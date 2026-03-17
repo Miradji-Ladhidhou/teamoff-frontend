@@ -55,6 +55,7 @@ const JoursBloquesPage = () => {
 
   const [users, setUsers] = useState([]);
   const [congeTypes, setCongeTypes] = useState([]);
+  const [loadingCongeTypes, setLoadingCongeTypes] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
@@ -81,7 +82,7 @@ const JoursBloquesPage = () => {
         const [policyResponse, usersResponse, typesResponse] = await Promise.all([
           entreprisesService.getPolitique(entrepriseId),
           usersService.getAll(),
-          congeTypesService.getAll(),
+          congeTypesService.getAll({ entreprise_id: entrepriseId }),
         ]);
 
         const policy = policyResponse.data?.politique_conges || {};
@@ -118,6 +119,24 @@ const JoursBloquesPage = () => {
 
     load();
   }, [entrepriseId]);
+
+  const loadCongeTypes = async () => {
+    if (!entrepriseId) return [];
+
+    try {
+      setLoadingCongeTypes(true);
+      const response = await congeTypesService.getAll({ entreprise_id: entrepriseId });
+      const nextTypes = Array.isArray(response.data) ? response.data : [];
+      setCongeTypes(nextTypes);
+      return nextTypes;
+    } catch (errLoadTypes) {
+      console.error('Erreur chargement types de congé:', errLoadTypes);
+      setError(errLoadTypes.response?.data?.message || 'Impossible de charger les types de congé.');
+      return [];
+    } finally {
+      setLoadingCongeTypes(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedUserId) return;
@@ -203,10 +222,12 @@ const JoursBloquesPage = () => {
     }
   };
 
-  const openCounterModal = (counter = null) => {
+  const openCounterModal = async (counter = null) => {
+    const availableTypes = congeTypes.length > 0 ? congeTypes : await loadCongeTypes();
+
     if (counter) {
       setCounterForm({
-        conge_type_id: counter.conge_type_id,
+        conge_type_id: counter.conge_type_id || availableTypes[0]?.id || '',
         jours_acquis: toNumber(counter.jours_acquis, 0),
         jours_pris: toNumber(counter.jours_pris, 0),
         jours_reportes: toNumber(counter.jours_reportes, 0),
@@ -214,7 +235,7 @@ const JoursBloquesPage = () => {
       });
     } else {
       setCounterForm({
-        conge_type_id: congeTypes[0]?.id || '',
+        conge_type_id: availableTypes[0]?.id || '',
         jours_acquis: 0,
         jours_pris: 0,
         jours_reportes: 0,
@@ -473,11 +494,20 @@ const JoursBloquesPage = () => {
                 value={counterForm.conge_type_id}
                 onChange={(event) => setCounterForm((prev) => ({ ...prev, conge_type_id: event.target.value }))}
                 required
+                disabled={loadingCongeTypes || congeTypes.length === 0}
               >
+                <option value="">
+                  {loadingCongeTypes ? 'Chargement des types...' : 'Sélectionnez un type de congé'}
+                </option>
                 {congeTypes.map((type) => (
                   <option key={type.id} value={type.id}>{type.libelle}</option>
                 ))}
               </Form.Select>
+              {congeTypes.length === 0 && !loadingCongeTypes && (
+                <div className="text-muted small mt-2">
+                  Aucun type de congé disponible pour alimenter le compteur.
+                </div>
+              )}
             </Form.Group>
             <Row>
               <Col md={6}>

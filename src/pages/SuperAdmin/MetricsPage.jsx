@@ -249,7 +249,7 @@ const MetricsPage = () => {
                       <tbody>
                         {metrics.enterpriseUsage.map((usage, index) => (
                           <tr key={index}>
-                            <td>{usage.entreprise_nom || `ID ${usage.entreprise_id}`}</td>
+                            <td>{usage.entreprise_nom || 'Entreprise non renseignee'}</td>
                             <td>{usage.count}</td>
                             <td>
                               <Badge bg="info">

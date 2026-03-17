@@ -1,4 +1,71 @@
 import axios from 'axios';
+import {
+  isNotificationDisabledForCurrentRoute,
+  setNotificationDisabledRoutes,
+  getNotificationDisabledRoutes,
+} from '../utils/notificationRules';
+
+let apiNotificationHandler = null;
+
+export const registerApiNotificationHandler = (handler) => {
+  apiNotificationHandler = typeof handler === 'function' ? handler : null;
+};
+
+export const configureApiNotificationDisabledRoutes = (routes = []) => {
+  setNotificationDisabledRoutes(routes);
+};
+
+export const getApiNotificationDisabledRoutes = () => getNotificationDisabledRoutes();
+
+const MUTATING_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+const MESSAGE_REPLACEMENTS = [
+  [/\bsucces\b/gi, 'succès'],
+  [/\bcree\b/gi, 'créé'],
+  [/\bcreee\b/gi, 'créée'],
+  [/\bsupprime\b/gi, 'supprimé'],
+  [/\bdesactive\b/gi, 'désactivé'],
+  [/\bactive\b/gi, 'activé'],
+  [/\bdonnees\b/gi, 'données'],
+  [/\ba\b jour/gi, 'à jour'],
+  [/\breessayer\b/gi, 'réessayer'],
+  [/\bconges\b/gi, 'congés'],
+];
+
+const normalizeNotificationMessage = (message, type = 'info') => {
+  if (!message || typeof message !== 'string') return message;
+
+  let normalized = message.trim();
+  if (!normalized) return normalized;
+
+  MESSAGE_REPLACEMENTS.forEach(([pattern, replacement]) => {
+    normalized = normalized.replace(pattern, replacement);
+  });
+
+  normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+  if (!/[.!?]$/.test(normalized)) {
+    normalized += type === 'error' ? '.' : '.';
+  }
+
+  return normalized;
+};
+
+const shouldNotify = (config = {}) => {
+  if (isNotificationDisabledForCurrentRoute()) return false;
+
+  const method = (config.method || '').toLowerCase();
+  if (!MUTATING_METHODS.has(method)) return false;
+
+  const url = config.url || '';
+  if (url.includes('/auth/login')) return false;
+  return true;
+};
+
+const emitApiNotification = (message, type = 'success', duration = 4000) => {
+  if (!apiNotificationHandler || !message) return;
+  apiNotificationHandler({ message: normalizeNotificationMessage(message, type), type, duration });
+};
 
 // Configuration de base d'axios
 const api = axios.create({
@@ -22,9 +89,21 @@ api.interceptors.request.use(
 
 // Intercepteur pour gérer les erreurs d'authentification et de maintenance
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (shouldNotify(response.config)) {
+      const backendMessage = response.data?.message;
+      const method = (response.config?.method || '').toUpperCase();
+      const fallback = `Action ${method} effectuée avec succès`;
+      emitApiNotification(backendMessage || fallback, 'success', 4000);
+    }
+
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url || '';
+    const isLoginRequest = requestUrl.includes('/auth/login');
+
+    if (error.response?.status === 401 && !isLoginRequest) {
       // Token expiré ou invalide
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -42,6 +121,12 @@ api.interceptors.response.use(
       window.location.href = `/maintenance?message=${message}`;
     }
 
+    if (shouldNotify(error.config)) {
+      const backendMessage = error.response?.data?.message;
+      const fallback = 'Une erreur est survenue pendant la mise à jour';
+      emitApiNotification(backendMessage || fallback, 'error', 4000);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -55,6 +140,7 @@ export const authService = {
   resetPassword: (data) => api.post('/auth/reset-password', data),
   changePassword: (data) => api.post('/auth/change-password', data),
   getProfile: () => api.get('/me'),
+  updateProfile: (data) => api.put('/me', data),
 };
 
 export const systemService = {
@@ -132,8 +218,8 @@ export const notificationsService = {
 };
 
 export const congeTypesService = {
-  getAll: () => api.get('/conge-types'),
-  getById: (id) => api.get(`/conge-types/${id}`),
+  getAll: (params = {}) => api.get('/conge-types', { params }),
+  getById: (id, params = {}) => api.get(`/conge-types/${id}`, { params }),
   create: (data) => api.post('/conge-types', data),
   update: (id, data) => api.put(`/conge-types/${id}`, data),
   delete: (id) => api.delete(`/conge-types/${id}`),

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaBuilding, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../hooks/useNotification';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
@@ -28,6 +29,7 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+    const notification = useNotification();
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -100,21 +102,23 @@ const UsersManagement = () => {
     const entrepriseId = isSuperAdmin ? formData.entreprise_id : user?.entreprise_id;
     if (!entrepriseId) return [];
     const baseServices = Array.isArray(servicesByCompany[entrepriseId]) ? servicesByCompany[entrepriseId] : [];
-
-    if (formData.service && !baseServices.includes(formData.service)) {
-      return [...baseServices, formData.service];
-    }
-
     return baseServices;
   };
 
   const selectableServices = getSelectableServices();
+  const isServiceRole = ['employe', 'manager'].includes(formData.role);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      setError('');
+      
+      // Validation obligatoire du service pour les employés
+      if (formData.role === 'employe' && !formData.service?.trim()) {
+        notification.error('Le service est obligatoire pour un employé', 4000);
+        return;
+      }
+
       const payload = {
         prenom: formData.prenom,
         nom: formData.nom,
@@ -388,8 +392,6 @@ const UsersManagement = () => {
                   <td>
                     <div>
                       <strong>{targetUser.prenom} {targetUser.nom}</strong>
-                      <br />
-                      <small className="text-muted">ID: {targetUser.id}</small>
                     </div>
                   </td>
                   <td>{targetUser.email}</td>
@@ -456,6 +458,7 @@ const UsersManagement = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+            {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -480,7 +483,7 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Role *</Form.Label>
-                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value })} required>
+                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value, service: ['employe', 'manager'].includes(event.target.value) ? formData.service : '' })} required>
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                     {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
@@ -495,7 +498,7 @@ const UsersManagement = () => {
                     value={formData.service}
                     onChange={(event) => setFormData({ ...formData, service: event.target.value })}
                     required={formData.role === 'employe'}
-                    disabled={(isSuperAdmin && !formData.entreprise_id) || selectableServices.length === 0}
+                    disabled={selectableServices.length === 0 || !isServiceRole}
                   >
                     <option value="">{selectableServices.length > 0 ? 'Sélectionner un service' : 'Aucun service disponible'}</option>
                     {selectableServices.map((serviceName) => (
@@ -503,8 +506,10 @@ const UsersManagement = () => {
                     ))}
                   </Form.Select>
                   <Form.Text className="text-muted">
-                    {isSuperAdmin
-                      ? 'Les services sont gérés depuis la page Services (sélectionnez d\'abord une entreprise).'
+                    {selectableServices.length === 0 && isServiceRole
+                      ? '⚠️ Aucun service disponible. Créez des services depuis la page Services avant d\'assigner ce rôle.'
+                      : !isServiceRole
+                      ? 'Les services s\'appliquent aux employés et aux managers.'
                       : 'Les services sont gérés depuis la page Services.'}
                   </Form.Text>
                 </Form.Group>

@@ -81,7 +81,6 @@ const CompaniesManagement = () => {
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   const [showReportValidation, setShowReportValidation] = useState(false);
-  const [serviceLimitDraft, setServiceLimitDraft] = useState({ service: '', limit: '' });
 
   useEffect(() => {
     loadCompanies();
@@ -105,7 +104,6 @@ const CompaniesManagement = () => {
     setFormData(DEFAULT_FORM);
     setShowAdvancedJson(false);
     setShowReportValidation(false);
-    setServiceLimitDraft({ service: '', limit: '' });
     setAdvancedParametresJson(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
     setAdvancedPolitiqueJson(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   };
@@ -224,7 +222,6 @@ const CompaniesManagement = () => {
     });
     setAdvancedParametresJson(JSON.stringify(companyParametres, null, 2));
     setAdvancedPolitiqueJson(JSON.stringify(companyPolitique, null, 2));
-    setServiceLimitDraft({ service: '', limit: '' });
     setShowAdvancedJson(false);
     setShowModal(true);
   };
@@ -280,38 +277,6 @@ const CompaniesManagement = () => {
       setAdvancedParametresJson(JSON.stringify(formData.parametres || {}, null, 2));
       setAdvancedPolitiqueJson(JSON.stringify(formData.politique_conges || {}, null, 2));
     }
-  };
-
-  const handleAddServiceLimit = () => {
-    const serviceName = String(serviceLimitDraft.service || '').trim();
-    if (!serviceName) {
-      return;
-    }
-
-    if (serviceLimitDraft.limit === '') {
-      return;
-    }
-
-    const parsedLimit = Number(serviceLimitDraft.limit);
-    if (!Number.isFinite(parsedLimit) || parsedLimit < 0) {
-      return;
-    }
-
-    setFormData((previous) => ({
-      ...previous,
-      politique_conges: {
-        ...previous.politique_conges,
-        max_employees_on_leave: {
-          ...previous.politique_conges.max_employees_on_leave,
-          by_service: {
-            ...(previous.politique_conges.max_employees_on_leave.by_service || {}),
-            [serviceName]: parsedLimit,
-          },
-        },
-      },
-    }));
-
-    setServiceLimitDraft({ service: '', limit: '' });
   };
 
   const handleServiceLimitChange = (serviceName, value) => {
@@ -762,30 +727,9 @@ const CompaniesManagement = () => {
                       <Col md={12}>
                         <Form.Group className="mb-3">
                           <Form.Label>Limites simultanées par service</Form.Label>
-                          <InputGroup className="mb-2">
-                            <Form.Control
-                              type="text"
-                              placeholder="Nom du service (ex: Support)"
-                              value={serviceLimitDraft.service}
-                              onChange={(event) => setServiceLimitDraft((previous) => ({
-                                ...previous,
-                                service: event.target.value,
-                              }))}
-                            />
-                            <Form.Control
-                              type="number"
-                              min={0}
-                              placeholder="Limite"
-                              value={serviceLimitDraft.limit}
-                              onChange={(event) => setServiceLimitDraft((previous) => ({
-                                ...previous,
-                                limit: event.target.value,
-                              }))}
-                            />
-                            <Button variant="outline-primary" onClick={handleAddServiceLimit}>
-                              Ajouter
-                            </Button>
-                          </InputGroup>
+                          <Form.Text className="text-muted d-block mb-2">
+                            L'ajout de services se fait uniquement depuis la page Services.
+                          </Form.Text>
 
                           {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).length === 0 && (
                             <Form.Text className="text-muted">

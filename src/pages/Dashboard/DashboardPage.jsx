@@ -117,7 +117,6 @@ const DashboardPage = () => {
   const getEntrepriseLabel = () => {
     if (user?.role === 'super_admin') return 'Multi-entreprises';
     if (user?.entreprise_nom) return user.entreprise_nom;
-    if (user?.entreprise_id) return `ID entreprise: ${user.entreprise_id}`;
     return 'Entreprise non renseignée';
   };
 

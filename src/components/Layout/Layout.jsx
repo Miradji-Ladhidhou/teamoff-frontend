@@ -77,7 +77,7 @@ const Layout = () => {
 
   const entrepriseLabel = user?.entreprise_nom
     ? user.entreprise_nom
-    : (user?.entreprise_id ? `Entreprise ${user.entreprise_id.slice(0, 8)}...` : 'Entreprise non renseignee');
+    : 'Entreprise non renseignee';
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -140,6 +140,16 @@ const Layout = () => {
 
           <hr className="my-4 role-divider" />
 
+          <Button 
+            variant="outline-light" 
+            size="sm" 
+            onClick={() => navigate('/my-profile')}
+            className="w-100 mb-2"
+          >
+            <FaUser className="me-2" />
+            Mes informations
+          </Button>
+
           <Button variant="outline-light" size="sm" onClick={handleLogout} className="w-100">
             <FaSignOutAlt className="me-2" />
             Deconnexion
@@ -170,6 +180,16 @@ const Layout = () => {
           </Nav>
 
           <hr className="my-4" />
+          <Button 
+            variant="outline-info" 
+            size="sm" 
+            onClick={() => navigate('/my-profile')}
+            className="w-100 mb-2"
+          >
+            <FaUser className="me-2" />
+            Mes informations
+          </Button>
+
           <Button variant="outline-danger" size="sm" onClick={handleLogout} className="w-100">
             <FaSignOutAlt className="me-2" />
             Deconnexion

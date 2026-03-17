@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
-import { entreprisesService, usersService } from '../services/api';
+import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 
 const DEFAULT_POLICY = {
@@ -28,6 +28,13 @@ const DEFAULT_SERVICE_POLICY = {
   max_employees_on_leave: 0,
 };
 
+const DEFAULT_CONGE_TYPE_FORM = {
+  code: '',
+  libelle: '',
+  quota_annuel: 0,
+  demi_journee_autorisee: false,
+};
+
 const PolitiqueCongesPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -37,6 +44,11 @@ const PolitiqueCongesPage = () => {
   const [policy, setPolicy] = useState(DEFAULT_POLICY);
   const [servicePolicies, setServicePolicies] = useState({});
   const [newServiceName, setNewServiceName] = useState('');
+  const [congeTypes, setCongeTypes] = useState([]);
+  const [showTypeModal, setShowTypeModal] = useState(false);
+  const [editingTypeId, setEditingTypeId] = useState(null);
+  const [savingType, setSavingType] = useState(false);
+  const [typeForm, setTypeForm] = useState(DEFAULT_CONGE_TYPE_FORM);
 
   const entrepriseId = user?.entreprise_id;
 
@@ -45,9 +57,10 @@ const PolitiqueCongesPage = () => {
       if (!entrepriseId) return;
       try {
         setLoading(true);
-        const [policyResponse, usersResponse] = await Promise.all([
+        const [policyResponse, usersResponse, typesResponse] = await Promise.all([
           entreprisesService.getPolitique(entrepriseId),
           usersService.getAll(),
+          congeTypesService.getAll({ entreprise_id: entrepriseId }),
         ]);
 
         const data = policyResponse.data?.politique_conges || policyResponse.data || {};
@@ -65,6 +78,7 @@ const PolitiqueCongesPage = () => {
         };
 
         const users = Array.isArray(usersResponse.data) ? usersResponse.data : [];
+        const types = Array.isArray(typesResponse.data) ? typesResponse.data : [];
         const serviceNames = [...new Set(users.map((u) => String(u.service || '').trim()).filter(Boolean))];
 
         const normalizedServicePolicies = { ...(merged.service_policies || {}) };
@@ -79,6 +93,7 @@ const PolitiqueCongesPage = () => {
 
         setPolicy(merged);
         setServicePolicies(normalizedServicePolicies);
+        setCongeTypes(types.sort((a, b) => String(a.libelle || '').localeCompare(String(b.libelle || ''), 'fr')));
       } catch (err) {
         console.error('Erreur chargement politique:', err);
         setError('Impossible de charger la politique de congé de votre entreprise.');
@@ -92,6 +107,92 @@ const PolitiqueCongesPage = () => {
 
   const setField = (name, value) => {
     setPolicy((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetTypeForm = () => {
+    setEditingTypeId(null);
+    setTypeForm(DEFAULT_CONGE_TYPE_FORM);
+  };
+
+  const openCreateTypeModal = () => {
+    resetTypeForm();
+    setShowTypeModal(true);
+  };
+
+  const openEditTypeModal = (type) => {
+    setEditingTypeId(type.id);
+    setTypeForm({
+      code: type.code || '',
+      libelle: type.libelle || '',
+      quota_annuel: Number(type.quota_annuel || 0),
+      demi_journee_autorisee: Boolean(type.demi_journee_autorisee),
+    });
+    setShowTypeModal(true);
+  };
+
+  const closeTypeModal = () => {
+    setShowTypeModal(false);
+    resetTypeForm();
+  };
+
+  const refreshCongeTypes = async () => {
+    const response = await congeTypesService.getAll({ entreprise_id: entrepriseId });
+    const types = Array.isArray(response.data) ? response.data : [];
+    setCongeTypes(types.sort((a, b) => String(a.libelle || '').localeCompare(String(b.libelle || ''), 'fr')));
+  };
+
+  const handleSaveCongeType = async (event) => {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      setSavingType(true);
+
+      const payload = {
+        entreprise_id: entrepriseId,
+        code: String(typeForm.code || '').trim().toUpperCase(),
+        libelle: String(typeForm.libelle || '').trim(),
+        quota_annuel: Number(typeForm.quota_annuel || 0),
+        demi_journee_autorisee: Boolean(typeForm.demi_journee_autorisee),
+      };
+
+      if (!payload.code || !payload.libelle) {
+        setError('Le code et le libellé du type de congé sont requis.');
+        return;
+      }
+
+      if (editingTypeId) {
+        await congeTypesService.update(editingTypeId, payload);
+        setSuccess('Type de congé mis à jour avec succès.');
+      } else {
+        await congeTypesService.create(payload);
+        setSuccess('Type de congé ajouté avec succès.');
+      }
+
+      await refreshCongeTypes();
+      closeTypeModal();
+    } catch (err) {
+      console.error('Erreur sauvegarde type de congé:', err);
+      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde du type de congé.');
+    } finally {
+      setSavingType(false);
+    }
+  };
+
+  const handleDeleteCongeType = async (typeId) => {
+    if (!window.confirm('Supprimer ce type de congé ?')) return;
+
+    try {
+      setError('');
+      setSuccess('');
+      await congeTypesService.delete(typeId);
+      await refreshCongeTypes();
+      setSuccess('Type de congé supprimé avec succès.');
+    } catch (err) {
+      console.error('Erreur suppression type de congé:', err);
+      setError(err.response?.data?.message || 'Erreur lors de la suppression du type de congé.');
+    }
   };
 
   const addServicePolicy = () => {
@@ -201,6 +302,55 @@ const PolitiqueCongesPage = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
+
+      <Card className="mb-4">
+        <Card.Header className="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Types de congé</strong>
+            <div className="text-muted small">Ajoutez et modifiez les types disponibles dans les formulaires de demande.</div>
+          </div>
+          <Button type="button" variant="primary" onClick={openCreateTypeModal}>
+            Ajouter un type de congé
+          </Button>
+        </Card.Header>
+        <Card.Body className="p-0">
+          {congeTypes.length === 0 ? (
+            <div className="p-4 text-center text-muted">Aucun type de congé configuré.</div>
+          ) : (
+            <Table responsive hover className="mb-0">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé</th>
+                  <th>Quota annuel</th>
+                  <th>Demi-journée</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {congeTypes.map((type) => (
+                  <tr key={type.id}>
+                    <td><Badge bg="secondary">{type.code}</Badge></td>
+                    <td>{type.libelle}</td>
+                    <td>{type.quota_annuel}</td>
+                    <td>{type.demi_journee_autorisee ? 'Oui' : 'Non'}</td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button type="button" size="sm" variant="outline-primary" onClick={() => openEditTypeModal(type)}>
+                          Modifier
+                        </Button>
+                        <Button type="button" size="sm" variant="outline-danger" onClick={() => handleDeleteCongeType(type.id)}>
+                          Supprimer
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
 
       <Card>
         <Card.Body>
@@ -430,6 +580,68 @@ const PolitiqueCongesPage = () => {
           </Form>
         </Card.Body>
       </Card>
+
+      <Modal show={showTypeModal} onHide={closeTypeModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>{editingTypeId ? 'Modifier le type de congé' : 'Ajouter un type de congé'}</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSaveCongeType}>
+          <Modal.Body>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={typeForm.code}
+                    onChange={(e) => setTypeForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                    placeholder="Ex: CP"
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={8}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Libellé</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={typeForm.libelle}
+                    onChange={(e) => setTypeForm((prev) => ({ ...prev, libelle: e.target.value }))}
+                    placeholder="Ex: Congés payés"
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Quota annuel</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                step="0.5"
+                value={typeForm.quota_annuel}
+                onChange={(e) => setTypeForm((prev) => ({ ...prev, quota_annuel: e.target.value }))}
+              />
+            </Form.Group>
+
+            <Form.Check
+              type="switch"
+              label="Autoriser les demi-journées"
+              checked={Boolean(typeForm.demi_journee_autorisee)}
+              onChange={(e) => setTypeForm((prev) => ({ ...prev, demi_journee_autorisee: e.target.checked }))}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type="button" variant="secondary" onClick={closeTypeModal}>
+              Annuler
+            </Button>
+            <Button type="submit" variant="primary" disabled={savingType}>
+              {savingType ? 'Enregistrement...' : editingTypeId ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </Container>
   );
 };

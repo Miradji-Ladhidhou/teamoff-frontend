@@ -1,8 +1,10 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
 import NotificationSystem from './components/NotificationSystem';
+import NotificationModal from './components/NotificationModal/NotificationModal';
 import { getDefaultRoute } from './utils/navigation';
 import AppFooter from './components/Layout/AppFooter';
 
@@ -29,6 +31,7 @@ const LegalPage = lazy(() => import('./pages/LegalPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
+const MyProfilePage = lazy(() => import('./pages/MyProfilePage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
@@ -130,9 +133,11 @@ const HomeRedirect = () => {
 function App() {
   return (
     <AuthProvider>
-      <NotificationSystem />
+      <NotificationProvider>
+        <NotificationSystem />
+        <NotificationModal />
 
-      <Routes>
+        <Routes>
 
         {/* Routes publiques */}
         <Route
@@ -227,6 +232,7 @@ function App() {
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/my-profile" element={<MyProfilePage />} />
           </Route>
         </Route>
 
@@ -276,6 +282,7 @@ function App() {
         <Route path="*" element={<HomeRedirect />} />
 
       </Routes>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

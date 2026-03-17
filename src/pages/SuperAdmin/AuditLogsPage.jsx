@@ -337,13 +337,9 @@ const AuditLogs = () => {
               </Col>
             </Row>
             <Row className="mb-3">
-              <Col md={6}>
+              <Col md={12}>
                 <strong>Entité</strong>
                 <div>{selectedLog.entity || '—'}</div>
-              </Col>
-              <Col md={6}>
-                <strong>ID entité</strong>
-                <div><code className="small">{selectedLog.entity_id || '—'}</code></div>
               </Col>
             </Row>
             <Row className="mb-3">

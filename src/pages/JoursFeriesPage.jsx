@@ -17,6 +17,7 @@ const JoursFeriesPage = () => {
   const [selectedEntrepriseId, setSelectedEntrepriseId] = useState('');
   const [importYear, setImportYear] = useState(new Date().getFullYear());
   const [importCountry, setImportCountry] = useState('FR');
+  const [importLoading, setImportLoading] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [templateName, setTemplateName] = useState('');
@@ -156,6 +157,22 @@ const JoursFeriesPage = () => {
       setError('');
       setSuccess('');
 
+      if (importYear < 2000 || importYear > 2100) {
+        setError('Veuillez saisir une année valide entre 2000 et 2100.');
+        return;
+      }
+
+      if (!/^[A-Z]{2}$/.test(importCountry)) {
+        setError('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
+        return;
+      }
+
+      if (user?.role === 'super_admin' && !selectedEntrepriseId) {
+        setError('Sélectionnez une entreprise avant de lancer l\'import API.');
+        return;
+      }
+
+      setImportLoading(true);
       const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
       const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
 
@@ -164,6 +181,8 @@ const JoursFeriesPage = () => {
     } catch (err) {
       console.error('Erreur import jours fériés:', err);
       setError(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -334,22 +353,24 @@ const JoursFeriesPage = () => {
       {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
       {success && <Alert variant="success" className="mb-4" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
-      {user?.role === 'super_admin' && (
+      {canManage && (
         <Card className="mb-3">
           <Card.Body>
             <Row className="g-3 align-items-end">
-              <Col md={5}>
-                <Form.Label>Entreprise</Form.Label>
-                <Form.Select
-                  value={selectedEntrepriseId}
-                  onChange={(e) => setSelectedEntrepriseId(e.target.value)}
-                >
-                  {entreprises.map((e) => (
-                    <option key={e.id} value={e.id}>{e.nom}</option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col md={2}>
+              {user?.role === 'super_admin' && (
+                <Col md={5}>
+                  <Form.Label>Entreprise</Form.Label>
+                  <Form.Select
+                    value={selectedEntrepriseId}
+                    onChange={(e) => setSelectedEntrepriseId(e.target.value)}
+                  >
+                    {entreprises.map((e) => (
+                      <option key={e.id} value={e.id}>{e.nom}</option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              )}
+              <Col md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Année</Form.Label>
                 <Form.Control
                   type="number"
@@ -357,7 +378,7 @@ const JoursFeriesPage = () => {
                   onChange={(e) => setImportYear(Number(e.target.value))}
                 />
               </Col>
-              <Col md={2}>
+              <Col md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Pays</Form.Label>
                 <Form.Control
                   type="text"
@@ -366,12 +387,20 @@ const JoursFeriesPage = () => {
                   maxLength={2}
                 />
               </Col>
-              <Col md={3}>
-                <Button variant="outline-primary" onClick={handleImportNational} disabled={!selectedEntrepriseId}>
-                  Import API jours fériés
+              <Col md={user?.role === 'super_admin' ? 3 : 6}>
+                <Button
+                  variant="outline-primary"
+                  onClick={handleImportNational}
+                  disabled={importLoading || (user?.role === 'super_admin' && !selectedEntrepriseId)}
+                >
+                  {importLoading ? 'Import en cours...' : 'Importer les jours fériés via API'}
                 </Button>
               </Col>
             </Row>
+            <div className="text-muted small mt-3">
+              L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
+              puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
+            </div>
           </Card.Body>
         </Card>
       )}

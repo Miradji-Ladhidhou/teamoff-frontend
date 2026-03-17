@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Modal } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
@@ -14,9 +14,22 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [canCloseErrorPopup, setCanCloseErrorPopup] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!showErrorPopup) return undefined;
+
+    setCanCloseErrorPopup(false);
+    const timer = setTimeout(() => {
+      setCanCloseErrorPopup(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [showErrorPopup]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,9 +53,11 @@ const LoginPage = () => {
         navigate(getDefaultRoute(savedUser?.role));
       } else {
         setError(result.error);
+        setShowErrorPopup(true);
       }
     } catch (err) {
       setError('Une erreur inattendue s\'est produite');
+      setShowErrorPopup(true);
     } finally {
       setLoading(false);
     }
@@ -50,6 +65,32 @@ const LoginPage = () => {
 
   return (
     <div className="min-vh-100" style={{ background: 'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)' }}>
+      <Modal
+        show={showErrorPopup}
+        onHide={() => {
+          if (canCloseErrorPopup) setShowErrorPopup(false);
+        }}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header className="bg-danger text-white">
+          <Modal.Title>Connexion refusee</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="fs-5">
+          {error || 'Identifiant ou mot de passe incorrect'}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => setShowErrorPopup(false)}
+            disabled={!canCloseErrorPopup}
+          >
+            {canCloseErrorPopup ? 'Reessayer' : 'Veuillez lire le message...'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Container className="py-4 py-lg-5">
         <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
           <Col lg={7}>
@@ -140,12 +181,6 @@ const LoginPage = () => {
                   <h2 className="h3 fw-bold mb-1">Connexion</h2>
                   <p className="text-muted mb-0">Accedez a votre espace TeamOff.</p>
                 </div>
-
-                {error && (
-                  <Alert variant="danger" className="mb-3">
-                    {error}
-                  </Alert>
-                )}
 
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">

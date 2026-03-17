@@ -60,7 +60,6 @@ const NouveauCongePage = () => {
   const loadInitialData = async () => {
     try {
       setLoadingData(true);
-      setError('');
 
       const [typesResponse, soldesResponse, congeResponse] = await Promise.all([
         congeTypesService.getAll(),
@@ -84,7 +83,6 @@ const NouveauCongePage = () => {
       }
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
-      setError(isEditMode ? 'Erreur lors du chargement du congé à modifier' : 'Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);
     }
@@ -190,7 +188,6 @@ const NouveauCongePage = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    setError('');
 
     try {
       if (isEditMode) {
@@ -199,15 +196,9 @@ const NouveauCongePage = () => {
         await congesService.create(formData);
       }
 
-      navigate(returnPath, {
-        state: {
-          message: isEditMode ? 'Demande de congé modifiée avec succès' : 'Demande de congé créée avec succès',
-          type: 'success'
-        }
-      });
+      navigate(returnPath);
     } catch (err) {
       console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
-      setError(err.response?.data?.message || `Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé`);
     } finally {
       setLoading(false);
     }
@@ -243,12 +234,6 @@ const NouveauCongePage = () => {
           <p className="text-muted">{isEditMode ? 'Mettez à jour les informations de votre demande' : 'Remplissez le formulaire ci-dessous'}</p>
         </div>
       </div>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       <InfoCardInfo title={isEditMode ? 'Conseils pour modifier votre demande' : 'Avant de soumettre votre demande'}>
         <ul className="mb-0">
