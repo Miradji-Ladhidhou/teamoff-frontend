@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa';
 import { notificationsService } from '../../services/api';
 import { getDefaultRoute, getNavigationForRole } from '../../utils/navigation';
+import AppFooter from './AppFooter';
 import './Layout.css';
 
 const Layout = () => {
@@ -33,9 +34,9 @@ const Layout = () => {
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const response = await notificationsService.getAll({ non_lu: 'true' });
-        const items = Array.isArray(response.data) ? response.data : [];
-        setUnreadNotifications(items.length);
+        const response = await notificationsService.getAll({ non_lu: 'true', page: 1, limit: 1 });
+        const total = Number(response.data?.pagination?.total);
+        setUnreadNotifications(Number.isFinite(total) ? total : 0);
       } catch (error) {
         console.error('Erreur chargement notifications:', error);
       }
@@ -194,8 +195,8 @@ const Layout = () => {
           </Navbar.Brand>
 
           <Navbar.Collapse className="justify-content-end">
-            <div className="d-flex align-items-center gap-2">
-              <small className="ui-text-soft me-3 d-none d-sm-inline">
+            <div className="d-flex align-items-center">
+              <small className="ui-text-soft d-none d-sm-inline">
                 {new Date().toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
@@ -203,11 +204,6 @@ const Layout = () => {
                   day: 'numeric'
                 })}
               </small>
-              <div className="text-end">
-                <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-                <small className="d-block ui-text-soft">{entrepriseLabel}</small>
-                <small className="ui-text-soft">{currentRoleMeta.label}</small>
-              </div>
             </div>
           </Navbar.Collapse>
         </Navbar>
@@ -215,6 +211,7 @@ const Layout = () => {
         <main className="role-content">
           <Outlet />
         </main>
+        <AppFooter />
       </div>
     </div>
   );

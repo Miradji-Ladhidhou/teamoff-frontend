@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
@@ -9,6 +9,7 @@ import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 const NouveauCongePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
@@ -29,6 +30,21 @@ const NouveauCongePage = () => {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [joursCalcules, setJoursCalcules] = useState(0);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    const params = new URLSearchParams(location.search);
+    const dateDebut = params.get('date_debut') || '';
+    const dateFin = params.get('date_fin') || '';
+
+    if (dateDebut || dateFin) {
+      setFormData((prev) => ({
+        ...prev,
+        date_debut: dateDebut || prev.date_debut,
+        date_fin: dateFin || prev.date_fin,
+      }));
+    }
+  }, [location.search, isEditMode]);
 
   useEffect(() => {
     loadInitialData();

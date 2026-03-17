@@ -10,6 +10,7 @@ const DEFAULT_FORM = {
   nom: '',
   email: '',
   role: 'employe',
+  service: '',
   entreprise_id: '',
   statut: 'actif',
   password: ''
@@ -31,6 +32,7 @@ const UsersManagement = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+  const [servicesByCompany, setServicesByCompany] = useState({});
 
   useEffect(() => {
     loadData();
@@ -47,8 +49,30 @@ const UsersManagement = () => {
       }
 
       const [usersRes, companiesRes] = await Promise.all(requests);
-      setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-      setCompanies(Array.isArray(companiesRes?.data) ? companiesRes.data : []);
+      const loadedUsers = Array.isArray(usersRes.data) ? usersRes.data : [];
+      const loadedCompanies = Array.isArray(companiesRes?.data) ? companiesRes.data : [];
+
+      setUsers(loadedUsers);
+      setCompanies(loadedCompanies);
+
+      if (isSuperAdmin) {
+        const serviceEntries = await Promise.all(
+          loadedCompanies.map(async (company) => {
+            try {
+              const response = await api.entreprisesService.getServices(company.id);
+              const items = Array.isArray(response.data?.items) ? response.data.items : [];
+              return [company.id, items.map((item) => item.name)];
+            } catch {
+              return [company.id, []];
+            }
+          })
+        );
+        setServicesByCompany(Object.fromEntries(serviceEntries));
+      } else if (user?.entreprise_id) {
+        const response = await api.entreprisesService.getServices(user.entreprise_id);
+        const items = Array.isArray(response.data?.items) ? response.data.items : [];
+        setServicesByCompany({ [user.entreprise_id]: items.map((item) => item.name) });
+      }
     } catch (loadError) {
       console.error('Erreur chargement donnees:', loadError);
       setError('Erreur lors du chargement des donnees');
@@ -72,6 +96,20 @@ const UsersManagement = () => {
     });
   };
 
+  const getSelectableServices = () => {
+    const entrepriseId = isSuperAdmin ? formData.entreprise_id : user?.entreprise_id;
+    if (!entrepriseId) return [];
+    const baseServices = Array.isArray(servicesByCompany[entrepriseId]) ? servicesByCompany[entrepriseId] : [];
+
+    if (formData.service && !baseServices.includes(formData.service)) {
+      return [...baseServices, formData.service];
+    }
+
+    return baseServices;
+  };
+
+  const selectableServices = getSelectableServices();
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -82,6 +120,7 @@ const UsersManagement = () => {
         nom: formData.nom,
         email: formData.email,
         role: formData.role,
+        service: formData.service || null,
         entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
         statut: formData.statut
       };
@@ -115,6 +154,7 @@ const UsersManagement = () => {
       nom: targetUser.nom || '',
       email: targetUser.email || '',
       role: targetUser.role || 'employe',
+      service: targetUser.service || '',
       entreprise_id: targetUser.entreprise_id || '',
       statut: targetUser.statut || 'actif',
       password: ''
@@ -335,6 +375,7 @@ const UsersManagement = () => {
                 <th>Utilisateur</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Service</th>
                 <th>Entreprise</th>
                 <th>Statut</th>
                 <th>Mise a jour</th>
@@ -353,6 +394,7 @@ const UsersManagement = () => {
                   </td>
                   <td>{targetUser.email}</td>
                   <td>{getRoleBadge(targetUser.role)}</td>
+                  <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
                   <td>
                     {companiesById[targetUser.entreprise_id] ? (
                       <div>
@@ -448,9 +490,37 @@ const UsersManagement = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
+                  <Form.Label>Service {formData.role === 'employe' ? '*' : ''}</Form.Label>
+                  <Form.Select
+                    value={formData.service}
+                    onChange={(event) => setFormData({ ...formData, service: event.target.value })}
+                    required={formData.role === 'employe'}
+                    disabled={(isSuperAdmin && !formData.entreprise_id) || selectableServices.length === 0}
+                  >
+                    <option value="">{selectableServices.length > 0 ? 'Sélectionner un service' : 'Aucun service disponible'}</option>
+                    {selectableServices.map((serviceName) => (
+                      <option key={serviceName} value={serviceName}>{serviceName}</option>
+                    ))}
+                  </Form.Select>
+                  <Form.Text className="text-muted">
+                    {isSuperAdmin
+                      ? 'Les services sont gérés depuis la page Services (sélectionnez d\'abord une entreprise).'
+                      : 'Les services sont gérés depuis la page Services.'}
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
                   <Form.Label>Entreprise *</Form.Label>
                   {isSuperAdmin ? (
-                    <Form.Select value={formData.entreprise_id} onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value })} required>
+                    <Form.Select
+                      value={formData.entreprise_id}
+                      onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value, service: '' })}
+                      required
+                    >
                       <option value="">Selectionner une entreprise</option>
                       {companies.map((company) => (
                         <option key={company.id} value={company.id}>
@@ -463,9 +533,6 @@ const UsersManagement = () => {
                   )}
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>

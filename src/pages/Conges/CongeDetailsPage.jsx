@@ -10,6 +10,7 @@ const CongeDetailsPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isSuperAdmin = user?.role === 'super_admin';
 
   const [conge, setConge] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,6 +149,19 @@ const CongeDetailsPage = () => {
     return parsedDate.toLocaleDateString('fr-FR');
   };
 
+  const formatDays = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return Number.isInteger(num) ? String(num) : num.toFixed(1);
+  };
+
+  const getRefusalComment = () => {
+    if (!conge) return '';
+    if (conge.statut === 'refuse_manager') return conge.commentaire_manager || '';
+    if (conge.statut === 'refuse_final') return conge.commentaire_admin || conge.commentaire_manager || '';
+    return '';
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
@@ -198,7 +212,7 @@ const CongeDetailsPage = () => {
           </Button>
           <div>
             <h1 className="h3 mb-1">Détails de la demande</h1>
-            <p className="text-muted mb-0">Demande #{conge.id}</p>
+            {isSuperAdmin && <p className="text-muted mb-0">Demande #{conge.id}</p>}
           </div>
         </div>
         <div className="d-flex gap-2">
@@ -291,6 +305,19 @@ const CongeDetailsPage = () => {
                     <strong className="text-muted d-block">Jours restants</strong>
                     {conge.jours_restants ?? '-'}
                   </div>
+                  {conge.calcul_details && (
+                    <div className="mb-3">
+                      <strong className="text-muted d-block">Détail du calcul</strong>
+                      <div className="small bg-light rounded p-2">
+                        <div>Jours sur la période : {formatDays(conge.calcul_details.jours_dans_periode)}</div>
+                        <div>Jours bloqués : {formatDays(conge.calcul_details.jours_bloques)}</div>
+                        <div>Jours fériés exclus : {formatDays(conge.calcul_details.jours_feries_exclus)}</div>
+                        <div>Demi-journées déduites : {formatDays(conge.calcul_details.jours_demi_journees_deduites)}</div>
+                        <div>Jours déduits du calcul : {formatDays(conge.calcul_details.jours_deduits_calcul)}</div>
+                        <div>Jours pris calculés : {formatDays(conge.calcul_details.jours_pris_calcules)}</div>
+                      </div>
+                    </div>
+                  )}
                   <div className="mb-3">
                     <strong className="text-muted d-block">Date demande</strong>
                     {formatDate(conge.date_demande || conge.created_at || conge.createdAt)}
@@ -304,6 +331,16 @@ const CongeDetailsPage = () => {
                   <div className="bg-light p-3 rounded">
                     <FaComment className="me-2 text-muted" />
                     {conge.commentaire_employe}
+                  </div>
+                </div>
+              )}
+
+              {getRefusalComment() && (
+                <div className="mt-3">
+                  <strong className="text-danger d-block">Commentaire du refus</strong>
+                  <div className="bg-danger-subtle p-3 rounded border border-danger-subtle">
+                    <FaComment className="me-2 text-danger" />
+                    {getRefusalComment()}
                   </div>
                 </div>
               )}
@@ -355,7 +392,7 @@ const CongeDetailsPage = () => {
                 <div className="d-grid gap-2">
                   <Button
                     variant="success"
-                    onClick={() => handleStatusChange('approuve')}
+                    onClick={() => handleStatusChange('valide')}
                     disabled={actionLoading}
                   >
                     {actionLoading ? (
@@ -394,10 +431,12 @@ const CongeDetailsPage = () => {
                   {formatDateShort(conge.updated_at)}
                 </div>
               )}
-              <div>
-                <strong>ID de la demande:</strong><br />
-                #{conge.id}
-              </div>
+              {isSuperAdmin && (
+                <div>
+                  <strong>ID de la demande:</strong><br />
+                  #{conge.id}
+                </div>
+              )}
             </Card.Body>
           </Card>
 

@@ -3,8 +3,81 @@ import { Container, Row, Col, Card, Button, Badge, Form, Alert, Spinner } from '
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { calendrierService, congesService } from '../services/api';
+import { calendrierService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+
+const normalizeLocalDate = (value) => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  if (typeof value === 'string') {
+    const rawDate = value.slice(0, 10);
+    const parts = rawDate.split('-').map(Number);
+    if (parts.length === 3 && parts.every(Number.isFinite)) {
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+};
+
+const formatDateParam = (value) => {
+  const date = normalizeLocalDate(value);
+  if (!date) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateLabel = (value) => {
+  const date = normalizeLocalDate(value);
+  if (!date) return '-';
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const getCongeFirstName = (conge) => {
+  const directCandidates = [
+    conge?.utilisateur_prenom,
+    conge?.prenom,
+    conge?.utilisateur?.prenom,
+  ];
+
+  for (const candidate of directCandidates) {
+    const value = String(candidate || '').trim();
+    if (value) return value;
+  }
+
+  const fullNameCandidates = [
+    conge?.utilisateur_nom,
+    conge?.utilisateur?.nom_complet,
+    `${conge?.utilisateur?.prenom || ''} ${conge?.utilisateur?.nom || ''}`,
+  ];
+
+  for (const candidate of fullNameCandidates) {
+    const value = String(candidate || '').trim();
+    if (value) return value.split(/\s+/)[0];
+  }
+
+  return 'Salarié';
+};
+
+const getCongeTypeLabel = (conge) => {
+  if (typeof conge?.conge_type === 'string') return conge.conge_type;
+  if (conge?.conge_type?.libelle) return conge.conge_type.libelle;
+  return conge?.conge_type_libelle || 'Congé';
+};
 
 const CalendrierPage = () => {
   const { user } = useAuth();
@@ -14,6 +87,8 @@ const CalendrierPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectionStart, setSelectionStart] = useState(null);
+  const [selectionEnd, setSelectionEnd] = useState(null);
   const [filters, setFilters] = useState({
     statut: 'all',
     utilisateur: 'all'
@@ -60,7 +135,7 @@ const CalendrierPage = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
     const days = [];
 
@@ -98,40 +173,87 @@ const CalendrierPage = () => {
 
   const getCongesForDay = (date) => {
     return conges.filter(conge => {
-      const startDate = new Date(conge.date_debut);
-      const endDate = new Date(conge.date_fin);
+      const targetDate = normalizeLocalDate(date);
+      const startDate = normalizeLocalDate(conge.date_debut);
+      const endDate = normalizeLocalDate(conge.date_fin);
+
+      if (!targetDate || !startDate || !endDate) return false;
 
       // Vérifier si la date est dans la période du congé
-      return date >= startDate && date <= endDate;
+      return targetDate >= startDate && targetDate <= endDate;
     });
   };
 
   const isJourFerie = (date) => {
     return joursFeries.some(jf => {
-      const jfDate = new Date(jf.date);
-      return jfDate.toDateString() === date.toDateString();
+      const jfDate = normalizeLocalDate(jf.date);
+      const currentDate = normalizeLocalDate(date);
+      return jfDate?.getTime() === currentDate?.getTime();
     });
   };
 
   const getJourFerieForDay = (date) => {
     return joursFeries.find(jf => {
-      const jfDate = new Date(jf.date);
-      return jfDate.toDateString() === date.toDateString();
+      const jfDate = normalizeLocalDate(jf.date);
+      const currentDate = normalizeLocalDate(date);
+      return jfDate?.getTime() === currentDate?.getTime();
     });
   };
 
   const getStatusColor = (statut) => {
     const colors = {
-      en_attente: 'warning',
-      approuve: 'success',
-      refuse: 'danger',
-      annule: 'secondary'
+      en_attente_manager: 'warning',
+      valide_manager: 'info',
+      valide_final: 'success',
+      refuse_manager: 'danger',
+      refuse_final: 'danger'
     };
     return colors[statut] || 'secondary';
   };
 
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  };
+
+  const isWeekend = (d) => {
+    const date = normalizeLocalDate(d);
+    const day = date?.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const handleSelectDay = (dateObj) => {
+    const date = normalizeLocalDate(dateObj);
+    if (!date) return;
+
+    if (isWeekend(date)) return;
+
+    if (!selectionStart || (selectionStart && selectionEnd)) {
+      setSelectionStart(date);
+      setSelectionEnd(null);
+      return;
+    }
+
+    if (date < selectionStart) {
+      setSelectionEnd(selectionStart);
+      setSelectionStart(date);
+    } else {
+      setSelectionEnd(date);
+    }
+  };
+
+  const isDateInSelection = (dateObj) => {
+    if (!selectionStart) return false;
+    const d = normalizeLocalDate(dateObj);
+    if (!d) return false;
+    const end = selectionEnd || selectionStart;
+    return d >= selectionStart && d <= end;
+  };
+
+  const isSelectionEdge = (dateObj) => {
+    const date = normalizeLocalDate(dateObj);
+    if (!date || !selectionStart) return false;
+    const end = selectionEnd || selectionStart;
+    return date.getTime() === selectionStart.getTime() || date.getTime() === end.getTime();
   };
 
   const handleFilterChange = (e) => {
@@ -143,7 +265,7 @@ const CalendrierPage = () => {
   };
 
   const days = getDaysInMonth(currentDate);
-  const weekDays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   if (loading) {
     return (
@@ -178,15 +300,54 @@ const CalendrierPage = () => {
       <InfoCardInfo title="Lisez le calendrier des congés">
         <p>Ce calendrier affiche tous les congés validés et les jours fériés. Les couleurs vous aident à identifier rapidement les périodes:</p>
         <ul className="mb-0">
-          <li><Badge bg="success">Vert</Badge> = Congé validé</li>
-          <li><Badge bg="warning">Orange</Badge> = Jour férié</li>
-          <li><Badge bg="danger">Rouge</Badge> = Congé refusé</li>
+          <li><Badge bg="warning">Jaune</Badge> = En attente manager</li>
+          <li><Badge bg="info">Bleu</Badge> = Validé manager</li>
+          <li><Badge bg="success">Vert</Badge> = Validé final</li>
+          <li><Badge bg="danger">Rouge</Badge> = Refusé</li>
         </ul>
       </InfoCardInfo>
 
       <TipCard title="Lecture efficace du planning">
         Activez les filtres pour isoler un statut ou un utilisateur, puis naviguez mois par mois pour préparer les périodes sensibles.
       </TipCard>
+
+      <InfoCardInfo title="Poser un congé depuis le calendrier">
+        <p className="mb-2">Cliquez une première date puis une seconde pour sélectionner votre période.</p>
+        <ul className="mb-0">
+          <li>1er clic: date de début</li>
+          <li>2e clic: date de fin</li>
+          <li>Le bouton crée une demande préremplie</li>
+        </ul>
+      </InfoCardInfo>
+
+      {selectionStart && (
+        <Alert variant="info" className="d-flex justify-content-between align-items-center">
+          <div>
+            Période sélectionnée: <strong>{formatDateLabel(selectionStart)}</strong>
+            {selectionEnd ? (
+              <>
+                {' '}au <strong>{formatDateLabel(selectionEnd)}</strong>
+              </>
+            ) : (
+              ' (sélectionnez une date de fin)'
+            )}
+          </div>
+          <div className="d-flex gap-2">
+            <Button variant="outline-secondary" size="sm" onClick={() => { setSelectionStart(null); setSelectionEnd(null); }}>
+              Réinitialiser
+            </Button>
+            {selectionEnd && (
+              <Button
+                as={Link}
+                to={`/conges/nouveau?date_debut=${formatDateParam(selectionStart)}&date_fin=${formatDateParam(selectionEnd)}`}
+                size="sm"
+              >
+                Poser ce congé
+              </Button>
+            )}
+          </div>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="danger" className="mb-4">
@@ -208,10 +369,11 @@ const CalendrierPage = () => {
                     onChange={handleFilterChange}
                   >
                     <option value="all">Tous les statuts</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="approuve">Approuvé</option>
-                    <option value="refuse">Refusé</option>
-                    <option value="annule">Annulé</option>
+                    <option value="en_attente_manager">En attente manager</option>
+                    <option value="valide_manager">Validé manager</option>
+                    <option value="valide_final">Validé final</option>
+                    <option value="refuse_manager">Refusé manager</option>
+                    <option value="refuse_final">Refusé final</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -260,21 +422,31 @@ const CalendrierPage = () => {
             {days.map((dayInfo, index) => {
               const dayConges = getCongesForDay(dayInfo.date);
               const jourFerie = getJourFerieForDay(dayInfo.date);
-              const isToday = dayInfo.date.toDateString() === new Date().toDateString();
+              const isToday = normalizeLocalDate(dayInfo.date)?.getTime() === normalizeLocalDate(new Date())?.getTime();
+              const isSelected = isDateInSelection(dayInfo.date);
+              const isSelectionLimit = isSelectionEdge(dayInfo.date);
+              const weekend = isWeekend(dayInfo.date);
 
               return (
                 <div
                   key={index}
-                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''}`}
+                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
+                  onClick={() => dayInfo.isCurrentMonth && handleSelectDay(dayInfo.date)}
+                  style={{
+                    cursor: dayInfo.isCurrentMonth && !weekend ? 'pointer' : 'default',
+                  }}
                 >
-                  <div className="calendar-day-number">
+                  <div
+                    className="calendar-day-number"
+                    data-weekday={normalizeLocalDate(dayInfo.date)?.toLocaleDateString('fr-FR', { weekday: 'short' }) || ''}
+                  >
                     {dayInfo.dayNumber}
                   </div>
 
                   {/* Jour férié */}
                   {jourFerie && (
                     <div className="calendar-ferie">
-                      <small className="text-danger fw-bold">{jourFerie.nom}</small>
+                      <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
                     </div>
                   )}
 
@@ -284,13 +456,10 @@ const CalendrierPage = () => {
                       <div
                         key={idx}
                         className={`calendar-event bg-${getStatusColor(conge.statut)}`}
-                        title={`${conge.utilisateur_nom} - ${conge.conge_type}`}
+                        title={`${getCongeFirstName(conge)} - ${getCongeTypeLabel(conge)}`}
                       >
                         <small className="text-white">
-                          {(['admin_entreprise', 'super_admin'].includes(user.role) || user.role === 'manager' || conge.utilisateur_id === user.id)
-                            ? conge.utilisateur_nom
-                            : 'Congé'
-                          }
+                          {`${getCongeFirstName(conge)} - ${getCongeTypeLabel(conge)}`}
                         </small>
                       </div>
                     ))}
@@ -315,11 +484,11 @@ const CalendrierPage = () => {
             <Col md={6}>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-success me-2"></div>
-                <small>Congé approuvé</small>
+                <small>Congé validé final</small>
               </div>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-warning me-2"></div>
-                <small>Congé en attente</small>
+                <small>Congé en attente manager</small>
               </div>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-danger me-2"></div>
@@ -328,11 +497,11 @@ const CalendrierPage = () => {
             </Col>
             <Col md={6}>
               <div className="d-flex align-items-center mb-2">
-                <div className="legend-color bg-secondary me-2"></div>
-                <small>Congé annulé</small>
+                <div className="legend-color bg-info me-2"></div>
+                <small>Congé validé manager</small>
               </div>
               <div className="d-flex align-items-center mb-2">
-                <div className="legend-color bg-light border me-2"></div>
+                <div className="legend-color legend-color-holiday me-2"></div>
                 <small>Jour férié</small>
               </div>
               <div className="d-flex align-items-center mb-2">
@@ -349,22 +518,27 @@ const CalendrierPage = () => {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 1px;
-          background-color: #dee2e6;
+          background-color: #d0d7de;
+          border: 1px solid #d0d7de;
+          border-radius: 16px;
+          overflow: hidden;
         }
 
         .calendar-header {
-          background-color: #f8f9fa;
-          padding: 10px;
+          background: linear-gradient(180deg, #f8f9fa 0%, #eef2f6 100%);
+          padding: 12px 10px;
           text-align: center;
           font-weight: bold;
           color: #495057;
+          font-size: 0.9rem;
         }
 
         .calendar-day {
           background-color: white;
-          min-height: 120px;
-          padding: 5px;
+          min-height: 132px;
+          padding: 8px;
           position: relative;
+          transition: background-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .calendar-day-other-month {
@@ -373,43 +547,63 @@ const CalendrierPage = () => {
         }
 
         .calendar-day-today {
-          background-color: #e3f2fd;
+          background-color: #eef7ff;
         }
 
         .calendar-day-ferie {
-          background-color: #fff3cd;
+          background-image: linear-gradient(180deg, #fff8e1 0%, #ffffff 42%);
+        }
+
+        .calendar-day-weekend {
+          background-color: #fbfbfc;
+        }
+
+        .calendar-day-selected {
+          background-color: #e7f1ff;
+          box-shadow: inset 0 0 0 1px #b6d4fe;
+        }
+
+        .calendar-day-selection-edge {
+          box-shadow: inset 0 0 0 2px #0d6efd;
         }
 
         .calendar-day-number {
           font-size: 14px;
           font-weight: bold;
-          margin-bottom: 5px;
+          margin-bottom: 6px;
+          color: #1f2937;
         }
 
         .calendar-ferie {
-          margin-bottom: 5px;
+          margin-bottom: 6px;
+          padding: 3px 6px;
+          border-radius: 999px;
+          background-color: #fff3cd;
+          display: inline-flex;
+          max-width: 100%;
         }
 
         .calendar-events {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
         }
 
         .calendar-event {
-          padding: 2px 4px;
-          border-radius: 3px;
+          padding: 4px 6px;
+          border-radius: 8px;
           font-size: 11px;
-          line-height: 1;
+          line-height: 1.15;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.18);
         }
 
         .calendar-event-more {
-          padding: 2px 4px;
+          padding: 3px 6px;
           background-color: #6c757d;
-          border-radius: 3px;
+          border-radius: 8px;
           font-size: 10px;
           color: white;
           text-align: center;
@@ -419,6 +613,66 @@ const CalendrierPage = () => {
           width: 20px;
           height: 20px;
           border-radius: 3px;
+        }
+
+        .legend-color-holiday {
+          background: linear-gradient(180deg, #fff3cd 0%, #ffe69c 100%);
+          border: 1px solid #f0ad4e;
+        }
+
+        @media (max-width: 991.98px) {
+          .calendar-day {
+            min-height: 116px;
+            padding: 6px;
+          }
+
+          .calendar-event {
+            font-size: 10px;
+            padding: 3px 5px;
+          }
+
+          .calendar-ferie {
+            font-size: 10px;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .calendar-grid {
+            display: block;
+            border: none;
+            background: transparent;
+          }
+
+          .calendar-header {
+            display: none;
+          }
+
+          .calendar-day {
+            min-height: auto;
+            margin-bottom: 10px;
+            border: 1px solid #d0d7de;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+          }
+
+          .calendar-day-other-month {
+            display: none;
+          }
+
+          .calendar-day-number::after {
+            content: ' · ' attr(data-weekday);
+            font-weight: 400;
+            color: #6b7280;
+          }
+
+          .calendar-events {
+            gap: 6px;
+          }
+
+          .calendar-event,
+          .calendar-event-more {
+            white-space: normal;
+          }
         }
 
         .timeline-item {

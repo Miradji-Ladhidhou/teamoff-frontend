@@ -24,6 +24,9 @@ export const roleNavigation = {
     { path: '/users', label: 'Utilisateurs', icon: 'users', section: 'primary' },
     { path: '/conges', label: 'Congés', icon: 'leave', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
+    { path: '/services', label: 'Services', icon: 'business', section: 'secondary' },
+    { path: '/politique-conges', label: 'Politique congés', icon: 'settings', section: 'secondary' },
+    { path: '/parametres-jours-bloques', label: 'Jours bloqués & soldes', icon: 'calendar', section: 'secondary' },
     { path: '/jours-feries', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
@@ -31,6 +34,7 @@ export const roleNavigation = {
   super_admin: [
     { path: '/superadmin/dashboard', label: 'Dashboard', icon: 'shield', section: 'primary' },
     { path: '/superadmin/companies', label: 'Entreprises', icon: 'business', section: 'primary' },
+    { path: '/superadmin/services', label: 'Services', icon: 'business', section: 'primary' },
     { path: '/superadmin/users', label: 'Utilisateurs', icon: 'users', section: 'primary' },
     { path: '/superadmin/leaves', label: 'Congés', icon: 'leave', section: 'primary' },
     { path: '/superadmin/metrics', label: 'Métriques', icon: 'chart', section: 'secondary' },

@@ -5,8 +5,6 @@ import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
 const DEFAULT_PARAMETRES = {
-  devise: 'EUR',
-  langue: 'fr',
   timezone: 'Indian/Reunion',
   notifications_email: true,
 };
@@ -42,7 +40,6 @@ const TIMEZONE_OPTIONS = [
 
 const DEFAULT_FORM = {
   nom: '',
-  logo: '',
   statut: 'active',
   politique_conges: DEFAULT_POLITIQUE,
   parametres: DEFAULT_PARAMETRES,
@@ -122,8 +119,6 @@ const CompaniesManagement = () => {
       const parametres = showAdvancedJson
         ? JSON.parse(advancedParametresJson || '{}')
         : {
-            devise: formData.parametres.devise,
-            langue: formData.parametres.langue,
             timezone: formData.parametres.timezone,
             notifications_email: formData.parametres.notifications_email,
           };
@@ -164,7 +159,6 @@ const CompaniesManagement = () => {
 
       const payload = {
         nom: formData.nom,
-        logo: formData.logo || null,
         statut: formData.statut,
         politique_conges: politiqueConges,
         parametres,
@@ -199,11 +193,8 @@ const CompaniesManagement = () => {
     setEditingCompany(company);
     setFormData({
       nom: company.nom || '',
-      logo: company.logo || '',
       statut: company.statut || 'active',
       parametres: {
-        devise: companyParametres.devise || DEFAULT_PARAMETRES.devise,
-        langue: companyParametres.langue || DEFAULT_PARAMETRES.langue,
         timezone: companyParametres.timezone || DEFAULT_PARAMETRES.timezone,
         notifications_email: typeof companyParametres.notifications_email === 'boolean'
           ? companyParametres.notifications_email
@@ -504,12 +495,6 @@ const CompaniesManagement = () => {
                   <td>
                     <div>
                       <strong>{company.nom}</strong>
-                      {company.logo && (
-                        <>
-                          <br />
-                          <small className="text-muted">{company.logo}</small>
-                        </>
-                      )}
                     </div>
                   </td>
                   <td>
@@ -557,16 +542,10 @@ const CompaniesManagement = () => {
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Row>
-              <Col md={6}>
+              <Col md={12}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nom de l'entreprise *</Form.Label>
                   <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>URL du logo</Form.Label>
-                  <Form.Control type="url" value={formData.logo} onChange={(event) => setFormData({ ...formData, logo: event.target.value })} placeholder="https://..." />
                 </Form.Group>
               </Col>
             </Row>
@@ -602,33 +581,7 @@ const CompaniesManagement = () => {
                   <Card.Body>
                     <h6 className="mb-3">Paramètres</h6>
                     <Row>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Devise</Form.Label>
-                          <Form.Select
-                            value={formData.parametres.devise}
-                            onChange={(event) => handleParametreChange('devise', event.target.value)}
-                          >
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="CHF">CHF</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Langue</Form.Label>
-                          <Form.Select
-                            value={formData.parametres.langue}
-                            onChange={(event) => handleParametreChange('langue', event.target.value)}
-                          >
-                            <option value="fr">Français</option>
-                            <option value="en">English</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
+                      <Col md={8}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             Timezone{' '}
@@ -646,7 +599,7 @@ const CompaniesManagement = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label>Emails</Form.Label>
                           <Form.Check

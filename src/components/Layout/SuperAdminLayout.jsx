@@ -5,6 +5,7 @@ import { FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers, FaCalen
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
 import { getNavigationForRole } from '../../utils/navigation';
+import AppFooter from './AppFooter';
 import './Layout.css';
 
 const SuperAdminLayout = () => {
@@ -35,9 +36,9 @@ const SuperAdminLayout = () => {
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const response = await notificationsService.getAll({ non_lu: 'true' });
-        const items = Array.isArray(response.data) ? response.data : [];
-        setUnreadNotifications(items.length);
+        const response = await notificationsService.getAll({ non_lu: 'true', page: 1, limit: 1 });
+        const total = Number(response.data?.pagination?.total);
+        setUnreadNotifications(Number.isFinite(total) ? total : 0);
       } catch (error) {
         console.error('Erreur chargement notifications:', error);
       }
@@ -177,7 +178,7 @@ const SuperAdminLayout = () => {
 
           <Navbar.Collapse className="justify-content-end">
             <div className="d-flex align-items-center">
-              <small className="ui-text-soft me-3">
+              <small className="ui-text-soft">
                 {new Date().toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
@@ -185,10 +186,6 @@ const SuperAdminLayout = () => {
                   day: 'numeric'
                 })}
               </small>
-              <div className="text-end">
-                <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-                <small className="ui-text-soft">SuperAdmin</small>
-              </div>
             </div>
           </Navbar.Collapse>
         </Navbar>
@@ -197,6 +194,7 @@ const SuperAdminLayout = () => {
         <div className="p-4">
           <Outlet />
         </div>
+        <AppFooter isSuperAdmin />
       </div>
     </div>
   );

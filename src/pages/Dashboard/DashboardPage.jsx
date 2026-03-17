@@ -46,7 +46,7 @@ const DashboardPage = () => {
         ]);
 
         const conges = Array.isArray(congesResponse.data) ? congesResponse.data : [];
-        const notifs = Array.isArray(notificationsResponse.data) ? notificationsResponse.data : [];
+        const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
 
         // Calcul des statistiques selon le rôle
         let statsData = {
@@ -117,7 +117,7 @@ const DashboardPage = () => {
   const getEntrepriseLabel = () => {
     if (user?.role === 'super_admin') return 'Multi-entreprises';
     if (user?.entreprise_nom) return user.entreprise_nom;
-    if (user?.entreprise_id) return `Entreprise ${user.entreprise_id.slice(0, 8)}...`;
+    if (user?.entreprise_id) return `ID entreprise: ${user.entreprise_id}`;
     return 'Entreprise non renseignée';
   };
 

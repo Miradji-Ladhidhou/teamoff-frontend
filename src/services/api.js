@@ -49,8 +49,16 @@ api.interceptors.response.use(
 // Services API
 export const authService = {
   login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
   register: (data) => api.post('/auth/register', data),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  changePassword: (data) => api.post('/auth/change-password', data),
   getProfile: () => api.get('/me'),
+};
+
+export const systemService = {
+  health: () => api.get('/health'),
 };
 
 export const congesService = {
@@ -58,8 +66,8 @@ export const congesService = {
   create: (data) => api.post('/conges/demande', data),
   update: (id, data) => api.put(`/conges/${id}`, data),
   delete: (id) => api.delete(`/conges/${id}`),
-  validate: (id, data) => api.post(`/conges/${id}/validate`, data),
-  reject: (id, data) => api.post(`/conges/${id}/reject`, data),
+  validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),
+  reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
   getById: (id) => api.get(`/conges/${id}`),
 };
 
@@ -67,6 +75,7 @@ export const usersService = {
   getAll: (params = {}) => api.get('/users', { params }),
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
+  updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
   delete: (id) => api.delete(`/users/${id}`),
   getById: (id) => api.get(`/users/${id}`),
 };
@@ -76,12 +85,22 @@ export const entreprisesService = {
   create: (data) => api.post('/entreprises', data),
   update: (id, data) => api.put(`/entreprises/${id}`, data),
   getById: (id) => api.get(`/entreprises/${id}`),
+  getPolitique: (id) => api.get(`/entreprises/${id}/politique`),
+  updatePolitique: (id, politique) => api.put(`/entreprises/${id}/politique`, { politique_conges: politique }),
+  getServices: (id) => api.get(`/entreprises/${id}/services`),
+  createService: (id, data) => api.post(`/entreprises/${id}/services`, data),
+  updateService: (id, serviceName, data) => api.put(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`, data),
+  deleteService: (id, serviceName) => api.delete(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`),
   delete: (id) => api.delete(`/entreprises/${id}`),
   updateStatus: (id, statut) => api.patch(`/entreprises/${id}/statut`, { statut }),
 };
 
 export const quotasService = {
+  getSolde: (userId, congeTypeId) => api.get(`/quotas/solde/${userId}/${congeTypeId}`),
   getSoldes: (userId, params = {}) => api.get(`/quotas/soldes/${userId}`, { params }),
+  getUserCounters: (userId, params = {}) => api.get(`/quotas/counters/${userId}`, { params }),
+  upsertUserCounter: (userId, data) => api.post(`/quotas/counters/${userId}`, data),
+  deleteUserCounter: (counterId) => api.delete(`/quotas/counters/${counterId}`),
   getUsage: () => api.get('/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
 };
@@ -94,6 +113,7 @@ export const calendrierService = {
 
 export const joursFeriesService = {
   getAll: (params = {}) => api.get('/jours-feries', { params }),
+  getById: (id, params = {}) => api.get(`/jours-feries/${id}`, { params }),
   create: (data) => api.post('/jours-feries', data),
   update: (id, data) => api.put(`/jours-feries/${id}`, data),
   delete: (id, params = {}) => api.delete(`/jours-feries/${id}`, { params }),
@@ -113,6 +133,7 @@ export const notificationsService = {
 
 export const congeTypesService = {
   getAll: () => api.get('/conge-types'),
+  getById: (id) => api.get(`/conge-types/${id}`),
   create: (data) => api.post('/conge-types', data),
   update: (id, data) => api.put(`/conge-types/${id}`, data),
   delete: (id) => api.delete(`/conge-types/${id}`),

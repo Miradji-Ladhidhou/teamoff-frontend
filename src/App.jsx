@@ -1,9 +1,10 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container, Spinner, Button } from 'react-bootstrap';
 import NotificationSystem from './components/NotificationSystem';
 import { getDefaultRoute } from './utils/navigation';
+import AppFooter from './components/Layout/AppFooter';
 
 // Layouts
 import Layout from './components/Layout/Layout';
@@ -20,11 +21,19 @@ const CalendrierPage = lazy(() => import('./pages/CalendrierPage'));
 const ExportsPage = lazy(() => import('./pages/ExportsPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const JoursFeriesPage = lazy(() => import('./pages/JoursFeriesPage'));
+const PolitiqueCongesPage = lazy(() => import('./pages/PolitiqueCongesPage'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+const JoursBloquesPage = lazy(() => import('./pages/JoursBloquesPage'));
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
+const LegalPage = lazy(() => import('./pages/LegalPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
 const CompaniesManagement = lazy(() => import('./pages/SuperAdmin/CompaniesPage'));
+const SuperAdminServicesPage = lazy(() => import('./pages/SuperAdmin/ServicesPage'));
 const SystemSettings = lazy(() => import('./pages/SuperAdmin/SettingsPage'));
 const MetricsPage = lazy(() => import('./pages/SuperAdmin/MetricsPage'));
 const AuditLogs = lazy(() => import('./pages/SuperAdmin/AuditLogsPage'));
@@ -78,13 +87,41 @@ const DashboardRedirect = () => {
   return <DashboardPage />;
 };
 
+const PublicPageLayout = ({ children }) => (
+  <div className="min-vh-100 d-flex flex-column" style={{ background: 'linear-gradient(180deg, #f6efe5 0%, #fffaf4 52%, #ffffff 100%)' }}>
+    <header className="border-bottom" style={{ backgroundColor: 'rgba(255, 255, 255, 0.88)', backdropFilter: 'blur(12px)' }}>
+      <Container className="d-flex align-items-center justify-content-between py-3 gap-3">
+        <Link to="/" className="text-decoration-none text-dark">
+          <div>
+            <div className="fw-bold fs-4" style={{ letterSpacing: '-0.03em' }}>TeamOff</div>
+            <div className="text-muted small">Gestion des conges et validations</div>
+          </div>
+        </Link>
+
+        <div className="d-flex flex-wrap gap-2">
+          <Button as={Link} to="/contact" variant="outline-dark" size="sm">Contact</Button>
+          <Button as={Link} to="/" variant="dark" size="sm">Connexion</Button>
+        </div>
+      </Container>
+    </header>
+
+    <main className="flex-grow-1 py-4 py-md-5">
+      {children}
+    </main>
+
+    <Container>
+      <AppFooter publicMode />
+    </Container>
+  </div>
+);
+
 const HomeRedirect = () => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) return <LoadingSpinner />;
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <Navigate to={getDefaultRoute(user?.role)} replace />;
@@ -98,6 +135,15 @@ function App() {
       <Routes>
 
         {/* Routes publiques */}
+        <Route
+          path="/"
+          element={
+            <AuthRedirect>
+              <LoginPage />
+            </AuthRedirect>
+          }
+        />
+
         <Route
           path="/login"
           element={
@@ -113,6 +159,50 @@ function App() {
             <AuthRedirect>
               <RegisterPage />
             </AuthRedirect>
+          }
+        />
+
+        <Route
+          path="/legal"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicPageLayout>
+                <LegalPage />
+              </PublicPageLayout>
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="/contact"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicPageLayout>
+                <ContactPage />
+              </PublicPageLayout>
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="/privacy"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicPageLayout>
+                <PrivacyPage />
+              </PublicPageLayout>
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="/help"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicPageLayout>
+                <HelpPage />
+              </PublicPageLayout>
+            </Suspense>
           }
         />
 
@@ -146,6 +236,9 @@ function App() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/exports" element={<ExportsPage />} />
             <Route path="/jours-feries" element={<JoursFeriesPage />} />
+            <Route path="/politique-conges" element={<PolitiqueCongesPage />} />
+            <Route path="/parametres-jours-bloques" element={<JoursBloquesPage />} />
+            <Route path="/services" element={<ServicesPage />} />
           </Route>
         </Route>
 
@@ -155,6 +248,7 @@ function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperAdminDashboard />} />
             <Route path="companies" element={<CompaniesManagement />} />
+            <Route path="services" element={<SuperAdminServicesPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="leaves" element={<CongesPage />} />
             <Route path="leaves/new" element={<NouveauCongePage />} />
@@ -166,6 +260,10 @@ function App() {
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="audit" element={<AuditLogs />} />
             <Route path="settings" element={<SystemSettings />} />
+            <Route path="legal" element={<LegalPage />} />
+            <Route path="contact" element={<ContactPage />} />
+            <Route path="privacy" element={<PrivacyPage />} />
+            <Route path="help" element={<HelpPage />} />
           </Route>
           <Route path="/entreprises" element={<Navigate to="/superadmin/companies" replace />} />
           <Route path="/metrics" element={<Navigate to="/superadmin/metrics" replace />} />
@@ -175,7 +273,6 @@ function App() {
         </Route>
 
         {/* Redirections */}
-        <Route path="/" element={<HomeRedirect />} />
         <Route path="*" element={<HomeRedirect />} />
 
       </Routes>

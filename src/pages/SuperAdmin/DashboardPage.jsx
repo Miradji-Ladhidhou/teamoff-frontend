@@ -6,6 +6,21 @@ import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
+const normalizeStatus = (ok) => (ok ? 'healthy' : 'unhealthy');
+
+const formatUptime = (seconds) => {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total < 0) return '-';
+
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+
+  if (days > 0) return `${days}j ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
+
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
@@ -28,79 +43,74 @@ const SuperAdminDashboard = () => {
       setLoading(true);
       setError('');
 
-      // Charger les statistiques globales avec gestion d'erreur
-      const [usersRes, companiesRes, leavesRes, activityRes] = await Promise.all([
-        api.usersService.getAll({ limit: 1 }).catch(() => ({ data: { total: 15 } })),
-        api.entreprisesService.getAll().catch(() => ({ data: Array(5).fill({}).map((_, i) => ({ id: i + 1, nom: `Entreprise ${i + 1}` })) })),
-        api.congesService.getAll({ limit: 1 }).catch(() => ({ data: { total: 45 } })),
-        api.notificationsService.getAll({ limit: 10 }).catch(() => ({ data: [] }))
+      const [usersResult, companiesResult, leavesResult, activityResult, healthResult, metricsResult] = await Promise.allSettled([
+        api.usersService.getAll(),
+        api.entreprisesService.getAll(),
+        api.congesService.getAll(),
+        api.notificationsService.getAll({ limit: 10 }),
+        api.systemService.health(),
+        api.metricsService.getMetrics()
       ]);
 
+      const users = usersResult.status === 'fulfilled' && Array.isArray(usersResult.value.data)
+        ? usersResult.value.data
+        : [];
+      const entreprises = companiesResult.status === 'fulfilled' && Array.isArray(companiesResult.value.data)
+        ? companiesResult.value.data
+        : [];
+      const conges = leavesResult.status === 'fulfilled' && Array.isArray(leavesResult.value.data)
+        ? leavesResult.value.data
+        : [];
+      const pendingLeaves = conges.filter((conge) => String(conge?.statut || '').startsWith('en_attente')).length;
+      const activeCompanies = entreprises.filter((entreprise) => entreprise?.statut === 'active').length;
+
       setStats({
-        totalUsers: usersRes.data?.total || 15,
-        totalCompanies: Array.isArray(companiesRes.data) ? companiesRes.data.length : 5,
-        totalLeaves: leavesRes.data?.total || 45,
-        pendingLeaves: Math.floor((leavesRes.data?.total || 45) * 0.3) // Estimation 30% en attente
+        totalUsers: users.length,
+        totalCompanies: activeCompanies,
+        totalLeaves: conges.length,
+        pendingLeaves
       });
 
-      // Activité récente (données mockées si API échoue)
-      const mockActivity = activityRes.data?.length > 0 ? activityRes.data : [
-        {
-          id: 1,
-          type: 'user_created',
-          message: 'Nouvel utilisateur inscrit',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          type: 'leave_submitted',
-          message: 'Demande de congé soumise',
-          createdAt: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 3,
-          type: 'company_added',
-          message: 'Nouvelle entreprise ajoutée',
-          createdAt: new Date(Date.now() - 7200000).toISOString()
-        }
-      ];
+      const activityItems = activityResult.status === 'fulfilled' && Array.isArray(activityResult.value.data?.items)
+        ? activityResult.value.data.items
+        : [];
+      setRecentActivity(activityItems);
 
-      setRecentActivity(mockActivity);
+      const healthData = healthResult.status === 'fulfilled' ? healthResult.value.data : null;
+      const metricsData = metricsResult.status === 'fulfilled' ? metricsResult.value.data : null;
 
-      // Santé système (toujours mockée pour la démo)
+      const isApiHealthy = healthData?.status === 'ok';
+      const isDbHealthy = healthData?.db === 'connected';
+
       setSystemHealth({
-        database: 'healthy',
-        api: 'healthy',
-        websocket: 'healthy',
-        uptime: '99.9%'
+        database: normalizeStatus(isDbHealthy),
+        api: normalizeStatus(isApiHealthy),
+        websocket: isApiHealthy ? 'healthy' : 'unhealthy',
+        uptime: formatUptime(metricsData?.uptime)
       });
+
+      if (!isApiHealthy || !isDbHealthy) {
+        setError('Certaines données système sont indisponibles actuellement.');
+      }
 
     } catch (error) {
       console.error('Erreur chargement dashboard:', error);
       setError('Erreur de chargement des données');
 
-      // Données de fallback
       setStats({
-        totalUsers: 15,
-        totalCompanies: 5,
-        totalLeaves: 45,
-        pendingLeaves: 12
+        totalUsers: 0,
+        totalCompanies: 0,
+        totalLeaves: 0,
+        pendingLeaves: 0
       });
 
-      setRecentActivity([
-        {
-          id: 1,
-          type: 'system',
-          message: 'Système initialisé',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      setRecentActivity([]);
 
       setSystemHealth({
-        database: 'healthy',
-        api: 'healthy',
-        websocket: 'healthy',
-        uptime: '99.9%'
+        database: 'unhealthy',
+        api: 'unhealthy',
+        websocket: 'unhealthy',
+        uptime: '-'
       });
     } finally {
       setLoading(false);
