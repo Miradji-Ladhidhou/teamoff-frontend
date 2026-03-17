@@ -16,6 +16,19 @@ const DEFAULT_POLITIQUE = {
   rtt_annuels: 0,
   report_autorise: false,
   report_max_jours: 0,
+  overlap_policy: 'block',
+  max_employees_on_leave: {
+    global: '',
+    by_service: {}
+  },
+  approval_workflow: 'manager_admin',
+  minimum_notice_days: 0,
+  max_consecutive_days: 365,
+  notification_settings: {
+    on_create: true,
+    on_validate: true,
+    on_reject: true,
+  }
 };
 
 const TIMEZONE_OPTIONS = [
@@ -35,6 +48,28 @@ const DEFAULT_FORM = {
   parametres: DEFAULT_PARAMETRES,
 };
 
+const normalizeByServiceLimits = (byService = {}) => {
+  const normalized = {};
+
+  Object.entries(byService || {}).forEach(([service, rawLimit]) => {
+    const serviceName = String(service || '').trim();
+    if (!serviceName) {
+      return;
+    }
+
+    if (rawLimit === '' || rawLimit === null || typeof rawLimit === 'undefined') {
+      return;
+    }
+
+    const numericLimit = Number(rawLimit);
+    if (Number.isFinite(numericLimit) && numericLimit >= 0) {
+      normalized[serviceName] = numericLimit;
+    }
+  });
+
+  return normalized;
+};
+
 const CompaniesManagement = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +84,7 @@ const CompaniesManagement = () => {
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   const [showReportValidation, setShowReportValidation] = useState(false);
+  const [serviceLimitDraft, setServiceLimitDraft] = useState({ service: '', limit: '' });
 
   useEffect(() => {
     loadCompanies();
@@ -72,6 +108,7 @@ const CompaniesManagement = () => {
     setFormData(DEFAULT_FORM);
     setShowAdvancedJson(false);
     setShowReportValidation(false);
+    setServiceLimitDraft({ service: '', limit: '' });
     setAdvancedParametresJson(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
     setAdvancedPolitiqueJson(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   };
@@ -98,6 +135,21 @@ const CompaniesManagement = () => {
             rtt_annuels: Number(formData.politique_conges.rtt_annuels || 0),
             report_autorise: Boolean(formData.politique_conges.report_autorise),
             report_max_jours: Number(formData.politique_conges.report_max_jours || 0),
+            overlap_policy: formData.politique_conges.overlap_policy,
+            max_employees_on_leave: {
+              global: formData.politique_conges.max_employees_on_leave.global === ''
+                ? null
+                : Number(formData.politique_conges.max_employees_on_leave.global || 0),
+              by_service: normalizeByServiceLimits(formData.politique_conges.max_employees_on_leave.by_service || {}),
+            },
+            approval_workflow: formData.politique_conges.approval_workflow,
+            minimum_notice_days: Number(formData.politique_conges.minimum_notice_days || 0),
+            max_consecutive_days: Number(formData.politique_conges.max_consecutive_days || 365),
+            notification_settings: {
+              on_create: Boolean(formData.politique_conges.notification_settings.on_create),
+              on_validate: Boolean(formData.politique_conges.notification_settings.on_validate),
+              on_reject: Boolean(formData.politique_conges.notification_settings.on_reject),
+            }
           };
 
       if (!showAdvancedJson) {
@@ -164,10 +216,24 @@ const CompaniesManagement = () => {
           ? companyPolitique.report_autorise
           : DEFAULT_POLITIQUE.report_autorise,
         report_max_jours: companyPolitique.report_max_jours ?? DEFAULT_POLITIQUE.report_max_jours,
+        overlap_policy: companyPolitique.overlap_policy || DEFAULT_POLITIQUE.overlap_policy,
+        max_employees_on_leave: {
+          global: companyPolitique.max_employees_on_leave?.global ?? '',
+          by_service: companyPolitique.max_employees_on_leave?.by_service || DEFAULT_POLITIQUE.max_employees_on_leave.by_service,
+        },
+        approval_workflow: companyPolitique.approval_workflow || DEFAULT_POLITIQUE.approval_workflow,
+        minimum_notice_days: companyPolitique.minimum_notice_days ?? DEFAULT_POLITIQUE.minimum_notice_days,
+        max_consecutive_days: companyPolitique.max_consecutive_days ?? DEFAULT_POLITIQUE.max_consecutive_days,
+        notification_settings: {
+          on_create: companyPolitique.notification_settings?.on_create ?? DEFAULT_POLITIQUE.notification_settings.on_create,
+          on_validate: companyPolitique.notification_settings?.on_validate ?? DEFAULT_POLITIQUE.notification_settings.on_validate,
+          on_reject: companyPolitique.notification_settings?.on_reject ?? DEFAULT_POLITIQUE.notification_settings.on_reject,
+        },
       },
     });
     setAdvancedParametresJson(JSON.stringify(companyParametres, null, 2));
     setAdvancedPolitiqueJson(JSON.stringify(companyPolitique, null, 2));
+    setServiceLimitDraft({ service: '', limit: '' });
     setShowAdvancedJson(false);
     setShowModal(true);
   };
@@ -203,6 +269,19 @@ const CompaniesManagement = () => {
     }
   };
 
+  const handleNestedPolitiqueChange = (parentKey, key, value) => {
+    setFormData((previous) => ({
+      ...previous,
+      politique_conges: {
+        ...previous.politique_conges,
+        [parentKey]: {
+          ...previous.politique_conges[parentKey],
+          [key]: value,
+        },
+      },
+    }));
+  };
+
   const handleAdvancedModeToggle = (enabled) => {
     setShowAdvancedJson(enabled);
 
@@ -210,6 +289,72 @@ const CompaniesManagement = () => {
       setAdvancedParametresJson(JSON.stringify(formData.parametres || {}, null, 2));
       setAdvancedPolitiqueJson(JSON.stringify(formData.politique_conges || {}, null, 2));
     }
+  };
+
+  const handleAddServiceLimit = () => {
+    const serviceName = String(serviceLimitDraft.service || '').trim();
+    if (!serviceName) {
+      return;
+    }
+
+    if (serviceLimitDraft.limit === '') {
+      return;
+    }
+
+    const parsedLimit = Number(serviceLimitDraft.limit);
+    if (!Number.isFinite(parsedLimit) || parsedLimit < 0) {
+      return;
+    }
+
+    setFormData((previous) => ({
+      ...previous,
+      politique_conges: {
+        ...previous.politique_conges,
+        max_employees_on_leave: {
+          ...previous.politique_conges.max_employees_on_leave,
+          by_service: {
+            ...(previous.politique_conges.max_employees_on_leave.by_service || {}),
+            [serviceName]: parsedLimit,
+          },
+        },
+      },
+    }));
+
+    setServiceLimitDraft({ service: '', limit: '' });
+  };
+
+  const handleServiceLimitChange = (serviceName, value) => {
+    setFormData((previous) => ({
+      ...previous,
+      politique_conges: {
+        ...previous.politique_conges,
+        max_employees_on_leave: {
+          ...previous.politique_conges.max_employees_on_leave,
+          by_service: {
+            ...(previous.politique_conges.max_employees_on_leave.by_service || {}),
+            [serviceName]: value,
+          },
+        },
+      },
+    }));
+  };
+
+  const handleRemoveServiceLimit = (serviceName) => {
+    setFormData((previous) => {
+      const currentByService = { ...(previous.politique_conges.max_employees_on_leave.by_service || {}) };
+      delete currentByService[serviceName];
+
+      return {
+        ...previous,
+        politique_conges: {
+          ...previous.politique_conges,
+          max_employees_on_leave: {
+            ...previous.politique_conges.max_employees_on_leave,
+            by_service: currentByService,
+          },
+        },
+      };
+    });
   };
 
   const handleDelete = async (companyId) => {
@@ -521,6 +666,69 @@ const CompaniesManagement = () => {
                   <Card.Body>
                     <h6 className="mb-3">Politique de congés</h6>
                     <Row>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Gestion des chevauchements</Form.Label>
+                          <Form.Select
+                            value={formData.politique_conges.overlap_policy}
+                            onChange={(event) => handlePolitiqueChange('overlap_policy', event.target.value)}
+                          >
+                            <option value="block">Bloquer</option>
+                            <option value="warning">Avertir</option>
+                            <option value="allow">Autoriser</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Workflow validation</Form.Label>
+                          <Form.Select
+                            value={formData.politique_conges.approval_workflow}
+                            onChange={(event) => handlePolitiqueChange('approval_workflow', event.target.value)}
+                          >
+                            <option value="auto">Auto</option>
+                            <option value="manager">Manager</option>
+                            <option value="manager_admin">Manager + Admin</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Limite simultanée (globale)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={formData.politique_conges.max_employees_on_leave.global}
+                            onChange={(event) => handleNestedPolitiqueChange('max_employees_on_leave', 'global', event.target.value)}
+                            placeholder="Aucune limite"
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={3}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Délai mini (jours)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={formData.politique_conges.minimum_notice_days}
+                            onChange={(event) => handlePolitiqueChange('minimum_notice_days', event.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Max jours consécutifs</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={1}
+                            value={formData.politique_conges.max_consecutive_days}
+                            onChange={(event) => handlePolitiqueChange('max_consecutive_days', event.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
                       <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
@@ -593,6 +801,98 @@ const CompaniesManagement = () => {
                           <Form.Control.Feedback type="invalid">
                             Entrez une valeur supérieure à 0 lorsque le report est activé.
                           </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={12}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Limites simultanées par service</Form.Label>
+                          <InputGroup className="mb-2">
+                            <Form.Control
+                              type="text"
+                              placeholder="Nom du service (ex: Support)"
+                              value={serviceLimitDraft.service}
+                              onChange={(event) => setServiceLimitDraft((previous) => ({
+                                ...previous,
+                                service: event.target.value,
+                              }))}
+                            />
+                            <Form.Control
+                              type="number"
+                              min={0}
+                              placeholder="Limite"
+                              value={serviceLimitDraft.limit}
+                              onChange={(event) => setServiceLimitDraft((previous) => ({
+                                ...previous,
+                                limit: event.target.value,
+                              }))}
+                            />
+                            <Button variant="outline-primary" onClick={handleAddServiceLimit}>
+                              Ajouter
+                            </Button>
+                          </InputGroup>
+
+                          {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).length === 0 && (
+                            <Form.Text className="text-muted">
+                              Aucune limite par service configuree.
+                            </Form.Text>
+                          )}
+
+                          {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).map(([serviceName, limit]) => (
+                            <InputGroup className="mb-2" key={serviceName}>
+                              <InputGroup.Text style={{ minWidth: 180 }}>{serviceName}</InputGroup.Text>
+                              <Form.Control
+                                type="number"
+                                min={0}
+                                value={limit}
+                                onChange={(event) => handleServiceLimitChange(serviceName, event.target.value)}
+                              />
+                              <Button variant="outline-danger" onClick={() => handleRemoveServiceLimit(serviceName)}>
+                                Supprimer
+                              </Button>
+                            </InputGroup>
+                          ))}
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications création</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-create"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_create)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_create', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_create ? 'Actives' : 'Inactives'}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications validation</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-validate"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_validate)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_validate', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_validate ? 'Actives' : 'Inactives'}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications refus</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-reject"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_reject)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_reject', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_reject ? 'Actives' : 'Inactives'}
+                          />
                         </Form.Group>
                       </Col>
                     </Row>
