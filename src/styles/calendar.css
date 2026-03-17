@@ -1,0 +1,134 @@
+/* Styles personnalisés pour React Big Calendar */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+.rbc-header {
+  padding: 8px 6px;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.rbc-event {
+  border-radius: 4px;
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  padding: 2px 6px;
+}
+
+.rbc-event.rbc-selected {
+  outline: 2px solid #007bff;
+}
+
+.rbc-today {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.rbc-toolbar {
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.rbc-toolbar button {
+  color: #495057;
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.rbc-toolbar-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 20px;
+}
+
+.rbc-month-view {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.rbc-day-bg {
+  border-right: 1px solid #dee2e6;
+}
+
+.rbc-day-bg.rbc-today {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.rbc-date-cell {
+  padding: 4px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.rbc-date-cell.rbc-now {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.rbc-event-content {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rbc-day-unavailable {
+  background-color: #f8f9fa !important;
+  opacity: 0.6;
+}
+
+.rbc-day-unavailable .rbc-date-cell {
+  color: #6c757d;
+  text-decoration: line-through;
+}
+
+.rbc-day-weekend {
+  background-color: #fff3cd !important;
+  opacity: 0.8;
+}
+
+.rbc-day-weekend .rbc-date-cell {
+  color: #856404;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rbc-toolbar-label {
+    margin: 10px 0;
+    font-size: 1.1rem;
+  }
+
+  .rbc-toolbar button {
+    margin: 2px;
+  }
+}
