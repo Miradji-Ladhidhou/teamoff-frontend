@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
@@ -8,11 +8,14 @@ import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCar
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
+  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const location = useLocation();
   const [conges, setConges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     statut: '',
+    conge_type_id: '',
     search: '',
     joursRestantsMin: '',
     joursRestantsMax: '',
@@ -41,6 +44,10 @@ const CongesPage = () => {
         params.statut = filters.statut;
       }
 
+      if (filters.conge_type_id) {
+        params.conge_type_id = filters.conge_type_id;
+      }
+
       // Filtrage selon le rôle
       if (user?.role === 'employe') {
         // Employé : seulement ses propres congés
@@ -65,11 +72,25 @@ const CongesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters.limit, filters.statut, user?.id, user?.role]);
+  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role]);
 
   useEffect(() => {
     loadConges();
   }, [loadConges]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const congeTypeId = params.get('conge_type_id') || '';
+
+    if (!congeTypeId) return;
+
+    setCurrentPage(1);
+    setFilters((prev) => ({
+      ...prev,
+      conge_type_id: congeTypeId,
+      page: 1
+    }));
+  }, [location.search]);
 
   const getCongeTypeLabel = (conge) => {
     if (typeof conge?.conge_type === 'string') return conge.conge_type;
@@ -99,6 +120,8 @@ const CongesPage = () => {
         || getEntrepriseLabel(conge).toLowerCase().includes(query)
         || conge.commentaire_employe?.toLowerCase().includes(query);
 
+      const matchesCongeType = !filters.conge_type_id || conge.conge_type_id === filters.conge_type_id;
+
       const joursRestants = Number(conge.jours_restants);
       const joursRestantsMin = filters.joursRestantsMin === '' ? null : Number(filters.joursRestantsMin);
       const joursRestantsMax = filters.joursRestantsMax === '' ? null : Number(filters.joursRestantsMax);
@@ -110,7 +133,7 @@ const CongesPage = () => {
       const matchesDateDemande = (!filters.dateDemandeDebut || (dateDemandeKey && dateDemandeKey >= filters.dateDemandeDebut))
         && (!filters.dateDemandeFin || (dateDemandeKey && dateDemandeKey <= filters.dateDemandeFin));
 
-      return matchesSearch && matchesJoursRestants && matchesDateDemande;
+      return matchesSearch && matchesCongeType && matchesJoursRestants && matchesDateDemande;
     });
   }, [conges, filters]);
 
@@ -292,10 +315,12 @@ const CongesPage = () => {
                 : 'Consulter et gérer vos demandes de congés'}
           </p>
         </div>
-        <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-          <FaPlus className="me-2" />
-          Nouveau congé
-        </Button>
+        {canCreateLeave && (
+          <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
+            <FaPlus className="me-2" />
+            Nouveau congé
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -465,13 +490,15 @@ const CongesPage = () => {
               <p className="text-muted">
                 {filters.search || filters.statut ?
                   'Essayez de modifier vos filtres' :
-                  'Créez votre première demande de congé'
+                  (canCreateLeave ? 'Créez votre première demande de congé' : 'Aucune demande trouvée')
                 }
               </p>
-              <Button as={Link} to="/conges/nouveau" variant="primary">
-                <FaPlus className="me-2" />
-                Nouveau congé
-              </Button>
+              {canCreateLeave && (
+                <Button as={Link} to="/conges/nouveau" variant="primary">
+                  <FaPlus className="me-2" />
+                  Nouveau congé
+                </Button>
+              )}
             </div>
           ) : (
             <>

@@ -19,6 +19,10 @@ import { InfoCardInfo, TipCard } from '../components/InfoCard';
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
   exclude_holidays: true,
+  count_saturday: false,
+  count_sunday: false,
+  include_saturday_after_friday: false,
+  include_sunday_after_friday: false,
   weekdays: [],
   specific_dates: [],
 };
@@ -34,11 +38,18 @@ const WEEKDAY_OPTIONS = [
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_MONTH = new Date().getMonth() + 1;
 
 const toNumber = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+
+const normalizeBlockedWeekdays = (days) => (
+  Array.isArray(days)
+    ? [...new Set(days.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))].sort((a, b) => a - b)
+    : []
+);
 
 const JoursBloquesPage = () => {
   const { user } = useAuth();
@@ -51,7 +62,11 @@ const JoursBloquesPage = () => {
 
   const [blockedDays, setBlockedDays] = useState(DEFAULT_BLOCKED_DAYS);
   const [accrualByType, setAccrualByType] = useState({});
+  const [reportAutorise, setReportAutorise] = useState(false);
+  const [reportMaxJours, setReportMaxJours] = useState(0);
   const [specificDateInput, setSpecificDateInput] = useState('');
+  const [showAdvancedWeekendRules, setShowAdvancedWeekendRules] = useState(false);
+  const [showCountersSection, setShowCountersSection] = useState(false);
 
   const [users, setUsers] = useState([]);
   const [congeTypes, setCongeTypes] = useState([]);
@@ -99,10 +114,12 @@ const JoursBloquesPage = () => {
 
         setBlockedDays({
           ...nextBlockedDays,
-          weekdays: Array.isArray(nextBlockedDays.weekdays) ? nextBlockedDays.weekdays.map(Number) : [],
+          weekdays: normalizeBlockedWeekdays(nextBlockedDays.weekdays),
           specific_dates: Array.isArray(nextBlockedDays.specific_dates) ? nextBlockedDays.specific_dates : [],
         });
         setAccrualByType(policy.accrual_by_type || {});
+        setReportAutorise(Boolean(policy.report_autorise));
+        setReportMaxJours(Number(policy.report_max_jours) || 0);
         setUsers(nextUsers);
         setCongeTypes(nextTypes);
 
@@ -200,7 +217,11 @@ const JoursBloquesPage = () => {
         blocked_days: {
           exclude_weekends: Boolean(blockedDays.exclude_weekends),
           exclude_holidays: Boolean(blockedDays.exclude_holidays),
-          weekdays: Array.isArray(blockedDays.weekdays) ? blockedDays.weekdays.map(Number) : [],
+          count_saturday: Boolean(blockedDays.count_saturday),
+          count_sunday: Boolean(blockedDays.count_sunday),
+          include_saturday_after_friday: Boolean(blockedDays.include_saturday_after_friday),
+          include_sunday_after_friday: Boolean(blockedDays.include_sunday_after_friday),
+          weekdays: normalizeBlockedWeekdays(blockedDays.weekdays),
           specific_dates: Array.isArray(blockedDays.specific_dates) ? blockedDays.specific_dates : [],
         },
         accrual_by_type: congeTypes.reduce((acc, type) => {
@@ -294,9 +315,11 @@ const JoursBloquesPage = () => {
 
   return (
     <Container>
-      <div className="mb-4">
-        <h1 className="h3 mb-1">Paramètres jours bloqués et soldes</h1>
-        <p className="text-muted mb-0">Configurez les jours non décomptés et ajustez les soldes de congés en cours d'année.</p>
+      <div className="mb-4 d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2">
+        <div>
+          <h1 className="h3 mb-1">Paramètres jours bloqués et soldes</h1>
+          <p className="text-muted mb-0">Configurez les jours non décomptés et ajustez les soldes de congés en cours d'année.</p>
+        </div>
       </div>
 
       <InfoCardInfo title="Impact métier">
@@ -308,6 +331,26 @@ const JoursBloquesPage = () => {
       <TipCard title="Cas d'entrée en cours d'année">
         Utilisez le tableau des compteurs pour ajuster précisément acquis, pris, reportés et réservés par type de congé.
       </TipCard>
+
+      <Card className="mb-4 border-0 bg-light">
+        <Card.Body>
+          <div className="fw-semibold mb-2">Par quoi commencer</div>
+          <ol className="mb-0 ps-3">
+            <li>Activez ou non l'exclusion des week-ends et des jours fériés selon votre règle RH.</li>
+            <li>Testez une simulation simple (lundi-vendredi) pour vérifier le résultat attendu.</li>
+            <li>N'ouvrez les sections avancées (week-end, compteurs) qu'en cas de besoin spécifique.</li>
+          </ol>
+        </Card.Body>
+      </Card>
+
+      <InfoCardInfo title="Exemples de configuration">
+        <ul className="mb-0">
+          <li>Entreprise classique: week-ends exclus, jours fériés exclus, aucun autre jour bloqué.</li>
+          <li>Activité 6j/7: week-ends exclus désactivé, puis blocage manuel uniquement du dimanche.</li>
+          <li>Règle RH stricte: ajouter automatiquement samedi/dimanche si le congé finit un vendredi.</li>
+          <li>Ajustement de compteur: "Acquis 10, Pris 2" donne un solde disponible de 8 (hors réservés/reportés).</li>
+        </ul>
+      </InfoCardInfo>
 
       {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
@@ -323,6 +366,55 @@ const JoursBloquesPage = () => {
               checked={Boolean(blockedDays.exclude_weekends)}
               onChange={(event) => setBlockedDays((prev) => ({ ...prev, exclude_weekends: event.target.checked }))}
             />
+            <Form.Text className="text-muted d-block mb-3">Exemple: activé = samedi/dimanche non déduits, sauf règles avancées activées ci-dessous.</Form.Text>
+            <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div className="small text-muted">Règles week-end avancées</div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline-secondary"
+                onClick={() => setShowAdvancedWeekendRules((prev) => !prev)}
+              >
+                {showAdvancedWeekendRules ? 'Masquer' : 'Afficher'}
+              </Button>
+            </div>
+            {showAdvancedWeekendRules && (
+              <>
+                <Form.Check
+                  className="mb-3"
+                  type="switch"
+                  label="Compter le samedi même si les week-ends sont exclus"
+                  checked={Boolean(blockedDays.count_saturday)}
+                  onChange={(event) => setBlockedDays((prev) => ({ ...prev, count_saturday: event.target.checked }))}
+                  disabled={!Boolean(blockedDays.exclude_weekends)}
+                />
+                <Form.Check
+                  className="mb-3"
+                  type="switch"
+                  label="Compter le dimanche même si les week-ends sont exclus"
+                  checked={Boolean(blockedDays.count_sunday)}
+                  onChange={(event) => setBlockedDays((prev) => ({ ...prev, count_sunday: event.target.checked }))}
+                  disabled={!Boolean(blockedDays.exclude_weekends)}
+                />
+                <Form.Check
+                  className="mb-3"
+                  type="switch"
+                  label="Ajouter automatiquement le samedi si le congé finit un vendredi"
+                  checked={Boolean(blockedDays.include_saturday_after_friday)}
+                  onChange={(event) => setBlockedDays((prev) => ({ ...prev, include_saturday_after_friday: event.target.checked }))}
+                />
+                <Form.Check
+                  className="mb-3"
+                  type="switch"
+                  label="Ajouter automatiquement le dimanche si le congé finit un vendredi"
+                  checked={Boolean(blockedDays.include_sunday_after_friday)}
+                  onChange={(event) => setBlockedDays((prev) => ({ ...prev, include_sunday_after_friday: event.target.checked }))}
+                />
+                <Form.Text className="text-muted d-block mb-3">
+                  Ces règles sont propres à votre entreprise et permettent de déduire samedi/dimanche même si la demande s'arrête au vendredi.
+                </Form.Text>
+              </>
+            )}
             <Form.Check
               className="mb-3"
               type="switch"
@@ -330,9 +422,13 @@ const JoursBloquesPage = () => {
               checked={Boolean(blockedDays.exclude_holidays)}
               onChange={(event) => setBlockedDays((prev) => ({ ...prev, exclude_holidays: event.target.checked }))}
             />
+            <Form.Text className="text-muted d-block mb-3">Exemple: activé = un jour férié pendant un congé n'est pas retiré du solde.</Form.Text>
 
             <Form.Group className="mb-3">
-              <Form.Label>Jours de semaine bloqués (en plus des week-ends)</Form.Label>
+              <Form.Label>Jours bloqués manuellement (en plus des règles ci-dessus)</Form.Label>
+              <Form.Text className="text-muted d-block mb-2">
+                Pour bloquer uniquement Dimanche: désactivez "Exclure les week-ends du décompte" puis activez "Dimanche".
+              </Form.Text>
               <div className="d-flex flex-wrap gap-2">
                 {WEEKDAY_OPTIONS.map((option) => (
                   <Button
@@ -382,7 +478,9 @@ const JoursBloquesPage = () => {
 
             <Form.Group className="mb-4">
               <Form.Label>Acquisition mensuelle automatique par type</Form.Label>
-              <Table responsive size="sm">
+              <div className="settings-table-wrap">
+                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir toutes les colonnes.</div>
+                <Table responsive size="sm" className="settings-table">
                 <thead>
                   <tr>
                     <th>Type de congé</th>
@@ -409,21 +507,36 @@ const JoursBloquesPage = () => {
                     </tr>
                   ))}
                 </tbody>
-              </Table>
+                </Table>
+              </div>
             </Form.Group>
 
-            <Button type="submit" disabled={savingPolicy}>
-              {savingPolicy ? 'Enregistrement...' : 'Enregistrer les paramètres'}
-            </Button>
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 border-top pt-3 mt-4">
+              <small className="text-muted">Pensez à enregistrer après chaque ajustement de règle.</small>
+              <div className="d-grid d-sm-block">
+                <Button type="submit" disabled={savingPolicy}>
+                  {savingPolicy ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                </Button>
+              </div>
+            </div>
           </Form>
         </Card.Body>
       </Card>
 
       <Card>
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <strong>CRUD soldes utilisateur</strong>
-          <Button size="sm" onClick={() => openCounterModal()}>Ajouter ou modifier un solde</Button>
+        <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <strong>Gestion des soldes utilisateur</strong>
+            <div className="small text-muted">Utilisez cette section uniquement pour les ajustements exceptionnels.</div>
+          </div>
+          <div className="d-grid d-sm-flex gap-2">
+            <Button size="sm" variant="outline-secondary" onClick={() => setShowCountersSection((prev) => !prev)}>
+              {showCountersSection ? 'Masquer' : 'Afficher'}
+            </Button>
+            <Button size="sm" onClick={() => openCounterModal()} disabled={!showCountersSection}>Ajouter ou modifier un solde</Button>
+          </div>
         </Card.Header>
+        {showCountersSection && (
         <Card.Body>
           <Row className="g-3 mb-3">
             <Col md={6}>
@@ -447,39 +560,48 @@ const JoursBloquesPage = () => {
           {loadingCounters ? (
             <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
           ) : (
-            <Table responsive hover>
+            <div className="settings-table-wrap">
+              <div className="settings-table-hint d-md-none">Glissez horizontalement pour consulter les soldes détaillés.</div>
+              {reportAutorise && (
+                <div className="alert alert-info py-2 mb-2 small">
+                  Report annuel activé (max {reportMaxJours} j) — colonne <strong>N-1 reporté</strong> = jours portés de {selectedYear - 1}.
+                </div>
+              )}
+              <Table responsive hover className="settings-table">
               <thead>
                 <tr>
                   <th>Type</th>
-                  <th>Acquis</th>
-                  <th>Pris</th>
-                  <th>Reportés</th>
-                  <th>Réservés</th>
+                  <th title={`Jours reportés depuis ${selectedYear - 1}`}>N-1 ({selectedYear - 1})</th>
+                  <th>N ({selectedYear})</th>
                   <th>Solde</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {counters.map((counter) => (
-                  <tr key={counter.id}>
-                    <td>{counter.conge_type?.libelle || '-'}</td>
-                    <td>{counter.jours_acquis}</td>
-                    <td>{counter.jours_pris}</td>
-                    <td>{counter.jours_reportes}</td>
-                    <td>{counter.jours_reserves}</td>
-                    <td><strong>{counter.solde_disponible}</strong></td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button size="sm" variant="outline-primary" onClick={() => openCounterModal(counter)}>Editer</Button>
-                        <Button size="sm" variant="outline-danger" onClick={() => deleteCounter(counter.id)}>Supprimer</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {counters.map((counter) => {
+                  const joursReportes = toNumber(counter.jours_reportes, 0);
+                  const joursAcquisAnnee = toNumber(counter.jours_acquis_annee ?? (toNumber(counter.jours_acquis, 0) - joursReportes), 0);
+                  return (
+                    <tr key={counter.id}>
+                      <td>{counter.conge_type?.libelle || '-'}</td>
+                      <td>{joursReportes > 0 ? `${joursReportes.toFixed(1)} j` : '0.0 j'}</td>
+                      <td><strong>{joursAcquisAnnee.toFixed(1)}</strong> j</td>
+                      <td><strong className="text-primary">{toNumber(counter.solde_disponible, 0).toFixed(1)}</strong> j</td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <Button size="sm" variant="outline-primary" onClick={() => openCounterModal(counter)}>Editer</Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => deleteCounter(counter.id)}>Supprimer</Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
-            </Table>
+              </Table>
+            </div>
           )}
         </Card.Body>
+        )}
       </Card>
 
       <Modal show={showCounterModal} onHide={() => setShowCounterModal(false)}>
@@ -564,6 +686,7 @@ const JoursBloquesPage = () => {
           </Modal.Footer>
         </Form>
       </Modal>
+
     </Container>
   );
 };

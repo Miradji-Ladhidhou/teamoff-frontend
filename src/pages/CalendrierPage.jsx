@@ -221,11 +221,13 @@ const CalendrierPage = () => {
     return day === 0 || day === 6;
   };
 
+  const isDaySelectable = (d) => Boolean(normalizeLocalDate(d));
+
   const handleSelectDay = (dateObj) => {
     const date = normalizeLocalDate(dateObj);
     if (!date) return;
 
-    if (isWeekend(date)) return;
+    if (!isDaySelectable(date)) return;
 
     if (!selectionStart || (selectionStart && selectionEnd)) {
       setSelectionStart(date);
@@ -239,6 +241,13 @@ const CalendrierPage = () => {
     } else {
       setSelectionEnd(date);
     }
+  };
+
+  const handleDayClick = (dayInfo) => {
+    const date = normalizeLocalDate(dayInfo?.date);
+    if (!date) return;
+
+    handleSelectDay(date);
   };
 
   const isDateInSelection = (dateObj) => {
@@ -426,14 +435,15 @@ const CalendrierPage = () => {
               const isSelected = isDateInSelection(dayInfo.date);
               const isSelectionLimit = isSelectionEdge(dayInfo.date);
               const weekend = isWeekend(dayInfo.date);
+              const selectable = isDaySelectable(dayInfo.date);
 
               return (
                 <div
                   key={index}
-                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
-                  onClick={() => dayInfo.isCurrentMonth && handleSelectDay(dayInfo.date)}
+                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
+                  onClick={() => selectable && handleDayClick(dayInfo)}
                   style={{
-                    cursor: dayInfo.isCurrentMonth && !weekend ? 'pointer' : 'default',
+                    cursor: selectable ? 'pointer' : 'default',
                   }}
                 >
                   <div
@@ -539,6 +549,10 @@ const CalendrierPage = () => {
           padding: 8px;
           position: relative;
           transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .calendar-day-clickable:hover {
+          background-color: #f4f9ff;
         }
 
         .calendar-day-other-month {
@@ -656,7 +670,7 @@ const CalendrierPage = () => {
           }
 
           .calendar-day-other-month {
-            display: none;
+            opacity: 0.88;
           }
 
           .calendar-day-number::after {

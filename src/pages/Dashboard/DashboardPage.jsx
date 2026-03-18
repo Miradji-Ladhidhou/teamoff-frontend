@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Badge, Button, Alert, Spinner } from 'react-
 import { Link } from 'react-router-dom';
 import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService, quotasService, notificationsService } from '../../services/api';
+import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
 
 const DashboardPage = () => {
@@ -70,8 +70,46 @@ const DashboardPage = () => {
         // Charger les soldes pour les employés
         if (user?.role === 'employe' && user.id) {
           try {
-            const soldesResponse = await quotasService.getSoldes(user.id);
-            setSoldes(Array.isArray(soldesResponse.data.soldes) ? soldesResponse.data.soldes : []);
+            const [soldesResponse, congeTypesResponse] = await Promise.all([
+              quotasService.getSoldes(user.id),
+              congeTypesService.getAll()
+            ]);
+
+            const soldesData = Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : [];
+            const congeTypesData = Array.isArray(congeTypesResponse.data) ? congeTypesResponse.data : [];
+
+            const soldesByTypeId = new Map(
+              soldesData
+                .filter((item) => item?.conge_type_id)
+                .map((item) => [String(item.conge_type_id), item])
+            );
+
+            const mergedSoldes = congeTypesData
+              .slice()
+              .sort((a, b) => String(a?.libelle || '').localeCompare(String(b?.libelle || ''), 'fr'))
+              .map((type) => {
+                const existing = soldesByTypeId.get(String(type.id));
+                if (existing) {
+                  return {
+                    ...existing,
+                    conge_type_id: existing.conge_type_id || type.id,
+                    conge_type: typeof existing.conge_type === 'string'
+                      ? existing.conge_type
+                      : (existing.conge_type || { id: type.id, libelle: type.libelle }),
+                    conge_type_libelle: existing.conge_type_libelle || type.libelle,
+                    solde_disponible: existing.solde_disponible ?? existing.solde_restant ?? 0,
+                  };
+                }
+
+                return {
+                  conge_type_id: type.id,
+                  conge_type: { id: type.id, libelle: type.libelle },
+                  conge_type_libelle: type.libelle,
+                  solde_disponible: 0,
+                };
+              });
+
+            setSoldes(mergedSoldes);
           } catch (soldesError) {
             console.warn('Erreur chargement soldes:', soldesError);
             setSoldes([]);
@@ -103,6 +141,19 @@ const DashboardPage = () => {
   };
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR');
+
+  const getSoldeTypeLabel = (solde) => {
+    if (solde?.conge_type?.libelle) return solde.conge_type.libelle;
+    if (solde?.conge_type_libelle) return solde.conge_type_libelle;
+    if (typeof solde?.conge_type === 'string' && solde.conge_type.trim()) return solde.conge_type;
+    return 'Type inconnu';
+  };
+
+  const getSoldeJours = (solde) => {
+    const raw = solde?.solde_restant ?? solde?.solde_disponible ?? solde?.solde ?? 0;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : 0;
+  };
 
   const getRoleLabel = (role) => {
     const map = {
@@ -194,12 +245,16 @@ const DashboardPage = () => {
             <Card>
               <Card.Header><h5 className="mb-0">Mes soldes de congés</h5></Card.Header>
               <Card.Body>
-                {soldes.map((solde, idx) => (
-                  <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
-                    <span>{solde.conge_type?.libelle || 'Type inconnu'}</span>
-                    <Badge bg="info">{solde.solde_restant} jours</Badge>
-                  </div>
-                ))}
+                {soldes.length === 0 ? (
+                  <p className="ui-text-soft mb-0">Aucun solde disponible</p>
+                ) : (
+                  soldes.map((solde, idx) => (
+                    <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
+                      <span>{getSoldeTypeLabel(solde)}</span>
+                      <Badge bg="info">{getSoldeJours(solde)} jours</Badge>
+                    </div>
+                  ))
+                )}
               </Card.Body>
             </Card>
           </Col>

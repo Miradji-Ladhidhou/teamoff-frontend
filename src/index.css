@@ -169,6 +169,37 @@ body {
   background-color: #f8fafc;
 }
 
+/* Parametres: tables mobile-first */
+.settings-table-wrap {
+  position: relative;
+}
+
+.settings-table-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.settings-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #f8fafc;
+}
+
+@media (max-width: 767.98px) {
+  .settings-table-wrap .table-responsive {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .settings-table-wrap .table {
+    min-width: 640px;
+    margin-bottom: 0;
+  }
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {

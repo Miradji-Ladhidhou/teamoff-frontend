@@ -173,6 +173,8 @@ export const entreprisesService = {
   getById: (id) => api.get(`/entreprises/${id}`),
   getPolitique: (id) => api.get(`/entreprises/${id}/politique`),
   updatePolitique: (id, politique) => api.put(`/entreprises/${id}/politique`, { politique_conges: politique }),
+  getParametres: (id) => api.get(`/entreprises/${id}/parametres`),
+  updateParametres: (id, data) => api.put(`/entreprises/${id}/parametres`, { parametres: data }),
   getServices: (id) => api.get(`/entreprises/${id}/services`),
   createService: (id, data) => api.post(`/entreprises/${id}/services`, data),
   updateService: (id, serviceName, data) => api.put(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`, data),
@@ -187,6 +189,8 @@ export const quotasService = {
   getUserCounters: (userId, params = {}) => api.get(`/quotas/counters/${userId}`, { params }),
   upsertUserCounter: (userId, data) => api.post(`/quotas/counters/${userId}`, data),
   deleteUserCounter: (counterId) => api.delete(`/quotas/counters/${counterId}`),
+  monthlyAccrual: (data = {}) => api.post('/quotas/monthly-accrual', data),
+  recalculateProrata: (data = {}) => api.post('/quotas/recalculate-prorata', data),
   getUsage: () => api.get('/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
 };
@@ -212,7 +216,15 @@ export const joursFeriesService = {
 };
 
 export const notificationsService = {
-  getAll: (params = {}) => api.get('/notifications', { params }),
+  getAll: (params = {}) => {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const normalizedTimezone = typeof browserTimezone === 'string' ? browserTimezone.trim() : '';
+    const finalParams = normalizedTimezone
+      ? { ...params, timezone: params.timezone || normalizedTimezone }
+      : params;
+
+    return api.get('/notifications', { params: finalParams });
+  },
   markAsRead: (id) => api.put(`/notifications/${id}/lue`),
   markAllAsRead: () => api.put('/notifications/lire-tout'),
 };

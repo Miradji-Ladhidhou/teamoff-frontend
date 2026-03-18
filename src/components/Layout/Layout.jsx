@@ -24,6 +24,8 @@ import { getDefaultRoute, getNavigationForRole } from '../../utils/navigation';
 import AppFooter from './AppFooter';
 import './Layout.css';
 
+const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
+
 const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -42,9 +44,25 @@ const Layout = () => {
       }
     };
 
+    const handleNotificationsUpdated = (event) => {
+      const unreadCount = Number(event?.detail?.unreadCount);
+      if (Number.isFinite(unreadCount)) {
+        setUnreadNotifications(Math.max(0, unreadCount));
+        return;
+      }
+
+      loadUnreadCount();
+    };
+
     if (user) {
       loadUnreadCount();
     }
+
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+    };
   }, [user]);
 
   const navigationItems = getNavigationForRole(user?.role);

@@ -97,6 +97,7 @@ export const entreprisesService = {
 
 export const quotasService = {
   getSoldes: (userId, params = {}) => cachedRequest('get', `/quotas/soldes/${userId}`, { params }),
+  monthlyAccrual: (data = {}) => api.post('/quotas/monthly-accrual', data),
   getUsage: () => cachedRequest('get', '/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
 };

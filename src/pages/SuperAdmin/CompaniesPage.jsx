@@ -5,7 +5,7 @@ import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
 const DEFAULT_PARAMETRES = {
-  timezone: 'Indian/Reunion',
+  timezone: 'Europe/Paris',
   notifications_email: true,
 };
 

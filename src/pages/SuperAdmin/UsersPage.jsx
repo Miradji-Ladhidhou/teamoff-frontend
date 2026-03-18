@@ -10,6 +10,7 @@ const DEFAULT_FORM = {
   prenom: '',
   nom: '',
   email: '',
+  date_embauche: '',
   role: 'employe',
   service: '',
   entreprise_id: '',
@@ -123,6 +124,7 @@ const UsersManagement = () => {
         prenom: formData.prenom,
         nom: formData.nom,
         email: formData.email,
+        date_embauche: formData.date_embauche || null,
         role: formData.role,
         service: formData.service || null,
         entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
@@ -157,6 +159,7 @@ const UsersManagement = () => {
       prenom: targetUser.prenom || '',
       nom: targetUser.nom || '',
       email: targetUser.email || '',
+      date_embauche: targetUser.date_embauche ? String(targetUser.date_embauche).slice(0, 10) : '',
       role: targetUser.role || 'employe',
       service: targetUser.service || '',
       entreprise_id: targetUser.entreprise_id || '',
@@ -378,6 +381,7 @@ const UsersManagement = () => {
               <tr>
                 <th>Utilisateur</th>
                 <th>Email</th>
+                <th>Date d'embauche</th>
                 <th>Role</th>
                 <th>Service</th>
                 <th>Entreprise</th>
@@ -395,6 +399,11 @@ const UsersManagement = () => {
                     </div>
                   </td>
                   <td>{targetUser.email}</td>
+                  <td>
+                    {targetUser.date_embauche
+                      ? new Date(`${targetUser.date_embauche}T00:00:00`).toLocaleDateString('fr-FR')
+                      : <span className="text-muted">Non définie</span>}
+                  </td>
                   <td>{getRoleBadge(targetUser.role)}</td>
                   <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
                   <td>
@@ -477,6 +486,18 @@ const UsersManagement = () => {
             <Form.Group className="mb-3">
               <Form.Label>Email *</Form.Label>
               <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Date d'embauche</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date_embauche}
+                onChange={(event) => setFormData({ ...formData, date_embauche: event.target.value })}
+              />
+              <Form.Text className="text-muted">
+                Utilisée pour le calcul proratisé des congés lors d'une arrivée en cours d'année.
+              </Form.Text>
             </Form.Group>
 
             <Row>

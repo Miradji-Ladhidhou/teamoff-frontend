@@ -12,6 +12,10 @@ const NouveauCongePage = () => {
   const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
+  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const canAccessPage = isEditMode
+    ? ['employe', 'manager', 'admin_entreprise'].includes(user?.role)
+    : canCreateLeave;
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
 
   const [formData, setFormData] = useState({
@@ -30,6 +34,7 @@ const NouveauCongePage = () => {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [joursCalcules, setJoursCalcules] = useState(0);
+  const [initialCongeStatut, setInitialCongeStatut] = useState(null);
 
   useEffect(() => {
     if (isEditMode) return;
@@ -48,7 +53,7 @@ const NouveauCongePage = () => {
 
   useEffect(() => {
     loadInitialData();
-  }, [id, user?.id]);
+  }, [id, user?.id, user?.role]);
 
   useEffect(() => {
     // Calculer les jours automatiquement quand les dates changent
@@ -61,26 +66,45 @@ const NouveauCongePage = () => {
     try {
       setLoadingData(true);
 
-      const [typesResponse, soldesResponse, congeResponse] = await Promise.all([
-        congeTypesService.getAll(),
-        quotasService.getSoldes(user.id),
-        isEditMode ? congesService.getById(id) : Promise.resolve(null)
-      ]);
-
-      setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
-      setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
-
-      if (congeResponse?.data) {
-        const conge = congeResponse.data;
-        setFormData({
-          conge_type_id: conge.conge_type_id || '',
-          date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
-          date_fin: conge.date_fin ? conge.date_fin.split('T')[0] : '',
-          debut_demi_journee: conge.debut_demi_journee || '',
-          fin_demi_journee: conge.fin_demi_journee || '',
-          commentaire_employe: conge.commentaire_employe || ''
-        });
+      if (!canAccessPage) {
+        setError('Vous n\'êtes pas autorisé à accéder à cette page');
+        return;
       }
+
+      if (isEditMode) {
+        const [typesResponse, congeResponse] = await Promise.all([
+          congeTypesService.getAll(),
+          congesService.getById(id)
+        ]);
+
+        setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
+
+        if (congeResponse?.data) {
+          const conge = congeResponse.data;
+          setInitialCongeStatut(conge.statut || null);
+          const targetUserId = conge.utilisateur_id || user.id;
+          const soldesResponse = await quotasService.getSoldes(targetUserId);
+          setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+
+          setFormData({
+            conge_type_id: conge.conge_type_id || '',
+            date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
+            date_fin: conge.date_fin ? conge.date_fin.split('T')[0] : '',
+            debut_demi_journee: conge.debut_demi_journee || '',
+            fin_demi_journee: conge.fin_demi_journee || '',
+            commentaire_employe: conge.commentaire_employe || ''
+          });
+        }
+      } else {
+        const [typesResponse, soldesResponse] = await Promise.all([
+          congeTypesService.getAll(),
+          quotasService.getSoldes(user.id),
+        ]);
+
+        setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
+        setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+      }
+
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
     } finally {
@@ -131,6 +155,10 @@ const NouveauCongePage = () => {
 
   const validateForm = () => {
     const errors = {};
+    const isAdminEditingValidatedConge =
+      isEditMode
+      && user?.role === 'admin_entreprise'
+      && initialCongeStatut === 'valide_final';
 
     if (!formData.conge_type_id) errors.conge_type_id = 'Le type de congé est requis';
     if (!formData.date_debut) errors.date_debut = 'La date de début est requise';
@@ -169,7 +197,7 @@ const NouveauCongePage = () => {
     }
 
     // Vérifier le solde disponible
-    if (formData.conge_type_id && joursCalcules > 0) {
+    if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules > 0) {
       const selectedType = congeTypes.find(type => type.id === formData.conge_type_id);
       const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
 
@@ -184,6 +212,11 @@ const NouveauCongePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isEditMode && !canCreateLeave) {
+      setError('Seuls les employés et managers peuvent poser un congé');
+      return;
+    }
 
     if (!validateForm()) return;
 
@@ -219,6 +252,15 @@ const NouveauCongePage = () => {
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des données...</p>
         </div>
+      </Container>
+    );
+  }
+
+  if (!canAccessPage) {
+    return (
+      <Container>
+        <Alert variant="warning">Seuls les employés et managers peuvent poser un congé.</Alert>
+        <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
       </Container>
     );
   }

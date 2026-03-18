@@ -163,6 +163,23 @@ const SystemSettings = () => {
     }));
   };
 
+  const renderSectionActions = ({ onSave, extraActions = null, hint = 'Les modifications sont appliquées après sauvegarde.' }) => (
+    <div className="d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2 border-top pt-3 mt-4">
+      <small className="text-muted">{hint}</small>
+      <div className="d-grid d-sm-flex gap-2">
+        {extraActions}
+        <Button
+          variant="primary"
+          onClick={onSave}
+          disabled={loading}
+        >
+          <FaSave className="me-2" />
+          {loading ? 'Sauvegarde...' : 'Enregistrer les modifications'}
+        </Button>
+      </div>
+    </div>
+  );
+
   const openConfirm = (action, label) => setConfirmModal({ show: true, action, label });
   const closeConfirm = () => setConfirmModal({ show: false, action: '', label: '' });
 
@@ -314,12 +331,33 @@ const SystemSettings = () => {
           <li>Documentez le changement et son objectif</li>
           <li>Appliquez d'abord en environnement de test</li>
           <li>Validez l'impact sur les utilisateurs et les notifications</li>
+          <li>Utilisez l'historique pour tracer chaque action sensible.</li>
         </ul>
       </InfoCardInfo>
 
       <TipCard title="Plan de rollback">
         Conservez une sauvegarde des valeurs précédentes pour revenir rapidement en arrière si besoin.
       </TipCard>
+
+      <Card className="mb-4 border-0 bg-light">
+        <Card.Body>
+          <div className="fw-semibold mb-2">Par quoi commencer</div>
+          <ol className="mb-0 ps-3">
+            <li>Commencez par l'onglet Général pour les réglages globaux de l'application.</li>
+            <li>Validez ensuite Sécurité et Email, puis testez l'envoi SMTP.</li>
+            <li>Terminez par les onglets Informations système et Historique.</li>
+          </ol>
+        </Card.Body>
+      </Card>
+
+      <InfoCardInfo title="Exemples concrets de réglages">
+        <ul className="mb-0">
+          <li>Sécurité standard: session 60 min, 5 tentatives, mot de passe min 8 avec caractères spéciaux.</li>
+          <li>Email Gmail: SMTP hôte smtp.gmail.com, port 587, expéditeur noreply@votredomaine.com.</li>
+          <li>Sauvegardes: fréquence quotidienne + rétention 30 jours pour un bon compromis sécurité/coût.</li>
+          <li>Maintenance: activez le mode maintenance avant une migration de base.</li>
+        </ul>
+      </InfoCardInfo>
 
       {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
@@ -408,16 +446,9 @@ const SystemSettings = () => {
                 </Col>
               </Row>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('general', 'généraux')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('general', 'généraux'),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -438,6 +469,7 @@ const SystemSettings = () => {
                       value={settings.sessionTimeout}
                       onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 60 = déconnexion automatique après 1h d'inactivité.</Form.Text>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -448,6 +480,7 @@ const SystemSettings = () => {
                       value={settings.maxLoginAttempts}
                       onChange={(e) => handleInputChange('maxLoginAttempts', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 5 = blocage temporaire après 5 échecs.</Form.Text>
                   </Form.Group>
                 </Col>
               </Row>
@@ -475,16 +508,9 @@ const SystemSettings = () => {
                 </Col>
               </Row>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('security', 'de sécurité')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('security', 'de sécurité'),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -551,27 +577,23 @@ const SystemSettings = () => {
                   onChange={(e) => handleInputChange('emailFrom', e.target.value)}
                   placeholder="noreply@teamoff.com"
                 />
+                <Form.Text className="text-muted">Exemple: utilisez une adresse dédiée type noreply@entreprise.com.</Form.Text>
               </Form.Group>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="outline-secondary"
-                  className="me-2"
-                  onClick={handleSendTestEmail}
-                  disabled={loading || (!testEmailRecipient && !settings.emailFrom && !settings.smtpUser)}
-                >
-                  <FaEnvelope className="me-2" />
-                  Tester l'envoi
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('email', 'email')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('email', 'email'),
+                hint: 'Testez d\'abord la configuration SMTP, puis enregistrez.',
+                extraActions: (
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleSendTestEmail}
+                    disabled={loading || (!testEmailRecipient && !settings.emailFrom && !settings.smtpUser)}
+                  >
+                    <FaEnvelope className="me-2" />
+                    Tester l'envoi
+                  </Button>
+                ),
+              })}
 
               <Form.Group className="mt-3">
                 <Form.Label>Destinataire email de test</Form.Label>
@@ -616,28 +638,25 @@ const SystemSettings = () => {
                       value={settings.dbRetentionDays}
                       onChange={(e) => handleInputChange('dbRetentionDays', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 30 = conservation des sauvegardes pendant 1 mois.</Form.Text>
                   </Form.Group>
                 </Col>
               </Row>
 
-              <div className="d-flex gap-2 justify-content-end">
-                <Button
-                  variant="outline-info"
-                  onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
-                  disabled={loading}
-                >
-                  <FaDatabase className="me-2" />
-                  Sauvegarde manuelle
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('database', 'base de données')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('database', 'base de données'),
+                hint: 'Conservez des valeurs prudentes pour éviter une perte de sauvegardes.',
+                extraActions: (
+                  <Button
+                    variant="outline-info"
+                    onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
+                    disabled={loading}
+                  >
+                    <FaDatabase className="me-2" />
+                    Sauvegarde manuelle
+                  </Button>
+                ),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -649,7 +668,9 @@ const SystemSettings = () => {
               <h5 className="mb-0">État du système</h5>
             </Card.Header>
             <Card.Body>
-              <Table bordered>
+              <div className="settings-table-wrap">
+                <div className="settings-table-hint d-md-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
+                <Table bordered responsive className="settings-table">
                 <tbody>
                   <tr>
                     <td><strong>Version Node.js</strong></td>
@@ -692,7 +713,8 @@ const SystemSettings = () => {
                     </td>
                   </tr>
                 </tbody>
-              </Table>
+                </Table>
+              </div>
 
               <div className="d-flex gap-2 justify-content-end mt-3">
                 <Button
@@ -786,7 +808,9 @@ const SystemSettings = () => {
                   Page {historyPage} / {historyTotalPages}
                 </small>
               </div>
-              <Table bordered responsive>
+              <div className="settings-table-wrap">
+                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir l'historique complet.</div>
+                <Table bordered responsive className="settings-table">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -810,7 +834,8 @@ const SystemSettings = () => {
                     </tr>
                   ))}
                 </tbody>
-              </Table>
+                </Table>
+              </div>
 
               <div className="d-flex justify-content-end gap-2">
                 <Button

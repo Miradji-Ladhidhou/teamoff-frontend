@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Alert, Spinner, Pagination, Form } from 'react-bootstrap';
 import { FaBell, FaCheck, FaCheckDouble } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationsService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 
+const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
+
+const TIMEZONE_LABELS = {
+  'Indian/Reunion': 'La Réunion',
+  'Europe/Paris': 'Paris',
+  'Africa/Abidjan': 'Abidjan',
+  'Africa/Casablanca': 'Casablanca',
+  'America/Montreal': 'Montréal',
+  UTC: 'UTC',
+};
+
 const NotificationsPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,6 +31,18 @@ const NotificationsPage = () => {
   useEffect(() => {
     loadNotifications();
   }, [currentPage, itemsPerPage]);
+
+  const broadcastUnreadCount = (unreadCount) => {
+    window.dispatchEvent(new CustomEvent(NOTIFICATIONS_UPDATED_EVENT, {
+      detail: { unreadCount: Math.max(0, Number(unreadCount) || 0) }
+    }));
+  };
+
+  const syncUnreadCount = async () => {
+    const response = await notificationsService.getAll({ non_lu: 'true', page: 1, limit: 1 });
+    const totalUnread = Number(response.data?.pagination?.total);
+    broadcastUnreadCount(Number.isFinite(totalUnread) ? totalUnread : 0);
+  };
 
   const loadNotifications = async () => {
     try {
@@ -31,6 +56,7 @@ const NotificationsPage = () => {
       setNotifications(items);
       setTotalItems(Number(pagination.total) || items.length);
       setTotalPages(Number(pagination.totalPages) || 1);
+      await syncUnreadCount();
     } catch (err) {
       console.error('Erreur chargement notifications:', err);
       setError('Erreur lors du chargement des notifications');
@@ -59,19 +85,181 @@ const NotificationsPage = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+  const getNotificationDateValue = (notification) => {
+    return (
+      notification?.created_at_display
+      || notification?.created_at_iso
+      || notification?.createdAt
+      || notification?.created_at
+      || null
+    );
+  };
+
+  const getNotificationTimezone = (notification) => {
+    const apiTimezone = typeof notification?.timezone === 'string' ? notification.timezone.trim() : '';
+    if (apiTimezone) {
+      return apiTimezone;
+    }
+
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return typeof browserTimezone === 'string' && browserTimezone.trim() ? browserTimezone.trim() : 'UTC';
+  };
+
+  const formatUtcOffset = (date, timezone) => {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        timeZoneName: 'shortOffset',
+        hour: '2-digit',
+      }).formatToParts(date);
+
+      const tzPart = parts.find((part) => part.type === 'timeZoneName')?.value || 'UTC';
+      const normalized = tzPart.replace('GMT', 'UTC').trim();
+      return normalized.startsWith('UTC') ? normalized : 'UTC';
+    } catch (error) {
+      return 'UTC';
+    }
+  };
+
+  const getTimezoneFriendlyLabel = (timezone) => {
+    if (TIMEZONE_LABELS[timezone]) {
+      return TIMEZONE_LABELS[timezone];
+    }
+
+    const maybeCity = timezone.split('/').pop() || timezone;
+    return maybeCity.replace(/_/g, ' ');
+  };
+
+  const formatNotificationDateBlock = (notification) => {
+    const dateValue = getNotificationDateValue(notification);
+    if (!dateValue) {
+      return {
+        timeLine: '-',
+        dateLine: '-',
+        timezoneLine: 'Heure',
+      };
+    }
+
+    const parsed = new Date(dateValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return {
+        timeLine: '-',
+        dateLine: '-',
+        timezoneLine: 'Heure',
+      };
+    }
+
+    const timezone = getNotificationTimezone(notification);
+    const timeLine = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: timezone,
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false,
+    }).format(parsed);
+
+    const dateOnly = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: timezone,
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(parsed);
+
+    const utcOffset = formatUtcOffset(parsed, timezone);
+    const timezoneLabel = getTimezoneFriendlyLabel(timezone);
+
+    return {
+      timeLine,
+      dateLine: `${dateOnly} (${utcOffset})`,
+      timezoneLine: `Heure (${timezoneLabel})`,
+    };
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) {
+      return '-';
+    }
+
+    if (typeof dateValue === 'string') {
+      if (/^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}(:\d{2})?$/.test(dateValue.trim())) {
+        return dateValue.trim();
+      }
+
+      const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hour, minute] = match;
+        return `${day}/${month}/${year} ${hour}:${minute}`;
+      }
+    }
+
+    const parsed = new Date(dateValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+
+    return parsed.toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
+  };
+
+  const getNotificationTargetUrl = (notification) => {
+    const rawUrl = (notification?.url || '').trim();
+    if (!rawUrl) {
+      return null;
+    }
+
+    // Les notifications de congé sont stockées en /conges/:id côté backend.
+    // On remappe pour le super admin vers sa route dédiée.
+    if (user?.role === 'super_admin') {
+      const match = rawUrl.match(/^\/conges\/([^/]+)$/);
+      if (match?.[1]) {
+        return `/superadmin/leaves/${match[1]}`;
+      }
+    }
+
+    return rawUrl;
+  };
+
+  const handleOpenNotification = async (notification) => {
+    const targetUrl = getNotificationTargetUrl(notification);
+    if (!targetUrl) {
+      return;
+    }
+
+    try {
+      if (!notification.lu) {
+        await notificationsService.markAsRead(notification.id);
+      }
+    } catch (err) {
+      console.error('Erreur marquage notification au clic:', err);
+    } finally {
+      await loadNotifications();
+      navigate(targetUrl);
+    }
   };
 
   const getNotificationIcon = (type) => {
     // Vous pouvez personnaliser les icônes selon le type de notification
     return <FaBell />;
+  };
+
+  const getDemandeurFromMessage = (message) => {
+    if (typeof message !== 'string') {
+      return null;
+    }
+
+    const match = message.match(/Nouvelle demande de congé de\s+(.+?)\s*\(/i);
+    if (!match?.[1]) {
+      return null;
+    }
+
+    const fullName = match[1].trim();
+    return fullName || null;
   };
 
   const handleItemsPerPageChange = (e) => {
@@ -133,10 +321,7 @@ const NotificationsPage = () => {
 
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <small className="text-muted">
-            Affichage {startIndex}-{endIndex} sur {totalItems} notification(s)
-          </small>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 ms-auto">
             <small className="text-muted">Par page</small>
             <Form.Select size="sm" style={{ width: 90 }} value={itemsPerPage} onChange={handleItemsPerPageChange}>
               <option value={5}>5</option>
@@ -154,12 +339,36 @@ const NotificationsPage = () => {
             </div>
           ) : (
             <div className="list-group list-group-flush">
-              {notifications.map((notification) => (
+              {notifications.map((notification) => {
+                const targetUrl = getNotificationTargetUrl(notification);
+                const isClickable = Boolean(targetUrl);
+                const demandeur = getDemandeurFromMessage(notification.message);
+                const entrepriseNom = notification.entreprise_nom || user?.entreprise_nom || null;
+
+                return (
                 <div
                   key={notification.id}
                   className={`list-group-item d-flex justify-content-between align-items-start ${
                     !notification.lu ? 'bg-light' : ''
                   }`}
+                  onClick={() => {
+                    if (isClickable) {
+                      handleOpenNotification(notification);
+                    }
+                  }}
+                  role={isClickable ? 'button' : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (!isClickable) {
+                      return;
+                    }
+
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleOpenNotification(notification);
+                    }
+                  }}
+                  style={isClickable ? { cursor: 'pointer' } : undefined}
                 >
                   <div className="d-flex align-items-start">
                     <div className="me-3 mt-1">
@@ -171,9 +380,12 @@ const NotificationsPage = () => {
                         {!notification.lu && <Badge bg="primary" pill>Non lu</Badge>}
                       </div>
                       <p className="mb-1 text-muted">{notification.message}</p>
-                      <small className="text-muted">
-                        {formatDate(notification.createdAt)}
-                      </small>
+                      {(demandeur || entrepriseNom) && (
+                        <div className="small text-muted">
+                          {demandeur && <div>Demandeur: {demandeur}</div>}
+                          {entrepriseNom && <div>Entreprise: {entrepriseNom}</div>}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -181,7 +393,10 @@ const NotificationsPage = () => {
                       <Button
                         variant="outline-primary"
                         size="sm"
-                        onClick={() => handleMarkAsRead(notification.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleMarkAsRead(notification.id);
+                        }}
                         className="d-flex align-items-center"
                       >
                         <FaCheck className="me-1" />
@@ -190,7 +405,8 @@ const NotificationsPage = () => {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card.Body>

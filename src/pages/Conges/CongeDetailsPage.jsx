@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCalendarAlt, FaComment } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
@@ -114,11 +114,23 @@ const CongeDetailsPage = () => {
   };
 
   const canEdit = () => {
-    return conge && conge.utilisateur_id === user.id && conge.statut === 'en_attente_manager';
+    if (!conge) return false;
+
+    if (user?.role === 'admin_entreprise' && conge.statut === 'valide_final') {
+      return true;
+    }
+
+    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
   const canDelete = () => {
-    return conge && conge.utilisateur_id === user.id && conge.statut === 'en_attente_manager';
+    if (!conge) return false;
+
+    if (user?.role === 'admin_entreprise' && conge.statut === 'valide_final') {
+      return true;
+    }
+
+    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
   const canApprove = () => {
@@ -228,8 +240,11 @@ const CongeDetailsPage = () => {
               size="sm"
               onClick={() => setShowDeleteModal(true)}
             >
-              <FaTrash className="me-1" />
-              Supprimer
+              {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? (
+                <><FaTimes className="me-1" />Annuler le congé</>
+              ) : (
+                <><FaTrash className="me-1" />Supprimer</>
+              )}
             </Button>
           )}
         </div>
@@ -258,7 +273,18 @@ const CongeDetailsPage = () => {
                 <Col md={6}>
                   <div className="mb-3">
                     <strong className="text-muted d-block">Type de congé</strong>
-                    {getCongeTypeLabel()}
+                    <div>{getCongeTypeLabel()}</div>
+                    {conge?.conge_type_id && (
+                      <Button
+                        as={Link}
+                        to={`/conges?conge_type_id=${encodeURIComponent(conge.conge_type_id)}`}
+                        variant="link"
+                        className="p-0 mt-1"
+                      >
+                        <FaList className="me-1" />
+                        Voir les congés du même type
+                      </Button>
+                    )}
                   </div>
                   <div className="mb-3">
                     <strong className="text-muted d-block">Demandeur</strong>
@@ -271,6 +297,21 @@ const CongeDetailsPage = () => {
                     <strong className="text-muted d-block">Entreprise</strong>
                     {getEntrepriseLabel()}
                   </div>
+                  {Array.isArray(conge?.calcul_details?.dates_non_prises) && conge.calcul_details.dates_non_prises.length > 0 && (
+                    <div className="mb-3">
+                      <strong className="text-muted d-block">Dates non prises dans le calcul</strong>
+                      <div className="small bg-light rounded p-2">
+                        {conge.calcul_details.dates_non_prises.map((item, index) => (
+                          <div key={`${item.date}-${index}`} className="d-flex justify-content-between gap-2 border-bottom py-1">
+                            <span>
+                              <strong>{formatDateShort(item.date)}</strong> - {item.cause}
+                            </span>
+                            <span className="text-muted">{formatDays(item.quantite)} j</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </Col>
                 <Col md={6}>
                   <div className="mb-3">
@@ -302,8 +343,17 @@ const CongeDetailsPage = () => {
                     {conge.jours_pris ?? conge.nombre_jours ?? conge.jours_calcules ?? '-'} jour(s)
                   </div>
                   <div className="mb-3">
-                    <strong className="text-muted d-block">Jours restants</strong>
-                    {conge.jours_restants ?? '-'}
+                    <strong className="text-muted d-block">
+                      Solde restant {getCongeTypeLabel()} {conge.date_debut ? new Date(conge.date_debut).getFullYear() : ''}
+                    </strong>
+                    <span className={(conge.jours_restants ?? 0) < 0 ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>
+                      {conge.jours_restants ?? '-'} jour(s)
+                    </span>
+                    {typeof conge.jours_restants === 'number' && (
+                      <div className="text-muted small mt-1">
+                        Cumul de tous les {getCongeTypeLabel()} approuvés sur l'année (ce congé : {conge.jours_pris ?? conge.nombre_jours ?? '-'} j).
+                      </div>
+                    )}
                   </div>
                   {conge.calcul_details && (
                     <div className="mb-3">
@@ -450,7 +500,8 @@ const CongeDetailsPage = () => {
                 <li>Les congés approuvés sont automatiquement déduits du solde</li>
                 <li>Un email de notification est envoyé au demandeur</li>
                 <li>Les refus doivent être justifiés</li>
-                <li>Les demandes peuvent être modifiées tant qu'elles sont en attente</li>
+                <li>Les demandes en attente peuvent être modifiées par le demandeur</li>
+                <li>Un congé validé ne peut être modifié ou annulé que par un admin entreprise</li>
               </ul>
             </Card.Body>
           </Card>
@@ -460,15 +511,20 @@ const CongeDetailsPage = () => {
       {/* Modal de suppression */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirmer la suppression</Modal.Title>
+          <Modal.Title>
+            {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final'
+              ? "Confirmer l'annulation"
+              : 'Confirmer la suppression'}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Êtes-vous sûr de vouloir supprimer cette demande de congé ?
-          Cette action est irréversible.
+          {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final'
+            ? 'Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l\'employé sera recalculé automatiquement et il sera notifié.'
+            : 'Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action est irréversible.'}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Annuler
+            Fermer
           </Button>
           <Button
             variant="danger"
@@ -478,7 +534,7 @@ const CongeDetailsPage = () => {
             {actionLoading ? (
               <Spinner animation="border" size="sm" className="me-2" />
             ) : (
-              'Supprimer'
+              user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annuler le congé' : 'Supprimer'
             )}
           </Button>
         </Modal.Footer>
