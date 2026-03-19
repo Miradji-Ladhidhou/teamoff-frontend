@@ -6,7 +6,15 @@ import {
   getNotificationDisabledRoutes,
 } from '../utils/notificationRules';
 
-export const NotificationContext = createContext();
+const defaultNotificationContext = {
+  notification: null,
+  showNotification: () => {},
+  hideNotification: () => {},
+  configureDisabledRoutes: () => {},
+  getDisabledRoutes: () => [],
+};
+
+export const NotificationContext = createContext(defaultNotificationContext);
 
 export const NotificationProvider = ({ children }) => {
   const [notification, setNotification] = useState(null);

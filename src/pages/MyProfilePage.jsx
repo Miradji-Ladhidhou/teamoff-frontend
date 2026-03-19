@@ -8,6 +8,8 @@ const MyProfilePage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
   
   const [profileData, setProfileData] = useState({
     prenom: '',
@@ -26,6 +28,14 @@ const MyProfilePage = () => {
     new: false,
     confirm: false
   });
+
+  const isPasswordConfirmationFilled = passwordData.confirmPassword.trim().length > 0;
+  const doPasswordsMatch = passwordData.newPassword === passwordData.confirmPassword;
+  const isPasswordFormValid =
+    passwordData.currentPassword.trim().length > 0
+    && passwordData.newPassword.trim().length > 0
+    && passwordData.confirmPassword.trim().length > 0
+    && doPasswordsMatch;
 
   useEffect(() => {
     if (user && user.id) {
@@ -50,6 +60,8 @@ const MyProfilePage = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    setSuccess('');
     try {
       await authService.updateProfile({
         nom: profileData.nom,
@@ -64,8 +76,10 @@ const MyProfilePage = () => {
         updatedUser.email = profileData.email;
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
+      setSuccess('Profil mis à jour avec succès.');
     } catch (err) {
       console.error('Erreur lors de la mise à jour du profil:', err);
+      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.');
     } finally {
       setLoading(false);
     }
@@ -73,15 +87,30 @@ const MyProfilePage = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setError('Tous les champs du mot de passe sont requis.');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('Les nouveaux mots de passe ne correspondent pas.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await authService.updateProfile({
+      await authService.changePassword({
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setSuccess('Mot de passe modifié avec succès.');
     } catch (err) {
       console.error('Erreur lors du changement de mot de passe:', err);
+      setError(err.response?.data?.message || 'Erreur lors du changement de mot de passe.');
     } finally {
       setLoading(false);
     }
@@ -136,6 +165,9 @@ const MyProfilePage = () => {
         </Col>
 
         <Col md={9}>
+          {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+          {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+
           {activeTab === 'profile' && (
             <Card>
               <Card.Header className="bg-light">
@@ -191,13 +223,23 @@ const MyProfilePage = () => {
                   <Form.Group className="mb-4">
                     <Form.Label>Confirmer le mot de passe</Form.Label>
                     <div className="input-group">
-                      <Form.Control type={showPasswords.confirm ? 'text' : 'password'} name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmer" disabled={loading} />
+                      <Form.Control type={showPasswords.confirm ? 'text' : 'password'} name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmer" disabled={loading} isInvalid={isPasswordConfirmationFilled && !doPasswordsMatch} isValid={isPasswordConfirmationFilled && doPasswordsMatch} />
                       <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} disabled={loading}>
                         {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
                       </Button>
                     </div>
+                    {isPasswordConfirmationFilled && !doPasswordsMatch && (
+                      <Form.Text className="text-danger fw-semibold">
+                        Les nouveaux mots de passe ne correspondent pas.
+                      </Form.Text>
+                    )}
+                    {isPasswordConfirmationFilled && doPasswordsMatch && (
+                      <Form.Text className="text-success fw-semibold">
+                        Les nouveaux mots de passe correspondent.
+                      </Form.Text>
+                    )}
                   </Form.Group>
-                  <Button variant="danger" type="submit" disabled={loading} className="w-100">
+                  <Button variant="danger" type="submit" disabled={loading || !isPasswordFormValid} className="w-100">
                     {loading ? <>Changement...</> : <><FaLock className="me-2" /> Changer le mot de passe</>}
                   </Button>
                 </Form>

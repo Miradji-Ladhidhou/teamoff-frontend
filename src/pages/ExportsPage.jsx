@@ -245,7 +245,7 @@ const ExportsPage = () => {
       )}
 
       {success && (
-        <Alert variant="success" className="mb-4">
+        <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>
           {success}
         </Alert>
       )}

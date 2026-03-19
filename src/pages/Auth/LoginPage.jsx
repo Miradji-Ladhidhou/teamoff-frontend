@@ -242,6 +242,12 @@ const LoginPage = () => {
                   </Button>
                 </Form>
 
+                <div className="text-center mb-3">
+                  <Link to="/forgot-password" className="text-decoration-none text-muted small">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
+
                 <div className="rounded-4 p-3 mb-3" style={{ backgroundColor: '#f7efe5' }}>
                   <div className="small text-uppercase fw-semibold mb-2" style={{ color: '#9a4f17', letterSpacing: '0.08em' }}>Pourquoi TeamOff</div>
                   <div className="text-muted small">Validation adaptee a vos services, compteurs visibles, calendrier mobile et informations legales accessibles sans friction.</div>

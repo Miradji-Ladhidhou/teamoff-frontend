@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, In
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
-import { useConfirmDialog } from '../../hooks/useConfirmDialog';
+import { useInlineConfirmation } from '../../hooks/useInlineConfirmation';
 
 const DEFAULT_PARAMETRES = {
   timezone: 'Europe/Paris',
@@ -69,7 +69,7 @@ const normalizeByServiceLimits = (byService = {}) => {
 };
 
 const CompaniesManagement = () => {
-  const confirmDialog = useConfirmDialog();
+  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -316,19 +316,17 @@ const CompaniesManagement = () => {
   };
 
   const handleDelete = async (companyId) => {
-    const confirmed = await confirmDialog({
-      title: 'Supprimer une entreprise',
-      message: 'Cette action supprime l\'entreprise et ses données associées.',
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger',
-    });
+    const confirmed = requestConfirmation(
+      `delete-company:${companyId}`,
+      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
+    );
 
     if (!confirmed) {
       return;
     }
 
     try {
+      clearConfirmation();
       await api.entreprisesService.delete(companyId);
       setSuccess('Entreprise supprimee avec succes');
       loadCompanies();
@@ -411,8 +409,9 @@ const CompaniesManagement = () => {
         </div>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <InfoCardInfo title="Gérer les entreprises efficacement">
         <p className="mb-2">Chaque entreprise possède sa politique de congés et ses paramètres.</p>

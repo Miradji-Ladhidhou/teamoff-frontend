@@ -143,6 +143,72 @@ body {
   border: 1px solid var(--border-color);
 }
 
+/* ── Alerte centrale unifiée (succès / erreur / info / warning) ── */
+.center-alert {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 560px);
+  z-index: 1070;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.97rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  animation: centerAlertIn 0.18s ease;
+}
+
+@keyframes centerAlertIn {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Rétrocompat : les classes inline existantes pointent sur center-alert */
+.floating-success-alert,
+.floating-error-alert,
+.floating-system-alert {
+  position: static;
+  width: 100%;
+  transform: none;
+  box-shadow: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Alerte de confirmation inline (bas d'écran) */
+.inline-confirmation-alert {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  width: min(88vw, 620px);
+  z-index: 1059;
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  background: #fff3cd;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  color: #7a2e0e;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.22);
+}
+
+@media (max-width: 767.98px) {
+  .center-alert {
+    width: calc(100vw - 32px);
+  }
+
+  .inline-confirmation-alert {
+    bottom: 60px;
+    width: calc(100vw - 32px);
+  }
+}
+
 /* Tables responsive */
 .table-responsive {
   border-radius: 8px;

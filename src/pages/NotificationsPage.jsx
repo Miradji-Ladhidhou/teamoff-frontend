@@ -317,7 +317,7 @@ const NotificationsPage = () => {
         Consultez cette page au début de journée pour ne manquer aucune validation ou action prioritaire.
       </TipCard>
 
-      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
 
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">

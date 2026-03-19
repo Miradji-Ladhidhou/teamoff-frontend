@@ -166,7 +166,7 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
 
       <InfoCardInfo title="Lecture rapide du dashboard super admin">
         <ul className="mb-0">

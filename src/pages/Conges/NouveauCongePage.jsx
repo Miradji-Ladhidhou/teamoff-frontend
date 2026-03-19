@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
+import { NotificationContext } from '../../contexts/NotificationContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
 const NouveauCongePage = () => {
   const { user } = useAuth();
+  const { showNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
@@ -35,6 +37,10 @@ const NouveauCongePage = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [joursCalcules, setJoursCalcules] = useState(0);
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
+  const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
+  const [showOverlapModal, setShowOverlapModal] = useState(false);
+  const [overlapModalMessage, setOverlapModalMessage] = useState('');
+  const [pendingWarningMessage, setPendingWarningMessage] = useState('');
 
   useEffect(() => {
     if (isEditMode) return;
@@ -82,6 +88,11 @@ const NouveauCongePage = () => {
         if (congeResponse?.data) {
           const conge = congeResponse.data;
           setInitialCongeStatut(conge.statut || null);
+          setInitialCongeSnapshot({
+            conge_type_id: conge.conge_type_id || '',
+            date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
+            jours_calcules: Number(conge.jours_calcules || conge.nombre_jours || conge.jours_pris || 0),
+          });
           const targetUserId = conge.utilisateur_id || user.id;
           const soldesResponse = await quotasService.getSoldes(targetUserId);
           setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
@@ -159,6 +170,7 @@ const NouveauCongePage = () => {
       isEditMode
       && user?.role === 'admin_entreprise'
       && initialCongeStatut === 'valide_final';
+    const isEditingPendingConge = isEditMode && initialCongeStatut === 'en_attente_manager';
 
     if (!formData.conge_type_id) errors.conge_type_id = 'Le type de congé est requis';
     if (!formData.date_debut) errors.date_debut = 'La date de début est requise';
@@ -198,16 +210,97 @@ const NouveauCongePage = () => {
 
     // Vérifier le solde disponible
     if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules > 0) {
-      const selectedType = congeTypes.find(type => type.id === formData.conge_type_id);
       const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
+      const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
+      const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
+      const initialYear = initialCongeSnapshot?.date_debut
+        ? new Date(initialCongeSnapshot.date_debut).getFullYear()
+        : null;
+      const nextYear = formData.date_debut ? new Date(formData.date_debut).getFullYear() : null;
+      const sameCounterAsInitial = isEditingPendingConge
+        && initialTypeId === formData.conge_type_id
+        && initialYear !== null
+        && initialYear === nextYear;
+      const effectiveAvailable = Number(soldeType?.solde_disponible || 0) + (sameCounterAsInitial ? currentRequestDays : 0);
 
-      if (soldeType && joursCalcules > soldeType.solde_disponible) {
-        errors.conge_type_id = `Solde insuffisant (${soldeType.solde_disponible} jours disponibles)`;
+      if (soldeType && joursCalcules > effectiveAvailable) {
+        errors.conge_type_id = `Solde insuffisant (${effectiveAvailable} jours disponibles)`;
       }
     }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const extractApiErrorMessage = (err, fallbackMessage) => {
+    const data = err?.response?.data;
+
+    if (typeof data?.message === 'string' && data.message.trim()) {
+      return data.message.trim();
+    }
+
+    if (typeof data?.error === 'string' && data.error.trim()) {
+      return data.error.trim();
+    }
+
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      const firstError = data.errors[0];
+      if (typeof firstError === 'string' && firstError.trim()) {
+        return firstError.trim();
+      }
+      if (typeof firstError?.msg === 'string' && firstError.msg.trim()) {
+        return firstError.msg.trim();
+      }
+      if (typeof firstError?.message === 'string' && firstError.message.trim()) {
+        return firstError.message.trim();
+      }
+    }
+
+    if (err?.code === 'ECONNABORTED') {
+      return 'Le serveur met trop de temps à répondre. Réessayez dans quelques instants.';
+    }
+
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message.trim();
+    }
+
+    return fallbackMessage;
+  };
+
+  const submitCreateLeave = async (precheckWarning = null) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await congesService.create(formData);
+      const warningMessage = response?.data?.overlap_warning?.message;
+      if (warningMessage && warningMessage !== precheckWarning) {
+        showNotification(warningMessage, 'warning', 7000);
+      }
+      navigate(returnPath);
+    } catch (err) {
+      console.error('Erreur lors de la création du congé:', err);
+      const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
+      setError(finalMessage);
+      showNotification(finalMessage, 'error', 6000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOverlapModalConfirm = async () => {
+    const warningToPreserve = pendingWarningMessage || overlapModalMessage;
+    setShowOverlapModal(false);
+    await submitCreateLeave(warningToPreserve);
+    setPendingWarningMessage('');
+    setOverlapModalMessage('');
+  };
+
+  const handleOverlapModalClose = () => {
+    setShowOverlapModal(false);
+    setError('Demande non envoyée.');
+    setPendingWarningMessage('');
+    setOverlapModalMessage('');
   };
 
   const handleSubmit = async (e) => {
@@ -220,18 +313,51 @@ const NouveauCongePage = () => {
 
     if (!validateForm()) return;
 
-    setLoading(true);
-
     try {
+      let response;
+      let precheckWarningMessage = null;
       if (isEditMode) {
-        await congesService.update(id, formData);
+        setLoading(true);
+        setError('');
+        response = await congesService.update(id, formData);
       } else {
-        await congesService.create(formData);
+        const overlapCheck = await congesService.checkOverlap(formData);
+        const overlapAction = overlapCheck?.data?.action;
+        const overlapMessage = overlapCheck?.data?.message;
+
+        if (overlapAction === 'block') {
+          const blockMessage = overlapMessage || 'Cette demande est bloquée par la politique de chevauchement.';
+          setError(blockMessage);
+          return;
+        }
+
+        if (overlapAction === 'warning') {
+          const warningMessage = overlapMessage || 'Attention: un chevauchement a été détecté.';
+          precheckWarningMessage = warningMessage;
+          setPendingWarningMessage(warningMessage);
+          setOverlapModalMessage(warningMessage);
+          setShowOverlapModal(true);
+          return;
+        }
+
+        await submitCreateLeave(precheckWarningMessage);
+        return;
+      }
+
+      const warningMessage = response?.data?.overlap_warning?.message;
+      if (warningMessage && warningMessage !== precheckWarningMessage) {
+        showNotification(warningMessage, 'warning', 7000);
       }
 
       navigate(returnPath);
     } catch (err) {
       console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
+      const fallbackMessage = isEditMode
+        ? 'Impossible de modifier la demande de congé.'
+        : 'Impossible de créer la demande de congé.';
+      const finalMessage = extractApiErrorMessage(err, fallbackMessage);
+      setError(finalMessage);
+      showNotification(finalMessage, 'error', 6000);
     } finally {
       setLoading(false);
     }
@@ -284,6 +410,12 @@ const NouveauCongePage = () => {
           <li>Ajoutez un commentaire clair pour faciliter la validation</li>
         </ul>
       </InfoCardInfo>
+
+      {error && (
+        <Alert variant="danger" className="floating-error-alert mb-4" dismissible onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
 
       <TipCard title="Exemple de commentaire utile">
         Absence familiale du 12 au 14 avril, relais opérationnel préparé avec l'équipe support.
@@ -518,6 +650,31 @@ const NouveauCongePage = () => {
           )}
         </Col>
       </Row>
+
+      <Modal show={showOverlapModal} onHide={handleOverlapModalClose} centered backdrop="static" keyboard={!loading}>
+        <Modal.Header closeButton={!loading}>
+          <Modal.Title>Chevauchement détecté</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-2">{overlapModalMessage}</p>
+          <p className="mb-0 text-muted small">Vous pouvez poursuivre l'envoi, mais cette demande nécessitera une vigilance particulière côté validation.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={handleOverlapModalClose} disabled={loading}>
+            Modifier ma demande
+          </Button>
+          <Button variant="warning" onClick={handleOverlapModalConfirm} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Envoi en cours...
+              </>
+            ) : (
+              'Confirmer et envoyer'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

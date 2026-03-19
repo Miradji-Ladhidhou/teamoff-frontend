@@ -1,13 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 
-const AuthContext = createContext();
+const defaultAuthContext = {
+  user: null,
+  loading: true,
+  isAuthenticated: false,
+  login: async () => ({ success: false, error: 'AuthProvider indisponible' }),
+  register: async () => ({ success: false, error: 'AuthProvider indisponible' }),
+  logout: () => {},
+  hasRole: () => false,
+  isAdmin: () => false,
+  isSuperAdmin: () => false,
+  isManager: () => false,
+  isEmploye: () => false,
+  canValidateConges: () => false,
+  canManageUsers: () => false,
+};
+
+const AuthContext = createContext(defaultAuthContext);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
   return context;
 };
 

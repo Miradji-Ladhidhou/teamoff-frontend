@@ -3,7 +3,7 @@ import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, 
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -59,7 +59,7 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const PolitiqueCongesPage = () => {
-  const confirmDialog = useConfirmDialog();
+  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -265,18 +265,16 @@ const PolitiqueCongesPage = () => {
   };
 
   const handleDeleteCongeType = async (typeId) => {
-    const confirmed = await confirmDialog({
-      title: 'Supprimer un type de congé',
-      message: 'Cette action est définitive. Voulez-vous continuer ?',
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger',
-    });
+    const confirmed = requestConfirmation(
+      `delete-conge-type:${typeId}`,
+      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
+    );
     if (!confirmed) return;
 
     try {
       setError('');
       setSuccess('');
+      clearConfirmation();
       await congeTypesService.delete(typeId);
       await refreshCongeTypes();
       setSuccess('Type de congé supprimé avec succès.');
@@ -444,8 +442,9 @@ const PolitiqueCongesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 
       <Card className="mb-4">
         <Card.Header className="d-flex justify-content-between align-items-center">
@@ -931,8 +930,8 @@ const PolitiqueCongesPage = () => {
           <h5 className="mb-0">Fuseau horaire de l'entreprise</h5>
         </Card.Header>
         <Card.Body>
-          {tzError && <Alert variant="danger" dismissible onClose={() => setTzError('')}>{tzError}</Alert>}
-          {tzSuccess && <Alert variant="success" dismissible onClose={() => setTzSuccess('')}>{tzSuccess}</Alert>}
+          {tzError && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setTzError('')}>{tzError}</Alert>}
+          {tzSuccess && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setTzSuccess('')}>{tzSuccess}</Alert>}
 
           <p className="text-muted small mb-3">
             Ce fuseau horaire est utilisé pour l'affichage des dates et heures dans les notifications et les exports.

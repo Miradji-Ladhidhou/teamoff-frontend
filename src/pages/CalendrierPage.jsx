@@ -523,7 +523,7 @@ const CalendrierPage = () => {
         </Card.Body>
       </Card>
 
-      <style jsx>{`
+      <style>{`
         .calendar-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);

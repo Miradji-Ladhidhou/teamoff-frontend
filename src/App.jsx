@@ -2,10 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
-import NotificationSystem from './components/NotificationSystem';
-import NotificationModal from './components/NotificationModal/NotificationModal';
+
 import { getDefaultRoute } from './utils/navigation';
 import AppFooter from './components/Layout/AppFooter';
 
@@ -15,6 +13,8 @@ import SuperAdminLayout from './components/Layout/SuperAdminLayout';
 // Lazy loaded pages
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const CongesPage = lazy(() => import('./pages/Conges/CongesPage'));
 const CongeDetailsPage = lazy(() => import('./pages/Conges/CongeDetailsPage'));
@@ -135,11 +135,7 @@ function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <ConfirmDialogProvider>
-          <NotificationSystem />
-          <NotificationModal />
-
-          <Routes>
+        <Routes>
 
         {/* Routes publiques */}
         <Route
@@ -165,6 +161,33 @@ function App() {
           element={
             <AuthRedirect>
               <RegisterPage />
+            </AuthRedirect>
+          }
+        />
+
+        <Route
+          path="/forgot-password"
+          element={
+            <AuthRedirect>
+              <ForgotPasswordPage />
+            </AuthRedirect>
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <AuthRedirect>
+              <ResetPasswordPage />
+            </AuthRedirect>
+          }
+        />
+
+        <Route
+          path="/reset-password/:token"
+          element={
+            <AuthRedirect>
+              <ResetPasswordPage />
             </AuthRedirect>
           }
         />
@@ -280,11 +303,10 @@ function App() {
           <Route path="/superadmin/entreprises" element={<Navigate to="/superadmin/companies" replace />} />
         </Route>
 
-            {/* Redirections */}
-            <Route path="*" element={<HomeRedirect />} />
+          {/* Redirections */}
+          <Route path="*" element={<HomeRedirect />} />
 
-          </Routes>
-        </ConfirmDialogProvider>
+        </Routes>
       </NotificationProvider>
     </AuthProvider>
   );

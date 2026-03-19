@@ -4,7 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -16,7 +16,7 @@ const DEFAULT_POLICY = {
 
 const ServicesPage = () => {
   const { user } = useAuth();
-  const confirmDialog = useConfirmDialog();
+  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const entrepriseId = user?.entreprise_id;
 
   const [loading, setLoading] = useState(true);
@@ -100,19 +100,17 @@ const ServicesPage = () => {
   };
 
   const handleDelete = async (service) => {
-    const confirmed = await confirmDialog({
-      title: 'Supprimer un service',
-      message: `Voulez-vous supprimer le service "${service.name}" ?`,
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger',
-    });
+    const confirmed = requestConfirmation(
+      `delete-service:${service.name}`,
+      `Suppression demandee pour "${service.name}": cliquez une seconde fois sur Supprimer pour confirmer.`
+    );
     if (!confirmed) return;
 
     setError('');
     setSuccess('');
 
     try {
+      clearConfirmation();
       await entreprisesService.deleteService(entrepriseId, service.name);
       setSuccess('Service supprimé avec succès.');
       await loadServices();
@@ -148,8 +146,9 @@ const ServicesPage = () => {
         </Button>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <InfoCardInfo title="Gestion des services">
         <p className="mb-0">Un employé doit être rattaché à un service existant. Les règles définies ici sont appliquées de manière isolée par service.</p>

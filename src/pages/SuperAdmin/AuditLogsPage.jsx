@@ -145,7 +145,7 @@ const AuditLogs = () => {
         </Button>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
 
       <InfoCardInfo title="Utiliser les logs d'audit">
         <ul className="mb-0">

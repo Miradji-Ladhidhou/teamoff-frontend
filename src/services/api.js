@@ -90,19 +90,6 @@ api.interceptors.request.use(
 // Intercepteur pour gérer les erreurs d'authentification et de maintenance
 api.interceptors.response.use(
   (response) => {
-    if (shouldNotify(response.config)) {
-      const backendMessage = response.data?.message;
-      const method = (response.config?.method || '').toLowerCase();
-      const fallbackByMethod = {
-        post: 'Création effectuée avec succès',
-        put: 'Mise à jour effectuée avec succès',
-        patch: 'Mise à jour effectuée avec succès',
-        delete: 'Suppression effectuée avec succès',
-      };
-      const fallback = fallbackByMethod[method] || 'Opération effectuée avec succès';
-      emitApiNotification(backendMessage || fallback, 'success', 4000);
-    }
-
     return response;
   },
   (error) => {
@@ -127,11 +114,7 @@ api.interceptors.response.use(
       window.location.href = `/maintenance?message=${message}`;
     }
 
-    if (shouldNotify(error.config)) {
-      const backendMessage = error.response?.data?.message;
-      const fallback = 'Une erreur est survenue pendant la mise à jour';
-      emitApiNotification(backendMessage || fallback, 'error', 4000);
-    }
+    // Notifications flottantes désactivées : les erreurs sont gérées par les alertes centrales des pages
 
     return Promise.reject(error);
   }
@@ -155,7 +138,8 @@ export const systemService = {
 
 export const congesService = {
   getAll: (params = {}) => api.get('/conges', { params }),
-  create: (data) => api.post('/conges/demande', data),
+  checkOverlap: (data) => api.post('/conges/check-overlap', data),
+  create: (data) => api.post('/conges/demande', data, { timeout: 30000 }),
   update: (id, data) => api.put(`/conges/${id}`, data),
   delete: (id) => api.delete(`/conges/${id}`),
   validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),

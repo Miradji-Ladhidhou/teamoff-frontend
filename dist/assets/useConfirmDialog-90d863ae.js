@@ -1,1 +1,0 @@
-import{r,aK as t}from"./index-a04c4c4a.js";const e=()=>{const o=r.useContext(t);if(!o)throw new Error("useConfirmDialog doit etre utilise dans un ConfirmDialogProvider");return o.confirm};export{e as u};

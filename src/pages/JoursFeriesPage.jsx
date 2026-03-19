@@ -4,10 +4,10 @@ import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 
 const JoursFeriesPage = () => {
-  const confirmDialog = useConfirmDialog();
+  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -136,16 +136,14 @@ const JoursFeriesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await confirmDialog({
-      title: 'Supprimer un jour férié',
-      message: 'Ce jour férié sera supprimé définitivement.',
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger',
-    });
+    const confirmed = requestConfirmation(
+      `delete-jour-ferie:${id}`,
+      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
+    );
     if (!confirmed) return;
 
     try {
+      clearConfirmation();
       await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
       await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
       setSuccess('Jour férié supprimé.');
@@ -359,8 +357,9 @@ const JoursFeriesPage = () => {
         </TipCard>
       )}
 
-      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
-      {success && <Alert variant="success" className="mb-4" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {confirmationMessage && <Alert variant="warning" className="mb-4 inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 
       {canManage && (
         <Card className="mb-3">

@@ -67,8 +67,8 @@ const DashboardPage = () => {
         setRecentConges(conges.slice(0, 5));
         setNotifications(notifs);
 
-        // Charger les soldes pour les employés
-        if (user?.role === 'employe' && user.id) {
+        // Charger les soldes pour les employés et managers
+        if (['employe', 'manager'].includes(user?.role) && user.id) {
           try {
             const [soldesResponse, congeTypesResponse] = await Promise.all([
               quotasService.getSoldes(user.id),
@@ -193,14 +193,14 @@ const DashboardPage = () => {
             <span className="ui-text-soft"><strong>Entreprise:</strong> {getEntrepriseLabel()}</span>
           </p>
         </div>
-        {user?.role === 'employe' && (
+        {['employe', 'manager'].includes(user?.role) && (
           <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
             <FaPlus className="me-2" /> Nouveau congé
           </Button>
         )}
       </div>
 
-      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
 
       <InfoCardInfo title="Comment utiliser ce tableau de bord">
         <p className="mb-1">Cette vue vous donne l'essentiel en un coup d'oeil:</p>

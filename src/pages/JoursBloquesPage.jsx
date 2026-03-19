@@ -15,7 +15,7 @@ import {
 import { entreprisesService, congeTypesService, quotasService, usersService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
@@ -53,7 +53,7 @@ const normalizeBlockedWeekdays = (days) => (
 );
 
 const JoursBloquesPage = () => {
-  const confirmDialog = useConfirmDialog();
+  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
   const entrepriseId = user?.entreprise_id;
 
@@ -293,17 +293,15 @@ const JoursBloquesPage = () => {
   };
 
   const deleteCounter = async (counterId) => {
-    const confirmed = await confirmDialog({
-      title: 'Supprimer un compteur',
-      message: 'Le compteur sélectionné sera supprimé définitivement.',
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger',
-    });
+    const confirmed = requestConfirmation(
+      `delete-counter:${counterId}`,
+      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
+    );
     if (!confirmed) return;
 
     try {
       setError('');
+      clearConfirmation();
       await quotasService.deleteUserCounter(counterId);
       setCounters((prev) => prev.filter((item) => item.id !== counterId));
       setSuccess('Compteur supprimé.');
@@ -360,8 +358,9 @@ const JoursBloquesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <Card className="mb-4">
         <Card.Header><strong>Règles de décompte</strong></Card.Header>
