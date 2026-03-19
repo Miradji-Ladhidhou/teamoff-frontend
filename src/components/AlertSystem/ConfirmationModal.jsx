@@ -1,60 +1,50 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useCallback } from 'react';
 import { AlertContext } from '../../contexts/AlertContext';
 import { FaTimes } from 'react-icons/fa';
 import './AlertSystem.css';
 
 /**
- * ConfirmationModal - Modale de confirmation pour actions critiques
- * - Bloquante (focus trap)
- * - Centrée à l'écran
- * - Accessible (role, focus management)
+ * ConfirmationModal - Modale de confirmation centrée via overlay flex.
+ * La modale est à l'INTÉRIEUR de l'overlay → centrage garanti sans transform hack.
  */
-
 const ConfirmationModal = () => {
-  const { modal, closeConfirmation } = useContext(AlertContext);
+  const { modal } = useContext(AlertContext);
 
-  // Focus trap - focus sur le bouton "Annuler" par défaut
   useEffect(() => {
-    if (modal) {
-      // Attendre le rendu
-      setTimeout(() => {
-        const cancelBtn = document.querySelector('[data-confirm-cancel]');
-        if (cancelBtn) {
-          cancelBtn.focus();
-        }
-      }, 50);
-    }
+    if (!modal) return;
+    const t = setTimeout(() => {
+      const btn = document.querySelector('[data-confirm-cancel]');
+      if (btn) btn.focus();
+    }, 50);
+    return () => clearTimeout(t);
   }, [modal]);
 
-  if (!modal) {
-    return null;
-  }
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        modal.onCancel();
+      }
+      if (e.key === 'Enter' && e.target.dataset.confirmConfirm) {
+        e.preventDefault();
+        modal.onConfirm();
+      }
+    },
+    [modal],
+  );
 
-  const handleKeyDown = (e) => {
-    // Échap pour fermer
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      modal.onCancel();
-    }
-    // Entrée pour confirmer
-    if (e.key === 'Enter' && e.target.dataset.confirmConfirm) {
-      e.preventDefault();
-      modal.onConfirm();
-    }
-  };
+  if (!modal) return null;
 
-  const modalClasses = `confirmation-modal ${modal.danger ? 'modal-danger' : ''}`;
+  const modalClasses = `confirmation-modal${modal.danger ? ' modal-danger' : ''}`;
 
   return (
-    <>
-      {/* Overlay bloquant */}
-      <div
-        className="modal-overlay"
-        onClick={modal.onCancel}
-        role="presentation"
-      />
-
-      {/* Modale */}
+    /* L'overlay est le flex-container qui centre la modale */
+    <div
+      className="modal-overlay"
+      onClick={modal.onCancel}
+      role="presentation"
+      aria-hidden="true"
+    >
       <div
         className={modalClasses}
         role="dialog"
@@ -62,6 +52,7 @@ const ConfirmationModal = () => {
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
         onKeyDown={handleKeyDown}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="modal-header">
@@ -85,7 +76,7 @@ const ConfirmationModal = () => {
           </p>
         </div>
 
-        {/* Footer */}
+        {/* Footer — mobile: colonne, desktop: ligne */}
         <div className="modal-footer">
           <button
             className="modal-btn modal-btn-cancel"
@@ -96,7 +87,7 @@ const ConfirmationModal = () => {
             {modal.cancelLabel}
           </button>
           <button
-            className={`modal-btn modal-btn-confirm ${modal.danger ? 'modal-btn-danger' : ''}`}
+            className={`modal-btn modal-btn-confirm${modal.danger ? ' modal-btn-danger' : ''}`}
             onClick={modal.onConfirm}
             type="button"
             data-confirm-confirm
@@ -105,7 +96,7 @@ const ConfirmationModal = () => {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
