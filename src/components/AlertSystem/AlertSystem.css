@@ -1,22 +1,49 @@
+/**
+ * UNIFIED ALERT SYSTEM - Complete Design Consistency
+ * =====================================================
+ * 
+ * All overlays and floating alerts use a single cohesive visual system:
+ * - Position: BOTTOM-CENTER (fixed, 20px from bottom, centered horizontally)
+ * - Animation: Slide from bottom (translateY) + fade (opacity)
+ * - Stack: Vertical with 12px spacing (flex-direction: column-reverse for latest on top)
+ * - Mobile First: Responsive scaling from 16px bottom on mobile to 24px on desktop
+ * - Z-Index: 9999 for toasts, 10000 for modal overlay, 10001 for confirmation modal
+ * - Auto-dismiss: 4000ms default (can be configured per toast)
+ * - Pause on hover: Resume after mouse leaves
+ * - Safe area: Supports notches/home indicators (env(safe-area-inset-bottom))
+ * 
+ * Types supported:
+ * - success (green #28a745)
+ * - error (red #dc3545)
+ * - info (blue #0d6efd)
+ * - warning (yellow #ffc107)
+ * 
+ * No variations permitted - all overlays use this exact system
+ * Mobile: 640px | Tablet: 641px-1024px | Desktop: 1025px+
+ */
+
 /* ==================== TOAST CONTAINER ==================== */
+/* BOTTOM-CENTER POSITIONING - All toasts stack vertically at bottom center */
 
 .toast-container {
   position: fixed;
-  top: 50%;
+  bottom: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom));
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   z-index: 9999;
   pointer-events: none;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 12px;
-  max-width: 90%;
+  max-width: calc(100% - 40px);
   width: 100%;
   max-width: 500px;
   align-items: center;
 }
 
 /* ==================== TOAST ITEM ==================== */
+/* Unified style and animations for all overlay alerts */
 
 .toast-item {
   pointer-events: auto;
@@ -30,19 +57,21 @@
   animation: toastSlideIn 0.3s ease-out forwards;
   min-height: 60px;
   border-left: 4px solid;
+  width: 100%;
 }
 
-/* Animations */
+/* Animations - SLIDE FROM BOTTOM */
 @keyframes toastSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 
 @keyframes toastSlideOut {
   from {
@@ -51,7 +80,7 @@
   }
   to {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(20px);
   }
 }
 
@@ -363,31 +392,39 @@
 
 /* ==================== RESPONSIVE ==================== */
 
+/* ==================== RESPONSIVE - Mobile First ==================== */
+
+/* Mobile: max 640px */
 @media (max-width: 640px) {
   .toast-container {
-    max-width: 95%;
-    width: calc(100% - 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    top: auto;
-    bottom: 20px;
-    bottom: max(20px, env(safe-area-inset-bottom));
+    max-width: calc(100% - 16px);
+    width: calc(100% - 16px);
+    bottom: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
   }
 
   .toast-item {
     padding: 12px;
     min-height: 56px;
+    gap: 10px;
   }
 
   .toast-message {
     font-size: 13px;
   }
 
+  .toast-close-btn {
+    width: 18px;
+    height: 18px;
+  }
+
   .confirmation-modal {
-    max-width: 95%;
-    width: calc(100% - 20px);
+    max-width: calc(100% - 16px);
+    width: calc(100% - 16px);
     max-height: 90vh;
     overflow-y: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
   }
 
   .modal-header {
@@ -397,6 +434,58 @@
   .modal-title {
     font-size: 18px;
   }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .modal-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+}
+
+/* Tablet: 641px - 1024px */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .toast-container {
+    max-width: calc(100% - 32px);
+    width: calc(100% - 32px);
+    bottom: 20px;
+  }
+
+  .toast-item {
+    padding: 14px;
+    min-height: 58px;
+  }
+
+  .confirmation-modal {
+    max-width: calc(100% - 32px);
+    width: calc(100% - 32px);
+  }
+}
+
+/* Desktop: 1025px+ */
+@media (min-width: 1025px) {
+  .toast-container {
+    max-width: 500px;
+    bottom: 24px;
+  }
+
+  .toast-item {
+    padding: 16px;
+    min-height: 60px;
+  }
+
+  .confirmation-modal {
+    max-width: 500px;
+  }
+}
 
   .modal-body {
     padding: 16px;

@@ -1,14 +1,20 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { toast } from 'react-toastify';
-import NotificationSystem from '../components/NotificationSystem';
-import useSocket from '../hooks/useSocket';
+import NotificationSystem from '../NotificationSystem';
+import useSocket from '../../hooks/useSocket';
+import { alertService } from '../../services/alertService';
 
 // Mock du hook useSocket
-jest.mock('../hooks/useSocket');
-jest.mock('react-toastify', () => ({
-  toast: jest.fn(),
-  ToastContainer: () => <div data-testid="toast-container" />
+jest.mock('../../hooks/useSocket');
+
+// Mock du alertService
+jest.mock('../../services/alertService', () => ({
+  alertService: {
+    addToast: jest.fn(),
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  }
 }));
 
 describe('NotificationSystem', () => {
@@ -16,18 +22,19 @@ describe('NotificationSystem', () => {
     jest.clearAllMocks();
   });
 
-  test('renders ToastContainer', () => {
+  test('renders null (displays via ToastContainer)', () => {
     useSocket.mockReturnValue({
       notifications: [],
       removeNotification: jest.fn()
     });
 
-    render(<NotificationSystem />);
+    const { container } = render(<NotificationSystem />);
 
-    expect(screen.getByTestId('toast-container')).toBeInTheDocument();
+    // NotificationSystem returns null - everything is handled by ToastContainer
+    expect(container.firstChild).toBeNull();
   });
 
-  test('shows notifications when received', async () => {
+  test('shows notifications via alertService when received', async () => {
     const mockRemoveNotification = jest.fn();
     const mockNotifications = [
       {
@@ -47,17 +54,17 @@ describe('NotificationSystem', () => {
     render(<NotificationSystem />);
 
     await waitFor(() => {
-      expect(toast).toHaveBeenCalledWith(
+      expect(alertService.addToast).toHaveBeenCalledWith(
         'Votre demande de congé a été approuvée',
-        expect.objectContaining({
-          type: 'success',
-          onClose: expect.any(Function)
-        })
+        'success',
+        4000
       );
     });
+
+    expect(mockRemoveNotification).toHaveBeenCalledWith(1);
   });
 
-  test('calls removeNotification when toast is closed', async () => {
+  test('maps conge-rejected to error type', async () => {
     const mockRemoveNotification = jest.fn();
     const mockNotifications = [
       {
@@ -77,13 +84,12 @@ describe('NotificationSystem', () => {
     render(<NotificationSystem />);
 
     await waitFor(() => {
-      expect(toast).toHaveBeenCalled();
+      expect(alertService.addToast).toHaveBeenCalledWith(
+        'Votre demande de congé a été rejetée',
+        'error',
+        4000
+      );
     });
-
-    // Simuler la fermeture du toast
-    const toastCall = toast.mock.calls[0];
-    const toastConfig = toastCall[1];
-    toastConfig.onClose();
 
     expect(mockRemoveNotification).toHaveBeenCalledWith(123);
   });
@@ -115,17 +121,19 @@ describe('NotificationSystem', () => {
     render(<NotificationSystem />);
 
     await waitFor(() => {
-      expect(toast).toHaveBeenCalledTimes(2);
+      expect(alertService.addToast).toHaveBeenCalledTimes(2);
     });
 
-    expect(toast).toHaveBeenCalledWith(
+    expect(alertService.addToast).toHaveBeenCalledWith(
       'Nouvelle demande de congé',
-      expect.objectContaining({ type: 'info' })
+      'info',
+      4000
     );
 
-    expect(toast).toHaveBeenCalledWith(
+    expect(alertService.addToast).toHaveBeenCalledWith(
       'Demande rejetée',
-      expect.objectContaining({ type: 'error' })
+      'error',
+      4000
     );
   });
 });

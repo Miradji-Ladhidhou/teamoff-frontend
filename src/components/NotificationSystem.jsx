@@ -1,15 +1,22 @@
 import React, { useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import useSocket from '../hooks/useSocket';
+import { alertService } from '../services/alertService';
+
+/**
+ * NotificationSystem - Affiche les notifications temps réel via WebSocket
+ * Utilise le système centralisé AlertSystem avec positionnement bottom-center
+ * 
+ * Mappe les types de notifications aux types de toast standardisés
+ */
 
 const NotificationSystem = () => {
   const { notifications, removeNotification } = useSocket();
 
   useEffect(() => {
-    notifications.forEach(notification => {
+    notifications.forEach((notification) => {
       let toastType = 'info';
 
+      // Mappe les types de notifications aux types de toast
       switch (notification.type) {
         case 'conge-validated':
           toastType = 'success';
@@ -26,32 +33,17 @@ const NotificationSystem = () => {
           toastType = 'info';
       }
 
-      toast(notification.message, {
-        type: toastType,
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        onClose: () => removeNotification(notification.id)
-      });
+      // Ajoute le toast via le service centralisé
+      alertService.addToast(notification.message, toastType, 4000);
+      
+      // Notifie le socket que la notification a été affichée
+      removeNotification(notification.id);
     });
   }, [notifications, removeNotification]);
 
-  return (
-    <ToastContainer
-      position="top-right"
-      autoClose={5000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-    />
-  );
+  // Ce composant n'affiche rien directement
+  // Les toasts sont affichés par ToastContainer
+  return null;
 };
 
 export default NotificationSystem;

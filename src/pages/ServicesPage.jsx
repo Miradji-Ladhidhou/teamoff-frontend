@@ -208,7 +208,7 @@ const ServicesPage = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>{editingService ? 'Modifier le service' : 'Créer un service'}</Modal.Title>
         </Modal.Header>

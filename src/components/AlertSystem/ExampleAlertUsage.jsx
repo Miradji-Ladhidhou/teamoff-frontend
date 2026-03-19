@@ -1,53 +1,94 @@
 /**
- * ExampleAlertUsage - Composant d'exemple d'utilisation du système d'alertes
+ * ExampleAlertUsage - Alert System Usage Examples
  * 
- * Ce fichier démontre tous les patterns d'utilisation du nouveau système d'alertes.
- * À supprimer une fois la migration complétée.
+ * Demonstrates all usage patterns of the unified alert system.
+ * This file is for reference. Remove after migration is complete.
  */
 
 import React, { useState } from 'react';
 import { Button, Container, Row, Col, Card } from 'react-bootstrap';
-import { useAlert, useConfirmation } from '../hooks/useAlert';
+import { alertService } from '../../services/alertService';
+import { useAlert } from '../../hooks/useAlert';
 
 export default function ExampleAlertUsage() {
-  const alert = useAlert();
-  const { confirm } = useConfirmation();
+  const { openConfirmation } = useAlert();
   const [loading, setLoading] = useState(false);
 
-  // ==================== EXEMPLES DE TOASTS ====================
+  // ==================== TOAST EXAMPLES ====================
 
   const handleShowSuccess = () => {
-    alert.success('Opération réussie avec succès !');
+    alertService.success('Operation completed successfully!');
   };
 
   const handleShowError = () => {
-    alert.error('Une erreur est survenue. Veuillez réessayer.');
+    alertService.error('An error occurred. Please try again.');
   };
 
   const handleShowInfo = () => {
-    alert.info('Ceci est une information importante.');
+    alertService.info('This is important information.');
+  };
+
+  const handleShowWarning = () => {
+    alertService.addToast('This is a warning', 'warning');
   };
 
   const handleShowMultiple = async () => {
-    alert.success('Première notification');
+    alertService.success('First notification');
     await new Promise(r => setTimeout(r, 100));
-    alert.info('Deuxième notification');
+    alertService.info('Second notification');
     await new Promise(r => setTimeout(r, 100));
-    alert.error('Troisième notification');
+    alertService.error('Third notification');
   };
 
-  // Simulation d'une opération API
+  // Simulate an API call
   const handleSimulateAPICall = async () => {
     setLoading(true);
     try {
-      alert.info('Traitement en cours...');
+      alertService.info('Processing...');
       
-      // Simuler un délai réseau
+      // Simulate network delay
       await new Promise(r => setTimeout(r, 1500));
       
-      alert.success('Les données ont été sauvegardées avec succès.');
+      alertService.success('Data saved successfully.');
     } catch (error) {
-      alert.error('Erreur lors de la sauvegarde: ' + error.message);
+      alertService.error('Error saving: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== CONFIRMATION MODAL EXAMPLES ====================
+
+  const handleConfirmDelete = () => {
+    openConfirmation({
+      title: 'Delete Item?',
+      description: 'This action cannot be undone. The item will be permanently deleted.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      danger: true,
+      onConfirm: () => {
+        alertService.success('Item deleted successfully');
+      },
+      onCancel: () => {
+        alertService.info('Deletion cancelled');
+      },
+    });
+  };
+
+  const handleConfirmAction = () => {
+    openConfirmation({
+      title: 'Confirm Action?',
+      description: 'Are you sure you want to proceed with this action?',
+      confirmLabel: 'Yes, proceed',
+      cancelLabel: 'No, cancel',
+      danger: false,
+      onConfirm: () => {
+        alertService.success('Action completed');
+      },
+    });
+  };
+
+  // ==================== COMPONENT RENDER ====================
     } finally {
       setLoading(false);
     }

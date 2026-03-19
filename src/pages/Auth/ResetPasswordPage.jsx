@@ -4,6 +4,8 @@ import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from '
 import { FaLock, FaCheck, FaArrowLeft } from 'react-icons/fa';
 import { NotificationContext } from '../../contexts/NotificationContext';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
 
@@ -21,7 +23,7 @@ const ResetPasswordPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const submitAction = useAsyncAction();
   const [submitted, setSubmitted] = useState(false);
   const alert = useAlert();
 
@@ -74,33 +76,33 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      if (!isPasswordFormValid) {
-        alert.error('Les mots de passe ne correspondent pas ou ne respectent pas les exigences');
-        setLoading(false);
-        return;
+    await submitAction.run(async () => {
+      try {
+        if (!isPasswordFormValid) {
+          alert.error('Les mots de passe ne correspondent pas ou ne respectent pas les exigences');
+          return;
+        }
+
+        await authService.resetPassword({
+          token,
+          newPassword: formData.newPassword,
+        });
+
+        setSubmitted(true);
+        showNotification('Mot de passe réinitialisé avec succès', 'success');
+
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } catch (err) {
+        const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de la réinitialisation';
+        alert.error(errorMsg);
+        showNotification(errorMsg, 'error');
       }
-
-      await authService.resetPassword({
-        token,
-        newPassword: formData.newPassword,
-      });
-
-      setSubmitted(true);
-      showNotification('Mot de passe réinitialisé avec succès', 'success');
-
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de la réinitialisation';
-      alert.error(errorMsg);
-      showNotification(errorMsg, 'error');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
+
+  const loading = submitAction.isRunning;
 
   return (
     <div
@@ -219,24 +221,21 @@ const ResetPasswordPage = () => {
                         )}
                       </Form.Group>
 
-                      <Button
+                      <AsyncButton
                         variant="primary"
                         type="submit"
-                        disabled={loading || !isPasswordFormValid}
+                        disabled={!isPasswordFormValid}
                         className="w-100 py-2 fw-500 mb-3"
+                        action={submitAction}
+                        loadingText="Réinitialisation..."
                       >
-                        {loading ? (
-                          <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Réinitialisation...
-                          </>
-                        ) : (
+                        {!loading && (
                           <>
                             <FaLock className="me-2" />
                             Réinitialiser le mot de passe
                           </>
                         )}
-                      </Button>
+                      </AsyncButton>
                     </Form>
 
                     <div className="text-center">

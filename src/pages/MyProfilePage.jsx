@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Badge } from 'react-bootstrap';
 import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
+import { useAsyncAction } from '../hooks/useAsyncAction';
+import AsyncButton from '../components/AsyncButton';
 
 const MyProfilePage = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const profileAction = useAsyncAction();
+  const passwordAction = useAsyncAction();
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState('');
   const alert = useAlert();
@@ -60,29 +63,28 @@ const MyProfilePage = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setSuccess('');
-    try {
-      await authService.updateProfile({
-        nom: profileData.nom,
-        prenom: profileData.prenom,
-        email: profileData.email
-      });
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        const updatedUser = JSON.parse(savedUser);
-        updatedUser.nom = profileData.nom;
-        updatedUser.prenom = profileData.prenom;
-        updatedUser.email = profileData.email;
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+    await profileAction.run(async () => {
+      setSuccess('');
+      try {
+        await authService.updateProfile({
+          nom: profileData.nom,
+          prenom: profileData.prenom,
+          email: profileData.email
+        });
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          const updatedUser = JSON.parse(savedUser);
+          updatedUser.nom = profileData.nom;
+          updatedUser.prenom = profileData.prenom;
+          updatedUser.email = profileData.email;
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        setSuccess('Profil mis à jour avec succès.');
+      } catch (err) {
+        console.error('Erreur lors de la mise à jour du profil:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.');
       }
-      setSuccess('Profil mis à jour avec succès.');
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du profil:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -99,21 +101,24 @@ const MyProfilePage = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      await authService.changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
-      });
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setSuccess('Mot de passe modifié avec succès.');
-    } catch (err) {
-      console.error('Erreur lors du changement de mot de passe:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors du changement de mot de passe.');
-    } finally {
-      setLoading(false);
-    }
+    await passwordAction.run(async () => {
+      try {
+        await authService.changePassword({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setSuccess('Mot de passe modifié avec succès.');
+      } catch (err) {
+        console.error('Erreur lors du changement de mot de passe:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors du changement de mot de passe.');
+      }
+    });
   };
+
+  const loading = profileAction.isRunning || passwordAction.isRunning;
+  const profileLoading = profileAction.isRunning;
+  const passwordLoading = passwordAction.isRunning;
 
   return (
     <Container className="py-5">
@@ -176,19 +181,25 @@ const MyProfilePage = () => {
                 <Form onSubmit={handleProfileSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label>Prénom</Form.Label>
-                    <Form.Control type="text" name="prenom" value={profileData.prenom} onChange={handleProfileChange} placeholder="Votre prénom" disabled={loading} />
+                    <Form.Control type="text" name="prenom" value={profileData.prenom} onChange={handleProfileChange} placeholder="Votre prénom" disabled={profileLoading} />
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Nom</Form.Label>
-                    <Form.Control type="text" name="nom" value={profileData.nom} onChange={handleProfileChange} placeholder="Votre nom" disabled={loading} />
+                    <Form.Control type="text" name="nom" value={profileData.nom} onChange={handleProfileChange} placeholder="Votre nom" disabled={profileLoading} />
                   </Form.Group>
                   <Form.Group className="mb-4">
                     <Form.Label>Email</Form.Label>
-                    <Form.Control type="email" name="email" value={profileData.email} onChange={handleProfileChange} placeholder="Votre email" disabled={loading} />
+                    <Form.Control type="email" name="email" value={profileData.email} onChange={handleProfileChange} placeholder="Votre email" disabled={profileLoading} />
                   </Form.Group>
-                  <Button variant="primary" type="submit" disabled={loading} className="w-100">
-                    {loading ? <>Sauvegarde...</> : <><FaSave className="me-2" /> Enregistrer</>}
-                  </Button>
+                  <AsyncButton
+                    variant="primary"
+                    type="submit"
+                    className="w-100"
+                    action={profileAction}
+                    loadingText="Sauvegarde..."
+                  >
+                    <FaSave className="me-2" /> Enregistrer
+                  </AsyncButton>
                 </Form>
               </Card.Body>
             </Card>
@@ -204,8 +215,8 @@ const MyProfilePage = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>Mot de passe actuel</Form.Label>
                     <div className="input-group">
-                      <Form.Control type={showPasswords.current ? 'text' : 'password'} name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} placeholder="Mot de passe actuel" disabled={loading} />
-                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))} disabled={loading}>
+                      <Form.Control type={showPasswords.current ? 'text' : 'password'} name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} placeholder="Mot de passe actuel" disabled={passwordLoading} />
+                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))} disabled={passwordLoading}>
                         {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
                       </Button>
                     </div>
@@ -213,8 +224,8 @@ const MyProfilePage = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>Nouveau mot de passe</Form.Label>
                     <div className="input-group">
-                      <Form.Control type={showPasswords.new ? 'text' : 'password'} name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} placeholder="Nouveau mot de passe" disabled={loading} />
-                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} disabled={loading}>
+                      <Form.Control type={showPasswords.new ? 'text' : 'password'} name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} placeholder="Nouveau mot de passe" disabled={passwordLoading} />
+                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} disabled={passwordLoading}>
                         {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
                       </Button>
                     </div>
@@ -222,8 +233,8 @@ const MyProfilePage = () => {
                   <Form.Group className="mb-4">
                     <Form.Label>Confirmer le mot de passe</Form.Label>
                     <div className="input-group">
-                      <Form.Control type={showPasswords.confirm ? 'text' : 'password'} name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmer" disabled={loading} isInvalid={isPasswordConfirmationFilled && !doPasswordsMatch} isValid={isPasswordConfirmationFilled && doPasswordsMatch} />
-                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} disabled={loading}>
+                      <Form.Control type={showPasswords.confirm ? 'text' : 'password'} name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmer" disabled={passwordLoading} isInvalid={isPasswordConfirmationFilled && !doPasswordsMatch} isValid={isPasswordConfirmationFilled && doPasswordsMatch} />
+                      <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} disabled={passwordLoading}>
                         {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
                       </Button>
                     </div>
@@ -238,9 +249,16 @@ const MyProfilePage = () => {
                       </Form.Text>
                     )}
                   </Form.Group>
-                  <Button variant="danger" type="submit" disabled={loading || !isPasswordFormValid} className="w-100">
-                    {loading ? <>Changement...</> : <><FaLock className="me-2" /> Changer le mot de passe</>}
-                  </Button>
+                  <AsyncButton
+                    variant="danger"
+                    type="submit"
+                    disabled={!isPasswordFormValid}
+                    className="w-100"
+                    action={passwordAction}
+                    loadingText="Changement..."
+                  >
+                    <FaLock className="me-2" /> Changer le mot de passe
+                  </AsyncButton>
                 </Form>
               </Card.Body>
             </Card>

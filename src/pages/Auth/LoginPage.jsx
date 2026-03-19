@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Badge, Modal } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
 
 const LoginPage = () => {
@@ -13,7 +15,7 @@ const LoginPage = () => {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const submitAction = useAsyncAction();
   const alert = useAlert();
   const [popupError, setPopupError] = useState('');
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -43,27 +45,28 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const result = await login(formData);
-      if (result.success) {
-        const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
-        navigate(getDefaultRoute(savedUser?.role));
-      } else {
-        const message = result.error || 'Identifiant ou mot de passe incorrect';
+    await submitAction.run(async () => {
+      try {
+        const result = await login(formData);
+        if (result.success) {
+          const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
+          navigate(getDefaultRoute(savedUser?.role));
+        } else {
+          const message = result.error || 'Identifiant ou mot de passe incorrect';
+          setPopupError(message);
+          alert.error(message);
+          setShowErrorPopup(true);
+        }
+      } catch (err) {
+        const message = 'Une erreur inattendue s\'est produite';
         setPopupError(message);
         alert.error(message);
         setShowErrorPopup(true);
       }
-    } catch (err) {
-      const message = 'Une erreur inattendue s\'est produite';
-      setPopupError(message);
-      alert.error(message);
-      setShowErrorPopup(true);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
+
+  const loading = submitAction.isRunning;
 
   return (
     <div className="min-vh-100" style={{ background: 'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)' }}>
@@ -224,24 +227,20 @@ const LoginPage = () => {
                     </div>
                   </Form.Group>
 
-                  <Button
+                  <AsyncButton
                     type="submit"
                     variant="dark"
                     className="w-100 mb-3 d-flex align-items-center justify-content-center"
-                    disabled={loading}
+                    action={submitAction}
+                    loadingText="Connexion en cours..."
                   >
-                    {loading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        Connexion en cours...
-                      </>
-                    ) : (
+                    {!loading && (
                       <>
                         <FaSignInAlt className="me-2" />
                         Se connecter
                       </>
                     )}
-                  </Button>
+                  </AsyncButton>
                 </Form>
 
                 <div className="text-center mb-3">

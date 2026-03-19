@@ -1,72 +1,38 @@
-import React, { useContext } from 'react';
-import { Alert } from 'react-bootstrap';
-import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimesCircle } from 'react-icons/fa';
+import React, { useContext, useEffect } from 'react';
 import { NotificationContext } from '../../contexts/NotificationContext';
+import { alertService } from '../../services/alertService';
+
+/**
+ * FloatingNotification - Adapter pour transformer les notifications de NotificationContext
+ * vers le système centralisé AlertSystem (bottom-center)
+ * 
+ * Ce composant écoute le contexte old-style et mappe vers alertService
+ * pour une migration progressive
+ */
 
 const FloatingNotification = () => {
   const { notification, hideNotification } = useContext(NotificationContext);
 
-  if (!notification) return null;
+  useEffect(() => {
+    // Si une nouvelle notification arrive, l'ajouter via alertService
+    if (notification?.message && notification?.type) {
+      // Mappe les types de notification
+      const toastType = notification.type === 'success' 
+        ? 'success' 
+        : notification.type === 'error' 
+        ? 'error' 
+        : 'info';
 
-  const getIcon = (type) => {
-    switch (type) {
-      case 'success':
-        return <FaCheckCircle className="notification-icon success" />;
-      case 'error':
-        return <FaTimesCircle className="notification-icon error" />;
-      case 'info':
-        return <FaInfoCircle className="notification-icon info" />;
-      case 'warning':
-        return <FaExclamationCircle className="notification-icon warning" />;
-      default:
-        return <FaCheckCircle className="notification-icon success" />;
+      // Ajoute le toast via le système centralisé
+      alertService.addToast(notification.message, toastType, 4000);
+
+      // Cache la notification du contexte old-style
+      hideNotification();
     }
-  };
+  }, [notification, hideNotification]);
 
-  const getTitle = (type) => {
-    switch (type) {
-      case 'success':
-        return 'Succès';
-      case 'error':
-        return 'Erreur';
-      case 'info':
-        return 'Information';
-      case 'warning':
-        return 'Attention';
-      default:
-        return 'Notification';
-    }
-  };
-
-  const getVariant = (type) => {
-    switch (type) {
-      case 'error':
-        return 'danger';
-      case 'warning':
-        return 'warning';
-      case 'info':
-        return 'info';
-      default:
-        return 'success';
-    }
-  };
-
-  return (
-    <Alert
-      variant={getVariant(notification?.type)}
-      className={`floating-system-alert ${notification?.type === 'success' ? 'floating-success-alert' : `floating-system-alert-${notification?.type || 'info'}`}`}
-      dismissible
-      onClose={hideNotification}
-    >
-      <div className="d-flex align-items-start gap-2">
-        <span className="mt-1">{getIcon(notification?.type)}</span>
-        <div>
-          <div className="fw-bold mb-1">{getTitle(notification?.type)}</div>
-          <div>{notification?.message}</div>
-        </div>
-      </div>
-    </Alert>
-  );
+  // Ce composant n'affiche rien - tout passe par AlertSystem
+  return null;
 };
 
 export default FloatingNotification;

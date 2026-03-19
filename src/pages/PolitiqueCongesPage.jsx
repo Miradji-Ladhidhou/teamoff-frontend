@@ -977,7 +977,7 @@ const PolitiqueCongesPage = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showTypeModal} onHide={closeTypeModal}>
+      <Modal show={showTypeModal} onHide={closeTypeModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>{editingTypeId ? 'Modifier le type de congé' : 'Ajouter un type de congé'}</Modal.Title>
         </Modal.Header>

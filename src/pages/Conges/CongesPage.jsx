@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
@@ -35,6 +37,8 @@ const CongesPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
   const [rejectComment, setRejectComment] = useState('');
+  const validateAction = useAsyncAction();
+  const rejectAction = useAsyncAction();
 
   const loadConges = useCallback(async () => {
     try {
@@ -231,14 +235,16 @@ const CongesPage = () => {
 
   const handleValidateConge = async () => {
     if (!selectedCongeToValidate) return;
-    try {
-      await congesService.validate(selectedCongeToValidate);
-      closeValidateModal();
-      loadConges(); // Recharger la liste
-    } catch (err) {
-      console.error('Erreur lors de la validation:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
-    }
+    await validateAction.run(async () => {
+      try {
+        await congesService.validate(selectedCongeToValidate);
+        closeValidateModal();
+        loadConges(); // Recharger la liste
+      } catch (err) {
+        console.error('Erreur lors de la validation:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
+      }
+    });
   };
 
   const handleRejectConge = async () => {
@@ -249,14 +255,16 @@ const CongesPage = () => {
       return;
     }
 
-    try {
-      await congesService.reject(selectedCongeToReject, { commentaire: rejectComment.trim() });
-      closeRejectModal();
-      loadConges(); // Recharger la liste
-    } catch (err) {
-      console.error('Erreur lors du rejet:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
-    }
+    await rejectAction.run(async () => {
+      try {
+        await congesService.reject(selectedCongeToReject, { commentaire: rejectComment.trim() });
+        closeRejectModal();
+        loadConges(); // Recharger la liste
+      } catch (err) {
+        console.error('Erreur lors du rejet:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
+      }
+    });
   };
 
   const getStatusBadge = (status) => {
@@ -611,25 +619,30 @@ const CongesPage = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showValidateModal} onHide={closeValidateModal} centered>
-        <Modal.Header closeButton>
+      <Modal show={showValidateModal} onHide={closeValidateModal} centered backdrop="static" keyboard={!validateAction.isRunning}>
+        <Modal.Header closeButton={!validateAction.isRunning}>
           <Modal.Title>Confirmer la validation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           Confirmez-vous la validation de cette demande de congé ?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeValidateModal}>
+          <Button variant="secondary" onClick={closeValidateModal} disabled={validateAction.isRunning}>
             Annuler
           </Button>
-          <Button variant="success" onClick={handleValidateConge}>
+          <AsyncButton
+            variant="success"
+            onClick={handleValidateConge}
+            action={validateAction}
+            loadingText="Validation..."
+          >
             Valider
-          </Button>
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showRejectModal} onHide={closeRejectModal} centered>
-        <Modal.Header closeButton>
+      <Modal show={showRejectModal} onHide={closeRejectModal} centered backdrop="static" keyboard={!rejectAction.isRunning}>
+        <Modal.Header closeButton={!rejectAction.isRunning}>
           <Modal.Title>Confirmer le rejet</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -641,16 +654,22 @@ const CongesPage = () => {
               value={rejectComment}
               onChange={(e) => setRejectComment(e.target.value)}
               placeholder="Saisissez le motif du rejet"
+              disabled={rejectAction.isRunning}
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeRejectModal}>
+          <Button variant="secondary" onClick={closeRejectModal} disabled={rejectAction.isRunning}>
             Annuler
           </Button>
-          <Button variant="danger" onClick={handleRejectConge}>
+          <AsyncButton
+            variant="danger"
+            onClick={handleRejectConge}
+            action={rejectAction}
+            loadingText="Rejet..."
+          >
             Rejeter
-          </Button>
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
     </Container>

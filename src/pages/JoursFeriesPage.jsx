@@ -6,6 +6,8 @@ import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 import { useAlert } from '../hooks/useAlert';
+import { useAsyncAction } from '../hooks/useAsyncAction';
+import AsyncButton from '../components/AsyncButton';
 
 const JoursFeriesPage = () => {
   const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
@@ -20,7 +22,6 @@ const JoursFeriesPage = () => {
   const [selectedEntrepriseId, setSelectedEntrepriseId] = useState('');
   const [importYear, setImportYear] = useState(new Date().getFullYear());
   const [importCountry, setImportCountry] = useState('FR');
-  const [importLoading, setImportLoading] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [templateName, setTemplateName] = useState('');
@@ -32,6 +33,13 @@ const JoursFeriesPage = () => {
     recurrent: false,
     est_travail: false,
   });
+  const saveAction = useAsyncAction();
+  const importNationalAction = useAsyncAction();
+  const createTemplateAction = useAsyncAction();
+  const importTemplateAction = useAsyncAction();
+  const exportTemplateAction = useAsyncAction();
+  const applyTemplateAction = useAsyncAction();
+  const deleteAction = useAsyncAction();
 
   useEffect(() => {
     if (user?.role === 'super_admin') {
@@ -100,28 +108,30 @@ const JoursFeriesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      setSuccess('');
+    await saveAction.run(async () => {
+      try {
+        setSuccess('');
 
-      const payload = {
-        ...formData,
-        entreprise_id: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
-      };
+        const payload = {
+          ...formData,
+          entreprise_id: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
+        };
 
-      if (editingJourFerie) {
-        await joursFeriesService.update(editingJourFerie.id, payload);
-      } else {
-        await joursFeriesService.create(payload);
+        if (editingJourFerie) {
+          await joursFeriesService.update(editingJourFerie.id, payload);
+        } else {
+          await joursFeriesService.create(payload);
+        }
+        setShowModal(false);
+        setEditingJourFerie(null);
+        setFormData({ date: '', libelle: '', recurrent: false, est_travail: false });
+        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+        setSuccess('Jour férié enregistré avec succès.');
+      } catch (err) {
+        console.error('Erreur sauvegarde jour férié:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
       }
-      setShowModal(false);
-      setEditingJourFerie(null);
-      setFormData({ date: '', libelle: '', recurrent: false, est_travail: false });
-      await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      setSuccess('Jour férié enregistré avec succès.');
-    } catch (err) {
-      console.error('Erreur sauvegarde jour férié:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
-    }
+    });
   };
 
   const handleEdit = (jourFerie) => {
@@ -142,15 +152,17 @@ const JoursFeriesPage = () => {
     );
     if (!confirmed) return;
 
-    try {
-      clearConfirmation();
-      await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      setSuccess('Jour férié supprimé.');
-    } catch (err) {
-      console.error('Erreur suppression jour férié:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
-    }
+    await deleteAction.run(async () => {
+      try {
+        clearConfirmation();
+        await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+        setSuccess('Jour férié supprimé.');
+      } catch (err) {
+        console.error('Erreur suppression jour férié:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
+      }
+    });
   };
 
   const handleNew = () => {
@@ -160,137 +172,146 @@ const JoursFeriesPage = () => {
   };
 
   const handleImportNational = async () => {
-    try {
-      setSuccess('');
+    await importNationalAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (importYear < 2000 || importYear > 2100) {
-        alert.error('Veuillez saisir une année valide entre 2000 et 2100.');
-        return;
+        if (importYear < 2000 || importYear > 2100) {
+          alert.error('Veuillez saisir une année valide entre 2000 et 2100.');
+          return;
+        }
+
+        if (!/^[A-Z]{2}$/.test(importCountry)) {
+          alert.error('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
+          return;
+        }
+
+        if (user?.role === 'super_admin' && !selectedEntrepriseId) {
+          alert.error('Sélectionnez une entreprise avant de lancer l\'import API.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
+
+        await loadJoursFeries(params);
+        setSuccess(response.data?.message || 'Import terminé.');
+      } catch (err) {
+        console.error('Erreur import jours fériés:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
       }
-
-      if (!/^[A-Z]{2}$/.test(importCountry)) {
-        alert.error('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
-        return;
-      }
-
-      if (user?.role === 'super_admin' && !selectedEntrepriseId) {
-        alert.error('Sélectionnez une entreprise avant de lancer l\'import API.');
-        return;
-      }
-
-      setImportLoading(true);
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
-
-      await loadJoursFeries(params);
-      setSuccess(response.data?.message || 'Import terminé.');
-    } catch (err) {
-      console.error('Erreur import jours fériés:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
-    } finally {
-      setImportLoading(false);
-    }
+    });
   };
 
   const handleCreateTemplateFromCurrent = async () => {
-    try {
-      setSuccess('');
+    await createTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!templateName.trim()) {
-        alert.error('Nom du modèle requis.');
-        return;
+        if (!templateName.trim()) {
+          alert.error('Nom du modèle requis.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const payload = {
+          name: templateName.trim(),
+          region: templateRegion.trim() || null,
+          sourceEntrepriseId: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
+        };
+
+        await joursFeriesService.createTemplate(payload, params);
+        await loadTemplates();
+        setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
+      } catch (err) {
+        console.error('Erreur création modèle:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la création du modèle');
       }
-
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const payload = {
-        name: templateName.trim(),
-        region: templateRegion.trim() || null,
-        sourceEntrepriseId: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
-      };
-
-      await joursFeriesService.createTemplate(payload, params);
-      await loadTemplates();
-      setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
-    } catch (err) {
-      console.error('Erreur création modèle:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la création du modèle');
-    }
+    });
   };
 
   const handleExportTemplateCsv = async () => {
-    try {
-      setSuccess('');
-      if (!selectedTemplateId) {
-        alert.error('Sélectionnez un modèle à exporter.');
-        return;
-      }
+    await exportTemplateAction.run(async () => {
+      try {
+        setSuccess('');
+        if (!selectedTemplateId) {
+          alert.error('Sélectionnez un modèle à exporter.');
+          return;
+        }
 
-      const response = await joursFeriesService.exportTemplateCSV(selectedTemplateId);
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `modele_jours_feries_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Erreur export modèle CSV:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
-    }
+        const response = await joursFeriesService.exportTemplateCSV(selectedTemplateId);
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `modele_jours_feries_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Erreur export modèle CSV:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
+      }
+    });
   };
 
   const handleImportTemplateCsv = async () => {
-    try {
-      setSuccess('');
+    await importTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!templateName.trim()) {
-        alert.error('Nom du modèle requis pour l\'import CSV.');
-        return;
+        if (!templateName.trim()) {
+          alert.error('Nom du modèle requis pour l\'import CSV.');
+          return;
+        }
+        if (!templateCsvContent.trim()) {
+          alert.error('Collez le contenu CSV avant import.');
+          return;
+        }
+
+        await joursFeriesService.importTemplateCSV({
+          name: templateName.trim(),
+          region: templateRegion.trim() || null,
+          csvContent: templateCsvContent,
+        });
+
+        await loadTemplates();
+        setSuccess('Modèle importé depuis CSV avec succès.');
+      } catch (err) {
+        console.error('Erreur import modèle CSV:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
       }
-      if (!templateCsvContent.trim()) {
-        alert.error('Collez le contenu CSV avant import.');
-        return;
-      }
-
-      await joursFeriesService.importTemplateCSV({
-        name: templateName.trim(),
-        region: templateRegion.trim() || null,
-        csvContent: templateCsvContent,
-      });
-
-      await loadTemplates();
-      setSuccess('Modèle importé depuis CSV avec succès.');
-    } catch (err) {
-      console.error('Erreur import modèle CSV:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
-    }
+    });
   };
 
   const handleApplyTemplate = async () => {
-    try {
-      setSuccess('');
+    await applyTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!selectedTemplateId) {
-        alert.error('Sélectionnez un modèle à appliquer.');
-        return;
+        if (!selectedTemplateId) {
+          alert.error('Sélectionnez un modèle à appliquer.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const response = await joursFeriesService.applyTemplate(
+          selectedTemplateId,
+          { replaceExisting: false },
+          params
+        );
+
+        await loadJoursFeries(params);
+        setSuccess(response.data?.message || 'Modèle appliqué.');
+      } catch (err) {
+        console.error('Erreur application modèle:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
       }
-
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const response = await joursFeriesService.applyTemplate(
-        selectedTemplateId,
-        { replaceExisting: false },
-        params
-      );
-
-      await loadJoursFeries(params);
-      setSuccess(response.data?.message || 'Modèle appliqué.');
-    } catch (err) {
-      console.error('Erreur application modèle:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
-    }
+    });
   };
+
+  const importLoading = importNationalAction.isRunning;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -391,13 +412,15 @@ const JoursFeriesPage = () => {
                 />
               </Col>
               <Col md={user?.role === 'super_admin' ? 3 : 6}>
-                <Button
+                <AsyncButton
                   variant="outline-primary"
                   onClick={handleImportNational}
-                  disabled={importLoading || (user?.role === 'super_admin' && !selectedEntrepriseId)}
+                  disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
+                  action={importNationalAction}
+                  loadingText="Import en cours..."
                 >
-                  {importLoading ? 'Import en cours...' : 'Importer les jours fériés via API'}
-                </Button>
+                  Importer les jours fériés via API
+                </AsyncButton>
               </Col>
             </Row>
             <div className="text-muted small mt-3">
@@ -434,12 +457,22 @@ const JoursFeriesPage = () => {
                 />
               </Col>
               <Col md={5} className="d-flex gap-2">
-                <Button variant="outline-primary" onClick={handleCreateTemplateFromCurrent}>
+                <AsyncButton
+                  variant="outline-primary"
+                  onClick={handleCreateTemplateFromCurrent}
+                  action={createTemplateAction}
+                  loadingText="Création du modèle..."
+                >
                   Créer depuis l'entreprise
-                </Button>
-                <Button variant="outline-success" onClick={handleImportTemplateCsv}>
+                </AsyncButton>
+                <AsyncButton
+                  variant="outline-success"
+                  onClick={handleImportTemplateCsv}
+                  action={importTemplateAction}
+                  loadingText="Import du modèle..."
+                >
                   Importer CSV en modèle
-                </Button>
+                </AsyncButton>
               </Col>
             </Row>
 
@@ -459,12 +492,24 @@ const JoursFeriesPage = () => {
                 </Form.Select>
               </Col>
               <Col md={6} className="d-flex gap-2">
-                <Button variant="outline-secondary" onClick={handleExportTemplateCsv} disabled={!selectedTemplateId}>
+                <AsyncButton
+                  variant="outline-secondary"
+                  onClick={handleExportTemplateCsv}
+                  disabled={!selectedTemplateId}
+                  action={exportTemplateAction}
+                  loadingText="Export du modèle..."
+                >
                   Exporter modèle CSV
-                </Button>
-                <Button variant="primary" onClick={handleApplyTemplate} disabled={!selectedTemplateId}>
+                </AsyncButton>
+                <AsyncButton
+                  variant="primary"
+                  onClick={handleApplyTemplate}
+                  disabled={!selectedTemplateId}
+                  action={applyTemplateAction}
+                  loadingText="Application..."
+                >
                   Appliquer à l'entreprise
-                </Button>
+                </AsyncButton>
               </Col>
             </Row>
 
@@ -537,6 +582,7 @@ const JoursFeriesPage = () => {
                               variant="outline-danger"
                               size="sm"
                               onClick={() => handleDelete(jourFerie.id)}
+                              disabled={deleteAction.isRunning}
                             >
                               <FaTrash />
                             </Button>
@@ -553,8 +599,8 @@ const JoursFeriesPage = () => {
       </Card>
 
       {/* Modal d'édition/ajout */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
+      <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static" keyboard={!saveAction.isRunning} centered>
+        <Modal.Header closeButton={!saveAction.isRunning}>
           <Modal.Title>
             {editingJourFerie ? 'Modifier le jour férié' : 'Nouveau jour férié'}
           </Modal.Title>
@@ -570,6 +616,7 @@ const JoursFeriesPage = () => {
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                     required
+                    disabled={saveAction.isRunning}
                   />
                 </Form.Group>
               </Col>
@@ -581,6 +628,7 @@ const JoursFeriesPage = () => {
                     label="Jour travaillé"
                     checked={formData.est_travail}
                     onChange={(e) => setFormData(prev => ({ ...prev, est_travail: e.target.checked }))}
+                    disabled={saveAction.isRunning}
                   />
                 </Form.Group>
               </Col>
@@ -591,6 +639,7 @@ const JoursFeriesPage = () => {
                 label="Jour férié récurrent (chaque année)"
                 checked={formData.recurrent}
                 onChange={(e) => setFormData(prev => ({ ...prev, recurrent: e.target.checked }))}
+                disabled={saveAction.isRunning}
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -601,16 +650,22 @@ const JoursFeriesPage = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, libelle: e.target.value }))}
                 placeholder="Ex: Jour de l'An, Noël..."
                 required
+                disabled={saveAction.isRunning}
               />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saveAction.isRunning}>
               Annuler
             </Button>
-            <Button variant="primary" type="submit">
+            <AsyncButton
+              variant="primary"
+              type="submit"
+              action={saveAction}
+              loadingText={editingJourFerie ? 'Modification...' : 'Création...'}
+            >
               {editingJourFerie ? 'Modifier' : 'Créer'}
-            </Button>
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

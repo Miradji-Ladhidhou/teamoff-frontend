@@ -167,46 +167,22 @@ body {
 }
 
 /* Rétrocompat : les classes inline existantes pointent sur center-alert */
+/* ===== DEPRECATED: Overlays now use centralized AlertSystem (bottom-center) ===== */
+/* These old styles are no longer used. All alerts/notifications use AlertSystem with */
+/* bottom-center positioning, unified animations, and mobile-first responsive design */
+
+/* Legacy floating alerts - Kept for reference only, not used */
 .floating-success-alert,
 .floating-error-alert,
 .floating-system-alert {
-  position: static;
-  width: 100%;
-  transform: none;
-  box-shadow: none;
-  font-weight: 600;
-  font-size: 0.95rem;
+  /* DEPRECATED: Use AlertSystem instead */
+  display: none;
 }
 
-/* Alerte de confirmation inline (bas d'écran) */
+/* Legacy inline confirmation alert - Kept for reference only */
 .inline-confirmation-alert {
-  position: fixed;
-  left: 50%;
-  bottom: 80px;
-  transform: translateX(-50%);
-  width: min(88vw, 620px);
-  z-index: 1059;
-  margin: 0;
-  padding: 0.7rem 0.95rem;
-  background: #fff3cd;
-  border: 2px solid #f59e0b;
-  border-radius: 8px;
-  color: #7a2e0e;
-  font-weight: 700;
-  font-size: 0.95rem;
-  line-height: 1.35;
-  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.22);
-}
-
-@media (max-width: 767.98px) {
-  .center-alert {
-    width: calc(100vw - 32px);
-  }
-
-  .inline-confirmation-alert {
-    bottom: 60px;
-    width: calc(100vw - 32px);
-  }
+  /* DEPRECATED: Use AlertSystem confirmation modal instead */
+  display: none;
 }
 
 /* Tables responsive */

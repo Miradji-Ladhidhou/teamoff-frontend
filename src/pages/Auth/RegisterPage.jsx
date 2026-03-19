@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, ProgressBar } from 'react-bootstrap';
 import { FaBuilding, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
 import { useNotification } from '../../hooks/useNotification';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const RegisterPage = () => {
   const [step, setStep] = useState(1);
@@ -24,7 +26,7 @@ const RegisterPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const submitAction = useAsyncAction();
   const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -88,23 +90,23 @@ const RegisterPage = () => {
     e.preventDefault();
     if (!validateStep2()) return;
 
-    setLoading(true);
-    try {
-      const result = await register(formData);
-      if (result.success) {
-        notification.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
-        navigate('/login');
-      } else {
-        alert.error(result.error);
+    await submitAction.run(async () => {
+      try {
+        const result = await register(formData);
+        if (result.success) {
+          notification.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
+          navigate('/login');
+        } else {
+          alert.error(result.error);
+        }
+      } catch (err) {
+        alert.error('Une erreur inattendue s\'est produite');
       }
-    } catch (err) {
-      alert.error('Une erreur inattendue s\'est produite');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const progress = (step / 2) * 100;
+  const loading = submitAction.isRunning;
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
@@ -339,21 +341,15 @@ const RegisterPage = () => {
                         >
                           Précédent
                         </Button>
-                        <Button
+                        <AsyncButton
                           type="submit"
                           variant="primary"
                           className="flex-fill d-flex align-items-center justify-content-center"
-                          disabled={loading}
+                          action={submitAction}
+                          loadingText="Création..."
                         >
-                          {loading ? (
-                            <>
-                              <Spinner animation="border" size="sm" className="me-2" />
-                              Création...
-                            </>
-                          ) : (
-                            'Créer le compte'
-                          )}
-                        </Button>
+                          Créer le compte
+                        </AsyncButton>
                       </div>
                     </>
                   )}

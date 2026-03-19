@@ -7,6 +7,8 @@ import { NotificationContext } from '../../contexts/NotificationContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
   const { user } = useAuth();
@@ -32,7 +34,7 @@ const NouveauCongePage = () => {
 
   const [congeTypes, setCongeTypes] = useState([]);
   const [soldes, setSoldes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const submitCongeAction = useAsyncAction();
   const [loadingData, setLoadingData] = useState(true);
   const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
@@ -269,8 +271,6 @@ const NouveauCongePage = () => {
   };
 
   const submitCreateLeave = async (precheckWarning = null) => {
-    setLoading(true);
-
     try {
       const response = await congesService.create(formData);
       const warningMessage = response?.data?.overlap_warning?.message;
@@ -283,15 +283,15 @@ const NouveauCongePage = () => {
       const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
       alert.error(finalMessage);
       showNotification(finalMessage, 'error', 6000);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleOverlapModalConfirm = async () => {
     const warningToPreserve = pendingWarningMessage || overlapModalMessage;
     setShowOverlapModal(false);
-    await submitCreateLeave(warningToPreserve);
+    await submitCongeAction.run(async () => {
+      await submitCreateLeave(warningToPreserve);
+    });
     setPendingWarningMessage('');
     setOverlapModalMessage('');
   };
@@ -313,54 +313,55 @@ const NouveauCongePage = () => {
 
     if (!validateForm()) return;
 
-    try {
-      let response;
-      let precheckWarningMessage = null;
-      if (isEditMode) {
-        setLoading(true);
-        response = await congesService.update(id, formData);
-      } else {
-        const overlapCheck = await congesService.checkOverlap(formData);
-        const overlapAction = overlapCheck?.data?.action;
-        const overlapMessage = overlapCheck?.data?.message;
+    await submitCongeAction.run(async () => {
+      try {
+        let response;
+        let precheckWarningMessage = null;
+        if (isEditMode) {
+          response = await congesService.update(id, formData);
+        } else {
+          const overlapCheck = await congesService.checkOverlap(formData);
+          const overlapAction = overlapCheck?.data?.action;
+          const overlapMessage = overlapCheck?.data?.message;
 
-        if (overlapAction === 'block') {
-          const blockMessage = overlapMessage || 'Cette demande est bloquée par la politique de chevauchement.';
-          alert.error(blockMessage);
+          if (overlapAction === 'block') {
+            const blockMessage = overlapMessage || 'Cette demande est bloquée par la politique de chevauchement.';
+            alert.error(blockMessage);
+            return;
+          }
+
+          if (overlapAction === 'warning') {
+            const warningMessage = overlapMessage || 'Attention: un chevauchement a été détecté.';
+            precheckWarningMessage = warningMessage;
+            setPendingWarningMessage(warningMessage);
+            setOverlapModalMessage(warningMessage);
+            setShowOverlapModal(true);
+            return;
+          }
+
+          await submitCreateLeave(precheckWarningMessage);
           return;
         }
 
-        if (overlapAction === 'warning') {
-          const warningMessage = overlapMessage || 'Attention: un chevauchement a été détecté.';
-          precheckWarningMessage = warningMessage;
-          setPendingWarningMessage(warningMessage);
-          setOverlapModalMessage(warningMessage);
-          setShowOverlapModal(true);
-          return;
+        const warningMessage = response?.data?.overlap_warning?.message;
+        if (warningMessage && warningMessage !== precheckWarningMessage) {
+          showNotification(warningMessage, 'warning', 7000);
         }
 
-        await submitCreateLeave(precheckWarningMessage);
-        return;
+        navigate(returnPath);
+      } catch (err) {
+        console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
+        const fallbackMessage = isEditMode
+          ? 'Impossible de modifier la demande de congé.'
+          : 'Impossible de créer la demande de congé.';
+        const finalMessage = extractApiErrorMessage(err, fallbackMessage);
+        alert.error(finalMessage);
+        showNotification(finalMessage, 'error', 6000);
       }
-
-      const warningMessage = response?.data?.overlap_warning?.message;
-      if (warningMessage && warningMessage !== precheckWarningMessage) {
-        showNotification(warningMessage, 'warning', 7000);
-      }
-
-      navigate(returnPath);
-    } catch (err) {
-      console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
-      const fallbackMessage = isEditMode
-        ? 'Impossible de modifier la demande de congé.'
-        : 'Impossible de créer la demande de congé.';
-      const finalMessage = extractApiErrorMessage(err, fallbackMessage);
-      alert.error(finalMessage);
-      showNotification(finalMessage, 'error', 6000);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
+
+  const loading = submitCongeAction.isRunning;
 
   const getSelectedType = () => {
     return congeTypes.find(type => type.id === formData.conge_type_id);
@@ -541,21 +542,15 @@ const NouveauCongePage = () => {
                 </Form.Group>
 
                 <div className="d-flex gap-2">
-                  <Button
+                  <AsyncButton
                     type="submit"
                     variant="primary"
-                    disabled={loading}
                     className="flex-fill"
+                    action={submitCongeAction}
+                    loadingText={isEditMode ? 'Modification en cours...' : 'Création en cours...'}
                   >
-                    {loading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        {isEditMode ? 'Modification en cours...' : 'Création en cours...'}
-                      </>
-                    ) : (
-                      isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande'
-                    )}
-                  </Button>
+                    {isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande'}
+                  </AsyncButton>
                   <Button
                     as={Link}
                     to={returnPath}
@@ -656,16 +651,14 @@ const NouveauCongePage = () => {
           <Button variant="outline-secondary" onClick={handleOverlapModalClose} disabled={loading}>
             Modifier ma demande
           </Button>
-          <Button variant="warning" onClick={handleOverlapModalConfirm} disabled={loading}>
-            {loading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Envoi en cours...
-              </>
-            ) : (
-              'Confirmer et envoyer'
-            )}
-          </Button>
+          <AsyncButton
+            variant="warning"
+            onClick={handleOverlapModalConfirm}
+            action={submitCongeAction}
+            loadingText="Envoi en cours..."
+          >
+            Confirmer et envoyer
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
     </Container>

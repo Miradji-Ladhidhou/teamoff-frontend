@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_FORM = {
   prenom: '',
@@ -33,8 +35,11 @@ const UsersManagement = () => {
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const [exportLoading, setExportLoading] = useState(false);
   const [servicesByCompany, setServicesByCompany] = useState({});
+  const [activeUserActionId, setActiveUserActionId] = useState(null);
+  const submitAction = useAsyncAction();
+  const exportAction = useAsyncAction();
+  const mutateUserAction = useAsyncAction();
 
   useEffect(() => {
     loadData();
@@ -110,45 +115,46 @@ const UsersManagement = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    try {
-      
-      // Validation obligatoire du service pour les employés
-      if (formData.role === 'employe' && !formData.service?.trim()) {
-        alert.error('Le service est obligatoire pour un employé');
-        return;
+    await submitAction.run(async () => {
+      try {
+        // Validation obligatoire du service pour les employés
+        if (formData.role === 'employe' && !formData.service?.trim()) {
+          alert.error('Le service est obligatoire pour un employé');
+          return;
+        }
+
+        const payload = {
+          prenom: formData.prenom,
+          nom: formData.nom,
+          email: formData.email,
+          date_embauche: formData.date_embauche || null,
+          role: formData.role,
+          service: formData.service || null,
+          entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
+          statut: formData.statut
+        };
+
+        if (editingUser && formData.password) {
+          payload.password = formData.password;
+        }
+
+        if (editingUser) {
+          await api.usersService.update(editingUser.id, payload);
+          alert.success('Utilisateur mis à jour avec succès');
+        } else {
+          await api.usersService.create(payload);
+          alert.success('Utilisateur créé avec succès');
+        }
+
+        setShowModal(false);
+        setEditingUser(null);
+        resetForm();
+        loadData();
+      } catch (submitError) {
+        console.error('Erreur sauvegarde utilisateur:', submitError);
+        alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
       }
-
-      const payload = {
-        prenom: formData.prenom,
-        nom: formData.nom,
-        email: formData.email,
-        date_embauche: formData.date_embauche || null,
-        role: formData.role,
-        service: formData.service || null,
-        entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
-        statut: formData.statut
-      };
-
-      if (editingUser && formData.password) {
-        payload.password = formData.password;
-      }
-
-      if (editingUser) {
-        await api.usersService.update(editingUser.id, payload);
-        alert.success('Utilisateur mis à jour avec succès');
-      } else {
-        await api.usersService.create(payload);
-        alert.success('Utilisateur créé avec succès');
-      }
-
-      setShowModal(false);
-      setEditingUser(null);
-      resetForm();
-      loadData();
-    } catch (submitError) {
-      console.error('Erreur sauvegarde utilisateur:', submitError);
-      alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
-    }
+    });
   };
 
   const handleEdit = (targetUser) => {
@@ -176,14 +182,19 @@ const UsersManagement = () => {
       cancelLabel: 'Annuler',
       danger: true,
       onConfirm: async () => {
-        try {
-          await api.usersService.delete(userId);
-          alert.success('Utilisateur supprimé avec succès');
-          loadData();
-        } catch (deleteError) {
-          console.error('Erreur suppression utilisateur:', deleteError);
-          alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-        }
+        await mutateUserAction.run(async () => {
+          setActiveUserActionId(userId);
+          try {
+            await api.usersService.delete(userId);
+            alert.success('Utilisateur supprimé avec succès');
+            loadData();
+          } catch (deleteError) {
+            console.error('Erreur suppression utilisateur:', deleteError);
+            alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+          } finally {
+            setActiveUserActionId(null);
+          }
+        });
       }
     });
   };
@@ -191,39 +202,44 @@ const UsersManagement = () => {
   const toggleUserStatus = async (targetUser) => {
     const nextStatus = targetUser.statut === 'actif' ? 'inactif' : 'actif';
 
-    try {
-      await api.usersService.update(targetUser.id, { statut: nextStatus });
-      alert.success(`Utilisateur ${nextStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`);
-      loadData();
-    } catch (statusError) {
-      console.error('Erreur changement statut:', statusError);
-      alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
-    }
+    await mutateUserAction.run(async () => {
+      setActiveUserActionId(targetUser.id);
+      try {
+        await api.usersService.update(targetUser.id, { statut: nextStatus });
+        alert.success(`Utilisateur ${nextStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`);
+        loadData();
+      } catch (statusError) {
+        console.error('Erreur changement statut:', statusError);
+        alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
+      } finally {
+        setActiveUserActionId(null);
+      }
+    });
   };
 
   const handleExportCsv = async () => {
-    try {
-      setExportLoading(true);
+    await exportAction.run(async () => {
+      try {
+        const response = await api.exportsService.exportUtilisateursCSV();
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
 
-      const response = await api.exportsService.exportUtilisateursCSV();
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const date = new Date().toISOString().slice(0, 10);
-
-      link.href = url;
-      link.download = `utilisateurs_${date}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (exportError) {
-      console.error('Erreur export utilisateurs CSV:', exportError);
-      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
-    } finally {
-      setExportLoading(false);
-    }
+        link.href = url;
+        link.download = `utilisateurs_${date}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (exportError) {
+        console.error('Erreur export utilisateurs CSV:', exportError);
+        alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
+      }
+    });
   };
+
+  const exportLoading = exportAction.isRunning;
 
   const filteredUsers = users.filter((targetUser) => {
     const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''}`.toLowerCase();
@@ -291,14 +307,15 @@ const UsersManagement = () => {
           </p>
         </div>
         <div className="d-flex gap-2">
-          <Button
+          <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
-            disabled={exportLoading}
+            action={exportAction}
+            loadingText="Export..."
           >
             <FaDownload className="me-2" />
-            {exportLoading ? 'Export...' : 'Exporter CSV'}
-          </Button>
+            Exporter CSV
+          </AsyncButton>
           <Button
             variant="primary"
             onClick={() => {
@@ -425,23 +442,30 @@ const UsersManagement = () => {
                       <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
                         <FaEdit />
                       </Button>
-                      <Button
+                      <AsyncButton
                         variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                         size="sm"
                         onClick={() => toggleUserStatus(targetUser)}
                         title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
+                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                        loadingText=""
+                        disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
                       >
                         {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
-                      </Button>
-                      <Button
+                      </AsyncButton>
+                      <AsyncButton
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDelete(targetUser.id)}
                         title="Supprimer"
                         disabled={targetUser.id === user?.id}
+                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                        loadingText=""
                       >
                         <FaTrash />
-                      </Button>
+                      </AsyncButton>
                     </div>
                   </td>
                 </tr>
@@ -463,8 +487,8 @@ const UsersManagement = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered>
+        <Modal.Header closeButton={!submitAction.isRunning}>
           <Modal.Title>{editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
@@ -474,20 +498,20 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Prenom *</Form.Label>
-                  <Form.Control type="text" value={formData.prenom} onChange={(event) => setFormData({ ...formData, prenom: event.target.value })} required />
+                  <Form.Control type="text" value={formData.prenom} onChange={(event) => setFormData({ ...formData, prenom: event.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nom *</Form.Label>
-                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required />
+                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
             </Row>
 
             <Form.Group className="mb-3">
               <Form.Label>Email *</Form.Label>
-              <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required />
+              <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required disabled={submitAction.isRunning} />
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -496,6 +520,7 @@ const UsersManagement = () => {
                 type="date"
                 value={formData.date_embauche}
                 onChange={(event) => setFormData({ ...formData, date_embauche: event.target.value })}
+                disabled={submitAction.isRunning}
               />
               <Form.Text className="text-muted">
                 Utilisée pour le calcul proratisé des congés lors d'une arrivée en cours d'année.
@@ -506,7 +531,7 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Role *</Form.Label>
-                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value, service: ['employe', 'manager'].includes(event.target.value) ? formData.service : '' })} required>
+                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value, service: ['employe', 'manager'].includes(event.target.value) ? formData.service : '' })} required disabled={submitAction.isRunning}>
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                     {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
@@ -521,7 +546,7 @@ const UsersManagement = () => {
                     value={formData.service}
                     onChange={(event) => setFormData({ ...formData, service: event.target.value })}
                     required={formData.role === 'employe'}
-                    disabled={selectableServices.length === 0 || !isServiceRole}
+                    disabled={submitAction.isRunning || selectableServices.length === 0 || !isServiceRole}
                   >
                     <option value="">{selectableServices.length > 0 ? 'Sélectionner un service' : 'Aucun service disponible'}</option>
                     {selectableServices.map((serviceName) => (
@@ -548,6 +573,7 @@ const UsersManagement = () => {
                       value={formData.entreprise_id}
                       onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value, service: '' })}
                       required
+                      disabled={submitAction.isRunning}
                     >
                       <option value="">Selectionner une entreprise</option>
                       {companies.map((company) => (
@@ -564,7 +590,7 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>
-                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })}>
+                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })} disabled={submitAction.isRunning}>
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                     <option value="en_attente">En attente</option>
@@ -579,14 +605,22 @@ const UsersManagement = () => {
                     value={formData.password}
                     onChange={(event) => setFormData({ ...formData, password: event.target.value })}
                     placeholder={editingUser ? 'Laisser vide pour conserver le mot de passe actuel' : 'Un mot de passe temporaire sera genere si vous laissez vide'}
+                    disabled={submitAction.isRunning}
                   />
                 </Form.Group>
               </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-            <Button variant="primary" type="submit">{editingUser ? 'Mettre a jour' : 'Creer'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitAction.isRunning}>Annuler</Button>
+            <AsyncButton
+              variant="primary"
+              type="submit"
+              action={submitAction}
+              loadingText={editingUser ? 'Mise a jour...' : 'Creation...'}
+            >
+              {editingUser ? 'Mettre a jour' : 'Creer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

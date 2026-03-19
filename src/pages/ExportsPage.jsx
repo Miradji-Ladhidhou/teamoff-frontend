@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, ProgressBar, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table } from 'react-bootstrap';
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { exportsService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useAlert } from '../hooks/useAlert';
+import { useAsyncAction } from '../hooks/useAsyncAction';
+import AsyncButton from '../components/AsyncButton';
 
 const ALLOWED_FORMATS_BY_TYPE = {
   conges: ['csv', 'pdf'],
@@ -16,11 +18,11 @@ const ALLOWED_FORMATS_BY_TYPE = {
 
 const ExportsPage = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const exportAction = useAsyncAction();
+  const previewAction = useAsyncAction();
   const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [exportProgress, setExportProgress] = useState(0);
-  const [previewLoading, setPreviewLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
   const [exportParams, setExportParams] = useState({
@@ -65,86 +67,89 @@ const ExportsPage = () => {
   };
 
   const handleExport = async () => {
-    setLoading(true);
-    setSuccess('');
-    setExportProgress(0);
+    await exportAction.run(async () => {
+      setSuccess('');
+      setExportProgress(0);
 
-    try {
-      // Simulation de la progression
-      const progressInterval = setInterval(() => {
-        setExportProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
+      let progressInterval = null;
+      try {
+        // Simulation de la progression
+        progressInterval = setInterval(() => {
+          setExportProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return prev;
+            }
+            return prev + 10;
+          });
+        }, 200);
+
+        let response;
+        const { type, format, ...queryParamsRaw } = exportParams;
+        const queryParams = { ...queryParamsRaw };
+
+        if (!queryParams.dateDebut) delete queryParams.dateDebut;
+        if (!queryParams.dateFin) delete queryParams.dateFin;
+        if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
+        if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
+
+        const allowedFormats = ALLOWED_FORMATS_BY_TYPE[type] || ['csv'];
+        if (!allowedFormats.includes(format)) {
+          throw new Error('Ce format n\'est pas disponible pour ce type d\'export.');
+        }
+
+        // Utiliser les bonnes fonctions selon le type et le format
+        if (type === 'conges') {
+          if (format === 'csv') {
+            response = await exportsService.exportCongesCSV(queryParams);
+          } else if (format === 'pdf') {
+            response = await exportsService.exportCongesPDF(queryParams);
           }
-          return prev + 10;
-        });
-      }, 200);
+        } else if (type === 'utilisateurs') {
+          if (format === 'csv') {
+            response = await exportsService.exportUtilisateursCSV();
+          }
+        } else if (type === 'audit') {
+          if (format === 'csv') {
+            response = await exportsService.exportAuditCSV(queryParams);
+          }
+        } else if (type === 'statistiques' || type === 'usage') {
+          if (format === 'pdf') {
+            response = await exportsService.exportUsagePDF();
+          }
+        }
 
-      let response;
-      const { type, format, ...queryParamsRaw } = exportParams;
-      const queryParams = { ...queryParamsRaw };
+        if (!response || !response.data) {
+          throw new Error('Aucune réponse de l\'API pour cet export.');
+        }
 
-      if (!queryParams.dateDebut) delete queryParams.dateDebut;
-      if (!queryParams.dateFin) delete queryParams.dateFin;
-      if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
-      if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
+        clearInterval(progressInterval);
+        setExportProgress(100);
 
-      const allowedFormats = ALLOWED_FORMATS_BY_TYPE[type] || ['csv'];
-      if (!allowedFormats.includes(format)) {
-        throw new Error('Ce format n\'est pas disponible pour ce type d\'export.');
+        // Télécharger le fichier
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        const fileName = `export_${exportParams.type}_${new Date().toISOString().split('T')[0]}.${format}`;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setSuccess('Export terminé avec succès !');
+        setExportProgress(0);
+      } catch (err) {
+        console.error('Erreur lors de l\'export:', err);
+        const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
+        alert.error(serverMessage || err.message || 'Erreur lors de l\'export. Veuillez réessayer.');
+        setExportProgress(0);
+      } finally {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
       }
-
-      // Utiliser les bonnes fonctions selon le type et le format
-      if (type === 'conges') {
-        if (format === 'csv') {
-          response = await exportsService.exportCongesCSV(queryParams);
-        } else if (format === 'pdf') {
-          response = await exportsService.exportCongesPDF(queryParams);
-        }
-      } else if (type === 'utilisateurs') {
-        if (format === 'csv') {
-          response = await exportsService.exportUtilisateursCSV();
-        }
-      } else if (type === 'audit') {
-        if (format === 'csv') {
-          response = await exportsService.exportAuditCSV(queryParams);
-        }
-      } else if (type === 'statistiques' || type === 'usage') {
-        if (format === 'pdf') {
-          response = await exportsService.exportUsagePDF();
-        }
-      }
-
-      if (!response || !response.data) {
-        throw new Error('Aucune réponse de l\'API pour cet export.');
-      }
-
-      clearInterval(progressInterval);
-      setExportProgress(100);
-
-      // Télécharger le fichier
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-
-      const fileName = `export_${exportParams.type}_${new Date().toISOString().split('T')[0]}.${format}`;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setSuccess('Export terminé avec succès !');
-      setExportProgress(0);
-
-    } catch (err) {
-      console.error('Erreur lors de l\'export:', err);
-      const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
-      alert.error(serverMessage || err.message || 'Erreur lors de l\'export. Veuillez réessayer.');
-      setExportProgress(0);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const buildQueryParams = () => {
@@ -160,24 +165,25 @@ const ExportsPage = () => {
   };
 
   const handlePreview = async () => {
-    setPreviewLoading(true);
-
-    try {
-      const queryParams = buildQueryParams();
-      const response = await exportsService.preview({
-        ...queryParams,
-        limit: 50,
-      });
-      setPreviewData(response.data);
-    } catch (err) {
-      console.error('Erreur preview export:', err);
-      const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
-      alert.error(serverMessage || 'Erreur lors de la prévisualisation des données.');
-      setPreviewData(null);
-    } finally {
-      setPreviewLoading(false);
-    }
+    await previewAction.run(async () => {
+      try {
+        const queryParams = buildQueryParams();
+        const response = await exportsService.preview({
+          ...queryParams,
+          limit: 50,
+        });
+        setPreviewData(response.data);
+      } catch (err) {
+        console.error('Erreur preview export:', err);
+        const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
+        alert.error(serverMessage || 'Erreur lors de la prévisualisation des données.');
+        setPreviewData(null);
+      }
+    });
   };
+
+  const loading = exportAction.isRunning;
+  const previewLoading = previewAction.isRunning;
 
   const allowedFormats = ALLOWED_FORMATS_BY_TYPE[exportParams.type] || ['csv'];
 
@@ -379,36 +385,29 @@ const ExportsPage = () => {
 
                 {/* Bouton d'export */}
                 <div className="d-flex gap-2">
-                  <Button
+                  <AsyncButton
                     onClick={handlePreview}
-                    disabled={previewLoading || loading}
-                    variant="outline-secondary"
-                  >
-                    {previewLoading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        Prévisualisation...
-                      </>
-                    ) : 'Prévisualiser les données'}
-                  </Button>
-                  <Button
-                    onClick={handleExport}
                     disabled={loading}
+                    variant="outline-secondary"
+                    action={previewAction}
+                    loadingText="Prévisualisation..."
+                  >
+                    Prévisualiser les données
+                  </AsyncButton>
+                  <AsyncButton
+                    onClick={handleExport}
                     variant="primary"
                     className="flex-fill"
+                    action={exportAction}
+                    loadingText="Export en cours..."
                   >
-                    {loading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        Export en cours...
-                      </>
-                    ) : (
+                    {!loading && (
                       <>
                         <FaDownload className="me-2" />
                         Exporter
                       </>
                     )}
-                  </Button>
+                  </AsyncButton>
                 </div>
 
                 {/* Barre de progression */}

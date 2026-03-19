@@ -1,15 +1,17 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Badge, Alert } from 'react-bootstrap';
 import { FaEnvelope, FaArrowLeft, FaCheck } from 'react-icons/fa';
 import { NotificationContext } from '../../contexts/NotificationContext';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const submitAction = useAsyncAction();
   const [submitted, setSubmitted] = useState(false);
   const alert = useAlert();
   const { showNotification } = useContext(NotificationContext);
@@ -21,26 +23,25 @@ const ForgotPasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    await submitAction.run(async () => {
+      try {
+        if (!email.trim()) {
+          alert.error('Veuillez entrer une adresse email');
+          return;
+        }
 
-    try {
-      if (!email.trim()) {
-        alert.error('Veuillez entrer une adresse email');
-        setLoading(false);
-        return;
+        await authService.forgotPassword({ email: email.trim() });
+        setSubmitted(true);
+        showNotification('Un email de réinitialisation a été envoyé', 'success');
+      } catch (err) {
+        const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de l\'envoi';
+        alert.error(errorMsg);
+        showNotification(errorMsg, 'error');
       }
-
-      await authService.forgotPassword({ email: email.trim() });
-      setSubmitted(true);
-      showNotification('Un email de réinitialisation a été envoyé', 'success');
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de l\'envoi';
-      alert.error(errorMsg);
-      showNotification(errorMsg, 'error');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
+
+  const loading = submitAction.isRunning;
 
   return (
     <div
@@ -113,24 +114,21 @@ const ForgotPasswordPage = () => {
                         />
                       </Form.Group>
 
-                      <Button
+                      <AsyncButton
                         variant="primary"
                         type="submit"
-                        disabled={loading || !email.trim()}
+                        disabled={!email.trim()}
                         className="w-100 py-2 fw-500 mb-3"
+                        action={submitAction}
+                        loadingText="Envoi..."
                       >
-                        {loading ? (
-                          <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Envoi...
-                          </>
-                        ) : (
+                        {!loading && (
                           <>
                             <FaEnvelope className="me-2" />
                             Envoyer le lien de réinitialisation
                           </>
                         )}
-                      </Button>
+                      </AsyncButton>
                     </Form>
 
                     <div className="text-center">

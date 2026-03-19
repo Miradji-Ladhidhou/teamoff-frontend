@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const CongeDetailsPage = () => {
   const { id } = useParams();
@@ -19,7 +21,7 @@ const CongeDetailsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentaire, setCommentaire] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
+  const action = useAsyncAction();
 
   useEffect(() => {
     loadCongeDetails();
@@ -39,42 +41,43 @@ const CongeDetailsPage = () => {
   };
 
   const handleDelete = async () => {
-    setActionLoading(true);
-    try {
-      await congesService.delete(id);
-      navigate('/conges', {
-        state: {
-          message: 'Demande de congé supprimée avec succès',
-          type: 'success'
-        }
-      });
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
-      alert.error('Erreur lors de la suppression de la demande');
-    } finally {
-      setActionLoading(false);
-      setShowDeleteModal(false);
-    }
+    await action.run(async () => {
+      try {
+        await congesService.delete(id);
+        navigate('/conges', {
+          state: {
+            message: 'Demande de congé supprimée avec succès',
+            type: 'success'
+          }
+        });
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert.error('Erreur lors de la suppression de la demande');
+      } finally {
+        setShowDeleteModal(false);
+      }
+    });
   };
 
   const handleStatusChange = async (newStatus, comment = '') => {
-    setActionLoading(true);
-    try {
-      if (newStatus === 'valide') {
-        await congesService.validate(id, { commentaire: comment });
-      } else if (newStatus === 'refuse') {
-        await congesService.reject(id, { commentaire: comment });
+    await action.run(async () => {
+      try {
+        if (newStatus === 'valide') {
+          await congesService.validate(id, { commentaire: comment });
+        } else if (newStatus === 'refuse') {
+          await congesService.reject(id, { commentaire: comment });
+        }
+        await loadCongeDetails(); // Recharger les données
+        setShowCommentModal(false);
+        setCommentaire('');
+      } catch (err) {
+        console.error('Erreur lors de la mise à jour du statut:', err);
+        alert.error('Erreur lors de la mise à jour du statut');
       }
-      await loadCongeDetails(); // Recharger les données
-      setShowCommentModal(false);
-      setCommentaire('');
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
-      alert.error('Erreur lors de la mise à jour du statut');
-    } finally {
-      setActionLoading(false);
-    }
+    });
   };
+
+  const actionLoading = action.isRunning;
 
   const getStatusBadge = (statut) => {
     const statusConfig = {
@@ -181,21 +184,6 @@ const CongeDetailsPage = () => {
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des détails...</p>
-        </div>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert variant="danger" className="text-center">
-          {error}
-        </Alert>
-        <div className="text-center mt-3">
-          <Button as={Link} to="/conges" variant="outline-primary">
-            Retour à la liste
-          </Button>
         </div>
       </Container>
     );
@@ -441,18 +429,17 @@ const CongeDetailsPage = () => {
               </Card.Header>
               <Card.Body>
                 <div className="d-grid gap-2">
-                  <Button
+                  <AsyncButton
                     variant="success"
                     onClick={() => handleStatusChange('valide')}
-                    disabled={actionLoading}
+                    action={action}
+                    loadingText="Traitement..."
                   >
-                    {actionLoading ? (
-                      <Spinner animation="border" size="sm" className="me-2" />
-                    ) : (
+                    {!actionLoading && (
                       <FaCheck className="me-2" />
                     )}
                     Approuver
-                  </Button>
+                  </AsyncButton>
                   <Button
                     variant="danger"
                     onClick={() => setShowCommentModal(true)}
@@ -510,8 +497,8 @@ const CongeDetailsPage = () => {
       </Row>
 
       {/* Modal de suppression */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+        <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>
             {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final'
               ? "Confirmer l'annulation"
@@ -524,26 +511,23 @@ const CongeDetailsPage = () => {
             : 'Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action est irréversible.'}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={actionLoading}>
             Fermer
           </Button>
-          <Button
+          <AsyncButton
             variant="danger"
             onClick={handleDelete}
-            disabled={actionLoading}
+            action={action}
+            loadingText={user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annulation...' : 'Suppression...'}
           >
-            {actionLoading ? (
-              <Spinner animation="border" size="sm" className="me-2" />
-            ) : (
-              user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annuler le congé' : 'Supprimer'
-            )}
-          </Button>
+            {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annuler le congé' : 'Supprimer'}
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
 
       {/* Modal pour commentaire de refus */}
-      <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)}>
-        <Modal.Header closeButton>
+      <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+        <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>Refuser la demande</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -555,25 +539,24 @@ const CongeDetailsPage = () => {
               value={commentaire}
               onChange={(e) => setCommentaire(e.target.value)}
               placeholder="Veuillez justifier le refus de cette demande..."
+              disabled={actionLoading}
               required
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCommentModal(false)}>
+          <Button variant="secondary" onClick={() => setShowCommentModal(false)} disabled={actionLoading}>
             Annuler
           </Button>
-          <Button
+          <AsyncButton
             variant="danger"
             onClick={() => handleStatusChange('refuse', commentaire)}
             disabled={actionLoading || !commentaire.trim()}
+            action={action}
+            loadingText="Refus..."
           >
-            {actionLoading ? (
-              <Spinner animation="border" size="sm" className="me-2" />
-            ) : (
-              'Refuser'
-            )}
-          </Button>
+            Refuser
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
     </Container>

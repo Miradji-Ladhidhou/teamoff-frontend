@@ -608,7 +608,7 @@ const JoursBloquesPage = () => {
         )}
       </Card>
 
-      <Modal show={showCounterModal} onHide={() => setShowCounterModal(false)}>
+      <Modal show={showCounterModal} onHide={() => setShowCounterModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Modifier le compteur</Modal.Title>
         </Modal.Header>

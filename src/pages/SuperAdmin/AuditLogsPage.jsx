@@ -307,7 +307,7 @@ const AuditLogs = () => {
       </Card>
 
       {/* Modale détails */}
-      <Modal show={!!selectedLog} onHide={() => setSelectedLog(null)} size="lg">
+      <Modal show={!!selectedLog} onHide={() => setSelectedLog(null)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Détails du log d'audit</Modal.Title>
         </Modal.Header>
