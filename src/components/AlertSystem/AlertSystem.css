@@ -1,0 +1,499 @@
+/* ==================== TOAST CONTAINER ==================== */
+
+.toast-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 90%;
+  width: 100%;
+  max-width: 500px;
+  align-items: center;
+}
+
+/* ==================== TOAST ITEM ==================== */
+
+.toast-item {
+  pointer-events: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: toastSlideIn 0.3s ease-out forwards;
+  min-height: 60px;
+  border-left: 4px solid;
+}
+
+/* Animations */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.toast-item.toast-exit {
+  animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+/* ==================== TOAST TYPES ==================== */
+
+.toast-success {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+}
+
+.toast-error {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+}
+
+.toast-info {
+  border-left-color: #0d6efd;
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
+}
+
+.toast-warning {
+  border-left-color: #ffc107;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+/* ==================== TOAST CONTENT ==================== */
+
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+}
+
+.toast-icon-success {
+  color: #28a745;
+}
+
+.toast-icon-error {
+  color: #dc3545;
+}
+
+.toast-icon-info {
+  color: #0d6efd;
+}
+
+.toast-icon-warning {
+  color: #ffc107;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #212529;
+  word-break: break-word;
+}
+
+.toast-close-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  transition: color 0.2s ease;
+  margin-left: auto;
+  margin-top: 2px;
+}
+
+.toast-close-btn:hover {
+  color: #212529;
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==================== CONFIRMATION MODAL ==================== */
+
+.confirmation-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10001;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  width: 100%;
+  max-width: 500px;
+  animation: modalSlideIn 0.3s ease-out forwards;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+.confirmation-modal.modal-exit {
+  animation: modalSlideOut 0.2s ease-in forwards;
+}
+
+/* ==================== MODAL HEADER ==================== */
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+  line-height: 1.4;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: #f8f9fa;
+  color: #212529;
+}
+
+.modal-close-btn:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* ==================== MODAL BODY ==================== */
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-description {
+  margin: 0;
+  font-size: 15px;
+  color: #495057;
+  line-height: 1.6;
+}
+
+/* ==================== MODAL FOOTER ==================== */
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ==================== MODAL BUTTONS ==================== */
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.modal-btn:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Cancel button */
+.modal-btn-cancel {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #212529;
+}
+
+.modal-btn-cancel:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.modal-btn-cancel:active:not(:disabled) {
+  background: #dee2e6;
+}
+
+/* Confirm button */
+.modal-btn-confirm {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.modal-btn-confirm:hover:not(:disabled) {
+  background: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.modal-btn-confirm:active:not(:disabled) {
+  background: #0a58ca;
+  border-color: #0a3622;
+}
+
+/* Danger confirm button */
+.modal-btn-danger {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.modal-btn-danger:hover:not(:disabled) {
+  background: #bb2d3b;
+  border-color: #b02a37;
+}
+
+.modal-btn-danger:active:not(:disabled) {
+  background: #a02834;
+  border-color: #9d2c2d;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 640px) {
+  .toast-container {
+    max-width: 95%;
+    width: calc(100% - 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    top: auto;
+    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  .toast-item {
+    padding: 12px;
+    min-height: 56px;
+  }
+
+  .toast-message {
+    font-size: 13px;
+  }
+
+  .confirmation-modal {
+    max-width: 95%;
+    width: calc(100% - 20px);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+.toast-item:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .toast-item,
+  .confirmation-modal,
+  .modal-overlay {
+    animation: none !important;
+  }
+
+  .toast-item,
+  .confirmation-modal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Dark mode support (optionnel) */
+@media (prefers-color-scheme: dark) {
+  .toast-item {
+    background: #2d2d2d;
+    color: #e9ecef;
+  }
+
+  .toast-message {
+    color: #e9ecef;
+  }
+
+  .toast-close-btn {
+    color: #adb5bd;
+  }
+
+  .toast-close-btn:hover {
+    color: #e9ecef;
+  }
+
+  .confirmation-modal {
+    background: #2d2d2d;
+    color: #e9ecef;
+  }
+
+  .modal-header {
+    border-bottom-color: #444;
+  }
+
+  .modal-title {
+    color: #e9ecef;
+  }
+
+  .modal-close-btn {
+    color: #adb5bd;
+  }
+
+  .modal-close-btn:hover {
+    background: #3d3d3d;
+    color: #e9ecef;
+  }
+
+  .modal-body {
+    color: #e9ecef;
+  }
+
+  .modal-description {
+    color: #adb5bd;
+  }
+
+  .modal-footer {
+    border-top-color: #444;
+  }
+
+  .modal-btn-cancel {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #e9ecef;
+  }
+
+  .modal-btn-cancel:hover {
+    background: #4d4d4d;
+  }
+}

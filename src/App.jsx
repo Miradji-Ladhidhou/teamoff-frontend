@@ -2,7 +2,12 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AlertProvider } from './contexts/AlertContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
+
+// Alert System Components
+import ToastContainer from './components/AlertSystem/ToastContainer';
+import ConfirmationModal from './components/AlertSystem/ConfirmationModal';
 
 import { getDefaultRoute } from './utils/navigation';
 import AppFooter from './components/Layout/AppFooter';
@@ -135,7 +140,12 @@ function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Routes>
+        <AlertProvider>
+          {/* Global Alert System Components */}
+          <ToastContainer />
+          <ConfirmationModal />
+          
+          <Routes>
 
         {/* Routes publiques */}
         <Route
@@ -307,6 +317,7 @@ function App() {
           <Route path="*" element={<HomeRedirect />} />
 
         </Routes>
+        </AlertProvider>
       </NotificationProvider>
     </AuthProvider>
   );
