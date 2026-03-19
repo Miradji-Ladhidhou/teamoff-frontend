@@ -112,7 +112,7 @@
 .modal-title {
   font-size: 18px;
   font-weight: 600;
-  color: #212529;
+  color: #3d87d1;
   margin: 0;
   line-height: 1.4;
 }
@@ -162,7 +162,7 @@
   padding: 24px;
   overflow-y: auto;
   max-height: calc(100vh - 200px);
-  color: #495057;
+  color: #69acef;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -198,7 +198,7 @@
 .modal-body .form-label {
   font-size: 13px;
   font-weight: 500;
-  color: #212529;
+  color: #69acef;
   margin-bottom: 6px;
 }
 
@@ -429,28 +429,4 @@
   }
 }
 
-/* Dark mode support (if implemented) */
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background: #1a1a2e;
-    color: #f0f0f0;
-  }
 
-  .modal-header,
-  .modal-footer {
-    border-color: #3d3d5c;
-    background: #16213e;
-  }
-
-  .modal-title {
-    color: #f0f0f0;
-  }
-
-  .modal-body {
-    color: #d0d0d0;
-  }
-
-  .btn-close {
-    filter: invert(1);
-  }
-}

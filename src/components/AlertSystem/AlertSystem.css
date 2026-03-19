@@ -139,25 +139,7 @@
   animation: toastOut 0.25s ease-in forwards;
 }
 
-.toast-success {
-  background: #fef08a;
-  border-left-color: #ca8a04;
-}
-
-.toast-error {
-  background: #fef08a;
-  border-left-color: #ca8a04;
-}
-
-.toast-info {
-  background: #fef08a;
-  border-left-color: #ca8a04;
-}
-
-.toast-warning {
-  background: #fef08a;
-  border-left-color: #ca8a04;
-}
+/* Tous les types partagent le même style — géré par .toast-item */
 
 /* ===================================================================
    TOAST CONTENT
@@ -180,12 +162,8 @@
   width: 18px;
   height: 18px;
   display: flex;
+  color: #111827;
 }
-
-.toast-icon-success { color: #111827; }
-.toast-icon-error   { color: #111827; }
-.toast-icon-info    { color: #111827; }
-.toast-icon-warning { color: #111827; }
 
 /* Texte sombre sur fond pastel clair — contraste WCAG AA garanti */
 .toast-message {
@@ -197,10 +175,7 @@
   color: #111827;
 }
 
-.toast-success .toast-message { color: #111827; }
-.toast-error   .toast-message { color: #111827; }
-.toast-info    .toast-message { color: #111827; }
-.toast-warning .toast-message { color: #111827; }
+/* Couleur couverte par .toast-message */
 
 .toast-close-btn {
   flex-shrink: 0;
@@ -220,10 +195,7 @@
   transition: opacity 0.15s, background 0.15s;
 }
 
-.toast-success .toast-close-btn { color: #111827; }
-.toast-error   .toast-close-btn { color: #111827; }
-.toast-info    .toast-close-btn { color: #111827; }
-.toast-warning .toast-close-btn { color: #111827; }
+/* Couleur couverte par .toast-close-btn */
 
 .toast-close-btn:hover {
   opacity: 1;
