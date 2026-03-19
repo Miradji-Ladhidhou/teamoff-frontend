@@ -5,6 +5,7 @@ import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye }
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const DashboardPage = () => {
   const { user, isAdmin } = useAuth();
@@ -20,7 +21,7 @@ const DashboardPage = () => {
   const [soldes, setSoldes] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -31,7 +32,6 @@ const DashboardPage = () => {
 
       try {
         setLoading(true);
-        setError('');
 
         // Paramètres pour les congés selon le rôle
         let congesParams = {};
@@ -118,7 +118,7 @@ const DashboardPage = () => {
 
       } catch (err) {
         console.error('Erreur dashboard:', err);
-        setError('Impossible de charger les données du tableau de bord.');
+        alert.error('Impossible de charger les données du tableau de bord.');
       } finally {
         setLoading(false);
       }
@@ -200,7 +200,7 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
 
       <InfoCardInfo title="Comment utiliser ce tableau de bord">
         <p className="mb-1">Cette vue vous donne l'essentiel en un coup d'oeil:</p>

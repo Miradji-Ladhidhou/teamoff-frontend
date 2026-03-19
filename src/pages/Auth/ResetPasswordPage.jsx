@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from 'react-bootstrap';
 import { FaLock, FaCheck, FaArrowLeft } from 'react-icons/fa';
 import { NotificationContext } from '../../contexts/NotificationContext';
+import { useAlert } from '../../hooks/useAlert';
 import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
 
@@ -22,7 +23,7 @@ const ResetPasswordPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   if (!token) {
     return (
@@ -63,7 +64,6 @@ const ResetPasswordPage = () => {
       ...prev,
       [name]: value,
     }));
-    if (error) setError('');
   };
 
   const doPasswordsMatch = formData.newPassword && formData.confirmPassword === formData.newPassword;
@@ -75,11 +75,9 @@ const ResetPasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
     try {
       if (!isPasswordFormValid) {
-        setError('Les mots de passe ne correspondent pas ou ne respectent pas les exigences');
+        alert.error('Les mots de passe ne correspondent pas ou ne respectent pas les exigences');
         setLoading(false);
         return;
       }
@@ -97,7 +95,7 @@ const ResetPasswordPage = () => {
       }, 2000);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de la réinitialisation';
-      setError(errorMsg);
+      alert.error(errorMsg);
       showNotification(errorMsg, 'error');
     } finally {
       setLoading(false);
@@ -161,8 +159,6 @@ const ResetPasswordPage = () => {
                 {!submitted ? (
                   <>
                     <h4 className="fw-bold text-center mb-4">Réinitialiser le mot de passe</h4>
-
-                    {error && <Alert variant="danger" className="floating-error-alert mb-4 dismissible">{error}</Alert>}
 
                     <Form onSubmit={handleSubmit}>
                       <Form.Group className="mb-4">

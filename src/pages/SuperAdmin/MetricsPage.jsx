@@ -4,6 +4,7 @@ import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer } from '
 import { useAuth } from '../../contexts/AuthContext';
 import { metricsService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const normalizeMetrics = (raw = {}) => {
   const totalRequests = Number(raw.totalRequests ?? raw.requests ?? 0);
@@ -54,7 +55,7 @@ const MetricsPage = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     if (user.role === 'super_admin') {
@@ -69,7 +70,7 @@ const MetricsPage = () => {
       setMetrics(normalizeMetrics(response.data));
     } catch (err) {
       console.error('Erreur lors du chargement des métriques:', err);
-      setError('Erreur lors du chargement des métriques');
+      alert.error('Erreur lors du chargement des métriques');
     } finally {
       setLoading(false);
     }

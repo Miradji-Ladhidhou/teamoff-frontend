@@ -4,6 +4,7 @@ import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Modal } from '
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
+import { useAlert } from '../../hooks/useAlert';
 import AppFooter from '../../components/Layout/AppFooter';
 
 const LoginPage = () => {
@@ -13,7 +14,8 @@ const LoginPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
+  const [popupError, setPopupError] = useState('');
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [canCloseErrorPopup, setCanCloseErrorPopup] = useState(false);
 
@@ -37,26 +39,26 @@ const LoginPage = () => {
       ...prev,
       [name]: value
     }));
-    // Effacer l'erreur quand l'utilisateur commence à taper
-    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
     try {
       const result = await login(formData);
       if (result.success) {
         const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
         navigate(getDefaultRoute(savedUser?.role));
       } else {
-        setError(result.error);
+        const message = result.error || 'Identifiant ou mot de passe incorrect';
+        setPopupError(message);
+        alert.error(message);
         setShowErrorPopup(true);
       }
     } catch (err) {
-      setError('Une erreur inattendue s\'est produite');
+      const message = 'Une erreur inattendue s\'est produite';
+      setPopupError(message);
+      alert.error(message);
       setShowErrorPopup(true);
     } finally {
       setLoading(false);
@@ -78,7 +80,7 @@ const LoginPage = () => {
           <Modal.Title>Connexion refusee</Modal.Title>
         </Modal.Header>
         <Modal.Body className="fs-5">
-          {error || 'Identifiant ou mot de passe incorrect'}
+          {popupError || 'Identifiant ou mot de passe incorrect'}
         </Modal.Body>
         <Modal.Footer>
           <Button

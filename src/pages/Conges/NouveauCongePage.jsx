@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { NotificationContext } from '../../contexts/NotificationContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const NouveauCongePage = () => {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ const NouveauCongePage = () => {
   const [soldes, setSoldes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
   const [joursCalcules, setJoursCalcules] = useState(0);
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
@@ -73,7 +74,7 @@ const NouveauCongePage = () => {
       setLoadingData(true);
 
       if (!canAccessPage) {
-        setError('Vous n\'êtes pas autorisé à accéder à cette page');
+        alert.error('Vous n\'êtes pas autorisé à accéder à cette page');
         return;
       }
 
@@ -269,7 +270,6 @@ const NouveauCongePage = () => {
 
   const submitCreateLeave = async (precheckWarning = null) => {
     setLoading(true);
-    setError('');
 
     try {
       const response = await congesService.create(formData);
@@ -281,7 +281,7 @@ const NouveauCongePage = () => {
     } catch (err) {
       console.error('Erreur lors de la création du congé:', err);
       const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
-      setError(finalMessage);
+      alert.error(finalMessage);
       showNotification(finalMessage, 'error', 6000);
     } finally {
       setLoading(false);
@@ -298,7 +298,7 @@ const NouveauCongePage = () => {
 
   const handleOverlapModalClose = () => {
     setShowOverlapModal(false);
-    setError('Demande non envoyée.');
+    alert.error('Demande non envoyée.');
     setPendingWarningMessage('');
     setOverlapModalMessage('');
   };
@@ -307,7 +307,7 @@ const NouveauCongePage = () => {
     e.preventDefault();
 
     if (!isEditMode && !canCreateLeave) {
-      setError('Seuls les employés et managers peuvent poser un congé');
+      alert.error('Seuls les employés et managers peuvent poser un congé');
       return;
     }
 
@@ -318,7 +318,6 @@ const NouveauCongePage = () => {
       let precheckWarningMessage = null;
       if (isEditMode) {
         setLoading(true);
-        setError('');
         response = await congesService.update(id, formData);
       } else {
         const overlapCheck = await congesService.checkOverlap(formData);
@@ -327,7 +326,7 @@ const NouveauCongePage = () => {
 
         if (overlapAction === 'block') {
           const blockMessage = overlapMessage || 'Cette demande est bloquée par la politique de chevauchement.';
-          setError(blockMessage);
+          alert.error(blockMessage);
           return;
         }
 
@@ -356,7 +355,7 @@ const NouveauCongePage = () => {
         ? 'Impossible de modifier la demande de congé.'
         : 'Impossible de créer la demande de congé.';
       const finalMessage = extractApiErrorMessage(err, fallbackMessage);
-      setError(finalMessage);
+      alert.error(finalMessage);
       showNotification(finalMessage, 'error', 6000);
     } finally {
       setLoading(false);
@@ -410,12 +409,6 @@ const NouveauCongePage = () => {
           <li>Ajoutez un commentaire clair pour faciliter la validation</li>
         </ul>
       </InfoCardInfo>
-
-      {error && (
-        <Alert variant="danger" className="floating-error-alert mb-4" dismissible onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
 
       <TipCard title="Exemple de commentaire utile">
         Absence familiale du 12 au 14 avril, relais opérationnel préparé avec l'équipe support.

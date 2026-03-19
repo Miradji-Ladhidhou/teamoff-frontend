@@ -5,6 +5,7 @@ import { FaBuilding, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react
 import { useAuth } from '../../contexts/AuthContext';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
 import { useNotification } from '../../hooks/useNotification';
+import { useAlert } from '../../hooks/useAlert';
 
 const RegisterPage = () => {
   const [step, setStep] = useState(1);
@@ -24,7 +25,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
 
   const { register } = useAuth();
@@ -44,7 +45,6 @@ const RegisterPage = () => {
         [name]: ''
       }));
     }
-    if (error) setError('');
   };
 
   const validateStep1 = () => {
@@ -89,18 +89,16 @@ const RegisterPage = () => {
     if (!validateStep2()) return;
 
     setLoading(true);
-    setError('');
-
     try {
       const result = await register(formData);
       if (result.success) {
         notification.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
         navigate('/login');
       } else {
-        setError(result.error);
+        alert.error(result.error);
       }
     } catch (err) {
-      setError('Une erreur inattendue s\'est produite');
+      alert.error('Une erreur inattendue s\'est produite');
     } finally {
       setLoading(false);
     }
@@ -137,12 +135,6 @@ const RegisterPage = () => {
                 <SuccessCardInfo title="Résultat attendu">
                   Une fois l'inscription validée, votre espace est prêt pour configurer les types de congés, les jours fériés et les utilisateurs.
                 </SuccessCardInfo>
-
-                {error && (
-                  <Alert variant="danger" className="mb-4">
-                    {error}
-                  </Alert>
-                )}
 
                 <Form onSubmit={step === 2 ? handleSubmit : (e) => e.preventDefault()}>
                   {step === 1 && (

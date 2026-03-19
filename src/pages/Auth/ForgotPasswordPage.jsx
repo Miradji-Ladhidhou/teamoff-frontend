@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from 'react-bootstrap';
 import { FaEnvelope, FaArrowLeft, FaCheck } from 'react-icons/fa';
 import { NotificationContext } from '../../contexts/NotificationContext';
+import { useAlert } from '../../hooks/useAlert';
 import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
 
@@ -10,23 +11,21 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const { showNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setEmail(e.target.value);
-    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       if (!email.trim()) {
-        setError('Veuillez entrer une adresse email');
+        alert.error('Veuillez entrer une adresse email');
         setLoading(false);
         return;
       }
@@ -36,7 +35,7 @@ const ForgotPasswordPage = () => {
       showNotification('Un email de réinitialisation a été envoyé', 'success');
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de l\'envoi';
-      setError(errorMsg);
+      alert.error(errorMsg);
       showNotification(errorMsg, 'error');
     } finally {
       setLoading(false);
@@ -100,8 +99,6 @@ const ForgotPasswordPage = () => {
                 {!submitted ? (
                   <>
                     <h4 className="fw-bold text-center mb-4">Réinitialiser votre mot de passe</h4>
-
-                    {error && <Alert variant="danger" className="floating-error-alert mb-4 dismissible">{error}</Alert>}
 
                     <Form onSubmit={handleSubmit}>
                       <Form.Group className="mb-4">

@@ -5,6 +5,7 @@ import { FaPlus, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
@@ -12,7 +13,7 @@ const CongesPage = () => {
   const location = useLocation();
   const [conges, setConges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [filters, setFilters] = useState({
     statut: '',
     conge_type_id: '',
@@ -68,7 +69,7 @@ const CongesPage = () => {
       setServerTotalPages(Math.ceil((response.total || response.data.length) / filters.limit));
     } catch (err) {
       console.error('Erreur lors du chargement des congés:', err);
-      setError('Erreur lors du chargement des congés');
+      alert.error('Erreur lors du chargement des congés');
     } finally {
       setLoading(false);
     }
@@ -236,7 +237,7 @@ const CongesPage = () => {
       loadConges(); // Recharger la liste
     } catch (err) {
       console.error('Erreur lors de la validation:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la validation du congé');
+      alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
     }
   };
 
@@ -244,7 +245,7 @@ const CongesPage = () => {
     if (!selectedCongeToReject) return;
 
     if (!rejectComment.trim()) {
-      setError('Veuillez renseigner un motif de rejet.');
+      alert.error('Veuillez renseigner un motif de rejet.');
       return;
     }
 
@@ -254,7 +255,7 @@ const CongesPage = () => {
       loadConges(); // Recharger la liste
     } catch (err) {
       console.error('Erreur lors du rejet:', err);
-      setError(err.response?.data?.message || 'Erreur lors du rejet du congé');
+      alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
     }
   };
 
@@ -322,12 +323,6 @@ const CongesPage = () => {
           </Button>
         )}
       </div>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {/* Contenu d'aide selon le rôle */}
       {user?.role === 'employe' && (

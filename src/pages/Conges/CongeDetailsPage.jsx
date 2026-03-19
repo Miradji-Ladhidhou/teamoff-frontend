@@ -5,6 +5,7 @@ import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCale
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const CongeDetailsPage = () => {
   const { id } = useParams();
@@ -14,7 +15,7 @@ const CongeDetailsPage = () => {
 
   const [conge, setConge] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentaire, setCommentaire] = useState('');
@@ -31,7 +32,7 @@ const CongeDetailsPage = () => {
       setConge(response.data);
     } catch (err) {
       console.error('Erreur lors du chargement du congé:', err);
-      setError('Erreur lors du chargement des détails du congé');
+      alert.error('Erreur lors du chargement des détails du congé');
     } finally {
       setLoading(false);
     }
@@ -49,7 +50,7 @@ const CongeDetailsPage = () => {
       });
     } catch (err) {
       console.error('Erreur lors de la suppression:', err);
-      setError('Erreur lors de la suppression de la demande');
+      alert.error('Erreur lors de la suppression de la demande');
     } finally {
       setActionLoading(false);
       setShowDeleteModal(false);
@@ -69,7 +70,7 @@ const CongeDetailsPage = () => {
       setCommentaire('');
     } catch (err) {
       console.error('Erreur lors de la mise à jour du statut:', err);
-      setError('Erreur lors de la mise à jour du statut');
+      alert.error('Erreur lors de la mise à jour du statut');
     } finally {
       setActionLoading(false);
     }

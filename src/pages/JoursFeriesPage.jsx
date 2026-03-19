@@ -5,13 +5,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
+import { useAlert } from '../hooks/useAlert';
 
 const JoursFeriesPage = () => {
   const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingJourFerie, setEditingJourFerie] = useState(null);
@@ -65,7 +66,7 @@ const JoursFeriesPage = () => {
       }
     } catch (err) {
       console.error('Erreur chargement entreprises:', err);
-      setError('Erreur lors du chargement des entreprises');
+      alert.error('Erreur lors du chargement des entreprises');
       setLoading(false);
     }
   };
@@ -80,7 +81,7 @@ const JoursFeriesPage = () => {
       }
     } catch (err) {
       console.error('Erreur chargement modèles:', err);
-      setError('Erreur lors du chargement des modèles de jours fériés');
+      alert.error('Erreur lors du chargement des modèles de jours fériés');
     }
   };
 
@@ -91,7 +92,7 @@ const JoursFeriesPage = () => {
       setJoursFeries(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Erreur chargement jours fériés:', err);
-      setError('Erreur lors du chargement des jours fériés');
+      alert.error('Erreur lors du chargement des jours fériés');
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,6 @@ const JoursFeriesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setError('');
       setSuccess('');
 
       const payload = {
@@ -120,7 +120,7 @@ const JoursFeriesPage = () => {
       setSuccess('Jour férié enregistré avec succès.');
     } catch (err) {
       console.error('Erreur sauvegarde jour férié:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
+      alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
     }
   };
 
@@ -149,7 +149,7 @@ const JoursFeriesPage = () => {
       setSuccess('Jour férié supprimé.');
     } catch (err) {
       console.error('Erreur suppression jour férié:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
+      alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
     }
   };
 
@@ -161,21 +161,20 @@ const JoursFeriesPage = () => {
 
   const handleImportNational = async () => {
     try {
-      setError('');
       setSuccess('');
 
       if (importYear < 2000 || importYear > 2100) {
-        setError('Veuillez saisir une année valide entre 2000 et 2100.');
+        alert.error('Veuillez saisir une année valide entre 2000 et 2100.');
         return;
       }
 
       if (!/^[A-Z]{2}$/.test(importCountry)) {
-        setError('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
+        alert.error('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
         return;
       }
 
       if (user?.role === 'super_admin' && !selectedEntrepriseId) {
-        setError('Sélectionnez une entreprise avant de lancer l\'import API.');
+        alert.error('Sélectionnez une entreprise avant de lancer l\'import API.');
         return;
       }
 
@@ -187,7 +186,7 @@ const JoursFeriesPage = () => {
       setSuccess(response.data?.message || 'Import terminé.');
     } catch (err) {
       console.error('Erreur import jours fériés:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
+      alert.error(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
     } finally {
       setImportLoading(false);
     }
@@ -195,11 +194,10 @@ const JoursFeriesPage = () => {
 
   const handleCreateTemplateFromCurrent = async () => {
     try {
-      setError('');
       setSuccess('');
 
       if (!templateName.trim()) {
-        setError('Nom du modèle requis.');
+        alert.error('Nom du modèle requis.');
         return;
       }
 
@@ -215,16 +213,15 @@ const JoursFeriesPage = () => {
       setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
     } catch (err) {
       console.error('Erreur création modèle:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la création du modèle');
+      alert.error(err.response?.data?.message || 'Erreur lors de la création du modèle');
     }
   };
 
   const handleExportTemplateCsv = async () => {
     try {
-      setError('');
       setSuccess('');
       if (!selectedTemplateId) {
-        setError('Sélectionnez un modèle à exporter.');
+        alert.error('Sélectionnez un modèle à exporter.');
         return;
       }
 
@@ -240,21 +237,20 @@ const JoursFeriesPage = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erreur export modèle CSV:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
+      alert.error(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
     }
   };
 
   const handleImportTemplateCsv = async () => {
     try {
-      setError('');
       setSuccess('');
 
       if (!templateName.trim()) {
-        setError('Nom du modèle requis pour l\'import CSV.');
+        alert.error('Nom du modèle requis pour l\'import CSV.');
         return;
       }
       if (!templateCsvContent.trim()) {
-        setError('Collez le contenu CSV avant import.');
+        alert.error('Collez le contenu CSV avant import.');
         return;
       }
 
@@ -268,17 +264,16 @@ const JoursFeriesPage = () => {
       setSuccess('Modèle importé depuis CSV avec succès.');
     } catch (err) {
       console.error('Erreur import modèle CSV:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
+      alert.error(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
     }
   };
 
   const handleApplyTemplate = async () => {
     try {
-      setError('');
       setSuccess('');
 
       if (!selectedTemplateId) {
-        setError('Sélectionnez un modèle à appliquer.');
+        alert.error('Sélectionnez un modèle à appliquer.');
         return;
       }
 
@@ -293,7 +288,7 @@ const JoursFeriesPage = () => {
       setSuccess(response.data?.message || 'Modèle appliqué.');
     } catch (err) {
       console.error('Erreur application modèle:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
+      alert.error(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
     }
   };
 
@@ -357,7 +352,7 @@ const JoursFeriesPage = () => {
         </TipCard>
       )}
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="mb-4 inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 

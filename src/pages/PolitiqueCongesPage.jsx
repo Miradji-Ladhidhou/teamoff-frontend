@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
+import { useAlert } from '../hooks/useAlert';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -63,7 +64,7 @@ const PolitiqueCongesPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [policy, setPolicy] = useState(DEFAULT_POLICY);
   const [servicePolicies, setServicePolicies] = useState({});
@@ -133,7 +134,7 @@ const PolitiqueCongesPage = () => {
         }
       } catch (err) {
         console.error('Erreur chargement politique:', err);
-        setError('Impossible de charger la politique de congé de votre entreprise.');
+        alert.error('Impossible de charger la politique de congé de votre entreprise.');
       } finally {
         setLoading(false);
       }
@@ -227,7 +228,6 @@ const PolitiqueCongesPage = () => {
 
   const handleSaveCongeType = async (event) => {
     event.preventDefault();
-    setError('');
     setSuccess('');
 
     try {
@@ -242,7 +242,7 @@ const PolitiqueCongesPage = () => {
       };
 
       if (!payload.code || !payload.libelle) {
-        setError('Le code et le libellé du type de congé sont requis.');
+        alert.error('Le code et le libellé du type de congé sont requis.');
         return;
       }
 
@@ -258,7 +258,7 @@ const PolitiqueCongesPage = () => {
       closeTypeModal();
     } catch (err) {
       console.error('Erreur sauvegarde type de congé:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde du type de congé.');
+      alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde du type de congé.');
     } finally {
       setSavingType(false);
     }
@@ -272,7 +272,6 @@ const PolitiqueCongesPage = () => {
     if (!confirmed) return;
 
     try {
-      setError('');
       setSuccess('');
       clearConfirmation();
       await congeTypesService.delete(typeId);
@@ -280,7 +279,7 @@ const PolitiqueCongesPage = () => {
       setSuccess('Type de congé supprimé avec succès.');
     } catch (err) {
       console.error('Erreur suppression type de congé:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la suppression du type de congé.');
+      alert.error(err.response?.data?.message || 'Erreur lors de la suppression du type de congé.');
     }
   };
 
@@ -350,7 +349,6 @@ const PolitiqueCongesPage = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setError('');
     setSuccess('');
 
     try {
@@ -391,7 +389,7 @@ const PolitiqueCongesPage = () => {
       setSuccess('Politique de congé mise à jour avec succès.');
     } catch (err) {
       console.error('Erreur sauvegarde politique:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde de la politique.');
+      alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde de la politique.');
     } finally {
       setSaving(false);
     }
@@ -442,7 +440,7 @@ const PolitiqueCongesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 

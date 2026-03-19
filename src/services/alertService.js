@@ -9,8 +9,6 @@
  * - Auto-dismiss pour les toasts
  */
 
-import crypto from 'crypto';
-
 const TOAST_DURATION = 4000; // 4 secondes
 
 // Génère un hash du message pour déduplication
@@ -88,13 +86,16 @@ class AlertService {
   addToast(message, type = 'info', duration = TOAST_DURATION) {
     if (!message || typeof message !== 'string') return null;
 
-    // Déduplication : vérifier si le même message+type est déjà affichéconst hash = generateMessageHash(message, type);
+    // Déduplication : vérifier si le même message+type est déjà affiché
+    const hash = generateMessageHash(message, type);
     if (this.messageHashes.has(hash)) {
       // Éviter les doublons
       return null;
     }
 
-    const id = crypto.randomUUID ? crypto.randomUUID() : `toast-${Date.now()}-${Math.random()}`;
+    const id = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `toast-${Date.now()}-${Math.random()}`;
     let timeoutId = null;
 
     const toastData = {

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
+import { useAlert } from '../hooks/useAlert';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -24,7 +25,7 @@ const ServicesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState({ name: '', policy: { ...DEFAULT_POLICY } });
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
@@ -36,13 +37,12 @@ const ServicesPage = () => {
   const loadServices = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await entreprisesService.getServices(entrepriseId);
       const items = Array.isArray(response.data?.items) ? response.data.items : [];
       setServices(items);
     } catch (loadError) {
       console.error('Erreur chargement services:', loadError);
-      setError('Erreur lors du chargement des services.');
+      alert.error('Erreur lors du chargement des services.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,6 @@ const ServicesPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
     setSuccess('');
 
     try {
@@ -95,7 +94,7 @@ const ServicesPage = () => {
       await loadServices();
     } catch (submitError) {
       console.error('Erreur sauvegarde service:', submitError);
-      setError(submitError.response?.data?.message || 'Erreur lors de la sauvegarde du service.');
+      alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde du service.');
     }
   };
 
@@ -106,7 +105,6 @@ const ServicesPage = () => {
     );
     if (!confirmed) return;
 
-    setError('');
     setSuccess('');
 
     try {
@@ -116,7 +114,7 @@ const ServicesPage = () => {
       await loadServices();
     } catch (deleteError) {
       console.error('Erreur suppression service:', deleteError);
-      setError(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
+      alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
     }
   };
 
@@ -146,7 +144,7 @@ const ServicesPage = () => {
         </Button>
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 

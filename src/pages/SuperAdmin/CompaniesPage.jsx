@@ -4,6 +4,7 @@ import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useInlineConfirmation } from '../../hooks/useInlineConfirmation';
+import { useAlert } from '../../hooks/useAlert';
 
 const DEFAULT_PARAMETRES = {
   timezone: 'Europe/Paris',
@@ -76,7 +77,7 @@ const CompaniesManagement = () => {
   const [editingCompany, setEditingCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
@@ -91,12 +92,11 @@ const CompaniesManagement = () => {
   const loadCompanies = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await api.entreprisesService.getAll();
       setCompanies(Array.isArray(response.data) ? response.data : []);
     } catch (loadError) {
       console.error('Erreur chargement entreprises:', loadError);
-      setError('Erreur lors du chargement des entreprises');
+      alert.error('Erreur lors du chargement des entreprises');
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,6 @@ const CompaniesManagement = () => {
     event.preventDefault();
 
     try {
-      setError('');
 
       const parametres = showAdvancedJson
         ? JSON.parse(advancedParametresJson || '{}')
@@ -178,7 +177,7 @@ const CompaniesManagement = () => {
       loadCompanies();
     } catch (submitError) {
       console.error('Erreur sauvegarde entreprise:', submitError);
-      setError(
+      alert.error(
         submitError instanceof SyntaxError
           ? 'Les champs JSON sont invalides'
           : submitError?.message || 'Erreur lors de la sauvegarde'
@@ -332,14 +331,13 @@ const CompaniesManagement = () => {
       loadCompanies();
     } catch (deleteError) {
       console.error('Erreur suppression entreprise:', deleteError);
-      setError(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+      alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
     }
   };
 
   const handleExportCsv = async () => {
     try {
       setExportLoading(true);
-      setError('');
 
       const response = await api.exportsService.exportEntreprisesCSV();
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -355,7 +353,7 @@ const CompaniesManagement = () => {
       window.URL.revokeObjectURL(url);
     } catch (exportError) {
       console.error('Erreur export entreprises CSV:', exportError);
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des entreprises');
+      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des entreprises');
     } finally {
       setExportLoading(false);
     }
@@ -409,7 +407,7 @@ const CompaniesManagement = () => {
         </div>
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 

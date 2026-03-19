@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } from 'react-icons/fa';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { settingsService } from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
 
 const SystemSettings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +40,7 @@ const SystemSettings = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [systemInfo, setSystemInfo] = useState({});
   const [confirmModal, setConfirmModal] = useState({ show: false, action: '', label: '' });
@@ -80,7 +81,7 @@ const SystemSettings = () => {
       }));
     } catch (error) {
       console.error('Erreur chargement paramètres:', error);
-      setError('Impossible de charger les paramètres système');
+      alert.error('Impossible de charger les paramètres système');
     }
   };
 
@@ -90,7 +91,7 @@ const SystemSettings = () => {
       setSystemInfo(response.data || {});
     } catch (error) {
       console.error('Erreur chargement info système:', error);
-      setError('Impossible de charger les informations système');
+      alert.error('Impossible de charger les informations système');
     }
   };
 
@@ -124,7 +125,6 @@ const SystemSettings = () => {
   const handleSave = async (section, label) => {
     try {
       setLoading(true);
-      setError('');
       setSuccess('');
 
       const sectionFields = {
@@ -150,7 +150,7 @@ const SystemSettings = () => {
       setSuccess(`Paramètres ${label} sauvegardés avec succès`);
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
-      setError(error.response?.data?.message || 'Erreur lors de la sauvegarde');
+      alert.error(error.response?.data?.message || 'Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
     }
@@ -188,7 +188,6 @@ const SystemSettings = () => {
     closeConfirm();
     try {
       setLoading(true);
-      setError('');
 
       let message = 'Action exécutée.';
 
@@ -226,7 +225,7 @@ const SystemSettings = () => {
       await loadHistory({ page: 1 });
       setSuccess(message);
     } catch {
-      setError('Erreur lors de l\'exécution de l\'action.');
+      alert.error('Erreur lors de l\'exécution de l\'action.');
     } finally {
       setLoading(false);
     }
@@ -235,13 +234,12 @@ const SystemSettings = () => {
   const handleSendTestEmail = async () => {
     try {
       setLoading(true);
-      setError('');
       setSuccess('');
 
       await settingsService.sendTestEmail(testEmailRecipient || settings.emailFrom || settings.smtpUser);
       setSuccess('Email de test envoyé avec succès.');
     } catch (error) {
-      setError(error.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de test.');
+      alert.error(error.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de test.');
     } finally {
       setLoading(false);
     }
@@ -250,7 +248,6 @@ const SystemSettings = () => {
   const handleExportHistoryCSV = async () => {
     try {
       setLoading(true);
-      setError('');
 
       const response = await settingsService.exportHistoryCSV();
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -263,7 +260,7 @@ const SystemSettings = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (exportError) {
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV de l\'historique.');
+      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV de l\'historique.');
     } finally {
       setLoading(false);
     }
@@ -359,7 +356,7 @@ const SystemSettings = () => {
         </ul>
       </InfoCardInfo>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
       <Tabs

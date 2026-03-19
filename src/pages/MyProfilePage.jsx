@@ -3,13 +3,14 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from '
 import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/api';
+import { useAlert } from '../hooks/useAlert';
 
 const MyProfilePage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const alert = useAlert();
   
   const [profileData, setProfileData] = useState({
     prenom: '',
@@ -60,7 +61,6 @@ const MyProfilePage = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     setSuccess('');
     try {
       await authService.updateProfile({
@@ -79,7 +79,7 @@ const MyProfilePage = () => {
       setSuccess('Profil mis à jour avec succès.');
     } catch (err) {
       console.error('Erreur lors de la mise à jour du profil:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.');
+      alert.error(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.');
     } finally {
       setLoading(false);
     }
@@ -87,16 +87,15 @@ const MyProfilePage = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setSuccess('');
 
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setError('Tous les champs du mot de passe sont requis.');
+      alert.error('Tous les champs du mot de passe sont requis.');
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Les nouveaux mots de passe ne correspondent pas.');
+      alert.error('Les nouveaux mots de passe ne correspondent pas.');
       return;
     }
 
@@ -110,7 +109,7 @@ const MyProfilePage = () => {
       setSuccess('Mot de passe modifié avec succès.');
     } catch (err) {
       console.error('Erreur lors du changement de mot de passe:', err);
-      setError(err.response?.data?.message || 'Erreur lors du changement de mot de passe.');
+      alert.error(err.response?.data?.message || 'Erreur lors du changement de mot de passe.');
     } finally {
       setLoading(false);
     }
@@ -165,7 +164,7 @@ const MyProfilePage = () => {
         </Col>
 
         <Col md={9}>
-          {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+          
           {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
           {activeTab === 'profile' && (

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { calendrierService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useAlert } from '../hooks/useAlert';
 
 const normalizeLocalDate = (value) => {
   if (!value) return null;
@@ -85,7 +86,7 @@ const CalendrierPage = () => {
   const [conges, setConges] = useState([]);
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
   const [selectionStart, setSelectionStart] = useState(null);
   const [selectionEnd, setSelectionEnd] = useState(null);
@@ -115,7 +116,7 @@ const CalendrierPage = () => {
 
     } catch (err) {
       console.error('Erreur lors du chargement du calendrier:', err);
-      setError('Erreur lors du chargement du calendrier');
+      alert.error('Erreur lors du chargement du calendrier');
     } finally {
       setLoading(false);
     }
@@ -355,12 +356,6 @@ const CalendrierPage = () => {
               </Button>
             )}
           </div>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
         </Alert>
       )}
 

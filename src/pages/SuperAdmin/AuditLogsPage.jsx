@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import { auditService, exportsService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
@@ -20,14 +21,13 @@ const AuditLogs = () => {
   const [dateFin, setDateFin] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [selectedLog, setSelectedLog] = useState(null);
   const LIMIT = 20;
 
   const loadLogs = useCallback(async (overrides = {}) => {
     try {
       setLoading(true);
-      setError('');
       const params = {
         page: overrides.page ?? currentPage,
         limit: LIMIT,
@@ -48,7 +48,7 @@ const AuditLogs = () => {
       setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error('Erreur chargement logs:', err);
-      setError('Erreur lors du chargement des logs d\'audit.');
+      alert.error('Erreur lors du chargement des logs d\'audit.');
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ const AuditLogs = () => {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch {
-      setError('Erreur lors de l\'export CSV.');
+      alert.error('Erreur lors de l\'export CSV.');
     }
   };
 
@@ -145,7 +145,7 @@ const AuditLogs = () => {
         </Button>
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
 
       <InfoCardInfo title="Utiliser les logs d'audit">
         <ul className="mb-0">

@@ -16,6 +16,7 @@ import { entreprisesService, congeTypesService, quotasService, usersService } fr
 import { useAuth } from '../contexts/AuthContext';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
+import { useAlert } from '../hooks/useAlert';
 
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
@@ -59,7 +60,7 @@ const JoursBloquesPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [savingPolicy, setSavingPolicy] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
 
   const [blockedDays, setBlockedDays] = useState(DEFAULT_BLOCKED_DAYS);
@@ -94,7 +95,6 @@ const JoursBloquesPage = () => {
     const load = async () => {
       try {
         setLoading(true);
-        setError('');
 
         const [policyResponse, usersResponse, typesResponse] = await Promise.all([
           entreprisesService.getPolitique(entrepriseId),
@@ -130,7 +130,7 @@ const JoursBloquesPage = () => {
         }
       } catch (errLoad) {
         console.error('Erreur chargement paramètres jours bloqués:', errLoad);
-        setError('Impossible de charger les paramètres de décompte et les soldes.');
+        alert.error('Impossible de charger les paramètres de décompte et les soldes.');
       } finally {
         setLoading(false);
       }
@@ -150,7 +150,7 @@ const JoursBloquesPage = () => {
       return nextTypes;
     } catch (errLoadTypes) {
       console.error('Erreur chargement types de congé:', errLoadTypes);
-      setError(errLoadTypes.response?.data?.message || 'Impossible de charger les types de congé.');
+      alert.error(errLoadTypes.response?.data?.message || 'Impossible de charger les types de congé.');
       return [];
     } finally {
       setLoadingCongeTypes(false);
@@ -167,7 +167,7 @@ const JoursBloquesPage = () => {
         setCounters(Array.isArray(response.data?.items) ? response.data.items : []);
       } catch (errLoadCounters) {
         console.error('Erreur chargement compteurs:', errLoadCounters);
-        setError(errLoadCounters.response?.data?.message || 'Impossible de charger les compteurs utilisateur.');
+        alert.error(errLoadCounters.response?.data?.message || 'Impossible de charger les compteurs utilisateur.');
       } finally {
         setLoadingCounters(false);
       }
@@ -210,7 +210,6 @@ const JoursBloquesPage = () => {
 
   const handleSavePolicy = async (event) => {
     event.preventDefault();
-    setError('');
     setSuccess('');
 
     try {
@@ -239,7 +238,7 @@ const JoursBloquesPage = () => {
       setSuccess('Paramètres enregistrés avec succès.');
     } catch (errSave) {
       console.error('Erreur enregistrement paramètres:', errSave);
-      setError(errSave.response?.data?.message || 'Erreur lors de la sauvegarde.');
+      alert.error(errSave.response?.data?.message || 'Erreur lors de la sauvegarde.');
     } finally {
       setSavingPolicy(false);
     }
@@ -273,7 +272,6 @@ const JoursBloquesPage = () => {
     if (!selectedUserId || !counterForm.conge_type_id) return;
 
     try {
-      setError('');
       await quotasService.upsertUserCounter(selectedUserId, {
         annee: selectedYear,
         conge_type_id: counterForm.conge_type_id,
@@ -288,7 +286,7 @@ const JoursBloquesPage = () => {
       setSuccess('Solde utilisateur mis à jour.');
     } catch (errCounter) {
       console.error('Erreur sauvegarde compteur:', errCounter);
-      setError(errCounter.response?.data?.message || 'Impossible de mettre à jour le compteur.');
+      alert.error(errCounter.response?.data?.message || 'Impossible de mettre à jour le compteur.');
     }
   };
 
@@ -300,14 +298,13 @@ const JoursBloquesPage = () => {
     if (!confirmed) return;
 
     try {
-      setError('');
       clearConfirmation();
       await quotasService.deleteUserCounter(counterId);
       setCounters((prev) => prev.filter((item) => item.id !== counterId));
       setSuccess('Compteur supprimé.');
     } catch (errDelete) {
       console.error('Erreur suppression compteur:', errDelete);
-      setError(errDelete.response?.data?.message || 'Impossible de supprimer le compteur.');
+      alert.error(errDelete.response?.data?.message || 'Impossible de supprimer le compteur.');
     }
   };
 
@@ -358,7 +355,7 @@ const JoursBloquesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 

@@ -5,6 +5,7 @@ import { FaUsers, FaBuilding, FaCalendarCheck, FaChartLine, FaCog, FaShieldAlt }
 import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const normalizeStatus = (ok) => (ok ? 'healthy' : 'unhealthy');
 
@@ -32,7 +33,7 @@ const SuperAdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [systemHealth, setSystemHealth] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     loadDashboardData();
@@ -41,7 +42,6 @@ const SuperAdminDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setError('');
 
       const [usersResult, companiesResult, leavesResult, activityResult, healthResult, metricsResult] = await Promise.allSettled([
         api.usersService.getAll(),
@@ -90,12 +90,12 @@ const SuperAdminDashboard = () => {
       });
 
       if (!isApiHealthy || !isDbHealthy) {
-        setError('Certaines données système sont indisponibles actuellement.');
+        alert.error('Certaines données système sont indisponibles actuellement.');
       }
 
     } catch (error) {
       console.error('Erreur chargement dashboard:', error);
-      setError('Erreur de chargement des données');
+      alert.error('Erreur de chargement des données');
 
       setStats({
         totalUsers: 0,
@@ -166,7 +166,7 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
 
       <InfoCardInfo title="Lecture rapide du dashboard super admin">
         <ul className="mb-0">

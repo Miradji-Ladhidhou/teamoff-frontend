@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationsService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useAlert } from '../hooks/useAlert';
 
 const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
 
@@ -22,7 +23,7 @@ const NotificationsPage = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
@@ -59,7 +60,7 @@ const NotificationsPage = () => {
       await syncUnreadCount();
     } catch (err) {
       console.error('Erreur chargement notifications:', err);
-      setError('Erreur lors du chargement des notifications');
+      alert.error('Erreur lors du chargement des notifications');
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ const NotificationsPage = () => {
       await loadNotifications();
     } catch (err) {
       console.error('Erreur marquage notification:', err);
-      setError('Erreur lors du marquage de la notification');
+      alert.error('Erreur lors du marquage de la notification');
     }
   };
 
@@ -81,7 +82,7 @@ const NotificationsPage = () => {
       await loadNotifications();
     } catch (err) {
       console.error('Erreur marquage toutes notifications:', err);
-      setError('Erreur lors du marquage de toutes les notifications');
+      alert.error('Erreur lors du marquage de toutes les notifications');
     }
   };
 
@@ -317,7 +318,7 @@ const NotificationsPage = () => {
         Consultez cette page au début de journée pour ne manquer aucune validation ou action prioritaire.
       </TipCard>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
 
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">

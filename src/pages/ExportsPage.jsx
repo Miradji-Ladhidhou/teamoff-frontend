@@ -4,6 +4,7 @@ import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar 
 import { useAuth } from '../contexts/AuthContext';
 import { exportsService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useAlert } from '../hooks/useAlert';
 
 const ALLOWED_FORMATS_BY_TYPE = {
   conges: ['csv', 'pdf'],
@@ -16,7 +17,7 @@ const ALLOWED_FORMATS_BY_TYPE = {
 const ExportsPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [exportProgress, setExportProgress] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -65,7 +66,6 @@ const ExportsPage = () => {
 
   const handleExport = async () => {
     setLoading(true);
-    setError('');
     setSuccess('');
     setExportProgress(0);
 
@@ -140,7 +140,7 @@ const ExportsPage = () => {
     } catch (err) {
       console.error('Erreur lors de l\'export:', err);
       const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
-      setError(serverMessage || err.message || 'Erreur lors de l\'export. Veuillez réessayer.');
+      alert.error(serverMessage || err.message || 'Erreur lors de l\'export. Veuillez réessayer.');
       setExportProgress(0);
     } finally {
       setLoading(false);
@@ -161,7 +161,6 @@ const ExportsPage = () => {
 
   const handlePreview = async () => {
     setPreviewLoading(true);
-    setError('');
 
     try {
       const queryParams = buildQueryParams();
@@ -173,7 +172,7 @@ const ExportsPage = () => {
     } catch (err) {
       console.error('Erreur preview export:', err);
       const serverMessage = err?.response?.data?.error || err?.response?.data?.message;
-      setError(serverMessage || 'Erreur lors de la prévisualisation des données.');
+      alert.error(serverMessage || 'Erreur lors de la prévisualisation des données.');
       setPreviewData(null);
     } finally {
       setPreviewLoading(false);
@@ -237,12 +236,6 @@ const ExportsPage = () => {
       <TipCard title="Astuce qualité de données">
         Pour des exports plus lisibles, commencez par un intervalle court puis élargissez progressivement.
       </TipCard>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {success && (
         <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>

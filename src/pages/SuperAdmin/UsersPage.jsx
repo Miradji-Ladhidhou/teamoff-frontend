@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaBuilding, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../hooks/useNotification';
-import { useInlineConfirmation } from '../../hooks/useInlineConfirmation';
+import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
@@ -22,7 +21,8 @@ const DEFAULT_FORM = {
 const UsersManagement = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
 
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -32,10 +32,7 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-    const notification = useNotification();
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
   const [servicesByCompany, setServicesByCompany] = useState({});
 
@@ -46,7 +43,6 @@ const UsersManagement = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      setError('');
 
       const requests = [api.usersService.getAll()];
       if (isSuperAdmin) {
@@ -80,7 +76,7 @@ const UsersManagement = () => {
       }
     } catch (loadError) {
       console.error('Erreur chargement donnees:', loadError);
-      setError('Erreur lors du chargement des donnees');
+      alert.error('Erreur lors du chargement des donnees');
     } finally {
       setLoading(false);
     }
@@ -118,7 +114,7 @@ const UsersManagement = () => {
       
       // Validation obligatoire du service pour les employés
       if (formData.role === 'employe' && !formData.service?.trim()) {
-        notification.error('Le service est obligatoire pour un employé', 4000);
+        alert.error('Le service est obligatoire pour un employé');
         return;
       }
 
@@ -139,10 +135,10 @@ const UsersManagement = () => {
 
       if (editingUser) {
         await api.usersService.update(editingUser.id, payload);
-        setSuccess('Utilisateur mis a jour avec succes');
+        alert.success('Utilisateur mis à jour avec succès');
       } else {
         await api.usersService.create(payload);
-        setSuccess('Utilisateur cree avec succes');
+        alert.success('Utilisateur créé avec succès');
       }
 
       setShowModal(false);
@@ -151,7 +147,7 @@ const UsersManagement = () => {
       loadData();
     } catch (submitError) {
       console.error('Erreur sauvegarde utilisateur:', submitError);
-      setError(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
+      alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
     }
   };
 
@@ -172,24 +168,24 @@ const UsersManagement = () => {
   };
 
   const handleDelete = async (userId) => {
-    const confirmed = requestConfirmation(
-      `delete-user:${userId}`,
-      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      clearConfirmation();
-      await api.usersService.delete(userId);
-      setSuccess('Utilisateur supprime avec succes');
-      loadData();
-    } catch (deleteError) {
-      console.error('Erreur suppression utilisateur:', deleteError);
-      setError(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-    }
+    const targetUser = users.find(u => u.id === userId);
+    confirm({
+      title: 'Supprimer cet utilisateur ?',
+      description: `Êtes-vous sûr de vouloir supprimer ${targetUser?.prenom} ${targetUser?.nom} ? Cette action est irréversible.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          await api.usersService.delete(userId);
+          alert.success('Utilisateur supprimé avec succès');
+          loadData();
+        } catch (deleteError) {
+          console.error('Erreur suppression utilisateur:', deleteError);
+          alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+        }
+      }
+    });
   };
 
   const toggleUserStatus = async (targetUser) => {
@@ -197,18 +193,17 @@ const UsersManagement = () => {
 
     try {
       await api.usersService.update(targetUser.id, { statut: nextStatus });
-      setSuccess(`Utilisateur ${nextStatus === 'actif' ? 'active' : 'desactive'} avec succes`);
+      alert.success(`Utilisateur ${nextStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`);
       loadData();
     } catch (statusError) {
       console.error('Erreur changement statut:', statusError);
-      setError(statusError.response?.data?.message || 'Erreur lors du changement de statut');
+      alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
     }
   };
 
   const handleExportCsv = async () => {
     try {
       setExportLoading(true);
-      setError('');
 
       const response = await api.exportsService.exportUtilisateursCSV();
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -224,7 +219,7 @@ const UsersManagement = () => {
       window.URL.revokeObjectURL(url);
     } catch (exportError) {
       console.error('Erreur export utilisateurs CSV:', exportError);
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
+      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
     } finally {
       setExportLoading(false);
     }
@@ -318,9 +313,7 @@ const UsersManagement = () => {
         </div>
       </div>
 
-      {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
+      
 
       <InfoCardInfo title="Répartition des rôles">
         <ul className="mb-0">
@@ -476,7 +469,7 @@ const UsersManagement = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {error && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setError('')}>{error}</Alert>}
+            
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
