@@ -4,8 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
-import { useAlert } from '../hooks/useAlert';
+import { useAlert, useConfirmation } from '../hooks/useAlert';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -17,7 +16,8 @@ const DEFAULT_POLICY = {
 
 const ServicesPage = () => {
   const { user } = useAuth();
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
   const entrepriseId = user?.entreprise_id;
 
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,6 @@ const ServicesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState({ name: '', policy: { ...DEFAULT_POLICY } });
-  const alert = useAlert();
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
@@ -99,23 +98,24 @@ const ServicesPage = () => {
   };
 
   const handleDelete = async (service) => {
-    const confirmed = requestConfirmation(
-      `delete-service:${service.name}`,
-      `Suppression demandee pour "${service.name}": cliquez une seconde fois sur Supprimer pour confirmer.`
-    );
-    if (!confirmed) return;
-
-    setSuccess('');
-
-    try {
-      clearConfirmation();
-      await entreprisesService.deleteService(entrepriseId, service.name);
-      setSuccess('Service supprimé avec succès.');
-      await loadServices();
-    } catch (deleteError) {
-      console.error('Erreur suppression service:', deleteError);
-      alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
-    }
+    confirm({
+      title: 'Supprimer ce service ?',
+      description: `Êtes-vous sûr de vouloir supprimer le service "${service.name}" ? Les utilisateurs rattachés perdront leur affectation de service.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        setSuccess('');
+        try {
+          await entreprisesService.deleteService(entrepriseId, service.name);
+          alert.success('Service supprimé avec succès.');
+          await loadServices();
+        } catch (deleteError) {
+          console.error('Erreur suppression service:', deleteError);
+          alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -146,7 +146,6 @@ const ServicesPage = () => {
 
       
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <InfoCardInfo title="Gestion des services">
         <p className="mb-0">Un employé doit être rattaché à un service existant. Les règles définies ici sont appliquées de manière isolée par service.</p>

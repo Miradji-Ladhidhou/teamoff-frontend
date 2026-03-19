@@ -3,8 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert } f
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
-import { useInlineConfirmation } from '../../hooks/useInlineConfirmation';
-import { useAlert } from '../../hooks/useAlert';
+import { useAlert, useConfirmation } from '../../hooks/useAlert';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -15,7 +14,8 @@ const DEFAULT_POLICY = {
 };
 
 const ServicesPage = () => {
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [services, setServices] = useState([]);
@@ -24,7 +24,6 @@ const ServicesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState({ name: '', policy: { ...DEFAULT_POLICY } });
-  const alert = useAlert();
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
@@ -118,23 +117,24 @@ const ServicesPage = () => {
   };
 
   const handleDelete = async (service) => {
-    const confirmed = requestConfirmation(
-      `delete-service:${selectedCompanyId}:${service.name}`,
-      `Suppression demandée pour "${service.name}" : cliquez une seconde fois sur Supprimer pour confirmer.`
-    );
-    if (!confirmed) return;
-
-    setSuccess('');
-
-    try {
-      clearConfirmation();
-      await api.entreprisesService.deleteService(selectedCompanyId, service.name);
-      setSuccess('Service supprimé avec succès.');
-      await loadServices(selectedCompanyId);
-    } catch (deleteError) {
-      console.error('Erreur suppression service:', deleteError);
-      alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
-    }
+    confirm({
+      title: 'Supprimer ce service ?',
+      description: `Êtes-vous sûr de vouloir supprimer le service "${service.name}" ? Les utilisateurs rattachés perdront leur affectation de service.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        setSuccess('');
+        try {
+          await api.entreprisesService.deleteService(selectedCompanyId, service.name);
+          alert.success('Service supprimé avec succès.');
+          await loadServices(selectedCompanyId);
+        } catch (deleteError) {
+          console.error('Erreur suppression service:', deleteError);
+          alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression du service.');
+        }
+      }
+    });
   };
 
   const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
@@ -154,7 +154,6 @@ const ServicesPage = () => {
 
       
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <InfoCardInfo title="Gestion des services par entreprise">
         <p className="mb-0">Sélectionnez une entreprise pour consulter et gérer ses services. Un employé doit être rattaché à un service existant.</p>

@@ -4,13 +4,12 @@ import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
-import { useAlert } from '../hooks/useAlert';
+import { useAlert, useConfirmation } from '../hooks/useAlert';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import AsyncButton from '../components/AsyncButton';
 
 const JoursFeriesPage = () => {
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const { confirm } = useConfirmation();
   const { user } = useAuth();
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,21 +145,23 @@ const JoursFeriesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = requestConfirmation(
-      `delete-jour-ferie:${id}`,
-      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
-    );
-    if (!confirmed) return;
-
-    await deleteAction.run(async () => {
-      try {
-        clearConfirmation();
-        await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-        setSuccess('Jour férié supprimé.');
-      } catch (err) {
-        console.error('Erreur suppression jour férié:', err);
-        alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
+    confirm({
+      title: 'Supprimer ce jour férié ?',
+      description: 'Cette action est irréversible et affectera les calculs de congés des utilisateurs.',
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await deleteAction.run(async () => {
+          try {
+            await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+            await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+            alert.success('Jour férié supprimé.');
+          } catch (err) {
+            console.error('Erreur suppression jour férié:', err);
+            alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
+          }
+        });
       }
     });
   };
@@ -377,7 +378,6 @@ const JoursFeriesPage = () => {
 
       
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="mb-4 inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 
       {canManage && (
         <Card className="mb-3">

@@ -3,8 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, In
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
-import { useInlineConfirmation } from '../../hooks/useInlineConfirmation';
-import { useAlert } from '../../hooks/useAlert';
+import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -72,14 +71,14 @@ const normalizeByServiceLimits = (byService = {}) => {
 };
 
 const CompaniesManagement = () => {
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
@@ -322,27 +321,27 @@ const CompaniesManagement = () => {
   };
 
   const handleDelete = async (companyId) => {
-    const confirmed = requestConfirmation(
-      `delete-company:${companyId}`,
-      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    await deleteAction.run(async () => {
-      setActiveCompanyActionId(companyId);
-      try {
-        clearConfirmation();
-        await api.entreprisesService.delete(companyId);
-        setSuccess('Entreprise supprimee avec succes');
-        loadCompanies();
-      } catch (deleteError) {
-        console.error('Erreur suppression entreprise:', deleteError);
-        alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-      } finally {
-        setActiveCompanyActionId(null);
+    const targetCompany = companies.find(c => c.id === companyId);
+    confirm({
+      title: 'Supprimer cette entreprise ?',
+      description: `Êtes-vous sûr de vouloir supprimer "${targetCompany?.nom}" ? Cette action est irréversible et supprimera tous les conges associes.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await deleteAction.run(async () => {
+          setActiveCompanyActionId(companyId);
+          try {
+            await api.entreprisesService.delete(companyId);
+            alert.success('Entreprise supprimee avec succes');
+            loadCompanies();
+          } catch (deleteError) {
+            console.error('Erreur suppression entreprise:', deleteError);
+            alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+          } finally {
+            setActiveCompanyActionId(null);
+          }
+        });
       }
     });
   };
@@ -422,7 +421,6 @@ const CompaniesManagement = () => {
 
       
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <InfoCardInfo title="Gérer les entreprises efficacement">
         <p className="mb-2">Chaque entreprise possède sa politique de congés et ses paramètres.</p>

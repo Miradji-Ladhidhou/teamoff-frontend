@@ -3,8 +3,7 @@ import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, 
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
-import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
-import { useAlert } from '../hooks/useAlert';
+import { useAlert, useConfirmation } from '../hooks/useAlert';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -60,7 +59,7 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const PolitiqueCongesPage = () => {
-  const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
+  const { confirm } = useConfirmation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -265,22 +264,25 @@ const PolitiqueCongesPage = () => {
   };
 
   const handleDeleteCongeType = async (typeId) => {
-    const confirmed = requestConfirmation(
-      `delete-conge-type:${typeId}`,
-      'Suppression demandée: cliquez une seconde fois sur Supprimer pour confirmer.'
-    );
-    if (!confirmed) return;
-
-    try {
-      setSuccess('');
-      clearConfirmation();
-      await congeTypesService.delete(typeId);
-      await refreshCongeTypes();
-      setSuccess('Type de congé supprimé avec succès.');
-    } catch (err) {
-      console.error('Erreur suppression type de congé:', err);
-      alert.error(err.response?.data?.message || 'Erreur lors de la suppression du type de congé.');
-    }
+    const targetType = congeTypes.find(t => t.id === typeId);
+    confirm({
+      title: 'Supprimer ce type de congé ?',
+      description: `Êtes-vous sûr de vouloir supprimer "${targetType?.libelle}" ? Cette action est irréversible et affectera les historiques.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setSuccess('');
+          await congeTypesService.delete(typeId);
+          await refreshCongeTypes();
+          alert.success('Type de congé supprimé avec succès.');
+        } catch (err) {
+          console.error('Erreur suppression type de congé:', err);
+          alert.error(err.response?.data?.message || 'Erreur lors de la suppression du type de congé.');
+        }
+      }
+    });
   };
 
   const addServicePolicy = () => {
@@ -442,7 +444,6 @@ const PolitiqueCongesPage = () => {
 
       
       {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold">{confirmationMessage}</Alert>}
 
       <Card className="mb-4">
         <Card.Header className="d-flex justify-content-between align-items-center">
