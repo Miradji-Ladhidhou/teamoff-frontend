@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
 import NotificationSystem from './components/NotificationSystem';
 import NotificationModal from './components/NotificationModal/NotificationModal';
@@ -134,10 +135,11 @@ function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <NotificationSystem />
-        <NotificationModal />
+        <ConfirmDialogProvider>
+          <NotificationSystem />
+          <NotificationModal />
 
-        <Routes>
+          <Routes>
 
         {/* Routes publiques */}
         <Route
@@ -278,10 +280,11 @@ function App() {
           <Route path="/superadmin/entreprises" element={<Navigate to="/superadmin/companies" replace />} />
         </Route>
 
-        {/* Redirections */}
-        <Route path="*" element={<HomeRedirect />} />
+            {/* Redirections */}
+            <Route path="*" element={<HomeRedirect />} />
 
-      </Routes>
+          </Routes>
+        </ConfirmDialogProvider>
       </NotificationProvider>
     </AuthProvider>
   );

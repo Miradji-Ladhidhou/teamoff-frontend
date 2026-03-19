@@ -3,6 +3,7 @@ import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, 
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -58,6 +59,7 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const PolitiqueCongesPage = () => {
+  const confirmDialog = useConfirmDialog();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -263,7 +265,14 @@ const PolitiqueCongesPage = () => {
   };
 
   const handleDeleteCongeType = async (typeId) => {
-    if (!window.confirm('Supprimer ce type de congé ?')) return;
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un type de congé',
+      message: 'Cette action est définitive. Voulez-vous continuer ?',
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       setError('');

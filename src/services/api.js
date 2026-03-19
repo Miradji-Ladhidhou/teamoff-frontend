@@ -69,7 +69,7 @@ const emitApiNotification = (message, type = 'success', duration = 4000) => {
 
 // Configuration de base d'axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5500/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
 });
 
@@ -92,8 +92,14 @@ api.interceptors.response.use(
   (response) => {
     if (shouldNotify(response.config)) {
       const backendMessage = response.data?.message;
-      const method = (response.config?.method || '').toUpperCase();
-      const fallback = `Action ${method} effectuée avec succès`;
+      const method = (response.config?.method || '').toLowerCase();
+      const fallbackByMethod = {
+        post: 'Création effectuée avec succès',
+        put: 'Mise à jour effectuée avec succès',
+        patch: 'Mise à jour effectuée avec succès',
+        delete: 'Suppression effectuée avec succès',
+      };
+      const fallback = fallbackByMethod[method] || 'Opération effectuée avec succès';
       emitApiNotification(backendMessage || fallback, 'success', 4000);
     }
 

@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, In
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 const DEFAULT_PARAMETRES = {
   timezone: 'Europe/Paris',
@@ -68,6 +69,7 @@ const normalizeByServiceLimits = (byService = {}) => {
 };
 
 const CompaniesManagement = () => {
+  const confirmDialog = useConfirmDialog();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -314,7 +316,15 @@ const CompaniesManagement = () => {
   };
 
   const handleDelete = async (companyId) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cette entreprise ?')) {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer une entreprise',
+      message: 'Cette action supprime l\'entreprise et ses données associées.',
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 

@@ -4,6 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -15,6 +16,7 @@ const DEFAULT_POLICY = {
 
 const ServicesPage = () => {
   const { user } = useAuth();
+  const confirmDialog = useConfirmDialog();
   const entrepriseId = user?.entreprise_id;
 
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,13 @@ const ServicesPage = () => {
   };
 
   const handleDelete = async (service) => {
-    const confirmed = window.confirm(`Supprimer le service "${service.name}" ?`);
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un service',
+      message: `Voulez-vous supprimer le service "${service.name}" ?`,
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
     if (!confirmed) return;
 
     setError('');

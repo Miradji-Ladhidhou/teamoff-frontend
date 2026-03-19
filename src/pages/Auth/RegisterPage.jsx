@@ -4,6 +4,7 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } 
 import { FaBuilding, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
+import { useNotification } from '../../hooks/useNotification';
 
 const RegisterPage = () => {
   const [step, setStep] = useState(1);
@@ -27,6 +28,7 @@ const RegisterPage = () => {
   const [validationErrors, setValidationErrors] = useState({});
 
   const { register } = useAuth();
+  const notification = useNotification();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -92,7 +94,7 @@ const RegisterPage = () => {
     try {
       const result = await register(formData);
       if (result.success) {
-        alert('Inscription réussie ! Un email de confirmation a été envoyé à l\'administrateur.');
+        notification.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
         navigate('/login');
       } else {
         setError(result.error);

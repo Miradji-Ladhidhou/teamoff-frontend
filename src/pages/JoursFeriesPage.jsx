@@ -4,8 +4,10 @@ import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 const JoursFeriesPage = () => {
+  const confirmDialog = useConfirmDialog();
   const { user } = useAuth();
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,14 @@ const JoursFeriesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce jour férié ?')) return;
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un jour férié',
+      message: 'Ce jour férié sera supprimé définitivement.',
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});

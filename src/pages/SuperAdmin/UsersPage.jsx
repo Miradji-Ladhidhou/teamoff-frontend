@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, In
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaBuilding, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../hooks/useNotification';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
@@ -21,6 +22,7 @@ const DEFAULT_FORM = {
 const UsersManagement = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
+  const confirmDialog = useConfirmDialog();
 
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -170,7 +172,15 @@ const UsersManagement = () => {
   };
 
   const handleDelete = async (userId) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un utilisateur',
+      message: 'Cette suppression est définitive. Voulez-vous continuer ?',
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 

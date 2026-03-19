@@ -15,6 +15,7 @@ import {
 import { entreprisesService, congeTypesService, quotasService, usersService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
@@ -52,6 +53,7 @@ const normalizeBlockedWeekdays = (days) => (
 );
 
 const JoursBloquesPage = () => {
+  const confirmDialog = useConfirmDialog();
   const { user } = useAuth();
   const entrepriseId = user?.entreprise_id;
 
@@ -291,7 +293,13 @@ const JoursBloquesPage = () => {
   };
 
   const deleteCounter = async (counterId) => {
-    const confirmed = window.confirm('Supprimer ce compteur ?');
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un compteur',
+      message: 'Le compteur sélectionné sera supprimé définitivement.',
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
     if (!confirmed) return;
 
     try {

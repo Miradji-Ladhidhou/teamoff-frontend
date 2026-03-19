@@ -49,7 +49,7 @@ describe('useSocket', () => {
 
     renderHook(() => useSocket());
 
-    expect(io).toHaveBeenCalledWith('http://localhost:5500', {
+    expect(io).toHaveBeenCalledWith(window.location.origin, {
       auth: { token: 'fake-token' }
     });
   });

@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert } f
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -13,6 +14,7 @@ const DEFAULT_POLICY = {
 };
 
 const ServicesPage = () => {
+  const confirmDialog = useConfirmDialog();
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [services, setServices] = useState([]);
@@ -117,7 +119,13 @@ const ServicesPage = () => {
   };
 
   const handleDelete = async (service) => {
-    const confirmed = window.confirm(`Supprimer le service "${service.name}" ?`);
+    const confirmed = await confirmDialog({
+      title: 'Supprimer un service',
+      message: `Voulez-vous supprimer le service "${service.name}" ?`,
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+      variant: 'danger',
+    });
     if (!confirmed) return;
 
     setError('');
