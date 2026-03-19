@@ -56,24 +56,39 @@ class AlertService {
   // ==================== TOAST MANAGEMENT ====================
 
   /**
-   * Affiche un toast de succès
+   * Ouvre une notification sous forme de modale non-intrusive
+   * Auto-ferme après la durée spécifiée
+   * @param {string} message
+   * @param {string} type - 'success' | 'error' | 'info' | 'warning'
+   * @param {number} duration - durée en ms avant auto-dismiss
+   * @returns {string} ID de la notification
+   */
+  openNotificationModal(message, type = 'info', duration = TOAST_DURATION) {
+    return this.addToast(message, type, duration);
+  }
+
+  /**
+   * Affiche une notification de succès
+   * Auto-ferme après la durée spécifiée
    */
   success(message, duration = TOAST_DURATION) {
-    return this.addToast(message, 'success', duration);
+    return this.openNotificationModal(message, 'success', duration);
   }
 
   /**
-   * Affiche un toast d'erreur
+   * Affiche une notification d'erreur
+   * Auto-ferme après la durée spécifiée
    */
   error(message, duration = TOAST_DURATION) {
-    return this.addToast(message, 'error', duration);
+    return this.openNotificationModal(message, 'error', duration);
   }
 
   /**
-   * Affiche un toast d'information
+   * Affiche une notification d'information
+   * Auto-ferme après la durée spécifiée
    */
   info(message, duration = TOAST_DURATION) {
-    return this.addToast(message, 'info', duration);
+    return this.openNotificationModal(message, 'info', duration);
   }
 
   /**
