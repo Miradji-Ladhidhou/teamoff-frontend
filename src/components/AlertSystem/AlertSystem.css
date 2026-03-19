@@ -22,7 +22,7 @@
   --alert-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.13);
   --alert-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.20);
 
-  --z-toast:   9999;
+  --z-toast:   999999;
   --z-overlay: 10000;
   --z-modal:   10001;
 
@@ -105,6 +105,7 @@
   bottom: 20px;
   bottom: max(20px, env(safe-area-inset-bottom));
   left: 50%;
+  top: auto;
   transform: translateX(-50%);
   z-index: var(--z-toast);
   pointer-events: none;
@@ -122,13 +123,14 @@
   pointer-events: auto;
   border-radius: var(--alert-radius-sm);
   box-shadow: var(--alert-shadow-md);
+  background: #fef08a;
   padding: 14px 16px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   animation: toastIn 0.25s ease-out forwards;
   min-height: 52px;
-  border-left: 3px solid;
+  border-left: 3px solid #ca8a04;
   width: 100%;
   box-sizing: border-box;
 }
@@ -138,23 +140,23 @@
 }
 
 .toast-success {
-  background: var(--clr-success-bg);
-  border-left-color: var(--clr-success-border);
+  background: #fef08a;
+  border-left-color: #ca8a04;
 }
 
 .toast-error {
-  background: var(--clr-error-bg);
-  border-left-color: var(--clr-error-border);
+  background: #fef08a;
+  border-left-color: #ca8a04;
 }
 
 .toast-info {
-  background: var(--clr-info-bg);
-  border-left-color: var(--clr-info-border);
+  background: #fef08a;
+  border-left-color: #ca8a04;
 }
 
 .toast-warning {
-  background: var(--clr-warning-bg);
-  border-left-color: var(--clr-warning-border);
+  background: #fef08a;
+  border-left-color: #ca8a04;
 }
 
 /* ===================================================================
@@ -180,10 +182,10 @@
   display: flex;
 }
 
-.toast-icon-success { color: var(--clr-success-icon); }
-.toast-icon-error   { color: var(--clr-error-icon); }
-.toast-icon-info    { color: var(--clr-info-icon); }
-.toast-icon-warning { color: var(--clr-warning-icon); }
+.toast-icon-success { color: #111827; }
+.toast-icon-error   { color: #111827; }
+.toast-icon-info    { color: #111827; }
+.toast-icon-warning { color: #111827; }
 
 /* Texte sombre sur fond pastel clair — contraste WCAG AA garanti */
 .toast-message {
@@ -192,12 +194,13 @@
   font-weight: 500;
   line-height: 1.5;
   word-break: break-word;
+  color: #111827;
 }
 
-.toast-success .toast-message { color: var(--clr-success); }
-.toast-error   .toast-message { color: var(--clr-error); }
-.toast-info    .toast-message { color: var(--clr-info); }
-.toast-warning .toast-message { color: var(--clr-warning); }
+.toast-success .toast-message { color: #111827; }
+.toast-error   .toast-message { color: #111827; }
+.toast-info    .toast-message { color: #111827; }
+.toast-warning .toast-message { color: #111827; }
 
 .toast-close-btn {
   flex-shrink: 0;
@@ -212,14 +215,15 @@
   height: 22px;
   border-radius: 4px;
   margin-left: auto;
+  color: #111827;
   opacity: 0.65;
   transition: opacity 0.15s, background 0.15s;
 }
 
-.toast-success .toast-close-btn { color: var(--clr-success); }
-.toast-error   .toast-close-btn { color: var(--clr-error); }
-.toast-info    .toast-close-btn { color: var(--clr-info); }
-.toast-warning .toast-close-btn { color: var(--clr-warning); }
+.toast-success .toast-close-btn { color: #111827; }
+.toast-error   .toast-close-btn { color: #111827; }
+.toast-info    .toast-close-btn { color: #111827; }
+.toast-warning .toast-close-btn { color: #111827; }
 
 .toast-close-btn:hover {
   opacity: 1;
