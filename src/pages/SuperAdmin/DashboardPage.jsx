@@ -148,20 +148,20 @@ const SuperAdminDashboard = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Dashboard SuperAdmin</h1>
-          <p className="text-muted">Vue d'ensemble de votre plateforme TeamOff</p>
+          <h1 className="h4 mb-1">Dashboard SuperAdmin</h1>
+          <p className="text-muted small mb-0">Vue d'ensemble de votre plateforme TeamOff</p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="page-header-actions">
           <Button as={Link} to="/superadmin/settings" variant="outline-primary" size="sm">
-            <FaCog className="me-2" />
-            Paramètres
+            <FaCog className="me-1" />
+            <span className="d-none d-sm-inline">Paramètres</span>
           </Button>
           <Button as={Link} to="/superadmin/metrics" variant="outline-info" size="sm">
-            <FaChartLine className="me-2" />
-            Rapports
+            <FaChartLine className="me-1" />
+            <span className="d-none d-sm-inline">Rapports</span>
           </Button>
         </div>
       </div>
@@ -181,55 +181,56 @@ const SuperAdminDashboard = () => {
       </TipCard>
 
       {/* Statistiques principales */}
-      <Row className="mb-4">
-        <Col md={3}>
+      <Row className="mb-4 g-3">
+        <Col xs={6} md={3}>
           <StatCard
-            title="Utilisateurs totaux"
+            title="Utilisateurs"
             value={stats.totalUsers}
             icon={FaUsers}
             color="primary"
-            subtitle="Tous rôles confondus"
+            subtitle="Tous rôles"
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
             title="Entreprises"
             value={stats.totalCompanies}
             icon={FaBuilding}
             color="success"
-            subtitle="Entreprises actives"
+            subtitle="Actives"
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
-            title="Demandes de congé"
+            title="Congés"
             value={stats.totalLeaves}
             icon={FaCalendarCheck}
             color="warning"
             subtitle={`${stats.pendingLeaves} en attente`}
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
-            title="Santé système"
+            title="Disponibilité"
             value={systemHealth.uptime}
             icon={FaShieldAlt}
             color="info"
-            subtitle="Disponibilité"
+            subtitle="Uptime"
           />
         </Col>
       </Row>
 
       <Row>
         {/* Activité récente */}
-        <Col md={8}>
+        <Col xs={12} md={8}>
           <Card>
             <Card.Header>
-              <h5 className="mb-0">Activité récente</h5>
+              <h5 className="mb-0" style={{ fontSize: '1rem' }}>Activité récente</h5>
             </Card.Header>
-            <Card.Body>
+            <Card.Body className="p-0">
               {recentActivity.length > 0 ? (
-                <Table hover>
+                <div className="table-responsive">
+                <Table hover className="mb-0">
                   <thead>
                     <tr>
                       <th>Type</th>
@@ -255,10 +256,10 @@ const SuperAdminDashboard = () => {
                     ))}
                   </tbody>
                 </Table>
+                </div>
               ) : (
-                <Alert variant="info">
-                  <Alert.Heading>Aucune activité récente</Alert.Heading>
-                  <p>Les activités système apparaîtront ici.</p>
+                <Alert variant="info" className="m-3">
+                  <p className="mb-0">Aucune activité récente. Les activités système apparaîtront ici.</p>
                 </Alert>
               )}
             </Card.Body>
@@ -266,10 +267,10 @@ const SuperAdminDashboard = () => {
         </Col>
 
         {/* Santé système */}
-        <Col md={4}>
+        <Col xs={12} md={4} className="mt-4 mt-md-0">
           <Card>
             <Card.Header>
-              <h5 className="mb-0">État du système</h5>
+              <h5 className="mb-0" style={{ fontSize: '1rem' }}>État du système</h5>
             </Card.Header>
             <Card.Body>
               <div className="mb-3">

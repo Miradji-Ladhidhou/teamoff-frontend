@@ -326,7 +326,7 @@ const JoursFeriesPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des jours fériés...</p>
@@ -336,21 +336,23 @@ const JoursFeriesPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Jours fériés</h1>
-          <p className="text-muted">Gestion des jours fériés et jours travaillés</p>
+          <h1 className="h4 mb-1">Jours fériés</h1>
+          <p className="text-muted small mb-0">Gestion des jours fériés et jours travaillés</p>
         </div>
         {canManage && (
-          <Button
-            variant="primary"
-            onClick={handleNew}
-            className="d-flex align-items-center"
-          >
-            <FaPlus className="me-2" />
-            Nouveau jour férié
-          </Button>
+          <div className="page-header-actions">
+            <Button
+              variant="primary"
+              onClick={handleNew}
+              className="d-flex align-items-center justify-content-center"
+            >
+              <FaPlus className="me-2" />
+              Nouveau jour férié
+            </Button>
+          </div>
         )}
       </div>
 

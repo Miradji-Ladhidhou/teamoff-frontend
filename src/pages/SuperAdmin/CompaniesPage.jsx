@@ -378,7 +378,7 @@ const CompaniesManagement = () => {
 
   if (loading) {
     return (
-      <Container>
+      <Container fluid="sm">
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Chargement...</span>
@@ -390,8 +390,8 @@ const CompaniesManagement = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Gestion des Entreprises</h1>
           <p className="text-muted">Administrer toutes les entreprises de la plateforme</p>

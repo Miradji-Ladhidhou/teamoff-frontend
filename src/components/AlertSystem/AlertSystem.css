@@ -487,6 +487,8 @@
   }
 }
 
+/* Extra small: max 480px */
+@media (max-width: 480px) {
   .modal-body {
     padding: 16px;
   }

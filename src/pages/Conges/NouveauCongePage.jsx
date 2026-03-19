@@ -373,7 +373,7 @@ const NouveauCongePage = () => {
 
   if (loadingData) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des données...</p>
@@ -384,7 +384,7 @@ const NouveauCongePage = () => {
 
   if (!canAccessPage) {
     return (
-      <Container>
+      <Container fluid="sm">
         <Alert variant="warning">Seuls les employés et managers peuvent poser un congé.</Alert>
         <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
       </Container>
@@ -392,7 +392,7 @@ const NouveauCongePage = () => {
   }
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="d-flex align-items-center mb-4">
         <Button as={Link} to={returnPath} variant="outline-secondary" className="me-3">
           <FaArrowLeft />

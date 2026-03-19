@@ -298,15 +298,16 @@ const UsersManagement = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Gestion des Utilisateurs</h1>
-          <p className="text-muted">
+          <h1 className="h4 mb-1">Gestion des Utilisateurs</h1>
+          <p className="text-muted small mb-0">
             {isSuperAdmin ? 'Administrer les utilisateurs de la plateforme' : 'Administrer les utilisateurs de votre entreprise'}
           </p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="page-header-actions">
           <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
@@ -314,7 +315,7 @@ const UsersManagement = () => {
             loadingText="Export..."
           >
             <FaDownload className="me-2" />
-            Exporter CSV
+            CSV
           </AsyncButton>
           <Button
             variant="primary"
@@ -325,7 +326,7 @@ const UsersManagement = () => {
             }}
           >
             <FaPlus className="me-2" />
-            Nouvel Utilisateur
+            <span className="d-none d-sm-inline">Nouvel </span>Utilisateur
           </Button>
         </div>
       </div>
@@ -347,21 +348,21 @@ const UsersManagement = () => {
 
       <Card className="mb-4">
         <Card.Body>
-          <Row>
-            <Col md={4}>
+          <Row className="g-2 align-items-center">
+            <Col xs={12} md={4}>
               <InputGroup>
                 <InputGroup.Text>
                   <FaSearch />
                 </InputGroup.Text>
                 <Form.Control
                   type="text"
-                  placeholder="Rechercher un utilisateur..."
+                  placeholder="Rechercher..."
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                 />
               </InputGroup>
             </Col>
-            <Col md={3}>
+            <Col xs={6} md={3}>
               {isSuperAdmin ? (
                 <Form.Select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)}>
                   <option value="">Toutes les entreprises</option>
@@ -375,7 +376,7 @@ const UsersManagement = () => {
                 <Form.Control value={companiesById[user?.entreprise_id] || 'Entreprise courante'} disabled />
               )}
             </Col>
-            <Col md={3}>
+            <Col xs={6} md={3}>
               <Form.Select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
                 <option value="">Tous les roles</option>
                 {isSuperAdmin && <option value="super_admin">Super Admin</option>}
@@ -384,7 +385,7 @@ const UsersManagement = () => {
                 <option value="employe">Employe</option>
               </Form.Select>
             </Col>
-            <Col md={2} className="text-end">
+            <Col xs={12} md={2} className="text-md-end">
               <Badge bg="info">
                 {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
               </Badge>
@@ -394,59 +395,45 @@ const UsersManagement = () => {
       </Card>
 
       <Card>
-        <Card.Body>
-          <Table hover responsive>
-            <thead>
-              <tr>
-                <th>Utilisateur</th>
-                <th>Email</th>
-                <th>Date d'embauche</th>
-                <th>Role</th>
-                <th>Service</th>
-                <th>Entreprise</th>
-                <th>Statut</th>
-                <th>Mise a jour</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((targetUser) => (
-                <tr key={targetUser.id}>
-                  <td>
-                    <div>
-                      <strong>{targetUser.prenom} {targetUser.nom}</strong>
-                    </div>
-                  </td>
-                  <td>{targetUser.email}</td>
-                  <td>
-                    {targetUser.date_embauche
-                      ? new Date(`${targetUser.date_embauche}T00:00:00`).toLocaleDateString('fr-FR')
-                      : <span className="text-muted">Non définie</span>}
-                  </td>
-                  <td>{getRoleBadge(targetUser.role)}</td>
-                  <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
-                  <td>
-                    {companiesById[targetUser.entreprise_id] ? (
-                      <div>
-                        <FaBuilding className="me-1" />
-                        {companiesById[targetUser.entreprise_id]}
+        <Card.Body className="p-0 p-md-3">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-4">
+              <FaUsers size={48} className="text-muted mb-3" />
+              <h5>Aucun utilisateur trouvé</h5>
+              <p className="text-muted small">
+                {searchTerm || companyFilter || roleFilter
+                  ? 'Aucun utilisateur ne correspond à vos critères.'
+                  : 'Commencez par créer votre premier utilisateur.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Vue carte — mobile uniquement */}
+              <div className="d-md-none mobile-card-list px-3">
+                {filteredUsers.map((targetUser) => (
+                  <div key={targetUser.id} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fw-semibold small">{targetUser.prenom} {targetUser.nom}</div>
+                        <div className="text-muted" style={{ fontSize: '0.78rem', wordBreak: 'break-all' }}>{targetUser.email}</div>
                       </div>
-                    ) : (
-                      <Badge bg="secondary">Aucune</Badge>
-                    )}
-                  </td>
-                  <td>{getStatusBadge(targetUser.statut)}</td>
-                  <td>{targetUser.updatedAt ? new Date(targetUser.updatedAt).toLocaleDateString('fr-FR') : 'Jamais'}</td>
-                  <td>
+                      {getStatusBadge(targetUser.statut)}
+                    </div>
+                    <div className="d-flex gap-1 flex-wrap mb-2" style={{ fontSize: '0.75rem' }}>
+                      {getRoleBadge(targetUser.role)}
+                      {targetUser.service && <Badge bg="secondary">{targetUser.service}</Badge>}
+                      {companiesById[targetUser.entreprise_id] && (
+                        <Badge bg="light" text="dark"><FaBuilding className="me-1" />{companiesById[targetUser.entreprise_id]}</Badge>
+                      )}
+                    </div>
                     <div className="d-flex gap-1">
-                      <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
-                        <FaEdit />
+                      <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(targetUser)}>
+                        <FaEdit className="me-1" /> Modifier
                       </Button>
                       <AsyncButton
                         variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                         size="sm"
                         onClick={() => toggleUserStatus(targetUser)}
-                        title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
                         isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
                         showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
                         loadingText=""
@@ -458,7 +445,6 @@ const UsersManagement = () => {
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDelete(targetUser.id)}
-                        title="Supprimer"
                         disabled={targetUser.id === user?.id}
                         isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
                         showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
@@ -467,22 +453,91 @@ const UsersManagement = () => {
                         <FaTrash />
                       </AsyncButton>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+                  </div>
+                ))}
+              </div>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-4">
-              <FaUsers size={48} className="text-muted mb-3" />
-              <h5>Aucun utilisateur trouve</h5>
-              <p className="text-muted">
-                {searchTerm || companyFilter || roleFilter
-                  ? 'Aucun utilisateur ne correspond a vos criteres.'
-                  : 'Commencez par creer votre premier utilisateur.'}
-              </p>
-            </div>
+              {/* Vue tableau — desktop uniquement */}
+              <div className="d-none d-md-block">
+                <Table hover responsive>
+                  <thead>
+                    <tr>
+                      <th>Utilisateur</th>
+                      <th>Email</th>
+                      <th>Date d'embauche</th>
+                      <th>Role</th>
+                      <th>Service</th>
+                      <th>Entreprise</th>
+                      <th>Statut</th>
+                      <th>Mise a jour</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((targetUser) => (
+                      <tr key={targetUser.id}>
+                        <td>
+                          <div>
+                            <strong>{targetUser.prenom} {targetUser.nom}</strong>
+                          </div>
+                        </td>
+                        <td>{targetUser.email}</td>
+                        <td>
+                          {targetUser.date_embauche
+                            ? new Date(`${targetUser.date_embauche}T00:00:00`).toLocaleDateString('fr-FR')
+                            : <span className="text-muted">Non définie</span>}
+                        </td>
+                        <td>{getRoleBadge(targetUser.role)}</td>
+                        <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
+                        <td>
+                          {companiesById[targetUser.entreprise_id] ? (
+                            <div>
+                              <FaBuilding className="me-1" />
+                              {companiesById[targetUser.entreprise_id]}
+                            </div>
+                          ) : (
+                            <Badge bg="secondary">Aucune</Badge>
+                          )}
+                        </td>
+                        <td>{getStatusBadge(targetUser.statut)}</td>
+                        <td>{targetUser.updatedAt ? new Date(targetUser.updatedAt).toLocaleDateString('fr-FR') : 'Jamais'}</td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
+                              <FaEdit />
+                            </Button>
+                            <AsyncButton
+                              variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
+                              size="sm"
+                              onClick={() => toggleUserStatus(targetUser)}
+                              title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
+                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                              loadingText=""
+                              disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
+                            >
+                              {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
+                            </AsyncButton>
+                            <AsyncButton
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => handleDelete(targetUser.id)}
+                              title="Supprimer"
+                              disabled={targetUser.id === user?.id}
+                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                              loadingText=""
+                            >
+                              <FaTrash />
+                            </AsyncButton>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>

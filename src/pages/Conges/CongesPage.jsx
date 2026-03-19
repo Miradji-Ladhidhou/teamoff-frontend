@@ -310,13 +310,14 @@ const CongesPage = () => {
   };
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">
+          <h1 className="h4 mb-1">
             {isAdmin() ? 'Gestion des Congés' : 'Mes Congés'}
           </h1>
-          <p className="text-muted">
+          <p className="text-muted small mb-0">
             {user?.role === 'super_admin'
               ? 'Superviser l\'ensemble des demandes de congé de la plateforme'
               : isAdmin()
@@ -325,10 +326,12 @@ const CongesPage = () => {
           </p>
         </div>
         {canCreateLeave && (
-          <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-            <FaPlus className="me-2" />
-            Nouveau congé
-          </Button>
+          <div className="page-header-actions">
+            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center justify-content-center">
+              <FaPlus className="me-2" />
+              Nouveau congé
+            </Button>
+          </div>
         )}
       </div>
 
@@ -490,7 +493,7 @@ const CongesPage = () => {
             <div className="text-center py-5">
               <FaSearch size={48} className="text-muted mb-3" />
               <h5 className="text-muted">Aucun congé trouvé</h5>
-              <p className="text-muted">
+              <p className="text-muted small">
                 {filters.search || filters.statut ?
                   'Essayez de modifier vos filtres' :
                   (canCreateLeave ? 'Créez votre première demande de congé' : 'Aucune demande trouvée')
@@ -505,7 +508,41 @@ const CongesPage = () => {
             </div>
           ) : (
             <>
-              <div className="table-responsive">
+              {/* Vue carte — mobile uniquement */}
+              <div className="d-md-none mobile-card-list">
+                {paginatedConges.map((conge) => (
+                  <div key={conge.id} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fw-semibold small text-truncate">{getCongeTypeLabel(conge)}</div>
+                        <div className="text-muted" style={{ fontSize: '0.78rem' }}>{getEmployeLabel(conge)}</div>
+                        {user?.role === 'super_admin' && (
+                          <div className="text-muted" style={{ fontSize: '0.72rem' }}>{getEntrepriseLabel(conge)}</div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
+                    </div>
+                    <div className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>
+                      📅 {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                      {(conge.jours_pris ?? conge.jours_calcules) && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)} j`}
+                    </div>
+                    <div className="d-flex gap-2">
+                      <Button as={Link} to={`/conges/${conge.id}`} variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center">
+                        <FaEye className="me-1" /> Voir
+                      </Button>
+                      {canValidateConge(conge) && (
+                        <Button variant="outline-success" size="sm" onClick={() => openValidateModal(conge.id)}>✓</Button>
+                      )}
+                      {canRejectConge(conge) && (
+                        <Button variant="outline-danger" size="sm" onClick={() => openRejectModal(conge.id)}>✗</Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Vue tableau — desktop uniquement */}
+              <div className="d-none d-md-block table-responsive">
                 <Table hover className="mb-0">
                   <thead className="table-light">
                     <tr>
@@ -574,7 +611,7 @@ const CongesPage = () => {
                     ))}
                   </tbody>
                 </Table>
-              </div>
+              </div>{/* fin .d-none.d-md-block */}
 
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center p-3 border-top">

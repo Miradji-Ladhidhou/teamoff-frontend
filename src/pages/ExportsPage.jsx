@@ -213,7 +213,7 @@ const ExportsPage = () => {
   // Vérifier les permissions
   if (!['admin_entreprise', 'super_admin'].includes(user.role)) {
     return (
-      <Container>
+      <Container fluid="sm">
         <Alert variant="danger" className="text-center">
           Accès non autorisé. Cette page est réservée aux administrateurs.
         </Alert>
@@ -222,7 +222,7 @@ const ExportsPage = () => {
   }
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="d-flex align-items-center mb-4">
         <div>
           <h1 className="h3 mb-1">Exports de données</h1>

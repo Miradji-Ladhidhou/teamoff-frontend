@@ -289,25 +289,97 @@ body {
     display: none !important;
   }
 
-  .btn {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
   .card-body {
-    padding: 1rem;
+    padding: 0.875rem;
   }
 
   h1 {
-    font-size: 1.75rem;
-  }
-
-  h2 {
     font-size: 1.5rem;
   }
 
-  h3 {
+  h2 {
     font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* ─── Touch targets ─────────────────────────── */
+.btn,
+.nav-link,
+[role="button"] {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-sm {
+  min-height: 36px;
+}
+
+/* ─── Inputs full-width mobile + touch height ─ */
+.form-control,
+.form-select {
+  min-height: 44px;
+}
+
+.form-control-sm,
+.form-select-sm {
+  min-height: 36px;
+}
+
+/* ─── Prévention du scroll horizontal global ── */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ─── Wrapper responsive pour les tables ─────── */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+/* ─── Mobile card list (alternative aux tables) */
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-card-list__item {
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-card-list__item:last-child {
+  border-bottom: none;
+}
+
+/* ─── Utilitaires d'affichage responsive ───── */
+@media (max-width: 767.98px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .show-mobile-only {
+    display: none !important;
+  }
+}
+
+/* ─── Typographie mobile propre ────────────── */
+@media (max-width: 575.98px) {
+  .text-responsive-sm {
+    font-size: 0.8125rem;
+  }
+
+  .text-responsive-xs {
+    font-size: 0.75rem;
   }
 }
 

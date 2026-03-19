@@ -98,7 +98,7 @@ const MetricsPage = () => {
   // Vérifier les permissions
   if (user.role !== 'super_admin') {
     return (
-      <Container>
+      <Container fluid="sm">
         <Alert variant="danger" className="text-center">
           Accès non autorisé. Cette page est réservée aux super administrateurs.
         </Alert>
@@ -108,7 +108,7 @@ const MetricsPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Chargement des métriques...</span>
         </Spinner>
@@ -118,7 +118,7 @@ const MetricsPage = () => {
 
   if (error) {
     return (
-      <Container>
+      <Container fluid="sm">
         <Alert variant="danger">
           <FaExclamationTriangle className="me-2" />
           {error}
@@ -128,7 +128,7 @@ const MetricsPage = () => {
   }
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="d-flex align-items-center mb-4">
         <FaChartLine className="text-primary me-3" size={32} />
         <div>

@@ -120,7 +120,7 @@ const ServicesPage = () => {
 
   if (loading) {
     return (
-      <Container>
+      <Container fluid="sm">
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Chargement...</span>
@@ -132,8 +132,8 @@ const ServicesPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Services</h1>
           <p className="text-muted mb-0">Créez vos services et configurez leur politique de congé isolée.</p>

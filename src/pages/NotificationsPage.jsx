@@ -274,7 +274,7 @@ const NotificationsPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des notifications...</p>
@@ -284,8 +284,8 @@ const NotificationsPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Notifications</h1>
           <p className="text-muted">Vos notifications et mises à jour</p>

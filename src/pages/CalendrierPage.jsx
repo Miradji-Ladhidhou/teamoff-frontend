@@ -279,7 +279,7 @@ const CalendrierPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement du calendrier...</p>
@@ -289,8 +289,8 @@ const CalendrierPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <h1 className="h3 mb-0">Calendrier des congés</h1>
         <div className="d-flex gap-2">
           <Button

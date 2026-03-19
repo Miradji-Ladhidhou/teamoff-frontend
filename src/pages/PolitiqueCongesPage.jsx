@@ -397,14 +397,14 @@ const PolitiqueCongesPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <Spinner animation="border" variant="primary" />
       </Container>
     );
   }
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="mb-4 d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2">
         <div>
           <h1 className="h3 mb-1">Politique de congé</h1>

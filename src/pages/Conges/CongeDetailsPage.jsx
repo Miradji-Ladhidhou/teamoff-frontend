@@ -180,7 +180,7 @@ const CongeDetailsPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des détails...</p>
@@ -191,7 +191,7 @@ const CongeDetailsPage = () => {
 
   if (!conge) {
     return (
-      <Container>
+      <Container fluid="sm">
         <Alert variant="warning" className="text-center">
           Congé non trouvé
         </Alert>
@@ -205,7 +205,7 @@ const CongeDetailsPage = () => {
   }
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="d-flex align-items-center justify-content-between mb-4">
         <div className="d-flex align-items-center">
           <Button as={Link} to="/conges" variant="outline-secondary" className="me-3">

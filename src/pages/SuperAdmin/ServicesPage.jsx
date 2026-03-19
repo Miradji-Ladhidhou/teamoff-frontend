@@ -140,8 +140,8 @@ const ServicesPage = () => {
   const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Services</h1>
           <p className="text-muted mb-0">Gérez les services par entreprise et configurez leurs politiques de congé.</p>

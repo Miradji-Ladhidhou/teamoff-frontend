@@ -173,7 +173,7 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="ui-text-soft">Chargement du tableau de bord...</p>
@@ -183,20 +183,20 @@ const DashboardPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="h3 mb-2 ui-page-title">Tableau de bord</h1>
-          <p className="mb-1"><span className="ui-user-name">Bienvenue, {user?.prenom || 'Utilisateur'} {user?.nom || ''}</span></p>
-          <p className="ui-text-soft mb-1">{getRoleLabel(user?.role)}</p>
-          <p className="mb-0">
-            <span className="ui-text-soft"><strong>Entreprise:</strong> {getEntrepriseLabel()}</span>
-          </p>
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
+        <div className="page-header-content">
+          <h1 className="h4 mb-1 ui-page-title">Tableau de bord</h1>
+          <p className="mb-0"><span className="ui-user-name fw-semibold">{user?.prenom || 'Utilisateur'} {user?.nom || ''}</span></p>
+          <p className="ui-text-soft small mb-0">{getRoleLabel(user?.role)} — {getEntrepriseLabel()}</p>
         </div>
         {['employe', 'manager'].includes(user?.role) && (
-          <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-            <FaPlus className="me-2" /> Nouveau congé
-          </Button>
+          <div className="page-header-actions">
+            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
+              <FaPlus className="me-2" /> Nouveau congé
+            </Button>
+          </div>
         )}
       </div>
 
@@ -278,22 +278,24 @@ const DashboardPage = () => {
               ) : (
                 <div className="list-group list-group-flush">
                   {recentConges.map((conge) => (
-                    <div key={conge.id} className="list-group-item px-0 py-3 d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="fw-semibold">
-                          {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
+                    <div key={conge.id} className="list-group-item px-0 py-2">
+                      <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <div className="fw-semibold text-truncate small">
+                            {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
+                          </div>
+                          <div className="ui-text-soft" style={{ fontSize: '0.78rem' }}>
+                            {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                          </div>
+                          <div style={{ fontSize: '0.75rem' }}>
+                            {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
+                            {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
+                          </div>
                         </div>
-                        <small className="ui-text-soft d-block">
-                          {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
-                        </small>
-                        <small className="ui-text-soft d-block">
-                          {conge.jours_calcules && <span className="badge bg-info me-2">{conge.jours_calcules} jours</span>}
-                          {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
-                        </small>
-                      </div>
-                      <div className="d-flex align-items-center gap-2 ms-2">
-                        {getStatusBadge(conge.statut)}
-                        <Button as={Link} to={`/conges/${conge.id}`} variant="outline-secondary" size="sm"><FaEye /></Button>
+                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                          {getStatusBadge(conge.statut)}
+                          <Button as={Link} to={`/conges/${conge.id}`} variant="outline-secondary" size="sm"><FaEye /></Button>
+                        </div>
                       </div>
                     </div>
                   ))}

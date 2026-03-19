@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
-import { FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers, FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes, FaBell, FaHistory, FaCog } from 'react-icons/fa';
+import { FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers, FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes, FaBell, FaHistory, FaCog, FaEllipsisH } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
 import { getNavigationForRole } from '../../utils/navigation';
@@ -32,8 +32,15 @@ const SuperAdminLayout = () => {
     holiday: FaCalendarTimes,
     bell: FaBell,
     audit: FaHistory,
-    settings: FaCog
+    settings: FaCog,
+    more: FaEllipsisH
   };
+
+  // Bottom nav mobile : 4 premiers primaires + "Plus"
+  const bottomNavItems = [
+    ...primaryItems.slice(0, 4),
+    { path: '__more__', label: 'Plus', icon: 'more', section: 'bottom' }
+  ];
 
   useEffect(() => {
     const loadUnreadCount = async () => {
@@ -209,11 +216,44 @@ const SuperAdminLayout = () => {
         </Navbar>
 
         {/* Contenu de la page */}
-        <div className="p-4">
+        <div style={{ padding: '1.25rem' }} className="superadmin-content">
           <Outlet />
         </div>
         <AppFooter isSuperAdmin />
       </div>
+
+      {/* Bottom Navigation Mobile */}
+      <nav className="mobile-bottom-nav d-md-none" role="navigation" aria-label="Navigation SuperAdmin">
+        {bottomNavItems.map((item) => {
+          const Icon = iconMap[item.icon] || FaShieldAlt;
+          const isMore = item.path === '__more__';
+          const active = !isMore && isActive(item.path);
+          const badgeValue = item.badgeKey === 'notifications' ? unreadNotifications : 0;
+
+          return (
+            <button
+              key={item.path}
+              className={`mobile-bottom-nav__item${active ? ' active' : ''}`}
+              onClick={() => {
+                if (isMore) {
+                  setShowSidebar(true);
+                } else {
+                  navigate(item.path);
+                }
+              }}
+              aria-label={item.label}
+            >
+              <span className="mobile-bottom-nav__icon">
+                <Icon size={20} />
+                {badgeValue > 0 && (
+                  <span className="mobile-bottom-nav__badge">{badgeValue > 9 ? '9+' : badgeValue}</span>
+                )}
+              </span>
+              <span className="mobile-bottom-nav__label">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };

@@ -133,8 +133,8 @@ const AuditLogs = () => {
   };
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Logs d'Audit</h1>
           <p className="text-muted">Historique des actions système et utilisateur</p>
