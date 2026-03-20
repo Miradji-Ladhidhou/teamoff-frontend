@@ -96,10 +96,7 @@ const SuperAdminLayout = () => {
             setShowSidebar(false);
           }
         }}
-        className={`mb-2 d-flex align-items-center ${
-          isActive(item.path) ? 'bg-primary text-white rounded px-2 py-2' : 'px-2 py-2'
-        } ${closeSidebar ? '' : 'text-white'}`}
-        style={{ cursor: 'pointer' }}
+        className={`mb-2 d-flex align-items-center cursor-pointer ${isActive(item.path) ? 'bg-primary text-white rounded px-2 py-2' : 'px-2 py-2'} ${closeSidebar ? '' : 'text-white'}`}
       >
         <Icon className="me-3" size={18} />
         <span>{item.label}</span>
@@ -115,7 +112,7 @@ const SuperAdminLayout = () => {
   return (
     <div className="d-flex">
       {/* Sidebar pour desktop */}
-      <div className="d-none d-md-block bg-dark text-white" style={{ width: '250px', minHeight: '100dvh' }}>
+      <div className="d-none d-md-block bg-dark text-white sidebar-nav">
         <div className="p-3">
           <div className="d-flex align-items-center mb-4">
             <FaShieldAlt size={24} className="text-warning me-2" />
@@ -216,7 +213,7 @@ const SuperAdminLayout = () => {
         </Navbar>
 
         {/* Contenu de la page */}
-        <div style={{ padding: '1.25rem' }} className="superadmin-content">
+        <div className="superadmin-content p-4">
           <Outlet />
         </div>
         <AppFooter isSuperAdmin />

@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 import { useAlert } from '../hooks/useAlert';
+import AsyncButton from '../components/AsyncButton';
 
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
@@ -316,7 +317,7 @@ const JoursBloquesPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <Spinner animation="border" variant="primary" />
       </Container>
     );
@@ -361,7 +362,12 @@ const JoursBloquesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
+      {confirmationMessage && (
+        <div className="alert alert-warning inline-confirmation-alert fw-semibold d-flex justify-content-between align-items-center" role="status">
+          <span>{confirmationMessage}</span>
+          <Button type="button" size="sm" variant="outline-secondary" onClick={clearConfirmation}>Fermer</Button>
+        </div>
+      )}
 
       <Card className="mb-4">
         <Card.Header><strong>Règles de décompte</strong></Card.Header>
@@ -474,8 +480,7 @@ const JoursBloquesPage = () => {
                     {date}
                     <button
                       type="button"
-                      className="btn-close btn-close-white"
-                      style={{ fontSize: '0.65rem' }}
+                      className="btn-close btn-close-white text-3xs"
                       onClick={() => removeSpecificDate(date)}
                       aria-label={`Supprimer ${date}`}
                     />
@@ -516,7 +521,7 @@ const JoursBloquesPage = () => {
                     {congeTypes.map((type) => (
                       <tr key={type.id}>
                         <td>{type.libelle}</td>
-                        <td style={{ maxWidth: 220 }}>
+                        <td className="td-truncate">
                           <Form.Control
                             type="number"
                             min="0"
@@ -539,9 +544,15 @@ const JoursBloquesPage = () => {
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
               <small className="text-muted">Pensez à enregistrer après chaque ajustement de règle.</small>
               <div className="d-grid w-100 w-sm-auto">
-                <Button type="submit" disabled={savingPolicy} className="w-100">
-                  {savingPolicy ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                </Button>
+                <AsyncButton
+                  type="submit"
+                  isLoading={savingPolicy}
+                  showSpinner={savingPolicy}
+                  loadingText="Enregistrement..."
+                  className="w-100"
+                >
+                  Enregistrer les modifications
+                </AsyncButton>
               </div>
             </div>
           </Form>
@@ -724,7 +735,9 @@ const JoursBloquesPage = () => {
           </Modal.Body>
           <Modal.Footer className="d-flex flex-column-reverse flex-sm-row gap-2">
             <Button variant="secondary" onClick={() => setShowCounterModal(false)} className="w-100 w-sm-auto">Annuler</Button>
-            <Button type="submit" className="w-100 w-sm-auto">Enregistrer</Button>
+            <AsyncButton type="submit" className="w-100 w-sm-auto" loadingText="Enregistrement...">
+              Enregistrer
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

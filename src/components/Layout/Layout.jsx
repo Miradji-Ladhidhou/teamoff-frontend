@@ -129,8 +129,7 @@ const Layout = () => {
             setShowSidebar(false);
           }
         }}
-        className={`role-nav-link mb-2 d-flex align-items-center ${isActive(item.path) ? 'active' : ''}`}
-        style={{ cursor: 'pointer' }}
+        className={`role-nav-link mb-2 d-flex align-items-center cursor-pointer ${isActive(item.path) ? 'active' : ''}`}
       >
         <Icon className="me-3" size={17} />
         <span>{item.label}</span>
@@ -238,13 +237,12 @@ const Layout = () => {
           </Button>
 
           <Navbar.Brand
-            className="role-topbar-brand"
-            style={{ cursor: 'pointer' }}
+            className="role-topbar-brand cursor-pointer"
             onClick={() => navigate(getDefaultRoute(user?.role))}
           >
             <FaShieldAlt className="me-2 role-brand-icon d-none d-md-inline" />
             <span className="d-none d-md-inline">Espace {currentRoleMeta.label}</span>
-            <span className="d-md-none fw-bold" style={{ fontSize: '1rem' }}>TeamOff</span>
+            <span className="d-md-none fw-bold fs-6">TeamOff</span>
           </Navbar.Brand>
 
           <Navbar.Collapse className="justify-content-end">

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useAlert, useConfirmation } from '../hooks/useAlert';
+import AsyncButton from '../components/AsyncButton';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -417,7 +418,7 @@ const PolitiqueCongesPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <Spinner animation="border" variant="primary" />
       </Container>
     );
@@ -703,7 +704,7 @@ const PolitiqueCongesPage = () => {
               </Row>
 
               {Object.keys(servicePolicies).length === 0 && (
-                <Alert variant="light" className="mb-0">Aucun service paramétré.</Alert>
+                <div className="alert alert-light mb-0" role="status">Aucun service paramétré.</div>
               )}
 
               {Object.keys(servicePolicies).length > 0 && (
@@ -858,13 +859,13 @@ const PolitiqueCongesPage = () => {
                       <Table responsive hover className="mb-0 align-middle settings-table">
                       <thead>
                         <tr>
-                          <th style={{ minWidth: 'clamp(7rem, 22vw, 11rem)' }}>Service</th>
-                          <th style={{ minWidth: 'clamp(7rem, 20vw, 10rem)' }}>Chevauchement</th>
-                          <th style={{ minWidth: 'clamp(7.5rem, 22vw, 11rem)' }}>Workflow</th>
-                          <th style={{ minWidth: 'clamp(5.5rem, 16vw, 7rem)' }}>Préavis</th>
-                          <th style={{ minWidth: 'clamp(6.5rem, 18vw, 7.5rem)' }}>Max consécutif</th>
-                          <th style={{ minWidth: 'clamp(7rem, 20vw, 9.5rem)' }}>Max simultanées</th>
-                          <th style={{ minWidth: 'clamp(6rem, 16vw, 7rem)' }}>Actions</th>
+                          <th className="th-col-service">Service</th>
+                          <th className="th-col-overlap">Chevauchement</th>
+                          <th className="th-col-workflow">Workflow</th>
+                          <th className="th-col-notice">Préavis</th>
+                          <th className="th-col-consec">Max consécutif</th>
+                          <th className="th-col-simul">Max simultanées</th>
+                          <th className="th-col-actions">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -949,7 +950,7 @@ const PolitiqueCongesPage = () => {
               )}
 
               {Object.keys(servicePolicies).length > 0 && filteredServiceEntries.length === 0 && (
-                <Alert variant="light" className="mb-0">Aucun service ne correspond à votre recherche.</Alert>
+                <div className="alert alert-light mb-0" role="status">Aucun service ne correspond à votre recherche.</div>
               )}
             </Form.Group>
             )}
@@ -957,9 +958,15 @@ const PolitiqueCongesPage = () => {
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
               <small className="text-muted">Les modifications sont prises en compte après enregistrement.</small>
               <div className="d-grid w-100 w-sm-auto">
-                <Button type="submit" disabled={saving} className="w-100">
-                  {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                </Button>
+                <AsyncButton
+                  type="submit"
+                  isLoading={saving}
+                  showSpinner={saving}
+                  loadingText="Enregistrement..."
+                  className="w-100"
+                >
+                  Enregistrer les modifications
+                </AsyncButton>
               </div>
             </div>
           </Form>
@@ -1010,9 +1017,15 @@ const PolitiqueCongesPage = () => {
             </Row>
 
             <div className="d-flex justify-content-end mt-3">
-              <Button type="submit" disabled={savingTz} className="w-100 w-sm-auto">
-                {savingTz ? 'Enregistrement...' : 'Enregistrer le fuseau horaire'}
-              </Button>
+              <AsyncButton
+                type="submit"
+                isLoading={savingTz}
+                showSpinner={savingTz}
+                loadingText="Enregistrement..."
+                className="w-100 w-sm-auto"
+              >
+                Enregistrer le fuseau horaire
+              </AsyncButton>
             </div>
           </Form>
         </Card.Body>
@@ -1073,9 +1086,15 @@ const PolitiqueCongesPage = () => {
             <Button type="button" variant="secondary" onClick={closeTypeModal}>
               Annuler
             </Button>
-            <Button type="submit" variant="primary" disabled={savingType}>
-              {savingType ? 'Enregistrement...' : editingTypeId ? 'Mettre à jour' : 'Créer'}
-            </Button>
+            <AsyncButton
+              type="submit"
+              variant="primary"
+              isLoading={savingType}
+              showSpinner={savingType}
+              loadingText="Enregistrement..."
+            >
+              {editingTypeId ? 'Mettre à jour' : 'Créer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

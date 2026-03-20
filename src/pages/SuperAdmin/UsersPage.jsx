@@ -413,13 +413,13 @@ const UsersManagement = () => {
                 {filteredUsers.map((targetUser) => (
                   <div key={targetUser.id} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
-                      <div style={{ minWidth: 0 }}>
+                      <div className="min-w-0">
                         <div className="fw-semibold small">{targetUser.prenom} {targetUser.nom}</div>
-                        <div className="text-muted" style={{ fontSize: '0.78rem', wordBreak: 'break-all' }}>{targetUser.email}</div>
+                        <div className="text-muted text-xs text-break">{targetUser.email}</div>
                       </div>
                       {getStatusBadge(targetUser.statut)}
                     </div>
-                    <div className="d-flex gap-1 flex-wrap mb-2" style={{ fontSize: '0.75rem' }}>
+                    <div className="d-flex gap-1 flex-wrap mb-2 text-xxs">
                       {getRoleBadge(targetUser.role)}
                       {targetUser.service && <Badge bg="secondary">{targetUser.service}</Badge>}
                       {companiesById[targetUser.entreprise_id] && (

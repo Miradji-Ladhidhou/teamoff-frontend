@@ -173,7 +173,7 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="ui-text-soft">Chargement du tableau de bord...</p>
@@ -212,12 +212,12 @@ const DashboardPage = () => {
       </InfoCardInfo>
 
       {notifications.filter(n => !n.lu).length > 0 && (
-        <Alert variant="info" className="mb-4">
+        <div className="alert alert-info mb-4" role="status">
           <div className="d-flex justify-content-between align-items-center">
             <span>Vous avez {notifications.filter(n => !n.lu).length} notification(s) non lue(s)</span>
             <Button as={Link} to="/notifications" variant="outline-info" size="sm">Voir</Button>
           </div>
-        </Alert>
+        </div>
       )}
 
       <Row className="mb-4">
@@ -280,14 +280,14 @@ const DashboardPage = () => {
                   {recentConges.map((conge) => (
                     <div key={conge.id} className="list-group-item px-0 py-2">
                       <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                        <div className="flex-grow-1 min-w-0">
                           <div className="fw-semibold text-truncate small">
                             {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
                           </div>
-                          <div className="ui-text-soft" style={{ fontSize: '0.78rem' }}>
+                          <div className="ui-text-soft text-xs">
                             {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                           </div>
-                          <div style={{ fontSize: '0.75rem' }}>
+                          <div className="text-xxs">
                             {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
                             {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
                           </div>

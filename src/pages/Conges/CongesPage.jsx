@@ -513,16 +513,16 @@ const CongesPage = () => {
                 {paginatedConges.map((conge) => (
                   <div key={conge.id} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div style={{ minWidth: 0 }}>
+                      <div className="min-w-0">
                         <div className="fw-semibold small text-truncate">{getCongeTypeLabel(conge)}</div>
-                        <div className="text-muted" style={{ fontSize: '0.78rem' }}>{getEmployeLabel(conge)}</div>
+                        <div className="text-muted text-xs">{getEmployeLabel(conge)}</div>
                         {user?.role === 'super_admin' && (
-                          <div className="text-muted" style={{ fontSize: '0.72rem' }}>{getEntrepriseLabel(conge)}</div>
+                          <div className="text-muted text-2xs">{getEntrepriseLabel(conge)}</div>
                         )}
                       </div>
                       <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
                     </div>
-                    <div className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>
+                    <div className="text-muted mb-2 small">
                       📅 {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                       {(conge.jours_pris ?? conge.jours_calcules) && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)} j`}
                     </div>

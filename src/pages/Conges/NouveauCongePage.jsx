@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { NotificationContext } from '../../contexts/NotificationContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
@@ -12,7 +11,6 @@ import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
   const { user } = useAuth();
-  const { showNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
@@ -42,9 +40,6 @@ const NouveauCongePage = () => {
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
   const [showOverlapModal, setShowOverlapModal] = useState(false);
-  const [overlapModalMessage, setOverlapModalMessage] = useState('');
-  const [pendingWarningMessage, setPendingWarningMessage] = useState('');
-
   useEffect(() => {
     if (isEditMode) return;
     const params = new URLSearchParams(location.search);
@@ -275,32 +270,17 @@ const NouveauCongePage = () => {
       const response = await congesService.create(formData);
       const warningMessage = response?.data?.overlap_warning?.message;
       if (warningMessage && warningMessage !== precheckWarning) {
-        showNotification(warningMessage, 'warning', 7000);
+        alert.showErrorModal(warningMessage, {
+          title: 'Chevauchement détecté',
+          autoCloseMs: 0,
+        });
       }
       navigate(returnPath);
     } catch (err) {
       console.error('Erreur lors de la création du congé:', err);
       const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
       alert.error(finalMessage);
-      showNotification(finalMessage, 'error', 6000);
     }
-  };
-
-  const handleOverlapModalConfirm = async () => {
-    const warningToPreserve = pendingWarningMessage || overlapModalMessage;
-    setShowOverlapModal(false);
-    await submitCongeAction.run(async () => {
-      await submitCreateLeave(warningToPreserve);
-    });
-    setPendingWarningMessage('');
-    setOverlapModalMessage('');
-  };
-
-  const handleOverlapModalClose = () => {
-    setShowOverlapModal(false);
-    alert.error('Demande non envoyée.');
-    setPendingWarningMessage('');
-    setOverlapModalMessage('');
   };
 
   const handleSubmit = async (e) => {
@@ -317,6 +297,7 @@ const NouveauCongePage = () => {
       try {
         let response;
         let precheckWarningMessage = null;
+
         if (isEditMode) {
           response = await congesService.update(id, formData);
         } else {
@@ -333,9 +314,19 @@ const NouveauCongePage = () => {
           if (overlapAction === 'warning') {
             const warningMessage = overlapMessage || 'Attention: un chevauchement a été détecté.';
             precheckWarningMessage = warningMessage;
-            setPendingWarningMessage(warningMessage);
-            setOverlapModalMessage(warningMessage);
-            setShowOverlapModal(true);
+            alert.confirm({
+              title: 'Chevauchement détecté',
+              description: `${warningMessage}\n\nVous pouvez poursuivre l'envoi, mais cette demande nécessitera une vigilance particulière côté validation.`,
+              confirmLabel: 'Confirmer et envoyer',
+              cancelLabel: 'Modifier ma demande',
+              danger: true,
+              onConfirm: async () => {
+                await submitCreateLeave(precheckWarningMessage);
+              },
+              onCancel: () => {
+                alert.error('Demande non envoyée.');
+              },
+            });
             return;
           }
 
@@ -345,7 +336,10 @@ const NouveauCongePage = () => {
 
         const warningMessage = response?.data?.overlap_warning?.message;
         if (warningMessage && warningMessage !== precheckWarningMessage) {
-          showNotification(warningMessage, 'warning', 7000);
+          alert.showErrorModal(warningMessage, {
+            title: 'Chevauchement détecté',
+            autoCloseMs: 0,
+          });
         }
 
         navigate(returnPath);
@@ -356,7 +350,6 @@ const NouveauCongePage = () => {
           : 'Impossible de créer la demande de congé.';
         const finalMessage = extractApiErrorMessage(err, fallbackMessage);
         alert.error(finalMessage);
-        showNotification(finalMessage, 'error', 6000);
       }
     });
   };
@@ -373,7 +366,7 @@ const NouveauCongePage = () => {
 
   if (loadingData) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des données...</p>
@@ -385,7 +378,7 @@ const NouveauCongePage = () => {
   if (!canAccessPage) {
     return (
       <Container fluid="sm">
-        <Alert variant="warning">Seuls les employés et managers peuvent poser un congé.</Alert>
+        <div className="alert alert-warning">Seuls les employés et managers peuvent poser un congé.</div>
         <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
       </Container>
     );
@@ -519,9 +512,9 @@ const NouveauCongePage = () => {
                 </Row>
 
                 {getSelectedType()?.demi_journee_autorisee === false && (
-                  <Alert variant="info" className="mb-3 py-2">
+                  <div className="alert alert-info mb-3 py-2" role="status">
                     Le type de congé sélectionné n'autorise pas les demi-journées.
-                  </Alert>
+                  </div>
                 )}
 
                 {/* Commentaire */}
@@ -639,28 +632,6 @@ const NouveauCongePage = () => {
         </Col>
       </Row>
 
-      <Modal show={showOverlapModal} onHide={handleOverlapModalClose} centered backdrop="static" keyboard={!loading}>
-        <Modal.Header closeButton={!loading}>
-          <Modal.Title>Chevauchement détecté</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="mb-2">{overlapModalMessage}</p>
-          <p className="mb-0 text-muted small">Vous pouvez poursuivre l'envoi, mais cette demande nécessitera une vigilance particulière côté validation.</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={handleOverlapModalClose} disabled={loading}>
-            Modifier ma demande
-          </Button>
-          <AsyncButton
-            variant="warning"
-            onClick={handleOverlapModalConfirm}
-            action={submitCongeAction}
-            loadingText="Envoi en cours..."
-          >
-            Confirmer et envoyer
-          </AsyncButton>
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 };

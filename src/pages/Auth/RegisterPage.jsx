@@ -4,7 +4,6 @@ import { Container, Row, Col, Card, Form, Button, Alert, ProgressBar } from 'rea
 import { FaBuilding, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
-import { useNotification } from '../../hooks/useNotification';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -31,7 +30,6 @@ const RegisterPage = () => {
   const [validationErrors, setValidationErrors] = useState({});
 
   const { register } = useAuth();
-  const notification = useNotification();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -94,7 +92,7 @@ const RegisterPage = () => {
       try {
         const result = await register(formData);
         if (result.success) {
-          notification.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
+          alert.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
           navigate('/login');
         } else {
           alert.error(result.error);
@@ -118,7 +116,7 @@ const RegisterPage = () => {
                 <div className="text-center mb-4">
                   <h1 className="h3 fw-bold text-primary mb-2">TeamOff</h1>
                   <p className="text-muted">Créer un compte entreprise</p>
-                  <ProgressBar now={progress} className="mb-3" style={{ height: '4px' }} />
+                  <ProgressBar now={progress} className="mb-3 progress-xs" />
                   <small className="text-muted">Étape {step} sur 2</small>
                 </div>
 

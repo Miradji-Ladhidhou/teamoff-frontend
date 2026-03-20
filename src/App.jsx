@@ -1,7 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { NotificationProvider } from './contexts/NotificationContext';
 import { AlertProvider } from './contexts/AlertContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
 
@@ -47,7 +46,7 @@ const MetricsPage = lazy(() => import('./pages/SuperAdmin/MetricsPage'));
 const AuditLogs = lazy(() => import('./pages/SuperAdmin/AuditLogsPage'));
 
 const LoadingSpinner = () => (
-  <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+  <Container className="page-loading">
     <div className="text-center">
       <Spinner animation="border" variant="primary" className="mb-3" />
       <p className="text-muted">Chargement...</p>
@@ -96,12 +95,12 @@ const DashboardRedirect = () => {
 };
 
 const PublicPageLayout = ({ children }) => (
-  <div className="min-vh-100 d-flex flex-column" style={{ background: 'linear-gradient(180deg, #f6efe5 0%, #fffaf4 52%, #ffffff 100%)' }}>
-    <header className="border-bottom" style={{ backgroundColor: 'rgba(255, 255, 255, 0.88)', backdropFilter: 'blur(12px)' }}>
+  <div className="min-vh-100 d-flex flex-column auth-bg-simple">
+    <header className="border-bottom glass-header">
       <Container className="d-flex align-items-center justify-content-between py-3 gap-3">
         <Link to="/" className="text-decoration-none text-dark">
           <div>
-            <div className="fw-bold fs-4" style={{ letterSpacing: '-0.03em' }}>TeamOff</div>
+            <div className="fw-bold fs-4 ls-logo">TeamOff</div>
             <div className="text-muted small">Gestion des conges et validations</div>
           </div>
         </Link>
@@ -138,12 +137,11 @@ const HomeRedirect = () => {
 function App() {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <AlertProvider>
-          {/* Global Alert System Components */}
-          <GlobalModalProvider />
-          
-          <Routes>
+      <AlertProvider>
+        {/* Global Alert System Components */}
+        <GlobalModalProvider />
+
+        <Routes>
 
         {/* Routes publiques */}
         <Route
@@ -315,8 +313,7 @@ function App() {
           <Route path="*" element={<HomeRedirect />} />
 
         </Routes>
-        </AlertProvider>
-      </NotificationProvider>
+      </AlertProvider>
     </AuthProvider>
   );
 }

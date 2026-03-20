@@ -5,6 +5,7 @@ import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } fro
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { settingsService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
+import AsyncButton from '../../components/AsyncButton';
 
 const SystemSettings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -174,14 +175,16 @@ const SystemSettings = () => {
       <small className="text-muted">{hint}</small>
       <div className="d-grid d-sm-flex gap-2">
         {extraActions}
-        <Button
+        <AsyncButton
           variant="primary"
           onClick={onSave}
-          disabled={loading}
+          isLoading={loading}
+          showSpinner={loading}
+          loadingText="Sauvegarde..."
         >
           <FaSave className="me-2" />
-          {loading ? 'Sauvegarde...' : 'Enregistrer les modifications'}
-        </Button>
+          Enregistrer les modifications
+        </AsyncButton>
       </div>
     </div>
   );
@@ -584,14 +587,17 @@ const SystemSettings = () => {
                 onSave: () => handleSave('email', 'email'),
                 hint: 'Testez d\'abord la configuration SMTP, puis enregistrez.',
                 extraActions: (
-                  <Button
+                  <AsyncButton
                     variant="outline-secondary"
                     onClick={handleSendTestEmail}
-                    disabled={loading || (!testEmailRecipient && !settings.emailFrom && !settings.smtpUser)}
+                    isLoading={loading}
+                    showSpinner={loading}
+                    loadingText="Envoi..."
+                    disabled={!testEmailRecipient && !settings.emailFrom && !settings.smtpUser}
                   >
                     <FaEnvelope className="me-2" />
                     Tester l'envoi
-                  </Button>
+                  </AsyncButton>
                 ),
               })}
 
@@ -787,15 +793,17 @@ const SystemSettings = () => {
                     <option value={20}>20 / page</option>
                     <option value={50}>50 / page</option>
                   </Form.Select>
-                  <Button
+                  <AsyncButton
                     variant="outline-primary"
                     size="sm"
                     onClick={handleExportHistoryCSV}
-                    disabled={loading}
+                    isLoading={loading}
+                    showSpinner={loading}
+                    loadingText="Export..."
                   >
                     <FaDownload className="me-2" />
                     Export CSV
-                  </Button>
+                  </AsyncButton>
                 </div>
               </div>
             </Card.Header>
@@ -868,7 +876,15 @@ const SystemSettings = () => {
         <Modal.Body>{confirmModal.label}</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeConfirm}>Annuler</Button>
-          <Button variant="primary" onClick={executeSystemAction}>Confirmer</Button>
+          <AsyncButton
+            variant="primary"
+            onClick={executeSystemAction}
+            isLoading={loading}
+            showSpinner={loading}
+            loadingText="Exécution..."
+          >
+            Confirmer
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
     </Container>

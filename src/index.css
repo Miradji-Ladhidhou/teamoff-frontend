@@ -1,6 +1,7 @@
 /* Styles globaux pour TeamOff - Mobile First */
 
 :root {
+  /* ── Couleurs système ─────────────────────── */
   --primary-color: #4f46e5;
   --secondary-color: #64748b;
   --success-color: #10b981;
@@ -9,6 +10,28 @@
   --light-bg: #f8fafc;
   --dark-text: #1e293b;
   --border-color: #e2e8f0;
+
+  /* ── Tokens brand / auth ─────────────────── */
+  --brand-accent: #9a4f17;
+  --brand-bg-warm: #f7efe5;
+  --auth-gradient: radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%);
+  --auth-gradient-simple: linear-gradient(180deg, #f6efe5 0%, #fffaf4 52%, #ffffff 100%);
+  --glass-header-bg: rgba(255, 255, 255, 0.88);
+  --glass-card-bg: rgba(255, 255, 255, 0.78);
+  --glass-card-bg-light: rgba(255, 255, 255, 0.72);
+  --border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+
+  /* ── Typographie ─────────────────────────── */
+  --ls-heading: -0.04em;
+  --ls-logo: -0.03em;
+  --ls-label: 0.08em;
+  --lh-tight: 1.05;
+  --fs-hero: clamp(2.2rem, 7vw, 3.5rem);
+
+  /* ── Layout ──────────────────────────────── */
+  --sidebar-width: 250px;
+  --card-radius: 12px;
+  --card-radius-lg: 1.5rem;
 }
 
 /* Reset et base */
@@ -26,6 +49,11 @@ body {
   background-color: var(--light-bg);
   color: var(--dark-text);
   line-height: 1.6;
+}
+
+#root {
+  width: 100%;
+  overflow-x: clip;
 }
 
 /* Mobile First - Responsive Design */
@@ -188,8 +216,14 @@ body {
 /* Tables responsive */
 .table-responsive {
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-responsive > .table {
+  margin-bottom: 0;
 }
 
 .table {
@@ -400,6 +434,38 @@ html, body {
   overflow-x: hidden;
 }
 
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+.row > * {
+  min-width: 0;
+}
+
+.card,
+.card-body,
+.list-group-item,
+.page-header,
+.page-header-content {
+  min-width: 0;
+}
+
+.text-break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+pre,
+code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* ─── Wrapper responsive pour les tables ─────── */
 .responsive-table-container {
   width: 100%;
@@ -470,3 +536,153 @@ html, body {
     border: 1px solid #ddd;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   Utility tokens — remplacent les styles inline
+   ═══════════════════════════════════════════════ */
+
+/* ── Auth / landing backgrounds ────────────── */
+.auth-bg {
+  background: var(--auth-gradient);
+}
+
+.auth-bg-simple {
+  background: var(--auth-gradient-simple);
+}
+
+/* ── Glassmorphism ──────────────────────────── */
+.glass-header {
+  background-color: var(--glass-header-bg);
+  backdrop-filter: blur(12px);
+}
+
+.glass-card {
+  background-color: var(--glass-card-bg) !important;
+}
+
+.glass-card-light {
+  background-color: var(--glass-card-bg-light) !important;
+}
+
+/* ── Brand couleur accent ───────────────────── */
+.text-brand {
+  color: var(--brand-accent) !important;
+}
+
+.bg-brand-warm {
+  background-color: var(--brand-bg-warm);
+}
+
+/* ── Typographie brand ─────────────────────── */
+.auth-hero-title {
+  letter-spacing: var(--ls-heading);
+  line-height: var(--lh-tight);
+  font-size: var(--fs-hero);
+}
+
+.ls-logo {
+  letter-spacing: var(--ls-logo);
+}
+
+.ls-label {
+  letter-spacing: var(--ls-label);
+}
+
+/* ── Tailles de texte fines ─────────────────── */
+.text-xs  { font-size: 0.78rem; }
+.text-xxs { font-size: 0.75rem; }
+.text-2xs { font-size: 0.72rem; }
+.text-3xs { font-size: 0.65rem; }
+
+/* ── Border / radius ────────────────────────── */
+.card-radius-lg {
+  border-radius: var(--card-radius-lg);
+  overflow: hidden;
+}
+
+.auth-step-card {
+  border: var(--border-subtle);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.border-none {
+  border: none !important;
+}
+
+/* ── Icônes taille auth ─────────────────────── */
+.auth-icon-sm {
+  width: clamp(40px, 9vw, 48px);
+  height: clamp(40px, 9vw, 48px);
+  min-width: clamp(40px, 9vw, 48px);
+}
+
+.auth-icon-lg {
+  width: clamp(64px, 18vw, 80px);
+  height: clamp(64px, 18vw, 80px);
+}
+
+/* ── Loading centré ─────────────────────────── */
+.page-loading {
+  min-height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ── Layout utils ───────────────────────────── */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.sidebar-nav {
+  width: var(--sidebar-width);
+  min-height: 100dvh;
+}
+
+/* ── Lead text max-width ─────────────────────── */
+.lead-constrained {
+  max-width: 44rem;
+}
+
+/* ── Maintenance page card ───────────────────── */
+.maintenance-card {
+  max-width: 680px;
+  width: 100%;
+}
+
+/* ── Progress bars ──────────────────────────── */
+.progress-xs { height: 4px; }
+.progress-sm-bar { height: 8px; }
+
+/* ── Scrollable containers ──────────────────── */
+.scroll-table-preview {
+  max-height: min(45vh, 360px);
+  overflow: auto;
+}
+
+.scroll-modal-content {
+  max-height: min(40vh, 200px);
+  overflow-y: auto;
+}
+
+/* ── Table col widths ────────────────────────── */
+.td-truncate { max-width: 220px; }
+.input-label-w { min-width: 180px; }
+.th-col-service    { min-width: clamp(7rem, 22vw, 11rem); }
+.th-col-overlap    { min-width: clamp(7rem, 20vw, 10rem); }
+.th-col-workflow   { min-width: clamp(7.5rem, 22vw, 11rem); }
+.th-col-notice     { min-width: clamp(5.5rem, 16vw, 7rem); }
+.th-col-consec     { min-width: clamp(6.5rem, 18vw, 7.5rem); }
+.th-col-simul      { min-width: clamp(7rem, 20vw, 9.5rem); }
+.th-col-actions    { min-width: clamp(6rem, 16vw, 7rem); }
+
+/* ── Card section title ─────────────────────── */
+.card-section-title { font-size: 1rem; }
+
+/* ── Password toggle z-index ────────────────── */
+.z-overlay { z-index: 5; }

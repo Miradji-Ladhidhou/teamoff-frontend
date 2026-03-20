@@ -279,7 +279,7 @@ const CalendrierPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement du calendrier...</p>
@@ -331,7 +331,7 @@ const CalendrierPage = () => {
       </InfoCardInfo>
 
       {selectionStart && (
-        <Alert variant="info" className="d-flex justify-content-between align-items-center">
+        <div className="alert alert-info d-flex justify-content-between align-items-center" role="status">
           <div>
             Période sélectionnée: <strong>{formatDateLabel(selectionStart)}</strong>
             {selectionEnd ? (
@@ -356,7 +356,7 @@ const CalendrierPage = () => {
               </Button>
             )}
           </div>
-        </Alert>
+        </div>
       )}
 
       {/* Filtres */}
@@ -437,9 +437,6 @@ const CalendrierPage = () => {
                   key={index}
                   className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
                   onClick={() => selectable && handleDayClick(dayInfo)}
-                  style={{
-                    cursor: selectable ? 'pointer' : 'default',
-                  }}
                 >
                   <div
                     className="calendar-day-number"
@@ -548,6 +545,10 @@ const CalendrierPage = () => {
 
         .calendar-day-clickable:hover {
           background-color: #f4f9ff;
+        }
+
+        .calendar-day-clickable {
+          cursor: pointer;
         }
 
         .calendar-day-other-month {

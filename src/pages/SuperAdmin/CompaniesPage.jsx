@@ -781,7 +781,7 @@ const CompaniesManagement = () => {
 
                           {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).map(([serviceName, limit]) => (
                             <InputGroup className="mb-2" key={serviceName}>
-                              <InputGroup.Text style={{ minWidth: 180 }}>{serviceName}</InputGroup.Text>
+                              <InputGroup.Text className="input-label-w">{serviceName}</InputGroup.Text>
                               <Form.Control
                                 type="number"
                                 min={0}

@@ -274,7 +274,7 @@ const NotificationsPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des notifications...</p>
@@ -356,6 +356,8 @@ const NotificationsPage = () => {
                   key={notification.id}
                   className={`list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 ${
                     !notification.lu ? 'bg-light' : ''
+                  } ${
+                    isClickable ? 'cursor-pointer' : ''
                   }`}
                   onClick={() => {
                     if (isClickable) {
@@ -374,7 +376,6 @@ const NotificationsPage = () => {
                       handleOpenNotification(notification);
                     }
                   }}
-                  style={isClickable ? { cursor: 'pointer' } : undefined}
                 >
                   <div className="d-flex align-items-start">
                     <div className="me-3 mt-1">

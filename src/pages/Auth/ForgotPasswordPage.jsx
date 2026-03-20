@@ -1,8 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
 import { FaEnvelope, FaArrowLeft, FaCheck } from 'react-icons/fa';
-import { NotificationContext } from '../../contexts/NotificationContext';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -14,7 +13,6 @@ const ForgotPasswordPage = () => {
   const submitAction = useAsyncAction();
   const [submitted, setSubmitted] = useState(false);
   const alert = useAlert();
-  const { showNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -32,11 +30,10 @@ const ForgotPasswordPage = () => {
 
         await authService.forgotPassword({ email: email.trim() });
         setSubmitted(true);
-        showNotification('Un email de réinitialisation a été envoyé', 'success');
+        alert.success('Un email de réinitialisation a été envoyé');
       } catch (err) {
         const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de l\'envoi';
         alert.error(errorMsg);
-        showNotification(errorMsg, 'error');
       }
     });
   };
@@ -45,11 +42,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <div
-      className="min-vh-100"
-      style={{
-        background:
-          'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)',
-      }}
+      className="min-vh-100 auth-bg"
     >
       <Container className="py-4 py-lg-5">
         <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
@@ -57,7 +50,7 @@ const ForgotPasswordPage = () => {
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">
               Récupérez l'accès à votre compte
             </Badge>
-            <h1 className="fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05, fontSize: 'clamp(2.2rem, 7vw, 3.5rem)' }}>
+            <h1 className="fw-bold mb-3 auth-hero-title">
               Mot de passe oublié ?
             </h1>
             <p className="lead mb-4 text-muted">
@@ -66,8 +59,7 @@ const ForgotPasswordPage = () => {
             <div className="d-flex flex-column gap-2">
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
-                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0 auth-icon-sm"
                 >
                   <FaEnvelope className="text-primary" size={20} />
                 </div>
@@ -78,8 +70,7 @@ const ForgotPasswordPage = () => {
               </div>
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
-                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0 auth-icon-sm"
                 >
                   <FaCheck className="text-primary" size={20} />
                 </div>
@@ -93,8 +84,7 @@ const ForgotPasswordPage = () => {
 
           <Col lg={5}>
             <Card
-              className="shadow-sm"
-              style={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', overflow: 'hidden' }}
+              className="shadow-sm auth-step-card"
             >
               <Card.Body className="p-4">
                 {!submitted ? (
@@ -141,8 +131,7 @@ const ForgotPasswordPage = () => {
                 ) : (
                   <div className="text-center">
                     <div
-                      className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                      style={{ width: 'clamp(64px, 18vw, 80px)', height: 'clamp(64px, 18vw, 80px)' }}
+                      className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center auth-icon-lg"
                     >
                       <FaCheck size={40} className="text-success" />
                     </div>

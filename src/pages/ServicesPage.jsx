@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useAlert, useConfirmation } from '../hooks/useAlert';
+import AsyncButton from '../components/AsyncButton';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -21,6 +22,7 @@ const ServicesPage = () => {
   const entrepriseId = user?.entreprise_id;
 
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [services, setServices] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -74,7 +76,7 @@ const ServicesPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSuccess('');
-
+    setSubmitting(true);
     try {
       const payload = {
         name: formData.name,
@@ -100,6 +102,8 @@ const ServicesPage = () => {
     } catch (submitError) {
       console.error('Erreur sauvegarde service:', submitError);
       alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde du service.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -337,8 +341,16 @@ const ServicesPage = () => {
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-            <Button type="submit" variant="primary">{editingService ? 'Mettre à jour' : 'Créer'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>Annuler</Button>
+            <AsyncButton
+              type="submit"
+              variant="primary"
+              isLoading={submitting}
+              showSpinner={submitting}
+              loadingText={editingService ? 'Mise à jour...' : 'Création...'}
+            >
+              {editingService ? 'Mettre à jour' : 'Créer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

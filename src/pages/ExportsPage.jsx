@@ -220,9 +220,9 @@ const ExportsPage = () => {
   if (!['admin_entreprise', 'super_admin'].includes(user.role)) {
     return (
       <Container fluid="sm">
-        <Alert variant="danger" className="text-center">
+        <div className="alert alert-danger text-center" role="alert">
           Accès non autorisé. Cette page est réservée aux administrateurs.
-        </Alert>
+        </div>
       </Container>
     );
   }
@@ -446,7 +446,7 @@ const ExportsPage = () => {
                         ))}
                       </div>
 
-                      <div className="table-responsive d-none d-md-block" style={{ maxHeight: 'min(45vh, 360px)', overflow: 'auto' }}>
+                      <div className="table-responsive d-none d-md-block scroll-table-preview">
                         <Table striped bordered hover size="sm" className="mb-0">
                         <thead>
                           <tr>
@@ -468,7 +468,7 @@ const ExportsPage = () => {
                       </div>
                     </>
                   ) : (
-                    <Alert variant="info" className="mb-0">Aucune donnée correspondant à ces filtres.</Alert>
+                    <div className="alert alert-info mb-0" role="status">Aucune donnée correspondant à ces filtres.</div>
                   )}
                 </div>
               )}

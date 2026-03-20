@@ -59,15 +59,15 @@ const LoginPage = () => {
   const loading = submitAction.isRunning;
 
   return (
-    <div className="min-vh-100" style={{ background: 'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)' }}>
+    <div className="min-vh-100 auth-bg">
       <Container className="py-4 py-lg-5">
         <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
           <Col lg={7}>
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">Plateforme RH pour équipes structurées</Badge>
-            <h1 className="fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05, fontSize: 'clamp(2.2rem, 7vw, 3.5rem)' }}>
+            <h1 className="fw-bold mb-3 auth-hero-title">
               La connexion devient votre page d'accueil utile.
             </h1>
-            <p className="lead text-muted mb-4" style={{ maxWidth: '44rem' }}>
+            <p className="lead text-muted mb-4 lead-constrained">
               Centralisez les demandes de conges, les validations par service, les quotas et le calendrier d'equipe dans une interface claire des la premiere visite.
             </p>
 
@@ -83,7 +83,7 @@ const LoginPage = () => {
 
             <Row className="g-3 mb-4">
               <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.78)' }}>
+                <Card className="border-0 shadow-sm h-100 glass-card">
                   <Card.Body>
                     <div className="text-muted small mb-1">Demandes suivies</div>
                     <div className="fs-2 fw-bold">24/7</div>
@@ -92,7 +92,7 @@ const LoginPage = () => {
                 </Card>
               </Col>
               <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.78)' }}>
+                <Card className="border-0 shadow-sm h-100 glass-card">
                   <Card.Body>
                     <div className="text-muted small mb-1">Workflow</div>
                     <div className="fs-2 fw-bold">Par service</div>
@@ -101,7 +101,7 @@ const LoginPage = () => {
                 </Card>
               </Col>
               <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100" style={{ backgroundColor: 'rgba(255, 255, 255, 0.78)' }}>
+                <Card className="border-0 shadow-sm h-100 glass-card">
                   <Card.Body>
                     <div className="text-muted small mb-1">Confiance</div>
                     <div className="fs-2 fw-bold">Audit</div>
@@ -113,27 +113,27 @@ const LoginPage = () => {
 
             <Row className="g-3">
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.72)' }}>
+                <Card className="h-100 border-0 shadow-sm glass-card-light">
                   <Card.Body>
-                    <FaCalendarCheck className="mb-3" size={22} style={{ color: '#9a4f17' }} />
+                    <FaCalendarCheck className="mb-3 text-brand" size={22} />
                     <h2 className="h5">Calendrier lisible</h2>
                     <p className="text-muted mb-0">Vision equipe, jours bloques, feries et calcul detaille des jours pris.</p>
                   </Card.Body>
                 </Card>
               </Col>
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.72)' }}>
+                <Card className="h-100 border-0 shadow-sm glass-card-light">
                   <Card.Body>
-                    <FaUsersCog className="mb-3" size={22} style={{ color: '#9a4f17' }} />
+                    <FaUsersCog className="mb-3 text-brand" size={22} />
                     <h2 className="h5">Services gouvernes</h2>
                     <p className="text-muted mb-0">Regles de validation, quotas et parametres adaptes aux realites de chaque equipe.</p>
                   </Card.Body>
                 </Card>
               </Col>
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.72)' }}>
+                <Card className="h-100 border-0 shadow-sm glass-card-light">
                   <Card.Body>
-                    <FaShieldAlt className="mb-3" size={22} style={{ color: '#9a4f17' }} />
+                    <FaShieldAlt className="mb-3 text-brand" size={22} />
                     <h2 className="h5">Acces maitrises</h2>
                     <p className="text-muted mb-0">Permissions par role, journaux d'audit et exposition limitee des donnees sensibles.</p>
                   </Card.Body>
@@ -143,10 +143,10 @@ const LoginPage = () => {
           </Col>
 
           <Col lg={5} xl={4}>
-            <Card id="login-form" className="shadow-lg border-0 fade-in" style={{ borderRadius: '1.5rem', overflow: 'hidden' }}>
+            <Card id="login-form" className="shadow-lg border-0 fade-in card-radius-lg">
               <Card.Body className="p-3 p-sm-4 p-lg-4">
                 <div className="mb-3 text-center text-lg-start">
-                  <p className="text-uppercase small fw-semibold mb-2" style={{ color: '#9a4f17', letterSpacing: '0.08em' }}>Acces plateforme</p>
+                  <p className="text-uppercase small fw-semibold mb-2 text-brand ls-label">Acces plateforme</p>
                   <h2 className="h3 fw-bold mb-1">Connexion</h2>
                   <p className="text-muted mb-0">Accedez a votre espace TeamOff.</p>
                 </div>
@@ -181,10 +181,9 @@ const LoginPage = () => {
                       <Button
                         type="button"
                         variant="link"
-                        className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={loading}
-                        style={{ zIndex: 5 }}
+                        className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2 z-overlay"
                       >
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </Button>
@@ -212,15 +211,14 @@ const LoginPage = () => {
                     Mot de passe oublié ?
                   </Link>
                 </div>
-
-                <div className="rounded-4 p-3 mb-3" style={{ backgroundColor: '#f7efe5' }}>
-                  <div className="small text-uppercase fw-semibold mb-2" style={{ color: '#9a4f17', letterSpacing: '0.08em' }}>Pourquoi TeamOff</div>
+                <div className="rounded-4 p-3 mb-3 bg-brand-warm">
+                  <div className="small text-uppercase fw-semibold mb-2 text-brand ls-label">Pourquoi TeamOff</div>
                   <div className="text-muted small">Validation adaptee a vos services, compteurs visibles, calendrier mobile et informations legales accessibles sans friction.</div>
                 </div>
 
                 <div className="text-center">
                   <p className="text-muted mb-1">Premiere connexion ?</p>
-                  <Link to="/register" className="text-decoration-none fw-semibold" style={{ color: '#9a4f17' }}>
+                  <Link to="/register" className="text-decoration-none fw-semibold text-brand">
                     Creer un compte
                   </Link>
                 </div>

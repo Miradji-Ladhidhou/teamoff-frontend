@@ -102,16 +102,16 @@ const MetricsPage = () => {
   if (user.role !== 'super_admin') {
     return (
       <Container fluid="sm">
-        <Alert variant="danger" className="text-center">
+        <div className="alert alert-danger text-center" role="alert">
           Accès non autorisé. Cette page est réservée aux super administrateurs.
-        </Alert>
+        </div>
       </Container>
     );
   }
 
   if (loading) {
     return (
-      <Container fluid="sm" className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Chargement des métriques...</span>
         </Spinner>
@@ -122,10 +122,10 @@ const MetricsPage = () => {
   if (error) {
     return (
       <Container fluid="sm">
-        <Alert variant="danger">
+        <div className="alert alert-danger" role="alert">
           <FaExclamationTriangle className="me-2" />
           {error}
-        </Alert>
+        </div>
       </Container>
     );
   }
@@ -200,7 +200,7 @@ const MetricsPage = () => {
                   <ProgressBar
                     variant={metrics.errorRate > 0.05 ? 'danger' : metrics.errorRate > 0.01 ? 'warning' : 'success'}
                     now={Math.min(metrics.errorRate * 100, 100)}
-                    style={{ height: '8px' }}
+                    className="progress-sm-bar"
                   />
                 </div>
 
@@ -343,9 +343,8 @@ const MetricsPage = () => {
                       <small className="text-muted">Cache hit rate</small>
                       <div className="d-flex align-items-center">
                         <ProgressBar
-                          className="flex-grow-1 me-2"
+                          className="flex-grow-1 me-2 progress-sm-bar"
                           now={metrics.cacheHitRate * 100}
-                          style={{ height: '8px' }}
                         />
                         <small>{(metrics.cacheHitRate * 100).toFixed(1)}%</small>
                       </div>

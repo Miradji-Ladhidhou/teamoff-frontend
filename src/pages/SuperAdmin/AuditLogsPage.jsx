@@ -401,8 +401,7 @@ const AuditLogs = () => {
               <div>
                 <strong>Métadonnées</strong>
                 <pre
-                  className="bg-light border rounded p-3 mt-1 small"
-                  style={{ maxHeight: 'min(40vh, 200px)', overflowY: 'auto' }}
+                  className="bg-light border rounded p-3 mt-1 small scroll-modal-content"
                 >
                   {JSON.stringify(selectedLog.metadata, null, 2)}
                 </pre>

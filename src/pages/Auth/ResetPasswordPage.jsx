@@ -1,8 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from 'react-bootstrap';
-import { FaLock, FaCheck, FaArrowLeft } from 'react-icons/fa';
-import { NotificationContext } from '../../contexts/NotificationContext';
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import { FaLock, FaCheck, FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -15,7 +14,6 @@ const ResetPasswordPage = () => {
   const tokenFromQuery = searchParams.get('token');
   const token = tokenFromQuery || tokenFromPath || '';
   const navigate = useNavigate();
-  const { showNotification } = useContext(NotificationContext);
 
   const [formData, setFormData] = useState({
     newPassword: '',
@@ -30,22 +28,18 @@ const ResetPasswordPage = () => {
   if (!token) {
     return (
       <div
-        className="min-vh-100"
-        style={{
-          background:
-            'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)',
-        }}
+        className="min-vh-100 auth-bg"
       >
         <Container className="py-3 py-lg-5">
           <Row>
             <Col lg={6} className="mx-auto">
               <Card className="shadow-sm">
                 <Card.Body className="p-3 p-lg-5 text-center">
-                  <Alert variant="danger" className="mb-4">
+                  <div className="alert alert-danger mb-4" role="alert">
                     <strong>Lien invalide</strong>
                     <br />
                     Le lien de réinitialisation est introuvable ou a expiré.
-                  </Alert>
+                  </div>
                   <Link to="/login" className="btn btn-primary">
                     <FaArrowLeft className="me-2" />
                     Retour à la connexion
@@ -89,7 +83,7 @@ const ResetPasswordPage = () => {
         });
 
         setSubmitted(true);
-        showNotification('Mot de passe réinitialisé avec succès', 'success');
+        alert.success('Mot de passe réinitialisé avec succès');
 
         setTimeout(() => {
           navigate('/login');
@@ -97,7 +91,6 @@ const ResetPasswordPage = () => {
       } catch (err) {
         const errorMsg = err.response?.data?.message || err.message || 'Erreur lors de la réinitialisation';
         alert.error(errorMsg);
-        showNotification(errorMsg, 'error');
       }
     });
   };
@@ -106,11 +99,7 @@ const ResetPasswordPage = () => {
 
   return (
     <div
-      className="min-vh-100"
-      style={{
-        background:
-          'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)',
-      }}
+      className="min-vh-100 auth-bg"
     >
       <Container className="py-4 py-lg-5">
         <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
@@ -118,7 +107,7 @@ const ResetPasswordPage = () => {
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">
               Réinitialisez votre accès
             </Badge>
-            <h1 className="fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05, fontSize: 'clamp(2.2rem, 7vw, 3.5rem)' }}>
+            <h1 className="fw-bold mb-3 auth-hero-title">
               Créez un nouveau mot de passe
             </h1>
             <p className="lead mb-4 text-muted">
@@ -127,8 +116,7 @@ const ResetPasswordPage = () => {
             <div className="d-flex flex-column gap-2">
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
-                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0 auth-icon-sm"
                 >
                   <FaLock className="text-primary" size={20} />
                 </div>
@@ -139,8 +127,7 @@ const ResetPasswordPage = () => {
               </div>
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
-                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0 auth-icon-sm"
                 >
                   <FaCheck className="text-primary" size={20} />
                 </div>
@@ -154,8 +141,7 @@ const ResetPasswordPage = () => {
 
           <Col lg={5}>
             <Card
-              className="shadow-sm"
-              style={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', overflow: 'hidden' }}
+              className="shadow-sm auth-step-card"
             >
               <Card.Body className="p-4">
                 {!submitted ? (
@@ -179,10 +165,9 @@ const ResetPasswordPage = () => {
                           <Button
                             variant="link"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted"
-                            style={{ border: 'none' }}
+                            className="position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted border-none"
                           >
-                            {showPassword ? '👁️' : '👁️‍🗨️'}
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
                           </Button>
                         </div>
                         {formData.newPassword && formData.newPassword.length < 8 && (
@@ -207,10 +192,9 @@ const ResetPasswordPage = () => {
                           <Button
                             variant="link"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted"
-                            style={{ border: 'none' }}
+                            className="position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted border-none"
                           >
-                            {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                           </Button>
                         </div>
                         {formData.confirmPassword && !doPasswordsMatch && (
@@ -248,8 +232,7 @@ const ResetPasswordPage = () => {
                 ) : (
                   <div className="text-center">
                     <div
-                      className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                      style={{ width: 'clamp(64px, 18vw, 80px)', height: 'clamp(64px, 18vw, 80px)' }}
+                      className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center auth-icon-lg"
                     >
                       <FaCheck size={40} className="text-success" />
                     </div>

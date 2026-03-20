@@ -4,6 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
+import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -21,6 +22,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [loadingServices, setLoadingServices] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState({ name: '', policy: { ...DEFAULT_POLICY } });
@@ -93,7 +95,7 @@ const ServicesPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSuccess('');
-
+    setSubmitting(true);
     try {
       const payload = {
         name: formData.name,
@@ -119,6 +121,8 @@ const ServicesPage = () => {
     } catch (submitError) {
       console.error('Erreur sauvegarde service:', submitError);
       alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde du service.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -361,8 +365,16 @@ const ServicesPage = () => {
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-            <Button type="submit" variant="primary">{editingService ? 'Mettre à jour' : 'Créer'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>Annuler</Button>
+            <AsyncButton
+              type="submit"
+              variant="primary"
+              isLoading={submitting}
+              showSpinner={submitting}
+              loadingText={editingService ? 'Mise à jour...' : 'Création...'}
+            >
+              {editingService ? 'Mettre à jour' : 'Créer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

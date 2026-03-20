@@ -225,7 +225,7 @@ const SuperAdminDashboard = () => {
         <Col xs={12} md={8}>
           <Card>
             <Card.Header>
-              <h5 className="mb-0" style={{ fontSize: '1rem' }}>Activité récente</h5>
+              <h5 className="mb-0 card-section-title">Activité récente</h5>
             </Card.Header>
             <Card.Body className="p-0">
               {recentActivity.length > 0 ? (
@@ -258,9 +258,9 @@ const SuperAdminDashboard = () => {
                 </Table>
                 </div>
               ) : (
-                <Alert variant="info" className="m-3">
+                <div className="alert alert-info m-3" role="status">
                   <p className="mb-0">Aucune activité récente. Les activités système apparaîtront ici.</p>
-                </Alert>
+                </div>
               )}
             </Card.Body>
           </Card>
@@ -270,7 +270,7 @@ const SuperAdminDashboard = () => {
         <Col xs={12} md={4} className="mt-4 mt-md-0">
           <Card>
             <Card.Header>
-              <h5 className="mb-0" style={{ fontSize: '1rem' }}>État du système</h5>
+              <h5 className="mb-0 card-section-title">État du système</h5>
             </Card.Header>
             <Card.Body>
               <div className="mb-3">
