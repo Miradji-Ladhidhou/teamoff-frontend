@@ -1,24 +1,42 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dépendances
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
-/coverage
+# Variables d'environnement
+.env
+.env.*
+!.env.example
 
-# production
+# Build et production
+/dist
 /build
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env
+# Tests et couverture
+/coverage
 
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Fichiers temporaires et uploads
+tmp/
+temp/
+uploads/
+
+# Cache Vite/ESBuild
+.vite/
+.cache/
+
+# Clés et certificats
+*.pem
+*.key
+*.cert
+*.crt
+
+# Système
+.DS_Store
+Thumbs.db
