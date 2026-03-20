@@ -20,12 +20,49 @@ const CongeDetailsPage = () => {
   const alert = useAlert();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showValidateModal, setShowValidateModal] = useState(false);
   const [commentaire, setCommentaire] = useState('');
+  const [cancelComment, setCancelComment] = useState('');
+  const [validationComment, setValidationComment] = useState('');
+  const [validationOverlapInfo, setValidationOverlapInfo] = useState(null);
+  const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
   const action = useAsyncAction();
 
   useEffect(() => {
     loadCongeDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (!conge || !canApprove()) {
+      setValidationOverlapInfo(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadValidationOverlap = async () => {
+      setValidationOverlapLoading(true);
+      try {
+        const response = await congesService.getValidationOverlap(id);
+        if (!cancelled) setValidationOverlapInfo(response.data);
+      } catch (_) {
+        if (!cancelled) {
+          setValidationOverlapInfo({
+            has_overlap: null,
+            message: 'Impossible de vérifier le chevauchement pour le moment.',
+          });
+        }
+      } finally {
+        if (!cancelled) setValidationOverlapLoading(false);
+      }
+    };
+
+    loadValidationOverlap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conge, id, user?.role]);
 
   const loadCongeDetails = async () => {
     try {
@@ -43,7 +80,8 @@ const CongeDetailsPage = () => {
   const handleDelete = async () => {
     await action.run(async () => {
       try {
-        await congesService.delete(id);
+        const isFinalValidated = user?.role === 'admin_entreprise' && conge?.statut === 'valide_final';
+        await congesService.delete(id, isFinalValidated ? { commentaire: cancelComment.trim() } : {});
         navigate('/conges', {
           state: {
             message: 'Demande de congé supprimée avec succès',
@@ -52,15 +90,16 @@ const CongeDetailsPage = () => {
         });
       } catch (err) {
         console.error('Erreur lors de la suppression:', err);
-        alert.error('Erreur lors de la suppression de la demande');
+        alert.error(err.response?.data?.message || 'Erreur lors de la suppression de la demande');
       } finally {
         setShowDeleteModal(false);
+        setCancelComment('');
       }
     });
   };
 
   const handleStatusChange = async (newStatus, comment = '') => {
-    await action.run(async () => {
+    return action.run(async () => {
       try {
         if (newStatus === 'valide') {
           await congesService.validate(id, { commentaire: comment });
@@ -70,9 +109,12 @@ const CongeDetailsPage = () => {
         await loadCongeDetails(); // Recharger les données
         setShowCommentModal(false);
         setCommentaire('');
+        setValidationComment('');
+        return true;
       } catch (err) {
         console.error('Erreur lors de la mise à jour du statut:', err);
-        alert.error('Erreur lors de la mise à jour du statut');
+        alert.error(err.response?.data?.message || 'Erreur lors de la mise à jour du statut');
+        return false;
       }
     });
   };
@@ -227,7 +269,10 @@ const CongeDetailsPage = () => {
             <Button
               variant="outline-danger"
               size="sm"
-              onClick={() => setShowDeleteModal(true)}
+              onClick={() => {
+                setCancelComment('');
+                setShowDeleteModal(true);
+              }}
             >
               {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? (
                 <><FaTimes className="me-1" />Annuler le congé</>
@@ -428,10 +473,41 @@ const CongeDetailsPage = () => {
                 <h6 className="mb-0">Actions</h6>
               </Card.Header>
               <Card.Body>
+                {validationOverlapInfo && (
+                  <Alert
+                    variant={validationOverlapInfo.has_overlap ? 'warning' : 'success'}
+                    className={`mb-3 overlap-alert ${validationOverlapInfo.has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
+                  >
+                    <strong>
+                      {validationOverlapInfo.has_overlap
+                        ? 'Alerte chevauchement détectée.'
+                        : 'Pas de chevauchement détecté.'}
+                    </strong>
+                    <div className="small mt-1">{validationOverlapInfo.message}</div>
+                  </Alert>
+                )}
+                {validationOverlapLoading && (
+                  <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+                )}
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Commentaire de validation</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={validationComment}
+                    onChange={(e) => setValidationComment(e.target.value)}
+                    placeholder="Ajoutez un commentaire (obligatoire en cas de chevauchement)"
+                    disabled={actionLoading}
+                  />
+                  <Form.Text className="text-muted">
+                    Le manager doit saisir un commentaire quand la demande est en chevauchement.
+                  </Form.Text>
+                </Form.Group>
                 <div className="d-grid gap-2">
                   <AsyncButton
                     variant="success"
-                    onClick={() => handleStatusChange('valide')}
+                    onClick={() => setShowValidateModal(true)}
                     action={action}
                     loadingText="Traitement..."
                   >
@@ -509,14 +585,40 @@ const CongeDetailsPage = () => {
           {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final'
             ? 'Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l\'employé sera recalculé automatiquement et il sera notifié.'
             : 'Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action est irréversible.'}
+
+          {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' && (
+            <Form.Group className="mt-3">
+              <Form.Label>Commentaire d'annulation (requis)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={cancelComment}
+                onChange={(e) => setCancelComment(e.target.value)}
+                placeholder="Expliquez la raison de l'annulation..."
+                disabled={actionLoading}
+                required
+              />
+            </Form.Group>
+          )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={actionLoading}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setCancelComment('');
+            }}
+            disabled={actionLoading}
+          >
             Fermer
           </Button>
           <AsyncButton
             variant="danger"
             onClick={handleDelete}
+            disabled={
+              actionLoading
+              || (user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' && !cancelComment.trim())
+            }
             action={action}
             loadingText={user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annulation...' : 'Suppression...'}
           >
@@ -556,6 +658,62 @@ const CongeDetailsPage = () => {
             loadingText="Refus..."
           >
             Refuser
+          </AsyncButton>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de confirmation validation */}
+      <Modal show={showValidateModal} onHide={() => setShowValidateModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+        <Modal.Header closeButton={!actionLoading}>
+          <Modal.Title>Confirmer la validation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {validationOverlapInfo && (
+            <Alert
+              variant={validationOverlapInfo.has_overlap ? 'warning' : 'success'}
+              className={`mb-3 overlap-alert ${validationOverlapInfo.has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
+            >
+              <strong>
+                {validationOverlapInfo.has_overlap
+                  ? 'Alerte chevauchement détectée.'
+                  : 'Pas de chevauchement détecté.'}
+              </strong>
+              <div className="small mt-1">{validationOverlapInfo.message}</div>
+            </Alert>
+          )}
+          {validationOverlapLoading && (
+            <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+          )}
+
+          <Form.Group>
+            <Form.Label>Commentaire de validation</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={validationComment}
+              onChange={(e) => setValidationComment(e.target.value)}
+              placeholder="Ajoutez un commentaire (obligatoire en cas de chevauchement)"
+              disabled={actionLoading}
+            />
+            <Form.Text className="text-muted">
+              Ce commentaire est obligatoire pour le manager si un chevauchement est détecté.
+            </Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowValidateModal(false)} disabled={actionLoading}>
+            Annuler
+          </Button>
+          <AsyncButton
+            variant="success"
+            onClick={async () => {
+              const success = await handleStatusChange('valide', validationComment);
+              if (success) setShowValidateModal(false);
+            }}
+            action={action}
+            loadingText="Validation..."
+          >
+            Valider
           </AsyncButton>
         </Modal.Footer>
       </Modal>

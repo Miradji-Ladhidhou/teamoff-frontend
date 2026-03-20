@@ -139,9 +139,10 @@ export const systemService = {
 export const congesService = {
   getAll: (params = {}) => api.get('/conges', { params }),
   checkOverlap: (data) => api.post('/conges/check-overlap', data),
+  getValidationOverlap: (id) => api.get(`/conges/${id}/validation-overlap`),
   create: (data) => api.post('/conges/demande', data, { timeout: 30000 }),
   update: (id, data) => api.put(`/conges/${id}`, data),
-  delete: (id) => api.delete(`/conges/${id}`),
+  delete: (id, data = {}) => api.delete(`/conges/${id}`, { data }),
   validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),
   reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
   getById: (id) => api.get(`/conges/${id}`),

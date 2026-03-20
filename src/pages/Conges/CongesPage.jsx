@@ -34,6 +34,9 @@ const CongesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showValidateModal, setShowValidateModal] = useState(false);
   const [selectedCongeToValidate, setSelectedCongeToValidate] = useState(null);
+  const [validateComment, setValidateComment] = useState('');
+  const [validationOverlapByCongeId, setValidationOverlapByCongeId] = useState({});
+  const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
   const [rejectComment, setRejectComment] = useState('');
@@ -182,13 +185,74 @@ const CongesPage = () => {
 
   const openValidateModal = (congeId) => {
     setSelectedCongeToValidate(congeId);
+    setValidateComment('');
     setShowValidateModal(true);
+    fetchValidationOverlap(congeId);
   };
 
   const closeValidateModal = () => {
     setShowValidateModal(false);
     setSelectedCongeToValidate(null);
+    setValidateComment('');
   };
+
+  const fetchValidationOverlap = async (congeId) => {
+    if (!congeId) return;
+
+    setValidationOverlapLoading(true);
+    try {
+      const response = await congesService.getValidationOverlap(congeId);
+      setValidationOverlapByCongeId((prev) => ({
+        ...prev,
+        [congeId]: response.data,
+      }));
+    } catch (err) {
+      setValidationOverlapByCongeId((prev) => ({
+        ...prev,
+        [congeId]: {
+          has_overlap: null,
+          message: 'Impossible de vérifier le chevauchement pour le moment.',
+        },
+      }));
+    } finally {
+      setValidationOverlapLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadValidationOverlapsForPage = async () => {
+      const targetConges = paginatedConges.filter((conge) => canValidateConge(conge));
+      if (!targetConges.length) return;
+
+      const results = await Promise.all(
+        targetConges.map(async (conge) => {
+          try {
+            const response = await congesService.getValidationOverlap(conge.id);
+            return [conge.id, response.data];
+          } catch (_) {
+            return [conge.id, { has_overlap: null, message: 'Vérification indisponible.' }];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      setValidationOverlapByCongeId((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, data]) => {
+          next[id] = data;
+        });
+        return next;
+      });
+    };
+
+    loadValidationOverlapsForPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paginatedConges]);
 
   const openRejectModal = (congeId) => {
     setSelectedCongeToReject(congeId);
@@ -237,7 +301,9 @@ const CongesPage = () => {
     if (!selectedCongeToValidate) return;
     await validateAction.run(async () => {
       try {
-        await congesService.validate(selectedCongeToValidate);
+        await congesService.validate(selectedCongeToValidate, {
+          commentaire: validateComment.trim(),
+        });
         closeValidateModal();
         loadConges(); // Recharger la liste
       } catch (err) {
@@ -519,6 +585,17 @@ const CongesPage = () => {
                         {user?.role === 'super_admin' && (
                           <div className="text-muted text-2xs">{getEntrepriseLabel(conge)}</div>
                         )}
+                        {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
+                          <div className="mt-1 text-xxs">
+                            {validationOverlapByCongeId[conge.id].has_overlap === true ? (
+                              <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
+                            ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
+                              <Badge bg="success">Pas de chevauchement</Badge>
+                            ) : (
+                              <Badge bg="secondary">Chevauchement: indisponible</Badge>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
                     </div>
@@ -569,7 +646,20 @@ const CongesPage = () => {
                         <td>{formatDays(conge.jours_pris ?? conge.jours_calcules)}</td>
                         <td>{formatDays(conge.jours_restants)}</td>
                         <td>{getStatusBadge(conge.statut)}</td>
-                        <td>{formatDate(conge.date_demande || conge.created_at || conge.createdAt)}</td>
+                        <td>
+                          <div>{formatDate(conge.date_demande || conge.created_at || conge.createdAt)}</div>
+                          {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
+                            <div className="mt-1 text-xxs">
+                              {validationOverlapByCongeId[conge.id].has_overlap === true ? (
+                                <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
+                              ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
+                                <Badge bg="success">Pas de chevauchement</Badge>
+                              ) : (
+                                <Badge bg="secondary">Chevauchement: indisponible</Badge>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td>
                           <div className="d-flex gap-1">
                             <Button
@@ -661,7 +751,37 @@ const CongesPage = () => {
           <Modal.Title>Confirmer la validation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Confirmez-vous la validation de cette demande de congé ?
+        {selectedCongeToValidate && validationOverlapByCongeId[selectedCongeToValidate] && (
+          <Alert
+            variant={validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'warning' : 'success'}
+            className={`mb-3 overlap-alert ${validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
+          >
+            <strong>
+              {validationOverlapByCongeId[selectedCongeToValidate].has_overlap
+                ? 'Alerte chevauchement détectée.'
+                : 'Pas de chevauchement détecté.'}
+            </strong>
+            <div className="small mt-1">{validationOverlapByCongeId[selectedCongeToValidate].message}</div>
+          </Alert>
+        )}
+        {validationOverlapLoading && (
+          <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+        )}
+          <p className="mb-3">Confirmez-vous la validation de cette demande de congé ?</p>
+          <Form.Group>
+            <Form.Label>Commentaire de validation</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={validateComment}
+              onChange={(e) => setValidateComment(e.target.value)}
+              placeholder="Ajoutez un commentaire (obligatoire en cas de chevauchement)"
+              disabled={validateAction.isRunning}
+            />
+            <Form.Text className="text-muted">
+              Ce commentaire est obligatoire si la demande est en chevauchement.
+            </Form.Text>
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeValidateModal} disabled={validateAction.isRunning}>

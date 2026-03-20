@@ -17,6 +17,7 @@ export const roleNavigation = {
     { path: '/dashboard', label: 'Dashboard', icon: 'home', section: 'primary' },
     { path: '/conges-equipe', label: 'Congés équipe', icon: 'leave', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
+    { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   admin_entreprise: [

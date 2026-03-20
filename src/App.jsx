@@ -268,10 +268,15 @@ function App() {
         </Route>
 
         {/* Routes admin entreprise */}
+        <Route element={<ProtectedRoute roles={['admin_entreprise', 'manager']} />}>
+          <Route element={<Layout />}>
+            <Route path="/exports" element={<ExportsPage />} />
+          </Route>
+        </Route>
+
         <Route element={<ProtectedRoute roles={['admin_entreprise']} />}>
           <Route element={<Layout />}>
             <Route path="/users" element={<UsersPage />} />
-            <Route path="/exports" element={<ExportsPage />} />
             <Route path="/jours-feries" element={<JoursFeriesPage />} />
             <Route path="/politique-conges" element={<PolitiqueCongesPage />} />
             <Route path="/parametres-jours-bloques" element={<JoursBloquesPage />} />

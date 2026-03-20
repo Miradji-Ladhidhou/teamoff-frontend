@@ -20,6 +20,7 @@ const DashboardPage = () => {
   const [recentConges, setRecentConges] = useState([]);
   const [soldes, setSoldes] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [recentOverlapByCongeId, setRecentOverlapByCongeId] = useState({});
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
 
@@ -126,6 +127,57 @@ const DashboardPage = () => {
 
     loadDashboardData();
   }, [user?.id, user?.role]);
+
+  useEffect(() => {
+    const canSeeOverlapAnnotations = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
+    if (!canSeeOverlapAnnotations || !recentConges.length) {
+      setRecentOverlapByCongeId({});
+      return;
+    }
+
+    const canValidateConge = (conge) => {
+      if (!conge) return false;
+      if (user?.role === 'manager') return conge.statut === 'en_attente_manager';
+      if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+        return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
+      }
+      return false;
+    };
+
+    const targetConges = recentConges.filter(canValidateConge);
+    if (!targetConges.length) {
+      setRecentOverlapByCongeId({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadRecentOverlaps = async () => {
+      const results = await Promise.all(
+        targetConges.map(async (conge) => {
+          try {
+            const response = await congesService.getValidationOverlap(conge.id);
+            return [conge.id, response.data];
+          } catch (_) {
+            return [conge.id, null];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      const next = {};
+      results.forEach(([congeId, data]) => {
+        next[congeId] = data;
+      });
+      setRecentOverlapByCongeId(next);
+    };
+
+    loadRecentOverlaps();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [recentConges, user?.role]);
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -287,6 +339,16 @@ const DashboardPage = () => {
                           <div className="ui-text-soft text-xs">
                             {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                           </div>
+                          {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
+                            <div className="overlap-dash-annotation overlap">
+                              Chevauchement
+                            </div>
+                          )}
+                          {recentOverlapByCongeId[conge.id]?.has_overlap === false && (
+                            <div className="overlap-dash-annotation no-overlap">
+                              Aucun chevauchement
+                            </div>
+                          )}
                           <div className="text-xxs">
                             {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
                             {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}

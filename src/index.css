@@ -686,3 +686,45 @@ code {
 
 /* ── Password toggle z-index ────────────────── */
 .z-overlay { z-index: 5; }
+
+.overlap-alert {
+  border-width: 2px;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.overlap-alert.overlap-alert-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe08a 100%);
+  border-color: #b45309;
+  color: #5b2c00;
+}
+
+.overlap-alert.overlap-alert-ok {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #15803d;
+  color: #14532d;
+}
+
+.overlap-dash-annotation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.overlap-dash-annotation.overlap {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.overlap-dash-annotation.no-overlap {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #22c55e;
+}

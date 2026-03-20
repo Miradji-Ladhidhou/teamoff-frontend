@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table } from 'react-bootstrap';
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { exportsService } from '../services/api';
+import { entreprisesService, exportsService, usersService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useAlert } from '../hooks/useAlert';
 import { useAsyncAction } from '../hooks/useAsyncAction';
@@ -24,6 +24,9 @@ const ExportsPage = () => {
   const [success, setSuccess] = useState('');
   const [exportProgress, setExportProgress] = useState(0);
   const [previewData, setPreviewData] = useState(null);
+  const [entreprises, setEntreprises] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [availableServices, setAvailableServices] = useState([]);
 
   const [exportParams, setExportParams] = useState({
     type: 'conges',
@@ -31,7 +34,12 @@ const ExportsPage = () => {
     dateDebut: '',
     dateFin: '',
     statut: 'all',
-    utilisateur: 'all'
+    utilisateur: 'all',
+    entrepriseId: '',
+    service: '',
+    salarie: '',
+    sortBy: user?.role === 'super_admin' ? 'entreprise' : 'service',
+    sortOrder: 'asc',
   });
 
   const exportOptions = user?.role === 'super_admin'
@@ -40,6 +48,10 @@ const ExportsPage = () => {
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'audit', label: 'Logs d\'audit' },
         { value: 'usage', label: 'Rapport d\'usage' }
+      ]
+    : user?.role === 'manager'
+    ? [
+        { value: 'conges', label: 'Demandes de congé' }
       ]
     : [
         { value: 'conges', label: 'Demandes de congé' },
@@ -52,6 +64,68 @@ const ExportsPage = () => {
     alert.showSuccessModal(success, { autoCloseMs: 4000 });
     setSuccess('');
   }, [success, alert]);
+
+  useEffect(() => {
+    if (user?.role !== 'super_admin') return;
+
+    let cancelled = false;
+    const loadEntreprises = async () => {
+      try {
+        const response = await entreprisesService.getAll();
+        if (!cancelled) {
+          setEntreprises(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch (_) {
+        if (!cancelled) setEntreprises([]);
+      }
+    };
+
+    loadEntreprises();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadUsersData = async () => {
+      try {
+        const response = await usersService.getAll();
+        const allUsers = Array.isArray(response.data) ? response.data : [];
+        const scopedUsers = user?.role === 'super_admin' && exportParams.entrepriseId
+          ? allUsers.filter((u) => u.entreprise_id === exportParams.entrepriseId)
+          : allUsers;
+
+        const usersSorted = [...scopedUsers].sort((a, b) => {
+          const aName = `${a.prenom || ''} ${a.nom || ''}`.trim().toLowerCase();
+          const bName = `${b.prenom || ''} ${b.nom || ''}`.trim().toLowerCase();
+          return aName.localeCompare(bName, 'fr');
+        });
+
+        const servicesSorted = [...new Set(
+          scopedUsers
+            .map((u) => (u.service || '').trim())
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, 'fr'));
+
+        if (!cancelled) {
+          setAvailableUsers(usersSorted);
+          setAvailableServices(servicesSorted);
+        }
+      } catch (_) {
+        if (!cancelled) {
+          setAvailableUsers([]);
+          setAvailableServices([]);
+        }
+      }
+    };
+
+    loadUsersData();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role, exportParams.entrepriseId]);
 
   const handleParamChange = (e) => {
     const { name, value } = e.target;
@@ -96,6 +170,11 @@ const ExportsPage = () => {
 
         if (!queryParams.dateDebut) delete queryParams.dateDebut;
         if (!queryParams.dateFin) delete queryParams.dateFin;
+        if (!queryParams.entrepriseId) delete queryParams.entrepriseId;
+        if (!queryParams.service) delete queryParams.service;
+        if (!queryParams.salarie) delete queryParams.salarie;
+        if (!queryParams.sortBy) delete queryParams.sortBy;
+        if (!queryParams.sortOrder) delete queryParams.sortOrder;
         if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
         if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
 
@@ -164,6 +243,11 @@ const ExportsPage = () => {
 
     if (!queryParams.dateDebut) delete queryParams.dateDebut;
     if (!queryParams.dateFin) delete queryParams.dateFin;
+    if (!queryParams.entrepriseId) delete queryParams.entrepriseId;
+    if (!queryParams.service) delete queryParams.service;
+    if (!queryParams.salarie) delete queryParams.salarie;
+    if (!queryParams.sortBy) delete queryParams.sortBy;
+    if (!queryParams.sortOrder) delete queryParams.sortOrder;
     if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
     if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
 
@@ -191,6 +275,10 @@ const ExportsPage = () => {
   const loading = exportAction.isRunning;
   const previewLoading = previewAction.isRunning;
 
+  const filteredSalaries = exportParams.service
+    ? availableUsers.filter((u) => (u.service || '').trim() === exportParams.service)
+    : availableUsers;
+
   const allowedFormats = ALLOWED_FORMATS_BY_TYPE[exportParams.type] || ['csv'];
 
   const getExportTypeIcon = (type) => {
@@ -217,11 +305,11 @@ const ExportsPage = () => {
   };
 
   // Vérifier les permissions
-  if (!['admin_entreprise', 'super_admin'].includes(user.role)) {
+  if (!['manager', 'admin_entreprise', 'super_admin'].includes(user.role)) {
     return (
       <Container fluid="sm">
         <div className="alert alert-danger text-center" role="alert">
-          Accès non autorisé. Cette page est réservée aux administrateurs.
+          Accès non autorisé. Cette page est réservée aux managers et administrateurs.
         </div>
       </Container>
     );
@@ -353,23 +441,101 @@ const ExportsPage = () => {
 
                 {/* Filtres spécifiques */}
                 {exportParams.type === 'conges' && (
-                  <Form.Group className="mb-3">
-                    <Form.Label>Statut des congés</Form.Label>
-                    <Form.Select
-                      name="statut"
-                      value={exportParams.statut}
-                      onChange={handleParamChange}
-                    >
-                      <option value="all">Tous les statuts</option>
-                      <option value="en_attente">En attente</option>
-                      <option value="approuve">Approuvé</option>
-                      <option value="refuse">Refusé</option>
-                      <option value="annule">Annulé</option>
-                    </Form.Select>
-                  </Form.Group>
+                  <>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Statut des congés</Form.Label>
+                      <Form.Select
+                        name="statut"
+                        value={exportParams.statut}
+                        onChange={handleParamChange}
+                      >
+                        <option value="all">Tous les statuts</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="approuve">Approuvé</option>
+                        <option value="refuse">Refusé</option>
+                      </Form.Select>
+                    </Form.Group>
+
+                    {user?.role === 'super_admin' && (
+                      <Form.Group className="mb-3">
+                        <Form.Label>Entreprise</Form.Label>
+                        <Form.Select
+                          name="entrepriseId"
+                          value={exportParams.entrepriseId}
+                          onChange={handleParamChange}
+                        >
+                          <option value="">Toutes les entreprises</option>
+                          {entreprises.map((entreprise) => (
+                            <option key={entreprise.id} value={entreprise.id}>{entreprise.nom}</option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    )}
+
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Service</Form.Label>
+                          <Form.Select
+                            name="service"
+                            value={exportParams.service}
+                            onChange={handleParamChange}
+                          >
+                            <option value="">Tous les services</option>
+                            {availableServices.map((service) => (
+                              <option key={service} value={service}>{service}</option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Salarié</Form.Label>
+                          <Form.Select
+                            name="salarie"
+                            value={exportParams.salarie}
+                            onChange={handleParamChange}
+                          >
+                            <option value="">Tous les salariés</option>
+                            {filteredSalaries.map((sal) => {
+                              const fullName = `${sal.prenom || ''} ${sal.nom || ''}`.trim();
+                              const label = fullName ? `${fullName} (${sal.email})` : sal.email;
+                              return (
+                                <option key={sal.id} value={sal.email}>{label}</option>
+                              );
+                            })}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Trier par</Form.Label>
+                          <Form.Select name="sortBy" value={exportParams.sortBy} onChange={handleParamChange}>
+                            {user?.role === 'super_admin' && <option value="entreprise">Entreprise</option>}
+                            <option value="service">Service</option>
+                            <option value="salarie">Salarié</option>
+                            <option value="statut">Statut</option>
+                            <option value="date_demande">Date de demande</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-4">
+                          <Form.Label>Ordre</Form.Label>
+                          <Form.Select name="sortOrder" value={exportParams.sortOrder} onChange={handleParamChange}>
+                            <option value="asc">Croissant</option>
+                            <option value="desc">Décroissant</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  </>
                 )}
 
-                {(exportParams.type === 'conges' || exportParams.type === 'statistiques' || exportParams.type === 'usage') && (
+                {(exportParams.type === 'statistiques' || exportParams.type === 'usage') && (
                   <Form.Group className="mb-4">
                     <Form.Label>Utilisateur</Form.Label>
                     <Form.Select
@@ -487,8 +653,12 @@ const ExportsPage = () => {
               <p><strong>PDF</strong> : Format adapté pour l'archivage et le partage</p>
               <hr />
               <p><strong>Demandes de congé</strong> : Liste complète avec statuts, dates, et commentaires</p>
-              <p><strong>Utilisateurs</strong> : Informations des employés avec rôles et statuts</p>
-              <p><strong>Statistiques</strong> : Tableaux de bord et métriques d'utilisation</p>
+              {user?.role !== 'manager' && (
+                <p><strong>Utilisateurs</strong> : Informations des employés avec rôles et statuts</p>
+              )}
+              {user?.role !== 'manager' && (
+                <p><strong>Statistiques</strong> : Tableaux de bord et métriques d'utilisation</p>
+              )}
               {user?.role === 'super_admin' && <p><strong>Audit</strong> : Historique de sécurité et d'administration</p>}
             </Card.Body>
           </Card>
