@@ -58,6 +58,12 @@ const JoursFeriesPage = () => {
     loadTemplates();
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadEntreprises = async () => {
     try {
       setLoading(true);
@@ -376,15 +382,12 @@ const JoursFeriesPage = () => {
         </TipCard>
       )}
 
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
       {canManage && (
         <Card className="mb-3">
           <Card.Body>
             <Row className="g-3 align-items-end">
               {user?.role === 'super_admin' && (
-                <Col md={5}>
+                <Col xs={12} md={5}>
                   <Form.Label>Entreprise</Form.Label>
                   <Form.Select
                     value={selectedEntrepriseId}
@@ -396,7 +399,7 @@ const JoursFeriesPage = () => {
                   </Form.Select>
                 </Col>
               )}
-              <Col md={user?.role === 'super_admin' ? 2 : 3}>
+              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Année</Form.Label>
                 <Form.Control
                   type="number"
@@ -404,7 +407,7 @@ const JoursFeriesPage = () => {
                   onChange={(e) => setImportYear(Number(e.target.value))}
                 />
               </Col>
-              <Col md={user?.role === 'super_admin' ? 2 : 3}>
+              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Pays</Form.Label>
                 <Form.Control
                   type="text"
@@ -413,11 +416,12 @@ const JoursFeriesPage = () => {
                   maxLength={2}
                 />
               </Col>
-              <Col md={user?.role === 'super_admin' ? 3 : 6}>
+              <Col xs={12} md={user?.role === 'super_admin' ? 3 : 6}>
                 <AsyncButton
                   variant="outline-primary"
                   onClick={handleImportNational}
                   disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
+                  className="w-100"
                   action={importNationalAction}
                   loadingText="Import en cours..."
                 >
@@ -440,7 +444,7 @@ const JoursFeriesPage = () => {
           </Card.Header>
           <Card.Body>
             <Row className="g-3 align-items-end">
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Form.Label>Nom du modèle</Form.Label>
                 <Form.Control
                   type="text"
@@ -449,7 +453,7 @@ const JoursFeriesPage = () => {
                   placeholder="Ex: FR - Réunion"
                 />
               </Col>
-              <Col md={3}>
+              <Col xs={12} md={3}>
                 <Form.Label>Région</Form.Label>
                 <Form.Control
                   type="text"
@@ -458,10 +462,11 @@ const JoursFeriesPage = () => {
                   placeholder="Ex: Reunion"
                 />
               </Col>
-              <Col md={5} className="d-flex gap-2">
+              <Col xs={12} md={5} className="d-flex flex-column flex-md-row gap-2">
                 <AsyncButton
                   variant="outline-primary"
                   onClick={handleCreateTemplateFromCurrent}
+                  className="w-100"
                   action={createTemplateAction}
                   loadingText="Création du modèle..."
                 >
@@ -470,6 +475,7 @@ const JoursFeriesPage = () => {
                 <AsyncButton
                   variant="outline-success"
                   onClick={handleImportTemplateCsv}
+                  className="w-100"
                   action={importTemplateAction}
                   loadingText="Import du modèle..."
                 >
@@ -479,7 +485,7 @@ const JoursFeriesPage = () => {
             </Row>
 
             <Row className="g-3 align-items-end mt-1">
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Label>Modèles disponibles</Form.Label>
                 <Form.Select
                   value={selectedTemplateId}
@@ -493,11 +499,12 @@ const JoursFeriesPage = () => {
                   ))}
                 </Form.Select>
               </Col>
-              <Col md={6} className="d-flex gap-2">
+              <Col xs={12} md={6} className="d-flex flex-column flex-md-row gap-2">
                 <AsyncButton
                   variant="outline-secondary"
                   onClick={handleExportTemplateCsv}
                   disabled={!selectedTemplateId}
+                  className="w-100"
                   action={exportTemplateAction}
                   loadingText="Export du modèle..."
                 >
@@ -507,6 +514,7 @@ const JoursFeriesPage = () => {
                   variant="primary"
                   onClick={handleApplyTemplate}
                   disabled={!selectedTemplateId}
+                  className="w-100"
                   action={applyTemplateAction}
                   loadingText="Application..."
                 >
@@ -537,15 +545,60 @@ const JoursFeriesPage = () => {
               <h5 className="text-muted">Aucun jour férié</h5>
               <p className="text-muted">Aucun jour férié n'est configuré</p>
               {canManage && (
-                <Button variant="primary" onClick={handleNew}>
+                <Button variant="primary" onClick={handleNew} className="w-100 w-sm-auto">
                   <FaPlus className="me-2" />
                   Ajouter le premier jour férié
                 </Button>
               )}
             </div>
           ) : (
-            <div className="table-responsive">
-              <Table hover className="mb-0">
+            <>
+              <div className="d-md-none mobile-card-list px-3 py-2">
+                {joursFeries.map((jourFerie) => (
+                  <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div>
+                        <div className="fw-semibold">{jourFerie.libelle}</div>
+                        <div className="small text-muted">{formatDate(jourFerie.date)}</div>
+                      </div>
+                      <div className="d-flex flex-column align-items-end gap-1">
+                        <Badge bg={jourFerie.est_travail ? 'success' : 'secondary'}>
+                          {jourFerie.est_travail ? 'Travaillé' : 'Férié'}
+                        </Badge>
+                        <Badge bg={jourFerie.recurrent ? 'info' : 'secondary'}>
+                          {jourFerie.recurrent ? 'Récurrent' : 'Ponctuel'}
+                        </Badge>
+                      </div>
+                    </div>
+                    {canManage && (
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="flex-fill justify-content-center"
+                          onClick={() => handleEdit(jourFerie)}
+                        >
+                          <FaEdit className="me-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="flex-fill justify-content-center"
+                          onClick={() => handleDelete(jourFerie.id)}
+                          disabled={deleteAction.isRunning}
+                        >
+                          <FaTrash className="me-1" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="table-responsive d-none d-md-block">
+                <Table hover className="mb-0">
                 <thead className="table-light">
                   <tr>
                     <th>Date</th>
@@ -594,8 +647,9 @@ const JoursFeriesPage = () => {
                     </tr>
                   ))}
                 </tbody>
-              </Table>
-            </div>
+                </Table>
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>
@@ -656,8 +710,8 @@ const JoursFeriesPage = () => {
               />
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saveAction.isRunning}>
+          <Modal.Footer className="d-flex flex-column-reverse flex-sm-row gap-2">
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saveAction.isRunning} className="w-100 w-sm-auto">
               Annuler
             </Button>
             <AsyncButton
@@ -665,6 +719,7 @@ const JoursFeriesPage = () => {
               type="submit"
               action={saveAction}
               loadingText={editingJourFerie ? 'Modification...' : 'Création...'}
+              className="w-100 w-sm-auto"
             >
               {editingJourFerie ? 'Modifier' : 'Créer'}
             </AsyncButton>

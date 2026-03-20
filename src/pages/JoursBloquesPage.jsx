@@ -176,6 +176,12 @@ const JoursBloquesPage = () => {
     loadCounters();
   }, [selectedUserId, selectedYear]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const userOptions = useMemo(
     () => users.map((item) => ({ id: item.id, label: `${item.prenom} ${item.nom}`.trim() })),
     [users]
@@ -318,7 +324,7 @@ const JoursBloquesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="mb-4 d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Paramètres jours bloqués et soldes</h1>
           <p className="text-muted mb-0">Configurez les jours non décomptés et ajustez les soldes de congés en cours d'année.</p>
@@ -355,8 +361,6 @@ const JoursBloquesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
       {confirmationMessage && <Alert variant="warning" className="inline-confirmation-alert fw-semibold" dismissible onClose={clearConfirmation}>{confirmationMessage}</Alert>}
 
       <Card className="mb-4">
@@ -451,14 +455,14 @@ const JoursBloquesPage = () => {
             <Form.Group className="mb-4">
               <Form.Label>Dates spécifiques bloquées</Form.Label>
               <Row className="g-2">
-                <Col md={4}>
+                <Col xs={12} md={4}>
                   <Form.Control
                     type="date"
                     value={specificDateInput}
                     onChange={(event) => setSpecificDateInput(event.target.value)}
                   />
                 </Col>
-                <Col md={3}>
+                <Col xs={12} md={3}>
                   <Button type="button" variant="outline-primary" onClick={addSpecificDate} className="w-100">
                     Ajouter la date
                   </Button>
@@ -482,43 +486,60 @@ const JoursBloquesPage = () => {
 
             <Form.Group className="mb-4">
               <Form.Label>Acquisition mensuelle automatique par type</Form.Label>
-              <div className="settings-table-wrap">
-                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir toutes les colonnes.</div>
+              <div className="d-md-none mobile-card-list">
+                {congeTypes.map((type) => (
+                  <div key={`accrual-mobile-${type.id}`} className="mobile-card-list__item">
+                    <div className="fw-semibold mb-2">{type.libelle}</div>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      step="0.25"
+                      value={accrualByType[type.id] ?? ''}
+                      placeholder={`Auto (${toNumber(type.quota_annuel, 0) / 12})`}
+                      onChange={(event) => setAccrualByType((prev) => ({
+                        ...prev,
+                        [type.id]: event.target.value,
+                      }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="settings-table-wrap d-none d-md-block">
                 <Table responsive size="sm" className="settings-table">
-                <thead>
-                  <tr>
-                    <th>Type de congé</th>
-                    <th>Jours acquis / mois</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {congeTypes.map((type) => (
-                    <tr key={type.id}>
-                      <td>{type.libelle}</td>
-                      <td style={{ maxWidth: 220 }}>
-                        <Form.Control
-                          type="number"
-                          min="0"
-                          step="0.25"
-                          value={accrualByType[type.id] ?? ''}
-                          placeholder={`Auto (${toNumber(type.quota_annuel, 0) / 12})`}
-                          onChange={(event) => setAccrualByType((prev) => ({
-                            ...prev,
-                            [type.id]: event.target.value,
-                          }))}
-                        />
-                      </td>
+                  <thead>
+                    <tr>
+                      <th>Type de congé</th>
+                      <th>Jours acquis / mois</th>
                     </tr>
-                  ))}
-                </tbody>
+                  </thead>
+                  <tbody>
+                    {congeTypes.map((type) => (
+                      <tr key={type.id}>
+                        <td>{type.libelle}</td>
+                        <td style={{ maxWidth: 220 }}>
+                          <Form.Control
+                            type="number"
+                            min="0"
+                            step="0.25"
+                            value={accrualByType[type.id] ?? ''}
+                            placeholder={`Auto (${toNumber(type.quota_annuel, 0) / 12})`}
+                            onChange={(event) => setAccrualByType((prev) => ({
+                              ...prev,
+                              [type.id]: event.target.value,
+                            }))}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </Table>
               </div>
             </Form.Group>
 
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 border-top pt-3 mt-4">
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
               <small className="text-muted">Pensez à enregistrer après chaque ajustement de règle.</small>
-              <div className="d-grid d-sm-block">
-                <Button type="submit" disabled={savingPolicy}>
+              <div className="d-grid w-100 w-sm-auto">
+                <Button type="submit" disabled={savingPolicy} className="w-100">
                   {savingPolicy ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </Button>
               </div>
@@ -533,7 +554,7 @@ const JoursBloquesPage = () => {
             <strong>Gestion des soldes utilisateur</strong>
             <div className="small text-muted">Utilisez cette section uniquement pour les ajustements exceptionnels.</div>
           </div>
-          <div className="d-grid d-sm-flex gap-2">
+          <div className="d-grid d-sm-flex gap-2 w-100 w-sm-auto">
             <Button size="sm" variant="outline-secondary" onClick={() => setShowCountersSection((prev) => !prev)}>
               {showCountersSection ? 'Masquer' : 'Afficher'}
             </Button>
@@ -543,14 +564,14 @@ const JoursBloquesPage = () => {
         {showCountersSection && (
         <Card.Body>
           <Row className="g-3 mb-3">
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                 {userOptions.map((item) => (
                   <option key={item.id} value={item.id}>{item.label}</option>
                 ))}
               </Form.Select>
             </Col>
-            <Col md={3}>
+            <Col xs={6} md={3}>
               <Form.Control
                 type="number"
                 min="2000"
@@ -565,42 +586,59 @@ const JoursBloquesPage = () => {
             <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
           ) : (
             <div className="settings-table-wrap">
-              <div className="settings-table-hint d-md-none">Glissez horizontalement pour consulter les soldes détaillés.</div>
               {reportAutorise && (
                 <div className="alert alert-info py-2 mb-2 small">
                   Report annuel activé (max {reportMaxJours} j) — colonne <strong>N-1 reporté</strong> = jours portés de {selectedYear - 1}.
                 </div>
               )}
-              <Table responsive hover className="settings-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th title={`Jours reportés depuis ${selectedYear - 1}`}>N-1 ({selectedYear - 1})</th>
-                  <th>N ({selectedYear})</th>
-                  <th>Solde</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+              <div className="d-md-none mobile-card-list">
                 {counters.map((counter) => {
                   const joursReportes = toNumber(counter.jours_reportes, 0);
                   const joursAcquisAnnee = toNumber(counter.jours_acquis_annee ?? (toNumber(counter.jours_acquis, 0) - joursReportes), 0);
                   return (
-                    <tr key={counter.id}>
-                      <td>{counter.conge_type?.libelle || '-'}</td>
-                      <td>{joursReportes > 0 ? `${joursReportes.toFixed(1)} j` : '0.0 j'}</td>
-                      <td><strong>{joursAcquisAnnee.toFixed(1)}</strong> j</td>
-                      <td><strong className="text-primary">{toNumber(counter.solde_disponible, 0).toFixed(1)}</strong> j</td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => openCounterModal(counter)}>Editer</Button>
-                          <Button size="sm" variant="outline-danger" onClick={() => deleteCounter(counter.id)}>Supprimer</Button>
-                        </div>
-                      </td>
-                    </tr>
+                    <div key={`counter-mobile-${counter.id}`} className="mobile-card-list__item">
+                      <div className="fw-semibold mb-2">{counter.conge_type?.libelle || '-'}</div>
+                      <div className="small text-muted mb-1">N-1 ({selectedYear - 1}): {joursReportes > 0 ? `${joursReportes.toFixed(1)} j` : '0.0 j'}</div>
+                      <div className="small text-muted mb-1">N ({selectedYear}): {joursAcquisAnnee.toFixed(1)} j</div>
+                      <div className="mb-3"><strong className="text-primary">Solde: {toNumber(counter.solde_disponible, 0).toFixed(1)} j</strong></div>
+                      <div className="d-flex gap-2">
+                        <Button size="sm" variant="outline-primary" className="flex-fill" onClick={() => openCounterModal(counter)}>Editer</Button>
+                        <Button size="sm" variant="outline-danger" className="flex-fill" onClick={() => deleteCounter(counter.id)}>Supprimer</Button>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
+              </div>
+              <Table responsive hover className="settings-table d-none d-md-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th title={`Jours reportés depuis ${selectedYear - 1}`}>N-1 ({selectedYear - 1})</th>
+                    <th>N ({selectedYear})</th>
+                    <th>Solde</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {counters.map((counter) => {
+                    const joursReportes = toNumber(counter.jours_reportes, 0);
+                    const joursAcquisAnnee = toNumber(counter.jours_acquis_annee ?? (toNumber(counter.jours_acquis, 0) - joursReportes), 0);
+                    return (
+                      <tr key={counter.id}>
+                        <td>{counter.conge_type?.libelle || '-'}</td>
+                        <td>{joursReportes > 0 ? `${joursReportes.toFixed(1)} j` : '0.0 j'}</td>
+                        <td><strong>{joursAcquisAnnee.toFixed(1)}</strong> j</td>
+                        <td><strong className="text-primary">{toNumber(counter.solde_disponible, 0).toFixed(1)}</strong> j</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => openCounterModal(counter)}>Editer</Button>
+                            <Button size="sm" variant="outline-danger" onClick={() => deleteCounter(counter.id)}>Supprimer</Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </Table>
             </div>
           )}
@@ -684,9 +722,9 @@ const JoursBloquesPage = () => {
               </Col>
             </Row>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowCounterModal(false)}>Annuler</Button>
-            <Button type="submit">Enregistrer</Button>
+          <Modal.Footer className="d-flex flex-column-reverse flex-sm-row gap-2">
+            <Button variant="secondary" onClick={() => setShowCounterModal(false)} className="w-100 w-sm-auto">Annuler</Button>
+            <Button type="submit" className="w-100 w-sm-auto">Enregistrer</Button>
           </Modal.Footer>
         </Form>
       </Modal>

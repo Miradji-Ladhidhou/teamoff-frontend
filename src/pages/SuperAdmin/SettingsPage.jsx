@@ -71,6 +71,12 @@ const SystemSettings = () => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadSettings = async () => {
     try {
       const response = await settingsService.getAll();
@@ -356,9 +362,6 @@ const SystemSettings = () => {
         </ul>
       </InfoCardInfo>
 
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
       <Tabs
         activeKey={activeTab}
         onSelect={(eventKey) => {
@@ -366,7 +369,7 @@ const SystemSettings = () => {
           setActiveTab(nextTab);
           setSearchParams({ tab: nextTab });
         }}
-        className="mb-4"
+        className="mb-4 settings-tabs-mobile"
       >
         {/* Onglet Général */}
         <Tab eventKey="general" title="Général">
@@ -713,7 +716,7 @@ const SystemSettings = () => {
                 </Table>
               </div>
 
-              <div className="d-flex gap-2 justify-content-end mt-3">
+              <div className="settings-system-actions justify-content-end mt-3">
                 <Button
                   variant="outline-warning"
                   onClick={() => openConfirm('restart', 'Redémarrer les services applicatifs ? Les sessions actives seront maintenues.')}
@@ -745,10 +748,10 @@ const SystemSettings = () => {
             <Card.Header>
               <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <h5 className="mb-0">Historique des modifications systeme</h5>
-                <div className="d-flex align-items-center gap-2 flex-wrap">
+                <div className="settings-history-toolbar align-items-center flex-wrap">
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 180 }}
+                    className="settings-history-control"
                     value={historySortBy}
                     onChange={(e) => {
                       setHistorySortBy(e.target.value);
@@ -761,7 +764,7 @@ const SystemSettings = () => {
                   </Form.Select>
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 140 }}
+                    className="settings-history-control"
                     value={historySortOrder}
                     onChange={(e) => {
                       setHistorySortOrder(e.target.value);
@@ -773,7 +776,7 @@ const SystemSettings = () => {
                   </Form.Select>
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 120 }}
+                    className="settings-history-control"
                     value={historyPageSize}
                     onChange={(e) => {
                       setHistoryPageSize(Number(e.target.value));
@@ -797,7 +800,7 @@ const SystemSettings = () => {
               </div>
             </Card.Header>
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="settings-history-meta justify-content-between align-items-center mb-2">
                 <small className="text-muted">
                   {historyTotal} action(s) trouvee(s)
                 </small>
@@ -834,7 +837,7 @@ const SystemSettings = () => {
                 </Table>
               </div>
 
-              <div className="d-flex justify-content-end gap-2">
+              <div className="settings-history-pagination justify-content-end gap-2">
                 <Button
                   variant="outline-secondary"
                   size="sm"

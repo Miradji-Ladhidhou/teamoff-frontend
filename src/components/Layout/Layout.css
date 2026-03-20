@@ -6,6 +6,7 @@
 
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f3f6fb;
 }
 
@@ -103,6 +104,7 @@
 .role-sidebar {
   width: 250px;
   min-height: 100vh;
+  min-height: 100dvh;
   color: #fff;
   background: var(--role-sidebar-bg);
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
@@ -164,6 +166,7 @@
 .role-content {
   padding: 1.5rem;
   min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
   background:
     radial-gradient(circle at 100% 0%, var(--role-accent-soft) 0%, transparent 28%),
     linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);

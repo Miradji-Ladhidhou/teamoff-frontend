@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table } from 'react-bootstrap';
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,6 +46,12 @@ const ExportsPage = () => {
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'statistiques', label: 'Statistiques' }
       ];
+
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
 
   const handleParamChange = (e) => {
     const { name, value } = e.target;
@@ -243,12 +249,6 @@ const ExportsPage = () => {
         Pour des exports plus lisibles, commencez par un intervalle court puis élargissez progressivement.
       </TipCard>
 
-      {success && (
-        <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>
-          {success}
-        </Alert>
-      )}
-
       <Row>
         <Col lg={8}>
           <Card>
@@ -260,7 +260,7 @@ const ExportsPage = () => {
                 {/* Type d'export */}
                 <Form.Group className="mb-3">
                   <Form.Label>Type d'export *</Form.Label>
-                  <div className="d-flex gap-3">
+                  <div className="d-flex flex-column flex-md-row gap-2 gap-md-3 export-options-group">
                     {exportOptions.map((option) => (
                       <Form.Check
                         key={option.value}
@@ -284,7 +284,7 @@ const ExportsPage = () => {
                 {/* Format */}
                 <Form.Group className="mb-3">
                   <Form.Label>Format de fichier *</Form.Label>
-                  <div className="d-flex gap-3">
+                  <div className="d-flex flex-column flex-sm-row gap-2 gap-sm-3 export-options-group">
                     <Form.Check
                       type="radio"
                       id="format-csv"
@@ -384,11 +384,12 @@ const ExportsPage = () => {
                 )}
 
                 {/* Bouton d'export */}
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-column flex-sm-row gap-2">
                   <AsyncButton
                     onClick={handlePreview}
                     disabled={loading}
                     variant="outline-secondary"
+                    className="w-100"
                     action={previewAction}
                     loadingText="Prévisualisation..."
                   >
@@ -397,7 +398,7 @@ const ExportsPage = () => {
                   <AsyncButton
                     onClick={handleExport}
                     variant="primary"
-                    className="flex-fill"
+                    className="w-100"
                     action={exportAction}
                     loadingText="Export en cours..."
                   >
@@ -424,13 +425,29 @@ const ExportsPage = () => {
 
               {previewData && (
                 <div className="mt-4">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-1 mb-2">
                     <h6 className="mb-0">Aperçu des données à exporter ({getExportTypeLabel(previewData.type || exportParams.type)})</h6>
                     <small className="text-muted">{previewData.count} ligne(s) affichée(s) sur un maximum de {previewData.limitedTo}</small>
                   </div>
                   {previewData.rows?.length ? (
-                    <div className="table-responsive" style={{ maxHeight: 360, overflow: 'auto' }}>
-                      <Table striped bordered hover size="sm" className="mb-0">
+                    <>
+                      <div className="d-md-none mobile-card-list">
+                        {previewData.rows.map((row, index) => (
+                          <Card key={`preview-mobile-row-${index}`} className="mb-2">
+                            <Card.Body className="py-2 px-3">
+                              {(previewData.columns || []).map((column) => (
+                                <div key={`${column}-mobile-${index}`} className="d-flex justify-content-between gap-2 py-1 border-bottom small">
+                                  <span className="text-muted">{column}</span>
+                                  <span className="fw-semibold text-end">{String(row[column] ?? '-')}</span>
+                                </div>
+                              ))}
+                            </Card.Body>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="table-responsive d-none d-md-block" style={{ maxHeight: 'min(45vh, 360px)', overflow: 'auto' }}>
+                        <Table striped bordered hover size="sm" className="mb-0">
                         <thead>
                           <tr>
                             {(previewData.columns || []).map((column) => (
@@ -447,8 +464,9 @@ const ExportsPage = () => {
                             </tr>
                           ))}
                         </tbody>
-                      </Table>
-                    </div>
+                        </Table>
+                      </div>
+                    </>
                   ) : (
                     <Alert variant="info" className="mb-0">Aucune donnée correspondant à ces filtres.</Alert>
                   )}

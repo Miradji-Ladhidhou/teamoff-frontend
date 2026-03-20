@@ -9,11 +9,12 @@ import './AlertSystem.css';
  */
 const ConfirmationModal = () => {
   const { modal } = useContext(AlertContext);
+  const isNotification = modal?.kind === 'notification';
 
   useEffect(() => {
     if (!modal) return;
     const t = setTimeout(() => {
-      const btn = document.querySelector('[data-confirm-cancel]');
+      const btn = document.querySelector('[data-modal-primary]');
       if (btn) btn.focus();
     }, 50);
     return () => clearTimeout(t);
@@ -21,11 +22,11 @@ const ConfirmationModal = () => {
 
   const handleKeyDown = useCallback(
     (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && modal.closeOnEsc !== false && modal.dismissible !== false) {
         e.preventDefault();
         modal.onCancel();
       }
-      if (e.key === 'Enter' && e.target.dataset.confirmConfirm) {
+      if (e.key === 'Enter' && e.target.dataset.modalPrimary) {
         e.preventDefault();
         modal.onConfirm();
       }
@@ -35,13 +36,20 @@ const ConfirmationModal = () => {
 
   if (!modal) return null;
 
-  const modalClasses = `confirmation-modal${modal.danger ? ' modal-danger' : ''}`;
+  const modalClasses = `confirmation-modal${modal.danger ? ' modal-danger' : ''}${isNotification ? ' modal-notification' : ''}${isNotification ? ` modal-notification-${modal.type || 'info'}` : ''}`;
+
+  const handleOverlayClick = () => {
+    if (modal.closeOnOverlay === false || modal.dismissible === false) {
+      return;
+    }
+    modal.onCancel();
+  };
 
   return (
     /* L'overlay est le flex-container qui centre la modale */
     <div
       className="modal-overlay"
-      onClick={modal.onCancel}
+      onClick={handleOverlayClick}
       role="presentation"
       aria-hidden="true"
     >
@@ -59,14 +67,16 @@ const ConfirmationModal = () => {
           <h2 id="modal-title" className="modal-title">
             {modal.title}
           </h2>
-          <button
-            className="modal-close-btn"
-            onClick={modal.onCancel}
-            aria-label="Fermer la modale"
-            type="button"
-          >
-            <FaTimes />
-          </button>
+          {modal.dismissible !== false && (
+            <button
+              className="modal-close-btn"
+              onClick={modal.onCancel}
+              aria-label="Fermer la modale"
+              type="button"
+            >
+              <FaTimes />
+            </button>
+          )}
         </div>
 
         {/* Body */}
@@ -78,19 +88,20 @@ const ConfirmationModal = () => {
 
         {/* Footer — mobile: colonne, desktop: ligne */}
         <div className="modal-footer">
-          <button
-            className="modal-btn modal-btn-cancel"
-            onClick={modal.onCancel}
-            type="button"
-            data-confirm-cancel
-          >
-            {modal.cancelLabel}
-          </button>
+          {modal.showCancel !== false && (
+            <button
+              className="modal-btn modal-btn-cancel"
+              onClick={modal.onCancel}
+              type="button"
+            >
+              {modal.cancelLabel}
+            </button>
+          )}
           <button
             className={`modal-btn modal-btn-confirm${modal.danger ? ' modal-btn-danger' : ''}`}
             onClick={modal.onConfirm}
             type="button"
-            data-confirm-confirm
+            data-modal-primary
           >
             {modal.confirmLabel}
           </button>

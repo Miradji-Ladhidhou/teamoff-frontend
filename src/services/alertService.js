@@ -26,11 +26,13 @@ class AlertService {
       modalOpened: [],
       modalClosed: [],
     };
-    
-    this.toasts = new Map(); // id => { id, message, type, hash, timestamp, timeoutId? }
+
+    this.toasts = new Map(); // conservé pour compatibilité backward
     this.modal = null;
+    this.modalQueue = [];
+    this.activeModalTimeout = null;
     this.messageHashes = new Set(); // Trackage des messages affichés
-    this.distinctList = []; // Liste des toasts distincts
+    this.distinctList = []; // Liste des notifications distinctes
   }
 
   // ==================== SUBSCRIBE/EMIT ====================
@@ -56,15 +58,71 @@ class AlertService {
   // ==================== TOAST MANAGEMENT ====================
 
   /**
-   * Ouvre une notification sous forme de modale non-intrusive
-   * Auto-ferme après la durée spécifiée
+   * Ouvre une notification globale sous forme de modale
+   * @param {string} message
+   * @param {string} type - 'success' | 'error' | 'info' | 'warning'
+   * @param {number|Object} optionsOrDuration - durée ms ou objet options
    * @param {string} message
    * @param {string} type - 'success' | 'error' | 'info' | 'warning'
    * @param {number} duration - durée en ms avant auto-dismiss
    * @returns {string} ID de la notification
    */
-  openNotificationModal(message, type = 'info', duration = TOAST_DURATION) {
-    return this.addToast(message, type, duration);
+  openNotificationModal(message, type = 'info', optionsOrDuration = TOAST_DURATION) {
+    if (!message || typeof message !== 'string') return null;
+
+    const options = typeof optionsOrDuration === 'number'
+      ? { autoCloseMs: optionsOrDuration }
+      : (optionsOrDuration || {});
+
+    const hash = generateMessageHash(message, type);
+    if (this.messageHashes.has(hash)) {
+      return null;
+    }
+
+    const id = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `modal-${Date.now()}-${Math.random()}`;
+
+    const titles = {
+      success: 'Succes',
+      error: 'Erreur',
+      info: 'Information',
+      warning: 'Attention',
+    };
+
+    this.messageHashes.add(hash);
+
+    const modalData = {
+      id,
+      kind: 'notification',
+      type,
+      hash,
+      title: options.title || titles[type] || titles.info,
+      description: message,
+      confirmLabel: options.confirmLabel || 'Fermer',
+      cancelLabel: null,
+      showCancel: false,
+      danger: type === 'error',
+      dismissible: options.dismissible !== false,
+      closeOnOverlay: options.closeOnOverlay !== false,
+      closeOnEsc: options.closeOnEsc !== false,
+      autoCloseMs: Number.isFinite(options.autoCloseMs) ? options.autoCloseMs : TOAST_DURATION,
+      onConfirm: () => {
+        if (typeof options.onClose === 'function') {
+          options.onClose();
+        }
+        this.closeModal();
+      },
+      onCancel: () => {
+        if (typeof options.onClose === 'function') {
+          options.onClose();
+        }
+        this.closeModal();
+      },
+    };
+
+    this.enqueueModal(modalData);
+    return id;
   }
 
   /**
@@ -91,126 +149,57 @@ class AlertService {
     return this.openNotificationModal(message, 'info', duration);
   }
 
+  showSuccessModal(message, options = {}) {
+    return this.openNotificationModal(message, 'success', options);
+  }
+
+  showErrorModal(message, options = {}) {
+    return this.openNotificationModal(message, 'error', options);
+  }
+
   /**
-   * Ajoute un toast avec déduplication
+   * Backward compatible: mappe les toasts vers les modales globales
    * @param {string} message
    * @param {string} type - 'success' | 'error' | 'info'
    * @param {number} duration - durée en ms avant auto-dismiss (0 = pas de dismiss)
    * @returns {string} ID du toast
    */
   addToast(message, type = 'info', duration = TOAST_DURATION) {
-    if (!message || typeof message !== 'string') return null;
-
-    // Déduplication : vérifier si le même message+type est déjà affiché
-    const hash = generateMessageHash(message, type);
-    if (this.messageHashes.has(hash)) {
-      // Éviter les doublons
-      return null;
-    }
-
-    const id = globalThis.crypto?.randomUUID
-      ? globalThis.crypto.randomUUID()
-      : `toast-${Date.now()}-${Math.random()}`;
-    let timeoutId = null;
-
-    const toastData = {
-      id,
-      message,
-      type,
-      hash,
-      timestamp: Date.now(),
-      timeoutId,
-    };
-
-    // Ajouter au tracking
-    this.toasts.set(id, toastData);
-    this.messageHashes.add(hash);
-    this.distinctList.push(toastData);
-
-    // Limiter à max 5 toasts pour éviter le spam
-    if (this.distinctList.length > 5) {
-      const oldestToast = this.distinctList.shift();
-      this.removeToast(oldestToast.id, true);
-    }
-
-    // Émettre l'événement
-    this.emit('toastAdded', toastData);
-
-    // Auto-dismiss après durée spécifiée
-    if (duration > 0) {
-      timeoutId = setTimeout(() => {
-        this.removeToast(id);
-      }, duration);
-      toastData.timeoutId = timeoutId;
-    }
-
-    return id;
+    return this.openNotificationModal(message, type, duration);
   }
 
   /**
    * Retire un toast et met à jour le tracking
    */
   removeToast(id, skipCleanup = false) {
-    const toastData = this.toasts.get(id);
-    if (!toastData) return;
-
-    // Clear timeout si existe
-    if (toastData.timeoutId) {
-      clearTimeout(toastData.timeoutId);
+    if (this.modal?.id === id) {
+      this.closeModal();
     }
-
-    // Retirer du tracking
-    this.toasts.delete(id);
-    if (toastData.hash) {
-      this.messageHashes.delete(toastData.hash);
-    }
-    this.distinctList = this.distinctList.filter(t => t.id !== id);
-
-    // Émettre l'événement
-    this.emit('toastRemoved', { id });
   }
 
   /**
    * Pause au hover - reprendre les timers
    */
   pauseToast(id) {
-    const toastData = this.toasts.get(id);
-    if (!toastData || !toastData.timeoutId) return;
-    clearTimeout(toastData.timeoutId);
-    toastData.timeoutId = null;
+    if (this.modal?.id !== id || this.activeModalTimeout === null) return;
+    clearTimeout(this.activeModalTimeout);
+    this.activeModalTimeout = null;
   }
 
   /**
    * Reprendre après hover
    */
   resumeToast(id, duration = TOAST_DURATION) {
-    const toastData = this.toasts.get(id);
-    if (!toastData) return;
-
-    const elapsed = Date.now() - toastData.timestamp;
-    const remaining = Math.max(0, duration - elapsed);
-
-    if (remaining > 0) {
-      toastData.timeoutId = setTimeout(() => {
-        this.removeToast(id);
-      }, remaining);
-    } else {
-      this.removeToast(id);
-    }
+    if (this.modal?.id !== id) return;
+    this.scheduleAutoClose(this.modal, duration);
   }
 
   /**
    * Efface tous les toasts
    */
   clearAllToasts() {
-    this.toasts.forEach((toastData) => {
-      if (toastData.timeoutId) {
-        clearTimeout(toastData.timeoutId);
-      }
-    });
-    this.toasts.clear();
-    this.messageHashes.clear();
-    this.distinctList = [];
+    this.modalQueue = [];
+    this.closeModal();
     this.emit('toastCleared', {});
   }
 
@@ -218,7 +207,7 @@ class AlertService {
    * Obtient la liste actuelle des toasts
    */
   getToasts() {
-    return Array.from(this.toasts.values());
+    return this.modal ? [this.modal] : [];
   }
 
   // ==================== MODAL MANAGEMENT ====================
@@ -238,14 +227,20 @@ class AlertService {
       danger = false, // true = style danger (rouge)
     } = config;
 
-    const id = crypto.randomUUID ? crypto.randomUUID() : `modal-${Date.now()}`;
+    const id = globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `modal-${Date.now()}`;
 
-    this.modal = {
+    const modalData = {
       id,
+      kind: 'confirmation',
+      type: danger ? 'error' : 'info',
       title,
       description,
       confirmLabel,
       cancelLabel,
+      showCancel: true,
+      dismissible: true,
+      closeOnOverlay: true,
+      closeOnEsc: true,
       onConfirm: () => {
         onConfirm();
         this.closeModal();
@@ -257,8 +252,38 @@ class AlertService {
       danger,
     };
 
-    this.emit('modalOpened', this.modal);
+    this.enqueueModal(modalData);
     return id;
+  }
+
+  enqueueModal(modalData) {
+    if (this.modal) {
+      this.modalQueue.push(modalData);
+      return;
+    }
+    this.openNow(modalData);
+  }
+
+  openNow(modalData) {
+    this.modal = modalData;
+    this.emit('modalOpened', this.modal);
+    this.scheduleAutoClose(modalData, modalData.autoCloseMs);
+  }
+
+  scheduleAutoClose(modalData, autoCloseMs) {
+    if (this.activeModalTimeout) {
+      clearTimeout(this.activeModalTimeout);
+      this.activeModalTimeout = null;
+    }
+
+    if (modalData?.kind !== 'notification') return;
+    if (!Number.isFinite(autoCloseMs) || autoCloseMs <= 0) return;
+
+    this.activeModalTimeout = setTimeout(() => {
+      if (this.modal?.id === modalData.id) {
+        this.closeModal();
+      }
+    }, autoCloseMs);
   }
 
   /**
@@ -267,8 +292,20 @@ class AlertService {
   closeModal() {
     if (this.modal) {
       const oldModal = this.modal;
+      if (oldModal.hash) {
+        this.messageHashes.delete(oldModal.hash);
+      }
+      if (this.activeModalTimeout) {
+        clearTimeout(this.activeModalTimeout);
+        this.activeModalTimeout = null;
+      }
       this.modal = null;
       this.emit('modalClosed', { id: oldModal.id });
+
+      if (this.modalQueue.length > 0) {
+        const nextModal = this.modalQueue.shift();
+        this.openNow(nextModal);
+      }
     }
   }
 

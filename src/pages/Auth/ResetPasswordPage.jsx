@@ -36,12 +36,12 @@ const ResetPasswordPage = () => {
             'radial-gradient(circle at top left, rgba(193, 124, 65, 0.22), transparent 28%), linear-gradient(180deg, #f5ede2 0%, #fffaf4 48%, #ffffff 100%)',
         }}
       >
-        <Container className="py-5">
+        <Container className="py-3 py-lg-5">
           <Row>
             <Col lg={6} className="mx-auto">
               <Card className="shadow-sm">
-                <Card.Body className="p-5 text-center">
-                  <Alert variant="danger" className="floating-error-alert">
+                <Card.Body className="p-3 p-lg-5 text-center">
+                  <Alert variant="danger" className="mb-4">
                     <strong>Lien invalide</strong>
                     <br />
                     Le lien de réinitialisation est introuvable ou a expiré.
@@ -118,7 +118,7 @@ const ResetPasswordPage = () => {
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">
               Réinitialisez votre accès
             </Badge>
-            <h1 className="display-4 fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+            <h1 className="fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05, fontSize: 'clamp(2.2rem, 7vw, 3.5rem)' }}>
               Créez un nouveau mot de passe
             </h1>
             <p className="lead mb-4 text-muted">
@@ -127,8 +127,8 @@ const ResetPasswordPage = () => {
             <div className="d-flex flex-column gap-2">
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center"
-                  style={{ width: '48px', height: '48px', minWidth: '48px' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
                 >
                   <FaLock className="text-primary" size={20} />
                 </div>
@@ -139,8 +139,8 @@ const ResetPasswordPage = () => {
               </div>
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center"
-                  style={{ width: '48px', height: '48px', minWidth: '48px' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
                 >
                   <FaCheck className="text-primary" size={20} />
                 </div>
@@ -249,7 +249,7 @@ const ResetPasswordPage = () => {
                   <div className="text-center">
                     <div
                       className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                      style={{ width: '80px', height: '80px' }}
+                      style={{ width: 'clamp(64px, 18vw, 80px)', height: 'clamp(64px, 18vw, 80px)' }}
                     >
                       <FaCheck size={40} className="text-success" />
                     </div>

@@ -57,7 +57,7 @@ const ForgotPasswordPage = () => {
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">
               Récupérez l'accès à votre compte
             </Badge>
-            <h1 className="display-4 fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+            <h1 className="fw-bold mb-3" style={{ letterSpacing: '-0.04em', lineHeight: 1.05, fontSize: 'clamp(2.2rem, 7vw, 3.5rem)' }}>
               Mot de passe oublié ?
             </h1>
             <p className="lead mb-4 text-muted">
@@ -66,8 +66,8 @@ const ForgotPasswordPage = () => {
             <div className="d-flex flex-column gap-2">
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center"
-                  style={{ width: '48px', height: '48px', minWidth: '48px' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
                 >
                   <FaEnvelope className="text-primary" size={20} />
                 </div>
@@ -78,8 +78,8 @@ const ForgotPasswordPage = () => {
               </div>
               <div className="d-flex align-items-start gap-3">
                 <div
-                  className="rounded-circle bg-light d-flex align-items-center justify-content-center"
-                  style={{ width: '48px', height: '48px', minWidth: '48px' }}
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: 'clamp(40px, 9vw, 48px)', height: 'clamp(40px, 9vw, 48px)', minWidth: 'clamp(40px, 9vw, 48px)' }}
                 >
                   <FaCheck className="text-primary" size={20} />
                 </div>
@@ -142,7 +142,7 @@ const ForgotPasswordPage = () => {
                   <div className="text-center">
                     <div
                       className="mx-auto mb-4 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                      style={{ width: '80px', height: '80px' }}
+                      style={{ width: 'clamp(64px, 18vw, 80px)', height: 'clamp(64px, 18vw, 80px)' }}
                     >
                       <FaCheck size={40} className="text-success" />
                     </div>

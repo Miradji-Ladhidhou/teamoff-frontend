@@ -33,6 +33,12 @@ const ServicesPage = () => {
     }
   }, [entrepriseId]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadServices = async () => {
     try {
       setLoading(true);
@@ -144,9 +150,6 @@ const ServicesPage = () => {
         </Button>
       </div>
 
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
       <InfoCardInfo title="Gestion des services">
         <p className="mb-0">Un employé doit être rattaché à un service existant. Les règles définies ici sont appliquées de manière isolée par service.</p>
       </InfoCardInfo>
@@ -157,45 +160,75 @@ const ServicesPage = () => {
 
       <Card>
         <Card.Body>
-          <Table responsive hover>
-            <thead>
-              <tr>
-                <th>Service</th>
-                <th>Employés affectés</th>
-                <th>Workflow</th>
-                <th>Préavis min</th>
-                <th>Max absences</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((service) => (
-                <tr key={service.name}>
-                  <td>
-                    <strong>{service.name}</strong>
-                  </td>
-                  <td>
-                    <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
-                      {service.employeesCount || 0}
-                    </Badge>
-                  </td>
-                  <td>{service.policy?.approval_workflow || 'manager_admin'}</td>
-                  <td>{service.policy?.minimum_notice_days || 0} j</td>
-                  <td>{service.policy?.max_employees_on_leave || 0}</td>
-                  <td>
-                    <div className="d-flex gap-2">
-                      <Button variant="outline-primary" size="sm" onClick={() => openEditModal(service)}>
-                        <FaEdit />
-                      </Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(service)}>
-                        <FaTrash />
-                      </Button>
-                    </div>
-                  </td>
+          <div className="d-md-none mobile-card-list">
+            {services.map((service) => (
+              <div key={service.name} className="mobile-card-list__item">
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <div>
+                    <div className="fw-semibold">{service.name}</div>
+                    <small className="text-muted">Workflow: {service.policy?.approval_workflow || 'manager_admin'}</small>
+                  </div>
+                  <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                    {service.employeesCount || 0}
+                  </Badge>
+                </div>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  <Badge bg="light" text="dark">Préavis: {service.policy?.minimum_notice_days || 0} j</Badge>
+                  <Badge bg="light" text="dark">Max absences: {service.policy?.max_employees_on_leave || 0}</Badge>
+                </div>
+                <div className="d-flex gap-2">
+                  <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openEditModal(service)}>
+                    <FaEdit className="me-1" /> Modifier
+                  </Button>
+                  <Button variant="outline-danger" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleDelete(service)}>
+                    <FaTrash className="me-1" /> Supprimer
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="d-none d-md-block">
+            <Table responsive hover>
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Employés affectés</th>
+                  <th>Workflow</th>
+                  <th>Préavis min</th>
+                  <th>Max absences</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {services.map((service) => (
+                  <tr key={service.name}>
+                    <td>
+                      <strong>{service.name}</strong>
+                    </td>
+                    <td>
+                      <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                        {service.employeesCount || 0}
+                      </Badge>
+                    </td>
+                    <td>{service.policy?.approval_workflow || 'manager_admin'}</td>
+                    <td>{service.policy?.minimum_notice_days || 0} j</td>
+                    <td>{service.policy?.max_employees_on_leave || 0}</td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button variant="outline-primary" size="sm" onClick={() => openEditModal(service)}>
+                          <FaEdit />
+                        </Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => handleDelete(service)}>
+                          <FaTrash />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
 
           {services.length === 0 && (
             <div className="text-center py-4">

@@ -139,10 +139,12 @@ const AuditLogs = () => {
           <h1 className="h3 mb-1">Logs d'Audit</h1>
           <p className="text-muted">Historique des actions système et utilisateur</p>
         </div>
-        <Button variant="outline-success" onClick={exportLogs}>
-          <FaDownload className="me-2" />
-          Exporter CSV
-        </Button>
+        <div className="page-header-actions">
+          <Button variant="outline-success" onClick={exportLogs}>
+            <FaDownload className="me-2" />
+            Exporter CSV
+          </Button>
+        </div>
       </div>
 
       
@@ -163,7 +165,7 @@ const AuditLogs = () => {
       <Card className="mb-4">
         <Card.Body>
           <Row className="g-2 align-items-end">
-            <Col md={3}>
+            <Col xs={12} md={3}>
               <Form.Label className="mb-1 small">Recherche</Form.Label>
               <InputGroup>
                 <InputGroup.Text><FaSearch /></InputGroup.Text>
@@ -175,7 +177,7 @@ const AuditLogs = () => {
                 />
               </InputGroup>
             </Col>
-            <Col md={2}>
+            <Col xs={12} sm={6} md={2}>
               <Form.Label className="mb-1 small">Action</Form.Label>
               <Form.Select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
                 <option value="">Toutes les actions</option>
@@ -188,15 +190,15 @@ const AuditLogs = () => {
                 <option value="SYSTEM_RESTART_REQUESTED">Redémarrage demandé</option>
               </Form.Select>
             </Col>
-            <Col md={2}>
+            <Col xs={6} sm={3} md={2}>
               <Form.Label className="mb-1 small">Du</Form.Label>
               <Form.Control type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
             </Col>
-            <Col md={2}>
+            <Col xs={6} sm={3} md={2}>
               <Form.Label className="mb-1 small">Au</Form.Label>
               <Form.Control type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
             </Col>
-            <Col md={3} className="d-flex align-items-end justify-content-end gap-2">
+            <Col xs={12} md={3} className="audit-filters-actions align-items-end justify-content-end">
               <Badge bg="secondary" className="py-2 px-3">{total} résultat{total > 1 ? 's' : ''}</Badge>
               <Button variant="outline-secondary" size="sm" onClick={handleReset}>
                 <FaTimes className="me-1" />Réinitialiser
@@ -216,60 +218,101 @@ const AuditLogs = () => {
             </div>
           ) : (
             <>
-              <Table hover responsive>
-                <thead>
-                  <tr>
-                    <th>Date/Heure</th>
-                    <th>Utilisateur</th>
-                    <th>Action</th>
-                    <th>Entité</th>
-                    <th>Entreprise</th>
-                    <th>IP</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id}>
-                      <td>
-                        <small>
-                          <div>{formatDateTime(log.createdAt).split(' ')[0]}</div>
-                          <span className="text-muted">{formatDateTime(log.createdAt).split(' ')[1]}</span>
-                        </small>
-                      </td>
-                      <td>
-                        <div>
-                          <strong>{getUserLabel(log)}</strong>
-                          {log.utilisateur && (
-                            <div><small className="text-muted">{log.utilisateur.email}</small></div>
-                          )}
+              {logs.length > 0 && (
+                <>
+                  <div className="d-md-none mobile-card-list">
+                    {logs.map((log) => (
+                      <div key={log.id} className="audit-log-mobile-card">
+                        <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                          <div>
+                            <div className="fw-semibold">{getUserLabel(log)}</div>
+                            {log.utilisateur && (
+                              <div><small className="text-muted">{log.utilisateur.email}</small></div>
+                            )}
+                          </div>
+                          {getActionBadge(log.action)}
                         </div>
-                      </td>
-                      <td>{getActionBadge(log.action)}</td>
-                      <td>
-                        <div className="d-flex align-items-center gap-1">
-                          {getEntityIcon(log.entity)}
-                          <span>{log.entity || '—'}</span>
+                        <div className="small text-muted mb-2">{formatDateTime(log.createdAt)}</div>
+                        <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
+                          <span className="d-inline-flex align-items-center gap-1">
+                            {getEntityIcon(log.entity)}
+                            <span>{log.entity || '—'}</span>
+                          </span>
+                          <Badge bg="light" text="dark">{log.entreprise?.nom || '—'}</Badge>
                         </div>
-                      </td>
-                      <td>
-                        <small>{log.entreprise?.nom || '—'}</small>
-                      </td>
-                      <td><code className="small">{log.ip_address || '—'}</code></td>
-                      <td>
+                        <div className="small text-muted mb-3">IP: {log.ip_address || '—'}</div>
                         <Button
                           variant="outline-info"
                           size="sm"
+                          className="w-100 justify-content-center"
                           title="Voir détails complets"
                           onClick={() => setSelectedLog(log)}
                         >
-                          <FaEye />
+                          <FaEye className="me-2" />
+                          Voir les détails
                         </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="d-none d-md-block">
+                    <Table hover responsive>
+                      <thead>
+                        <tr>
+                          <th>Date/Heure</th>
+                          <th>Utilisateur</th>
+                          <th>Action</th>
+                          <th>Entité</th>
+                          <th>Entreprise</th>
+                          <th>IP</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map((log) => (
+                          <tr key={log.id}>
+                            <td>
+                              <small>
+                                <div>{formatDateTime(log.createdAt).split(' ')[0]}</div>
+                                <span className="text-muted">{formatDateTime(log.createdAt).split(' ')[1]}</span>
+                              </small>
+                            </td>
+                            <td>
+                              <div>
+                                <strong>{getUserLabel(log)}</strong>
+                                {log.utilisateur && (
+                                  <div><small className="text-muted">{log.utilisateur.email}</small></div>
+                                )}
+                              </div>
+                            </td>
+                            <td>{getActionBadge(log.action)}</td>
+                            <td>
+                              <div className="d-flex align-items-center gap-1">
+                                {getEntityIcon(log.entity)}
+                                <span>{log.entity || '—'}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <small>{log.entreprise?.nom || '—'}</small>
+                            </td>
+                            <td><code className="small">{log.ip_address || '—'}</code></td>
+                            <td>
+                              <Button
+                                variant="outline-info"
+                                size="sm"
+                                title="Voir détails complets"
+                                onClick={() => setSelectedLog(log)}
+                              >
+                                <FaEye />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </>
+              )}
 
               {logs.length === 0 && (
                 <div className="text-center py-4">
@@ -359,7 +402,7 @@ const AuditLogs = () => {
                 <strong>Métadonnées</strong>
                 <pre
                   className="bg-light border rounded p-3 mt-1 small"
-                  style={{ maxHeight: 200, overflowY: 'auto' }}
+                  style={{ maxHeight: 'min(40vh, 200px)', overflowY: 'auto' }}
                 >
                   {JSON.stringify(selectedLog.metadata, null, 2)}
                 </pre>

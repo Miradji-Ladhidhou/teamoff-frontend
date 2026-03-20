@@ -294,7 +294,7 @@ const NotificationsPage = () => {
           <Button
             variant="outline-success"
             onClick={handleMarkAllAsRead}
-            className="d-flex align-items-center"
+            className="d-flex align-items-center justify-content-center"
           >
             <FaCheckDouble className="me-2" />
             Tout marquer comme lu
@@ -321,10 +321,15 @@ const NotificationsPage = () => {
       
 
       <Card>
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-2 ms-auto">
+        <Card.Header className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+          <div className="d-flex align-items-center gap-2 ms-sm-auto">
             <small className="text-muted">Par page</small>
-            <Form.Select size="sm" style={{ width: 90 }} value={itemsPerPage} onChange={handleItemsPerPageChange}>
+            <Form.Select
+              size="sm"
+              className="notifications-items-per-page"
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+            >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -349,7 +354,7 @@ const NotificationsPage = () => {
                 return (
                 <div
                   key={notification.id}
-                  className={`list-group-item d-flex justify-content-between align-items-start ${
+                  className={`list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 ${
                     !notification.lu ? 'bg-light' : ''
                   }`}
                   onClick={() => {
@@ -389,7 +394,7 @@ const NotificationsPage = () => {
                       )}
                     </div>
                   </div>
-                  <div>
+                  <div className="w-100 d-flex justify-content-end">
                     {!notification.lu && (
                       <Button
                         variant="outline-primary"
@@ -398,7 +403,7 @@ const NotificationsPage = () => {
                           event.stopPropagation();
                           handleMarkAsRead(notification.id);
                         }}
-                        className="d-flex align-items-center"
+                        className="d-flex align-items-center justify-content-center w-100"
                       >
                         <FaCheck className="me-1" />
                         Marquer comme lu
@@ -412,8 +417,11 @@ const NotificationsPage = () => {
           )}
         </Card.Body>
         {totalItems > 0 && totalPages > 1 && (
-          <Card.Footer className="d-flex justify-content-center">
-            <Pagination className="mb-0">
+          <Card.Footer className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <small className="text-muted">
+              {startIndex}-{endIndex} sur {totalItems}
+            </small>
+            <Pagination className="mb-0 flex-wrap justify-content-center">
               <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
               <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
               {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {

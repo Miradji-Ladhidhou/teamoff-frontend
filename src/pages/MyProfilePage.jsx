@@ -51,6 +51,12 @@ const MyProfilePage = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({ ...prev, [name]: value }));
@@ -121,7 +127,7 @@ const MyProfilePage = () => {
   const passwordLoading = passwordAction.isRunning;
 
   return (
-    <Container className="py-5">
+    <Container className="py-3 py-lg-5">
       <Row className="mb-4">
         <Col md={8}>
           <div className="d-flex align-items-center gap-3">
@@ -169,9 +175,6 @@ const MyProfilePage = () => {
         </Col>
 
         <Col md={9}>
-          
-          {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
           {activeTab === 'profile' && (
             <Card>
               <Card.Header className="bg-light">

@@ -6,8 +6,7 @@ import { AlertProvider } from './contexts/AlertContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
 
 // Alert System Components
-import ToastContainer from './components/AlertSystem/ToastContainer';
-import ConfirmationModal from './components/AlertSystem/ConfirmationModal';
+import GlobalModalProvider from './components/AlertSystem/GlobalModalProvider';
 
 import { getDefaultRoute } from './utils/navigation';
 import AppFooter from './components/Layout/AppFooter';
@@ -142,8 +141,7 @@ function App() {
       <NotificationProvider>
         <AlertProvider>
           {/* Global Alert System Components */}
-          <ToastContainer />
-          <ConfirmationModal />
+          <GlobalModalProvider />
           
           <Routes>
 

@@ -19,6 +19,8 @@ export const useAlert = () => {
   }
 
   return {
+    showSuccessModal: context.showSuccessModal,
+    showErrorModal: context.showErrorModal,
     success: context.showSuccess,
     error: context.showError,
     info: context.showInfo,

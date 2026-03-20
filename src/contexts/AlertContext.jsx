@@ -10,40 +10,15 @@ export const AlertContext = createContext({
   showSuccess: () => {},
   showError: () => {},
   showInfo: () => {},
+  showSuccessModal: () => {},
+  showErrorModal: () => {},
   openConfirmation: () => {},
   closeConfirmation: () => {},
-  toasts: [],
   modal: null,
 });
 
 export const AlertProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
   const [modal, setModal] = useState(null);
-
-  // Synchroniser les toasts avec le service
-  useEffect(() => {
-    const handleToastAdded = (toastData) => {
-      setToasts(current => [...current, toastData]);
-    };
-
-    const handleToastRemoved = ({ id }) => {
-      setToasts(current => current.filter(t => t.id !== id));
-    };
-
-    const handleToastCleared = () => {
-      setToasts([]);
-    };
-
-    alertService.on('toastAdded', handleToastAdded);
-    alertService.on('toastRemoved', handleToastRemoved);
-    alertService.on('toastCleared', handleToastCleared);
-
-    return () => {
-      alertService.off('toastAdded', handleToastAdded);
-      alertService.off('toastRemoved', handleToastRemoved);
-      alertService.off('toastCleared', handleToastCleared);
-    };
-  }, []);
 
   // Synchroniser la modale avec le service
   useEffect(() => {
@@ -78,6 +53,14 @@ export const AlertProvider = ({ children }) => {
     alertService.info(message, duration);
   }, []);
 
+  const showSuccessModal = useCallback((message, options = {}) => {
+    alertService.showSuccessModal(message, options);
+  }, []);
+
+  const showErrorModal = useCallback((message, options = {}) => {
+    alertService.showErrorModal(message, options);
+  }, []);
+
   /**
    * Ouvre une modale de confirmation (pour actions critiques)
    * WARNING ne doit JAMAIS être implémenté en toast
@@ -91,17 +74,18 @@ export const AlertProvider = ({ children }) => {
   }, []);
 
   const value = {
-    // Toast functions
+    // Notification functions
     showSuccess,
     showError,
     showInfo,
+    showSuccessModal,
+    showErrorModal,
     
     // Modal/Confirmation functions
     openConfirmation,
     closeConfirmation,
     
     // State
-    toasts,
     modal,
   };
 

@@ -28,7 +28,7 @@ export default function MaintenancePage() {
   };
 
   return (
-    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100dvh' }}>
       <Card className="shadow border-0" style={{ maxWidth: 680, width: '100%' }}>
         <Card.Body className="p-4 p-md-5 text-center">
           <div className="mb-3" style={{ fontSize: '2.25rem' }}>Maintenance</div>

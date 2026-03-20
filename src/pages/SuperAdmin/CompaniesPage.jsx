@@ -93,6 +93,12 @@ const CompaniesManagement = () => {
     loadCompanies();
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadCompanies = async () => {
     try {
       setLoading(true);
@@ -418,9 +424,6 @@ const CompaniesManagement = () => {
           </Button>
         </div>
       </div>
-
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
       <InfoCardInfo title="Gérer les entreprises efficacement">
         <p className="mb-2">Chaque entreprise possède sa politique de congés et ses paramètres.</p>

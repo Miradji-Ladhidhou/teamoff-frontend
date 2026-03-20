@@ -115,7 +115,7 @@ const SuperAdminLayout = () => {
   return (
     <div className="d-flex">
       {/* Sidebar pour desktop */}
-      <div className="d-none d-md-block bg-dark text-white" style={{ width: '250px', minHeight: '100vh' }}>
+      <div className="d-none d-md-block bg-dark text-white" style={{ width: '250px', minHeight: '100dvh' }}>
         <div className="p-3">
           <div className="d-flex align-items-center mb-4">
             <FaShieldAlt size={24} className="text-warning me-2" />

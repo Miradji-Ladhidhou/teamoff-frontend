@@ -142,6 +142,24 @@ const PolitiqueCongesPage = () => {
     loadPolicy();
   }, [entrepriseId]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
+  useEffect(() => {
+    if (!tzError) return;
+    alert.showErrorModal(tzError, { title: 'Erreur', autoCloseMs: 0 });
+    setTzError('');
+  }, [tzError, alert]);
+
+  useEffect(() => {
+    if (!tzSuccess) return;
+    alert.showSuccessModal(tzSuccess, { autoCloseMs: 4000 });
+    setTzSuccess('');
+  }, [tzSuccess, alert]);
+
   const setField = (name, value) => {
     setPolicy((prev) => ({ ...prev, [name]: value }));
   };
@@ -442,16 +460,13 @@ const PolitiqueCongesPage = () => {
         </ul>
       </InfoCardInfo>
 
-      
-      {success && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
       <Card className="mb-4">
-        <Card.Header className="d-flex justify-content-between align-items-center">
+        <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
           <div>
             <strong>Types de congé</strong>
             <div className="text-muted small">Ajoutez et modifiez les types disponibles dans les formulaires de demande.</div>
           </div>
-          <Button type="button" variant="primary" onClick={openCreateTypeModal}>
+          <Button type="button" variant="primary" onClick={openCreateTypeModal} className="w-100 w-md-auto">
             Ajouter un type de congé
           </Button>
         </Card.Header>
@@ -459,40 +474,68 @@ const PolitiqueCongesPage = () => {
           {congeTypes.length === 0 ? (
             <div className="p-4 text-center text-muted">Aucun type de congé configuré.</div>
           ) : (
-            <div className="settings-table-wrap">
-              <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir toutes les colonnes.</div>
-              <Table responsive hover className="mb-0 settings-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Libellé</th>
-                  <th>Quota annuel</th>
-                  <th>Demi-journée</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="d-md-none mobile-card-list px-3 py-2">
                 {congeTypes.map((type) => (
-                  <tr key={type.id}>
-                    <td><Badge bg="secondary">{type.code}</Badge></td>
-                    <td>{type.libelle}</td>
-                    <td>{type.quota_annuel}</td>
-                    <td>{type.demi_journee_autorisee ? 'Oui' : 'Non'}</td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button type="button" size="sm" variant="outline-primary" onClick={() => openEditTypeModal(type)}>
-                          Modifier
-                        </Button>
-                        <Button type="button" size="sm" variant="outline-danger" onClick={() => handleDeleteCongeType(type.id)}>
-                          Supprimer
-                        </Button>
+                  <div key={`mobile-type-${type.id}`} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div>
+                        <div className="fw-semibold">{type.libelle}</div>
+                        <div className="small text-muted">Quota annuel: {type.quota_annuel}</div>
                       </div>
-                    </td>
-                  </tr>
+                      <Badge bg="secondary">{type.code}</Badge>
+                    </div>
+                    <div className="mb-3">
+                      <Badge bg={type.demi_journee_autorisee ? 'success' : 'secondary'}>
+                        {type.demi_journee_autorisee ? 'Demi-journée autorisée' : 'Demi-journée non autorisée'}
+                      </Badge>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <Button type="button" size="sm" variant="outline-primary" className="flex-fill" onClick={() => openEditTypeModal(type)}>
+                        Modifier
+                      </Button>
+                      <Button type="button" size="sm" variant="outline-danger" className="flex-fill" onClick={() => handleDeleteCongeType(type.id)}>
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-              </Table>
-            </div>
+              </div>
+
+              <div className="settings-table-wrap d-none d-md-block">
+                <Table responsive hover className="mb-0 settings-table">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Libellé</th>
+                      <th>Quota annuel</th>
+                      <th>Demi-journée</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {congeTypes.map((type) => (
+                      <tr key={type.id}>
+                        <td><Badge bg="secondary">{type.code}</Badge></td>
+                        <td>{type.libelle}</td>
+                        <td>{type.quota_annuel}</td>
+                        <td>{type.demi_journee_autorisee ? 'Oui' : 'Non'}</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Button type="button" size="sm" variant="outline-primary" onClick={() => openEditTypeModal(type)}>
+                              Modifier
+                            </Button>
+                            <Button type="button" size="sm" variant="outline-danger" onClick={() => handleDeleteCongeType(type.id)}>
+                              Supprimer
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>
@@ -667,7 +710,7 @@ const PolitiqueCongesPage = () => {
                 <Card className="mb-3 border-0 bg-light">
                   <Card.Body className="py-3">
                     <Row className="g-2 align-items-center">
-                      <Col md={5}>
+                      <Col xs={12} md={5}>
                         <Form.Control
                           type="text"
                           value={serviceSearch}
@@ -678,13 +721,13 @@ const PolitiqueCongesPage = () => {
                           placeholder="Rechercher un service"
                         />
                       </Col>
-                      <Col md={3}>
+                      <Col xs={12} sm={6} md={3}>
                         <div className="small text-muted">
                           {filteredServiceEntries.length} service(s) affichable(s) sur {serviceEntries.length}
                         </div>
                       </Col>
-                      <Col md={4}>
-                        <div className="d-flex gap-2 justify-content-md-end">
+                      <Col xs={12} sm={6} md={4}>
+                        <div className="d-flex gap-2 flex-wrap justify-content-md-end">
                           <Button
                             type="button"
                             size="sm"
@@ -727,7 +770,7 @@ const PolitiqueCongesPage = () => {
                       <Badge bg="light" text="dark">{servicePolicy.approval_workflow === 'admin_only' ? 'Admin uniquement' : servicePolicy.approval_workflow === 'manager_only' ? 'Manager uniquement' : 'Manager puis Admin'}</Badge>
                       <Badge bg="light" text="dark">Préavis: {servicePolicy.minimum_notice_days ?? 0}j</Badge>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-2 w-100 w-sm-auto">
                       <Button type="button" size="sm" variant="outline-secondary" onClick={() => toggleServiceExpanded(serviceName)}>
                         {expandedServices[serviceName] ? 'Replier' : 'Déplier'}
                       </Button>
@@ -815,13 +858,13 @@ const PolitiqueCongesPage = () => {
                       <Table responsive hover className="mb-0 align-middle settings-table">
                       <thead>
                         <tr>
-                          <th style={{ minWidth: '180px' }}>Service</th>
-                          <th style={{ minWidth: '160px' }}>Chevauchement</th>
-                          <th style={{ minWidth: '180px' }}>Workflow</th>
-                          <th style={{ minWidth: '110px' }}>Préavis</th>
-                          <th style={{ minWidth: '120px' }}>Max consécutif</th>
-                          <th style={{ minWidth: '150px' }}>Max simultanées</th>
-                          <th style={{ minWidth: '110px' }}>Actions</th>
+                          <th style={{ minWidth: 'clamp(7rem, 22vw, 11rem)' }}>Service</th>
+                          <th style={{ minWidth: 'clamp(7rem, 20vw, 10rem)' }}>Chevauchement</th>
+                          <th style={{ minWidth: 'clamp(7.5rem, 22vw, 11rem)' }}>Workflow</th>
+                          <th style={{ minWidth: 'clamp(5.5rem, 16vw, 7rem)' }}>Préavis</th>
+                          <th style={{ minWidth: 'clamp(6.5rem, 18vw, 7.5rem)' }}>Max consécutif</th>
+                          <th style={{ minWidth: 'clamp(7rem, 20vw, 9.5rem)' }}>Max simultanées</th>
+                          <th style={{ minWidth: 'clamp(6rem, 16vw, 7rem)' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -911,10 +954,10 @@ const PolitiqueCongesPage = () => {
             </Form.Group>
             )}
 
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 border-top pt-3 mt-4">
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
               <small className="text-muted">Les modifications sont prises en compte après enregistrement.</small>
-              <div className="d-grid d-sm-block">
-                <Button type="submit" disabled={saving}>
+              <div className="d-grid w-100 w-sm-auto">
+                <Button type="submit" disabled={saving} className="w-100">
                   {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </Button>
               </div>
@@ -929,9 +972,6 @@ const PolitiqueCongesPage = () => {
           <h5 className="mb-0">Fuseau horaire de l'entreprise</h5>
         </Card.Header>
         <Card.Body>
-          {tzError && <Alert variant="danger" className="floating-error-alert" dismissible onClose={() => setTzError('')}>{tzError}</Alert>}
-          {tzSuccess && <Alert variant="success" className="floating-success-alert" dismissible onClose={() => setTzSuccess('')}>{tzSuccess}</Alert>}
-
           <p className="text-muted small mb-3">
             Ce fuseau horaire est utilisé pour l'affichage des dates et heures dans les notifications et les exports.
           </p>
@@ -970,7 +1010,7 @@ const PolitiqueCongesPage = () => {
             </Row>
 
             <div className="d-flex justify-content-end mt-3">
-              <Button type="submit" disabled={savingTz}>
+              <Button type="submit" disabled={savingTz} className="w-100 w-sm-auto">
                 {savingTz ? 'Enregistrement...' : 'Enregistrer le fuseau horaire'}
               </Button>
             </div>
