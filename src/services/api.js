@@ -74,7 +74,7 @@ const emitApiNotification = (message, type = 'success', duration = 4000) => {
 
 // Configuration de base d'axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://teamoff-backend-acqc.onrender.com/api',
   timeout: 10000,
 });
 
