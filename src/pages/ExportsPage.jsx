@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table } from 'react-bootstrap';
-import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar } from 'react-icons/fa';
+import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
@@ -10,6 +10,8 @@ import AsyncButton from '../components/AsyncButton';
 
 const ALLOWED_FORMATS_BY_TYPE = {
   conges: ['csv', 'pdf'],
+  absences: ['csv', 'pdf'],
+  arrets_maladie: ['csv', 'pdf'],
   utilisateurs: ['csv'],
   audit: ['csv'],
   usage: ['pdf'],
@@ -44,17 +46,23 @@ const ExportsPage = () => {
 
   const exportOptions = user?.role === 'super_admin'
     ? [
-        { value: 'conges', label: 'Demandes de congé' },
-        { value: 'utilisateurs', label: 'Utilisateurs' },
-        { value: 'audit', label: 'Logs d\'audit' },
-        { value: 'usage', label: 'Rapport d\'usage' }
-      ]
+      { value: 'conges', label: 'Demandes de congé' },
+      { value: 'absences', label: 'Absences' },
+      { value: 'arrets_maladie', label: 'Arrêts maladie' },
+      { value: 'utilisateurs', label: 'Utilisateurs' },
+      { value: 'audit', label: 'Logs d\'audit' },
+      { value: 'usage', label: 'Rapport d\'usage' }
+    ]
     : user?.role === 'manager'
-    ? [
-        { value: 'conges', label: 'Demandes de congé' }
-      ]
-    : [
+      ? [
         { value: 'conges', label: 'Demandes de congé' },
+        { value: 'absences', label: 'Absences' },
+        { value: 'arrets_maladie', label: 'Arrêts maladie' }
+      ]
+      : [
+        { value: 'conges', label: 'Demandes de congé' },
+        { value: 'absences', label: 'Absences' },
+        { value: 'arrets_maladie', label: 'Arrêts maladie' },
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'statistiques', label: 'Statistiques' }
       ];
@@ -190,6 +198,18 @@ const ExportsPage = () => {
           } else if (format === 'pdf') {
             response = await exportsService.exportCongesPDF(queryParams);
           }
+        } else if (type === 'absences') {
+          if (format === 'csv') {
+            response = await exportsService.exportAbsencesCSV(queryParams);
+          } else if (format === 'pdf') {
+            response = await exportsService.exportAbsencesPDF(queryParams);
+          }
+        } else if (type === 'arrets_maladie') {
+          if (format === 'csv') {
+            response = await exportsService.exportArretsMaladieCSV(queryParams);
+          } else if (format === 'pdf') {
+            response = await exportsService.exportArretsMaladiePDF(queryParams);
+          }
         } else if (type === 'utilisateurs') {
           if (format === 'csv') {
             response = await exportsService.exportUtilisateursCSV();
@@ -259,6 +279,7 @@ const ExportsPage = () => {
       try {
         const queryParams = buildQueryParams();
         const response = await exportsService.preview({
+          type: exportParams.type, // 🔥 obligatoire
           ...queryParams,
           limit: 50,
         });
@@ -284,6 +305,8 @@ const ExportsPage = () => {
   const getExportTypeIcon = (type) => {
     const icons = {
       conges: FaCalendarAlt,
+      absences: FaCalendarAlt,
+      arrets_maladie: FaHeartbeat,
       utilisateurs: FaUsers,
       statistiques: FaChartBar,
       audit: FaFileExcel,
@@ -296,6 +319,8 @@ const ExportsPage = () => {
   const getExportTypeLabel = (type) => {
     const labels = {
       conges: 'Demandes de congé',
+      absences: 'Absences',
+      arrets_maladie: 'Arrêts maladie',
       utilisateurs: 'Utilisateurs',
       statistiques: 'Statistiques',
       audit: 'Logs d\'audit',
@@ -614,22 +639,22 @@ const ExportsPage = () => {
 
                       <div className="table-responsive d-none d-md-block scroll-table-preview">
                         <Table striped bordered hover size="sm" className="mb-0">
-                        <thead>
-                          <tr>
-                            {(previewData.columns || []).map((column) => (
-                              <th key={column}>{column}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {previewData.rows.map((row, index) => (
-                            <tr key={`preview-row-${index}`}>
+                          <thead>
+                            <tr>
                               {(previewData.columns || []).map((column) => (
-                                <td key={`${column}-${index}`}>{String(row[column] ?? '')}</td>
+                                <th key={column}>{column}</th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
+                          </thead>
+                          <tbody>
+                            {previewData.rows.map((row, index) => (
+                              <tr key={`preview-row-${index}`}>
+                                {(previewData.columns || []).map((column) => (
+                                  <td key={`${column}-${index}`}>{String(row[column] ?? '')}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
                         </Table>
                       </div>
                     </>
@@ -653,6 +678,8 @@ const ExportsPage = () => {
               <p><strong>PDF</strong> : Format adapté pour l'archivage et le partage</p>
               <hr />
               <p><strong>Demandes de congé</strong> : Liste complète avec statuts, dates, et commentaires</p>
+              <p><strong>Absences</strong> : Toutes les absences hors maladie (absences exceptionnelles, etc.)</p>
+              <p><strong>Arrêts maladie</strong> : Toutes les absences pour maladie avec justificatif</p>
               {user?.role !== 'manager' && (
                 <p><strong>Utilisateurs</strong> : Informations des employés avec rôles et statuts</p>
               )}

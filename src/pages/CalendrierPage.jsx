@@ -3,9 +3,10 @@ import { Container, Row, Col, Card, Button, Badge, Form, Alert, Spinner } from '
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { calendrierService } from '../services/api';
+import { calendrierService, api } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
 import { useAlert } from '../hooks/useAlert';
+import '../styles/calendar.css';
 
 const normalizeLocalDate = (value) => {
   if (!value) return null;
@@ -85,6 +86,7 @@ const CalendrierPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [conges, setConges] = useState([]);
   const [joursFeries, setJoursFeries] = useState([]);
+  const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
@@ -109,6 +111,10 @@ const CalendrierPage = () => {
       // Charger les congés pour le mois
       const congesResponse = await calendrierService.getCongesByMonth(year, month, filters);
       setConges(congesResponse.data);
+
+      // Charger les absences (filtrage côté client)
+      const absencesResponse = await api.get('/absences');
+      setAbsences(absencesResponse.data || []);
 
       // Charger les jours fériés pour le mois
       const feriesResponse = await calendrierService.getJoursFeriesByMonth(year, month);
@@ -172,17 +178,27 @@ const CalendrierPage = () => {
     return days;
   };
 
-  const getCongesForDay = (date) => {
-    return conges.filter(conge => {
-      const targetDate = normalizeLocalDate(date);
+  // Retourne tous les événements (congés + absences) pour un jour donné
+  const getEventsForDay = (date) => {
+    const targetDate = normalizeLocalDate(date);
+    // Congés
+    const dayConges = conges.filter(conge => {
       const startDate = normalizeLocalDate(conge.date_debut);
       const endDate = normalizeLocalDate(conge.date_fin);
-
       if (!targetDate || !startDate || !endDate) return false;
-
-      // Vérifier si la date est dans la période du congé
       return targetDate >= startDate && targetDate <= endDate;
     });
+    // Absences
+    const dayAbsences = absences.filter(abs => {
+      const startDate = normalizeLocalDate(abs.date_debut);
+      const endDate = normalizeLocalDate(abs.date_fin);
+      if (!targetDate || !startDate || !endDate) return false;
+      return targetDate >= startDate && targetDate <= endDate;
+    });
+    // On tague chaque événement pour l’affichage
+    const mappedConges = dayConges.map(c => ({ ...c, _eventType: 'conge' }));
+    const mappedAbsences = dayAbsences.map(a => ({ ...a, _eventType: 'absence' }));
+    return [...mappedConges, ...mappedAbsences];
   };
 
   const isJourFerie = (date) => {
@@ -279,7 +295,7 @@ const CalendrierPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="page-loading">
+      <Container fluid="sm" className="page-loading py-3">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement du calendrier...</p>
@@ -291,44 +307,11 @@ const CalendrierPage = () => {
   return (
     <Container fluid="sm">
       <div className="page-header">
-        <h1 className="h3 mb-0">Calendrier des congés</h1>
-        <div className="d-flex gap-2">
-          <Button
-            variant="outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FaFilter className="me-1" />
-            Filtres
-          </Button>
-          <Button as={Link} to="/conges/nouveau" variant="primary">
-            <FaPlus className="me-1" />
-            Nouveau congé
-          </Button>
-        </div>
+        <h1 className="h4 mb-1">Calendrier des absences et congés</h1>
+        <p className="text-muted small mb-0">
+          Visualisez toutes les absences et congés de l'équipe sur une seule vue calendrier.
+        </p>
       </div>
-
-      <InfoCardInfo title="Lisez le calendrier des congés">
-        <p>Ce calendrier affiche tous les congés validés et les jours fériés. Les couleurs vous aident à identifier rapidement les périodes:</p>
-        <ul className="mb-0">
-          <li><Badge bg="warning">Jaune</Badge> = En attente manager</li>
-          <li><Badge bg="info">Bleu</Badge> = Validé manager</li>
-          <li><Badge bg="success">Vert</Badge> = Validé final</li>
-          <li><Badge bg="danger">Rouge</Badge> = Refusé</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Lecture efficace du planning">
-        Activez les filtres pour isoler un statut ou un utilisateur, puis naviguez mois par mois pour préparer les périodes sensibles.
-      </TipCard>
-
-      <InfoCardInfo title="Poser un congé depuis le calendrier">
-        <p className="mb-2">Cliquez une première date puis une seconde pour sélectionner votre période.</p>
-        <ul className="mb-0">
-          <li>1er clic: date de début</li>
-          <li>2e clic: date de fin</li>
-          <li>Le bouton crée une demande préremplie</li>
-        </ul>
-      </InfoCardInfo>
 
       {selectionStart && (
         <div className="alert alert-info d-flex justify-content-between align-items-center" role="status">
@@ -413,67 +396,88 @@ const CalendrierPage = () => {
           </Button>
         </Card.Header>
 
-        <Card.Body className="p-0">
+        <Card.Body className="p-0" style={{ maxWidth: '100%', overflowX: 'auto' }}>
           {/* En-têtes des jours */}
-          <div className="calendar-grid">
-            {weekDays.map(day => (
-              <div key={day} className="calendar-header">
-                {day}
-              </div>
-            ))}
+          <div className="calendar-grid-wrapper">
+            <div className="calendar-grid">
+              {weekDays.map(day => (
+                <div key={day} className="calendar-header">
+                  {day}
+                </div>
+              ))}
 
-            {/* Jours du calendrier */}
-            {days.map((dayInfo, index) => {
-              const dayConges = getCongesForDay(dayInfo.date);
-              const jourFerie = getJourFerieForDay(dayInfo.date);
-              const isToday = normalizeLocalDate(dayInfo.date)?.getTime() === normalizeLocalDate(new Date())?.getTime();
-              const isSelected = isDateInSelection(dayInfo.date);
-              const isSelectionLimit = isSelectionEdge(dayInfo.date);
-              const weekend = isWeekend(dayInfo.date);
-              const selectable = isDaySelectable(dayInfo.date);
+              {/* Jours du calendrier */}
+              {days.map((dayInfo, index) => {
+                const events = getEventsForDay(dayInfo.date);
+                const jourFerie = getJourFerieForDay(dayInfo.date);
+                const isToday = normalizeLocalDate(dayInfo.date)?.getTime() === normalizeLocalDate(new Date())?.getTime();
+                const isSelected = isDateInSelection(dayInfo.date);
+                const isSelectionLimit = isSelectionEdge(dayInfo.date);
+                const weekend = isWeekend(dayInfo.date);
+                const selectable = isDaySelectable(dayInfo.date);
 
-              return (
-                <div
-                  key={index}
-                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
-                  onClick={() => selectable && handleDayClick(dayInfo)}
-                >
+                return (
                   <div
-                    className="calendar-day-number"
-                    data-weekday={normalizeLocalDate(dayInfo.date)?.toLocaleDateString('fr-FR', { weekday: 'short' }) || ''}
+                    key={index}
+                    className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
+                    onClick={() => selectable && handleDayClick(dayInfo)}
                   >
-                    {dayInfo.dayNumber}
-                  </div>
-
-                  {/* Jour férié */}
-                  {jourFerie && (
-                    <div className="calendar-ferie">
-                      <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
+                    <div
+                      className="calendar-day-number"
+                      data-weekday={normalizeLocalDate(dayInfo.date)?.toLocaleDateString('fr-FR', { weekday: 'short' }) || ''}
+                    >
+                      {dayInfo.dayNumber}
                     </div>
-                  )}
 
-                  {/* Congés */}
-                  <div className="calendar-events">
-                    {dayConges.slice(0, 3).map((conge, idx) => (
-                      <div
-                        key={idx}
-                        className={`calendar-event bg-${getStatusColor(conge.statut)}`}
-                        title={`${getCongeFirstName(conge)} - ${getCongeTypeLabel(conge)}`}
-                      >
-                        <small className="text-white">
-                          {`${getCongeFirstName(conge)} - ${getCongeTypeLabel(conge)}`}
-                        </small>
-                      </div>
-                    ))}
-                    {dayConges.length > 3 && (
-                      <div className="calendar-event-more">
-                        <small>+{dayConges.length - 3} autres</small>
+                    {/* Jour férié */}
+                    {jourFerie && (
+                      <div className="calendar-ferie">
+                        <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
                       </div>
                     )}
+
+                    {/* Événements (congés + absences) */}
+                    <div className="calendar-events">
+                      {events.slice(0, 3).map((event, idx) => {
+                        if (event._eventType === 'conge') {
+                          return (
+                            <div
+                              key={idx}
+                              className={`calendar-event bg-${getStatusColor(event.statut)}`}
+                              title={`${getCongeFirstName(event)} - ${getCongeTypeLabel(event)}`}
+                            >
+                              <small className="text-white">
+                                {`${getCongeFirstName(event)} - ${getCongeTypeLabel(event)}`}
+                              </small>
+                            </div>
+                          );
+                        } else if (event._eventType === 'absence') {
+                          // Couleur : maladie = vert, exceptionnelle = bleu
+                          const absColor = event.type_absence === 'maladie' ? 'success' : 'primary';
+                          return (
+                            <div
+                              key={idx}
+                              className={`calendar-event bg-${absColor}`}
+                              title={`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''} (${event.type_absence})${event.commentaire ? ' : ' + event.commentaire : ''}`}
+                            >
+                              <small className="text-white">
+                                {`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''}`}
+                              </small>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                      {events.length > 3 && (
+                        <div className="calendar-event-more">
+                          <small>+{events.length - 3} autres</small>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </Card.Body>
       </Card>
@@ -514,195 +518,6 @@ const CalendrierPage = () => {
           </Row>
         </Card.Body>
       </Card>
-
-      <style>{`
-        .calendar-grid {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 1px;
-          background-color: #d0d7de;
-          border: 1px solid #d0d7de;
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .calendar-header {
-          background: linear-gradient(180deg, #f8f9fa 0%, #eef2f6 100%);
-          padding: 12px 10px;
-          text-align: center;
-          font-weight: bold;
-          color: #495057;
-          font-size: 0.9rem;
-        }
-
-        .calendar-day {
-          background-color: white;
-          min-height: 132px;
-          padding: 8px;
-          position: relative;
-          transition: background-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .calendar-day-clickable:hover {
-          background-color: #f4f9ff;
-        }
-
-        .calendar-day-clickable {
-          cursor: pointer;
-        }
-
-        .calendar-day-other-month {
-          background-color: #f8f9fa;
-          color: #6c757d;
-        }
-
-        .calendar-day-today {
-          background-color: #eef7ff;
-        }
-
-        .calendar-day-ferie {
-          background-image: linear-gradient(180deg, #fff8e1 0%, #ffffff 42%);
-        }
-
-        .calendar-day-weekend {
-          background-color: #fbfbfc;
-        }
-
-        .calendar-day-selected {
-          background-color: #e7f1ff;
-          box-shadow: inset 0 0 0 1px #b6d4fe;
-        }
-
-        .calendar-day-selection-edge {
-          box-shadow: inset 0 0 0 2px #0d6efd;
-        }
-
-        .calendar-day-number {
-          font-size: 14px;
-          font-weight: bold;
-          margin-bottom: 6px;
-          color: #1f2937;
-        }
-
-        .calendar-ferie {
-          margin-bottom: 6px;
-          padding: 3px 6px;
-          border-radius: 999px;
-          background-color: #fff3cd;
-          display: inline-flex;
-          max-width: 100%;
-        }
-
-        .calendar-events {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .calendar-event {
-          padding: 4px 6px;
-          border-radius: 8px;
-          font-size: 11px;
-          line-height: 1.15;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.18);
-        }
-
-        .calendar-event-more {
-          padding: 3px 6px;
-          background-color: #6c757d;
-          border-radius: 8px;
-          font-size: 10px;
-          color: white;
-          text-align: center;
-        }
-
-        .legend-color {
-          width: 20px;
-          height: 20px;
-          border-radius: 3px;
-        }
-
-        .legend-color-holiday {
-          background: linear-gradient(180deg, #fff3cd 0%, #ffe69c 100%);
-          border: 1px solid #f0ad4e;
-        }
-
-        @media (max-width: 991.98px) {
-          .calendar-day {
-            min-height: 116px;
-            padding: 6px;
-          }
-
-          .calendar-event {
-            font-size: 10px;
-            padding: 3px 5px;
-          }
-
-          .calendar-ferie {
-            font-size: 10px;
-          }
-        }
-
-        @media (max-width: 767.98px) {
-          .calendar-grid {
-            display: block;
-            border: none;
-            background: transparent;
-          }
-
-          .calendar-header {
-            display: none;
-          }
-
-          .calendar-day {
-            min-height: auto;
-            margin-bottom: 10px;
-            border: 1px solid #d0d7de;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-          }
-
-          .calendar-day-other-month {
-            opacity: 0.88;
-          }
-
-          .calendar-day-number::after {
-            content: ' · ' attr(data-weekday);
-            font-weight: 400;
-            color: #6b7280;
-          }
-
-          .calendar-events {
-            gap: 6px;
-          }
-
-          .calendar-event,
-          .calendar-event-more {
-            white-space: normal;
-          }
-        }
-
-        .timeline-item {
-          position: relative;
-          padding-left: 30px;
-        }
-
-        .timeline-marker {
-          position: absolute;
-          left: 0;
-          top: 5px;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .timeline-content {
-          padding-bottom: 10px;
-        }
-      `}</style>
     </Container>
   );
 };

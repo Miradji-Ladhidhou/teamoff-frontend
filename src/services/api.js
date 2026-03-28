@@ -245,6 +245,22 @@ export const exportsService = {
     params,
     responseType: 'blob'
   }),
+  exportAbsencesCSV: (params = {}) => api.get('/exports/absences/csv', {
+    params,
+    responseType: 'blob'
+  }),
+  exportAbsencesPDF: (params = {}) => api.get('/exports/absences/pdf', {
+    params,
+    responseType: 'blob'
+  }),
+  exportArretsMaladieCSV: (params = {}) => api.get('/exports/arrets-maladie/csv', {
+    params,
+    responseType: 'blob'
+  }),
+  exportArretsMaladiePDF: (params = {}) => api.get('/exports/arrets-maladie/pdf', {
+    params,
+    responseType: 'blob'
+  }),
   exportUtilisateursCSV: () => api.get('/exports/utilisateurs/csv', {
     responseType: 'blob'
   }),
@@ -281,3 +297,11 @@ export const settingsService = {
   setMaintenance: (enabled, maintenanceMessage) => api.post('/settings/actions/maintenance', { enabled, maintenanceMessage }),
   sendTestEmail: (to) => api.post('/settings/actions/test-email', { to }),
 };
+
+export const absencesService = {
+  getAll: (params = {}) => api.get('/absences', { params }),
+  // Vous pouvez ajouter d'autres méthodes ici si besoin (create, update, etc.)
+};
+
+// Exporter l'instance axios personnalisée pour les imports nommés
+export { api };

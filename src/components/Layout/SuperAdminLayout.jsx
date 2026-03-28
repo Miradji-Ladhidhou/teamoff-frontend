@@ -27,6 +27,7 @@ const SuperAdminLayout = () => {
     business: FaBuilding,
     users: FaUsers,
     leave: FaCalendarCheck,
+    calendar: FaCalendarAlt,
     chart: FaChartLine,
     download: FaDownload,
     holiday: FaCalendarTimes,

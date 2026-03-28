@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
 import { FaEnvelope, FaHeadset, FaLifeRing } from 'react-icons/fa';
 import { InfoCardInfo } from '../components/InfoCard';

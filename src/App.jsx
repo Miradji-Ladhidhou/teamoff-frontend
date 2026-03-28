@@ -36,6 +36,8 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const MyProfilePage = lazy(() => import('./pages/MyProfilePage'));
+const AbsencesEquipePage = lazy(() => import('./pages/Absences/AbsencesEquipePage'));
+import AbsencesPage from './pages/Absences';
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
@@ -261,6 +263,8 @@ function App() {
             <Route path="/conges/nouveau" element={<NouveauCongePage />} />
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
+            <Route path="/absences" element={<AbsencesPage />} />
+            <Route path="/absences/equipe" element={<AbsencesEquipePage />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />

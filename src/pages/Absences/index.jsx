@@ -1,0 +1,62 @@
+import React from 'react';
+import AbsenceForm from './AbsenceForm';
+import CalendrierPage from '../CalendrierPage';
+import { useAuth } from '../../contexts/AuthContext';
+import { Container, Card, Row, Col } from 'react-bootstrap';
+import { FaCalendarAlt } from 'react-icons/fa';
+import { InfoCardInfo } from '../../components/InfoCard';
+
+const AbsencesPage = () => {
+  const [refresh, setRefresh] = React.useState(false);
+  const handleSuccess = () => setRefresh(r => !r);
+  const { user } = useAuth();
+
+  const canEdit = user && ['manager', 'admin_entreprise', 'super_admin'].includes(user.role);
+  const canDeclareAbsence = user && (user.role === 'employe' || user.role === 'manager');
+
+  return (
+    <Container fluid="sm">
+      <div className="page-header">
+        <div>
+          <h1 className="h4 mb-1">
+            Gestion des absences
+          </h1>
+          <p className="text-muted small mb-0">
+            Déclarez vos absences (maladie ou exceptionnelle) et consultez le planning de l'équipe.
+          </p>
+        </div>
+      </div>
+
+      <Card className="mb-4">
+        <Card.Body>
+          <h2 className="h5 mb-2">Déclarer une absence</h2>
+          <ul className="mb-2">
+            <li>Un justificatif est obligatoire pour un arrêt maladie.</li>
+            <li><b>Les absences et arrêts maladie sont enregistrés immédiatement, sans validation ni refus.</b></li>
+            <li>Vous pouvez consulter l'historique et le planning ci-dessous.</li>
+          </ul>
+          <div className="alert alert-info mt-2 absence-calendar-alert">
+            <b>Note :</b> Les absences ne sont pas soumises à un workflow de validation. Elles sont ajoutées au planning dès la déclaration.<br/>
+            Pour toute correction, contactez votre manager ou l'administration.
+          </div>
+        </Card.Body>
+      </Card>
+
+      {canDeclareAbsence && (
+        <Card className="mb-4">
+          <Card.Body>
+            <AbsenceForm onSuccess={handleSuccess} />
+          </Card.Body>
+        </Card>
+      )}
+
+      <Card>
+        <Card.Body className="p-0">
+          <CalendrierPage />
+        </Card.Body>
+      </Card>
+    </Container>
+  );
+};
+
+export default AbsencesPage;
