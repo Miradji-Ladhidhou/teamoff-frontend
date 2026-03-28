@@ -96,33 +96,39 @@ const DashboardRedirect = () => {
   return <DashboardPage />;
 };
 
-const PublicPageLayout = ({ children }) => (
-  <div className="min-vh-100 d-flex flex-column auth-bg-simple">
-    <header className="border-bottom glass-header">
-      <Container className="d-flex align-items-center justify-content-between py-3 gap-3">
-        <Link to="/" className="text-decoration-none text-dark">
-          <div>
-            <div className="fw-bold fs-4 ls-logo">TeamOff</div>
-            <div className="text-muted small">Gestion des conges et validations</div>
-          </div>
-        </Link>
+import { useLocation } from 'react-router-dom';
 
-        <div className="d-flex flex-wrap gap-2">
-          <Button as={Link} to="/contact" variant="outline-dark" size="sm">Contact</Button>
-          <Button as={Link} to="/" variant="dark" size="sm">Connexion</Button>
-        </div>
+const PublicPageLayout = ({ children }) => {
+  const location = useLocation();
+  // On masque l'en-tête public sur la page /help
+  const hideHeader = location.pathname === '/help';
+  return (
+    <div className="min-vh-100 d-flex flex-column auth-bg-simple">
+      {!hideHeader && (
+        <header className="border-bottom glass-header">
+          <Container className="d-flex align-items-center justify-content-between py-3 gap-3">
+            <Link to="/" className="text-decoration-none text-dark">
+              <div>
+                <div className="fw-bold fs-4 ls-logo">TeamOff</div>
+                <div className="text-muted small">Gestion des conges et validations</div>
+              </div>
+            </Link>
+            <div className="d-flex flex-wrap gap-2">
+              <Button as={Link} to="/contact" variant="outline-dark" size="sm">Contact</Button>
+              <Button as={Link} to="/" variant="dark" size="sm">Connexion</Button>
+            </div>
+          </Container>
+        </header>
+      )}
+      <main className="flex-grow-1 py-4 py-md-5">
+        {children}
+      </main>
+      <Container>
+        <AppFooter publicMode />
       </Container>
-    </header>
-
-    <main className="flex-grow-1 py-4 py-md-5">
-      {children}
-    </main>
-
-    <Container>
-      <AppFooter publicMode />
-    </Container>
-  </div>
-);
+    </div>
+  );
+};
 
 const HomeRedirect = () => {
   const { isAuthenticated, loading, user } = useAuth();

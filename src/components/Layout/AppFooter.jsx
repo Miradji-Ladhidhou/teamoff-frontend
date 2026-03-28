@@ -79,10 +79,10 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
         <div className="app-footer__grid">
           <section>
             <p className="app-footer__eyebrow">TeamOff</p>
-            <h2 className="app-footer__title">Une navigation utile jusqu\'au dernier pixel.</h2>
+            <h2 className="app-footer__title">Une navigation utile jusqu'au dernier pixel.</h2>
             <p className="app-footer__text">
               Retrouvez les informations legales, les moyens de contact, les acces rapides et les liens de confiance
-              directement depuis chaque page de l\'application.
+              directement depuis chaque page de l'application.
             </p>
             <div className="d-flex flex-wrap gap-2 mt-3">
               {ctaButtons.map((item) => (
@@ -108,8 +108,9 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
           <section>
             <h3 className="app-footer__section-title">Moyens de contact</h3>
             <ul className="app-footer__list">
-              <li><span className="app-footer__text">Canal support officiel défini par votre organisation</span></li>
-              <li><span className="app-footer__text">Niveaux de support et disponibilité selon vos engagements internes</span></li>
+              <li><span className="app-footer__text"><strong>Email support :</strong> saas.teamoff@gmail.com</span></li>
+              <li><span className="app-footer__text"><strong>Support technique :</strong> 24h/24, 7j/7 (sous réserve de la disponibilité des prestataires)</span></li>
+              <li><span className="app-footer__text"><strong>Référent :</strong> TeamOff SaaS</span></li>
               <li><Link to={isSuperAdmin ? '/superadmin/contact' : '/contact'} className="app-footer__link">Ouvrir la page Contact</Link></li>
             </ul>
           </section>
@@ -127,7 +128,7 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
         </div>
 
         <div className="app-footer__bottom">
-          <div>
+          {/*   <div>
             <h3 className="app-footer__section-title mb-2">Reseaux sociaux</h3>
             <div className="d-flex flex-wrap gap-2">
               {socialLinks.map((item) => {
@@ -147,8 +148,8 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
                 );
               })}
             </div>
-          </div>
-
+          </div> */}
+    
           <div>
             <h3 className="app-footer__section-title mb-2">Gages de confiance</h3>
             <div className="d-flex flex-wrap gap-2">

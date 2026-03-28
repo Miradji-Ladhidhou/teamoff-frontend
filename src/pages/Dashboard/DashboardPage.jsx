@@ -336,9 +336,11 @@ const DashboardPage = () => {
                           <div className="fw-semibold text-truncate small">
                             {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
                           </div>
+                          <br />
                           <div className="ui-text-soft text-xs">
                             {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                           </div>
+                           <br />
                           {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
                             <div className="overlap-dash-annotation overlap">
                               Chevauchement
@@ -349,6 +351,7 @@ const DashboardPage = () => {
                               Aucun chevauchement
                             </div>
                           )}
+                          
                           <div className="text-xxs">
                             {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
                             {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}

@@ -18,7 +18,7 @@ const LoginPage = () => {
   const submitAction = useAsyncAction();
   const alert = useAlert();
 
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -57,6 +57,12 @@ const LoginPage = () => {
   };
 
   const loading = submitAction.isRunning;
+
+  if (isAuthenticated && user) {
+    // Redirige automatiquement si déjà connecté
+    navigate(getDefaultRoute(user.role));
+    return null;
+  }
 
   return (
     <div className="min-vh-100 auth-bg">

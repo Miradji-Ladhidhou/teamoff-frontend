@@ -12,6 +12,7 @@ export const roleNavigation = {
     { path: '/mes-conges', label: 'Mes congés', icon: 'leave', section: 'primary' },
     { path: '/absences', label: 'Absences', icon: 'calendar', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
+    { path: '/help', label: "Besoin d'aide", icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   manager: [
@@ -21,6 +22,7 @@ export const roleNavigation = {
     { path: '/absences', label: 'Absences', icon: 'calendar', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
+    { path: '/help', label: "Besoin d'aide", icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   admin_entreprise: [
@@ -35,6 +37,7 @@ export const roleNavigation = {
     { path: '/parametres-jours-bloques', label: 'Jours bloqués & soldes', icon: 'calendar', section: 'secondary' },
     { path: '/jours-feries', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
+    { path: '/help', label: "Besoin d'aide", icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   super_admin: [
@@ -49,7 +52,8 @@ export const roleNavigation = {
     { path: '/superadmin/holidays', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
     { path: '/superadmin/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' },
     { path: '/superadmin/audit', label: 'Audit', icon: 'audit', section: 'secondary' },
-    { path: '/superadmin/settings', label: 'Paramètres', icon: 'settings', section: 'secondary' }
+    { path: '/superadmin/settings', label: 'Paramètres', icon: 'settings', section: 'secondary' },
+    { path: '/help', label: "Besoin d'aide", icon: 'info', section: 'secondary' }
   ]
 };
 

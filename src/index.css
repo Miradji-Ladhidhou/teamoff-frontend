@@ -750,10 +750,12 @@ code {
   background: #fef3c7;
   color: #92400e;
   border: 1px solid #f59e0b;
+  margin-bottom: 20px;
 }
 
 .overlap-dash-annotation.no-overlap {
   background: #dcfce7;
   color: #166534;
   border: 1px solid #22c55e;
+  margin-bottom: 20px;
 }

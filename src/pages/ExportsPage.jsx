@@ -15,7 +15,7 @@ const ALLOWED_FORMATS_BY_TYPE = {
   utilisateurs: ['csv'],
   audit: ['csv'],
   usage: ['pdf'],
-  statistiques: ['pdf'],
+  statistiques: ['csv'],
 };
 
 const ExportsPage = () => {
@@ -218,7 +218,11 @@ const ExportsPage = () => {
           if (format === 'csv') {
             response = await exportsService.exportAuditCSV(queryParams);
           }
-        } else if (type === 'statistiques' || type === 'usage') {
+        } else if (type === 'statistiques') {
+          if (format === 'csv') {
+            response = await exportsService.exportStatistiquesCSV(queryParams);
+          }
+        } else if (type === 'usage') {
           if (format === 'pdf') {
             response = await exportsService.exportUsagePDF();
           }
@@ -279,7 +283,7 @@ const ExportsPage = () => {
       try {
         const queryParams = buildQueryParams();
         const response = await exportsService.preview({
-          type: exportParams.type, // 🔥 obligatoire
+          type: exportParams.type, 
           ...queryParams,
           limit: 50,
         });
@@ -345,7 +349,7 @@ const ExportsPage = () => {
       <div className="d-flex align-items-center mb-4">
         <div>
           <h1 className="h3 mb-1">Exports de données</h1>
-          <p className="text-muted">Exportez vos données au format CSV ou PDF</p>
+          <p className="text-muted">Exportez vos données au format CSV</p>
         </div>
       </div>
 
@@ -353,7 +357,7 @@ const ExportsPage = () => {
         <p className="mb-2">Suivez ces étapes pour obtenir un fichier propre et exploitable :</p>
         <ol className="mb-0">
           <li>Choisissez le type de données à exporter</li>
-          <li>Sélectionnez le format (CSV pour tableur, PDF pour partage)</li>
+          <li>Exportez vos données au format CSV</li>
           <li>Affinez la période et les filtres, puis lancez l'export</li>
         </ol>
       </InfoCardInfo>
@@ -413,7 +417,7 @@ const ExportsPage = () => {
                         </div>
                       }
                     />
-                    <Form.Check
+                    {/*      <Form.Check
                       type="radio"
                       id="format-pdf"
                       name="format"
@@ -427,7 +431,7 @@ const ExportsPage = () => {
                           PDF
                         </div>
                       }
-                    />
+                    /> */}
                   </div>
                 </Form.Group>
 
@@ -465,21 +469,26 @@ const ExportsPage = () => {
                 </Row>
 
                 {/* Filtres spécifiques */}
-                {exportParams.type === 'conges' && (
+                {(exportParams.type === 'conges' || exportParams.type === 'absences' || exportParams.type === 'arrets_maladie') && (
                   <>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Statut des congés</Form.Label>
-                      <Form.Select
-                        name="statut"
-                        value={exportParams.statut}
-                        onChange={handleParamChange}
-                      >
-                        <option value="all">Tous les statuts</option>
-                        <option value="en_attente">En attente</option>
-                        <option value="approuve">Approuvé</option>
-                        <option value="refuse">Refusé</option>
-                      </Form.Select>
-                    </Form.Group>
+                    {/* Statut uniquement pour congés */}
+                    {exportParams.type === 'conges' && (
+                      <Form.Group className="mb-3">
+                        <Form.Label>Statut des congés</Form.Label>
+                        <Form.Select
+                          name="statut"
+                          value={exportParams.statut}
+                          onChange={handleParamChange}
+                        >
+                          <option value="all">Tous les statuts</option>
+                          <option value="en_attente_manager">En attente manager</option>
+                          <option value="valide_manager">Validé manager</option>
+                          <option value="refuse_manager">Refusé manager</option>
+                          <option value="valide_final">Validé final</option>
+                          <option value="refuse_final">Refusé final</option>
+                        </Form.Select>
+                      </Form.Group>
+                    )}
 
                     {user?.role === 'super_admin' && (
                       <Form.Group className="mb-3">
@@ -675,7 +684,7 @@ const ExportsPage = () => {
             </Card.Header>
             <Card.Body className="small">
               <p><strong>CSV (.csv)</strong> : Format idéal pour analyser les données dans un tableur</p>
-              <p><strong>PDF</strong> : Format adapté pour l'archivage et le partage</p>
+              {/* <p><strong>PDF</strong> : Format adapté pour l'archivage et le partage</p> */}
               <hr />
               <p><strong>Demandes de congé</strong> : Liste complète avec statuts, dates, et commentaires</p>
               <p><strong>Absences</strong> : Toutes les absences hors maladie (absences exceptionnelles, etc.)</p>

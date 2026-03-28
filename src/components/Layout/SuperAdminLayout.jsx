@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
-import { FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers, FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes, FaBell, FaHistory, FaCog, FaEllipsisH } from 'react-icons/fa';
+import { FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers, FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes, FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
 import { getNavigationForRole } from '../../utils/navigation';
