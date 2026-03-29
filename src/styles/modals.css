@@ -1,0 +1,462 @@
+/**
+ * UNIFIED MODAL SYSTEM - Complete Consistency
+ * =====================================================
+ * 
+ * All modals use a single cohesive design system:
+ * - Position: CENTERED on screen (always centered, never on sides)
+ * - Mobile First: Responsive scaling for all screen sizes
+ * - Uniform styling: Same colors, borders, shadows, spacing
+ * - Text sizing: Scaled appropriately per screen size
+ * - Z-Index: 10000+ to ensure visibility
+ * 
+ * Breakpoints:
+ * - Mobile: 0-640px (max-width: 95%, padding: 16px)
+ * - Tablet: 641px-1024px (max-width: 80%, padding: 20px)
+ * - Desktop: 1025px+ (max-width: 600px, padding: 24px)
+ */
+
+/* ==================== MODAL CONTAINER (Bootstrap .modal) ==================== */
+
+.modal {
+  --bs-modal-width: 600px;
+}
+
+.modal-dialog {
+  width: min(var(--bs-modal-width), calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+  margin: 0.75rem auto;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: calc(100dvh - 1.5rem);
+  overflow: hidden;
+}
+
+/* Mobile: max 640px */
+@media (max-width: 640px) {
+  .modal {
+    --bs-modal-width: calc(100vw - 32px);
+    --bs-modal-margin: 0 16px;
+  }
+
+  .modal-dialog {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    margin: 10px auto;
+  }
+
+  .modal-content {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+  }
+}
+
+/* Tablet: 641px - 1024px */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-dialog {
+    max-width: min(var(--bs-modal-width), calc(100vw - 48px));
+    width: min(var(--bs-modal-width), calc(100vw - 48px));
+  }
+
+  .modal-content {
+    border-radius: 16px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Desktop: 1025px+ */
+@media (min-width: 1025px) {
+  .modal-dialog {
+    max-width: 600px;
+  }
+
+  .modal-content {
+    border-radius: 16px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.modal-dialog {
+  display: block;
+}
+
+.modal-content {
+  background: white;
+  overflow: hidden;
+}
+
+/* ==================== MODAL BACKDROP (Overlay) ==================== */
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+}
+
+/* ==================== MODAL HEADER ==================== */
+
+.modal-header {
+  border-bottom: 1px solid #e9ecef;
+  padding: 20px 24px;
+  gap: 12px;
+}
+
+/* Mobile header */
+@media (max-width: 640px) {
+  .modal-header {
+    padding: 16px;
+    gap: 8px;
+  }
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3d87d1;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Mobile title */
+@media (max-width: 640px) {
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+/* Tablet title */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-title {
+    font-size: 17px;
+  }
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.btn-close:focus {
+  opacity: 1;
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* ==================== MODAL BODY ==================== */
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 200px);
+  max-height: calc(100dvh - 200px);
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+  overscroll-behavior: contain;
+}
+
+/* Mobile body */
+@media (max-width: 640px) {
+  .modal-body {
+    padding: 16px;
+    max-height: calc(100vh - 150px);
+    max-height: calc(100dvh - 150px);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+/* Tablet body */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-body {
+    padding: 20px;
+    max-height: calc(100vh - 180px);
+    max-height: calc(100dvh - 180px);
+    font-size: 13.5px;
+  }
+}
+
+.modal-body p {
+  margin-bottom: 12px;
+}
+
+.modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Form elements in modal */
+.modal-body .form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+/* Mobile form labels */
+@media (max-width: 640px) {
+  .modal-body .form-label {
+    font-size: 12px;
+  }
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* Mobile form inputs */
+@media (max-width: 640px) {
+  .modal-body .form-control,
+  .modal-body .form-select {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ==================== MODAL FOOTER ==================== */
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 16px 24px;
+  gap: 12px;
+  background: #f8f9fa;
+}
+
+/* Mobile footer */
+@media (max-width: 640px) {
+  .modal-footer {
+    padding: 12px 16px;
+    gap: 8px;
+    flex-direction: column-reverse;
+  }
+}
+
+/* Tablet footer */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-footer {
+    padding: 14px 20px;
+    gap: 10px;
+  }
+}
+
+.modal-footer .btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  white-space: normal;
+  word-break: break-word;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile buttons - full width */
+@media (max-width: 640px) {
+  .modal-footer .btn {
+    width: 100%;
+    font-size: 12px;
+    padding: 10px 12px;
+    min-height: 38px;
+  }
+}
+
+/* Tablet buttons */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-footer .btn {
+    font-size: 12px;
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+}
+
+.modal-footer .btn-primary {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+  background: #0b5ed7;
+  border-color: #0a58ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.modal-footer .btn-secondary {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #212529;
+}
+
+.modal-footer .btn-secondary:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  transform: translateY(-1px);
+}
+
+.modal-footer .btn-danger {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.modal-footer .btn-danger:hover:not(:disabled) {
+  background: #bb2d3b;
+  border-color: #b02a37;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.modal-footer .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-footer .btn:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.modal-title,
+.modal-body,
+.modal-body p,
+.modal-body .alert,
+.modal-body .form-text {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ==================== MODAL ANIMATIONS ==================== */
+
+.modal.fade {
+  transition: opacity 0.3s ease-out;
+}
+
+.modal.show {
+  animation: modalFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==================== MODAL SIZES ==================== */
+
+/* Large modal - max 700px on desktop */
+.modal-lg {
+  --bs-modal-width: 700px;
+}
+
+@media (max-width: 640px) {
+  .modal-lg .modal-dialog {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-lg .modal-dialog {
+    max-width: calc(100vw - 64px);
+  }
+}
+
+/* Standard modal - 600px on desktop (default) */
+.modal-dialog {
+  --bs-modal-width: 600px;
+}
+
+/* Small modal - max 500px on desktop */
+.modal-sm {
+  --bs-modal-width: 500px;
+}
+
+@media (max-width: 640px) {
+  .modal-sm .modal-dialog {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+.modal-dialog:focus {
+  outline: none;
+}
+
+.modal-content:focus {
+  outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  .modal-content {
+    border: 2px solid #212529;
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: #212529;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .modal.fade,
+  .modal-footer .btn,
+  .btn-close {
+    transition: none;
+    animation: none;
+  }
+
+  .modal-footer .btn:hover {
+    transform: none;
+  }
+}
+
+

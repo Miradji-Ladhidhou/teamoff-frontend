@@ -1,10 +1,9 @@
 import React from 'react';
-import { Alert } from 'react-bootstrap';
 import { FaInfoCircle, FaLightbulb, FaCheckCircle } from 'react-icons/fa';
 
 export const InfoCard = ({ variant = 'info', icon: Icon = FaInfoCircle, title, children }) => {
   return (
-    <Alert variant={variant} className="mb-4 d-flex gap-3">
+    <div className={`alert alert-${variant} mb-4 d-flex gap-3`} role="note">
       <div className="flex-shrink-0 mt-1">
         <Icon size={24} />
       </div>
@@ -12,7 +11,7 @@ export const InfoCard = ({ variant = 'info', icon: Icon = FaInfoCircle, title, c
         {title && <h6 className="alert-heading">{title}</h6>}
         {children}
       </div>
-    </Alert>
+    </div>
   );
 };
 

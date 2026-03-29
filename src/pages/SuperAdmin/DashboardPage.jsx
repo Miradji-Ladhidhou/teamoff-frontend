@@ -5,6 +5,22 @@ import { FaUsers, FaBuilding, FaCalendarCheck, FaChartLine, FaCog, FaShieldAlt }
 import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
+
+const normalizeStatus = (ok) => (ok ? 'healthy' : 'unhealthy');
+
+const formatUptime = (seconds) => {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total < 0) return '-';
+
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+
+  if (days > 0) return `${days}j ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
 
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
@@ -17,7 +33,7 @@ const SuperAdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [systemHealth, setSystemHealth] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     loadDashboardData();
@@ -26,81 +42,75 @@ const SuperAdminDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setError('');
 
-      // Charger les statistiques globales avec gestion d'erreur
-      const [usersRes, companiesRes, leavesRes, activityRes] = await Promise.all([
-        api.usersService.getAll({ limit: 1 }).catch(() => ({ data: { total: 15 } })),
-        api.entreprisesService.getAll().catch(() => ({ data: Array(5).fill({}).map((_, i) => ({ id: i + 1, nom: `Entreprise ${i + 1}` })) })),
-        api.congesService.getAll({ limit: 1 }).catch(() => ({ data: { total: 45 } })),
-        api.notificationsService.getAll({ limit: 10 }).catch(() => ({ data: [] }))
+      const [usersResult, companiesResult, leavesResult, activityResult, healthResult, metricsResult] = await Promise.allSettled([
+        api.usersService.getAll(),
+        api.entreprisesService.getAll(),
+        api.congesService.getAll(),
+        api.notificationsService.getAll({ limit: 10 }),
+        api.systemService.health(),
+        api.metricsService.getMetrics()
       ]);
 
+      const users = usersResult.status === 'fulfilled' && Array.isArray(usersResult.value.data)
+        ? usersResult.value.data
+        : [];
+      const entreprises = companiesResult.status === 'fulfilled' && Array.isArray(companiesResult.value.data)
+        ? companiesResult.value.data
+        : [];
+      const conges = leavesResult.status === 'fulfilled' && Array.isArray(leavesResult.value.data)
+        ? leavesResult.value.data
+        : [];
+      const pendingLeaves = conges.filter((conge) => String(conge?.statut || '').startsWith('en_attente')).length;
+      const activeCompanies = entreprises.filter((entreprise) => entreprise?.statut === 'active').length;
+
       setStats({
-        totalUsers: usersRes.data?.total || 15,
-        totalCompanies: Array.isArray(companiesRes.data) ? companiesRes.data.length : 5,
-        totalLeaves: leavesRes.data?.total || 45,
-        pendingLeaves: Math.floor((leavesRes.data?.total || 45) * 0.3) // Estimation 30% en attente
+        totalUsers: users.length,
+        totalCompanies: activeCompanies,
+        totalLeaves: conges.length,
+        pendingLeaves
       });
 
-      // Activité récente (données mockées si API échoue)
-      const mockActivity = activityRes.data?.length > 0 ? activityRes.data : [
-        {
-          id: 1,
-          type: 'user_created',
-          message: 'Nouvel utilisateur inscrit',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          type: 'leave_submitted',
-          message: 'Demande de congé soumise',
-          createdAt: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 3,
-          type: 'company_added',
-          message: 'Nouvelle entreprise ajoutée',
-          createdAt: new Date(Date.now() - 7200000).toISOString()
-        }
-      ];
+      const activityItems = activityResult.status === 'fulfilled' && Array.isArray(activityResult.value.data?.items)
+        ? activityResult.value.data.items
+        : [];
+      setRecentActivity(activityItems);
 
-      setRecentActivity(mockActivity);
+      const healthData = healthResult.status === 'fulfilled' ? healthResult.value.data : null;
+      const metricsData = metricsResult.status === 'fulfilled' ? metricsResult.value.data : null;
 
-      // Santé système (toujours mockée pour la démo)
+      const isApiHealthy = healthData?.status === 'ok';
+      const isDbHealthy = healthData?.db === 'connected';
+
       setSystemHealth({
-        database: 'healthy',
-        api: 'healthy',
-        websocket: 'healthy',
-        uptime: '99.9%'
+        database: normalizeStatus(isDbHealthy),
+        api: normalizeStatus(isApiHealthy),
+        websocket: isApiHealthy ? 'healthy' : 'unhealthy',
+        uptime: formatUptime(metricsData?.uptime)
       });
+
+      if (!isApiHealthy || !isDbHealthy) {
+        alert.error('Certaines données système sont indisponibles actuellement.');
+      }
 
     } catch (error) {
       console.error('Erreur chargement dashboard:', error);
-      setError('Erreur de chargement des données');
+      alert.error('Erreur de chargement des données');
 
-      // Données de fallback
       setStats({
-        totalUsers: 15,
-        totalCompanies: 5,
-        totalLeaves: 45,
-        pendingLeaves: 12
+        totalUsers: 0,
+        totalCompanies: 0,
+        totalLeaves: 0,
+        pendingLeaves: 0
       });
 
-      setRecentActivity([
-        {
-          id: 1,
-          type: 'system',
-          message: 'Système initialisé',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      setRecentActivity([]);
 
       setSystemHealth({
-        database: 'healthy',
-        api: 'healthy',
-        websocket: 'healthy',
-        uptime: '99.9%'
+        database: 'unhealthy',
+        api: 'unhealthy',
+        websocket: 'unhealthy',
+        uptime: '-'
       });
     } finally {
       setLoading(false);
@@ -138,25 +148,25 @@ const SuperAdminDashboard = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Dashboard SuperAdmin</h1>
-          <p className="text-muted">Vue d'ensemble de votre plateforme TeamOff</p>
+          <h1 className="h4 mb-1">Dashboard SuperAdmin</h1>
+          <p className="text-muted small mb-0">Vue d'ensemble de votre plateforme TeamOff</p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="page-header-actions">
           <Button as={Link} to="/superadmin/settings" variant="outline-primary" size="sm">
-            <FaCog className="me-2" />
-            Paramètres
+            <FaCog className="me-1" />
+            <span className="d-none d-sm-inline">Paramètres</span>
           </Button>
           <Button as={Link} to="/superadmin/metrics" variant="outline-info" size="sm">
-            <FaChartLine className="me-2" />
-            Rapports
+            <FaChartLine className="me-1" />
+            <span className="d-none d-sm-inline">Rapports</span>
           </Button>
         </div>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
+      
 
       <InfoCardInfo title="Lecture rapide du dashboard super admin">
         <ul className="mb-0">
@@ -171,55 +181,56 @@ const SuperAdminDashboard = () => {
       </TipCard>
 
       {/* Statistiques principales */}
-      <Row className="mb-4">
-        <Col md={3}>
+      <Row className="mb-4 g-3">
+        <Col xs={6} md={3}>
           <StatCard
-            title="Utilisateurs totaux"
+            title="Utilisateurs"
             value={stats.totalUsers}
             icon={FaUsers}
             color="primary"
-            subtitle="Tous rôles confondus"
+            subtitle="Tous rôles"
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
             title="Entreprises"
             value={stats.totalCompanies}
             icon={FaBuilding}
             color="success"
-            subtitle="Entreprises actives"
+            subtitle="Actives"
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
-            title="Demandes de congé"
+            title="Congés"
             value={stats.totalLeaves}
             icon={FaCalendarCheck}
             color="warning"
             subtitle={`${stats.pendingLeaves} en attente`}
           />
         </Col>
-        <Col md={3}>
+        <Col xs={6} md={3}>
           <StatCard
-            title="Santé système"
+            title="Disponibilité"
             value={systemHealth.uptime}
             icon={FaShieldAlt}
             color="info"
-            subtitle="Disponibilité"
+            subtitle="Uptime"
           />
         </Col>
       </Row>
 
       <Row>
         {/* Activité récente */}
-        <Col md={8}>
+        <Col xs={12} md={8}>
           <Card>
             <Card.Header>
-              <h5 className="mb-0">Activité récente</h5>
+              <h5 className="mb-0 card-section-title">Activité récente</h5>
             </Card.Header>
-            <Card.Body>
+            <Card.Body className="p-0">
               {recentActivity.length > 0 ? (
-                <Table hover>
+                <div className="table-responsive">
+                <Table hover className="mb-0">
                   <thead>
                     <tr>
                       <th>Type</th>
@@ -245,21 +256,21 @@ const SuperAdminDashboard = () => {
                     ))}
                   </tbody>
                 </Table>
+                </div>
               ) : (
-                <Alert variant="info">
-                  <Alert.Heading>Aucune activité récente</Alert.Heading>
-                  <p>Les activités système apparaîtront ici.</p>
-                </Alert>
+                <div className="alert alert-info m-3" role="status">
+                  <p className="mb-0">Aucune activité récente. Les activités système apparaîtront ici.</p>
+                </div>
               )}
             </Card.Body>
           </Card>
         </Col>
 
         {/* Santé système */}
-        <Col md={4}>
+        <Col xs={12} md={4} className="mt-4 mt-md-0">
           <Card>
             <Card.Header>
-              <h5 className="mb-0">État du système</h5>
+              <h5 className="mb-0 card-section-title">État du système</h5>
             </Card.Header>
             <Card.Body>
               <div className="mb-3">

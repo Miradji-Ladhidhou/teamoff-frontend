@@ -4,12 +4,16 @@ import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useAlert, useConfirmation } from '../hooks/useAlert';
+import { useAsyncAction } from '../hooks/useAsyncAction';
+import AsyncButton from '../components/AsyncButton';
 
 const JoursFeriesPage = () => {
+  const { confirm } = useConfirmation();
   const { user } = useAuth();
   const [joursFeries, setJoursFeries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingJourFerie, setEditingJourFerie] = useState(null);
@@ -28,6 +32,13 @@ const JoursFeriesPage = () => {
     recurrent: false,
     est_travail: false,
   });
+  const saveAction = useAsyncAction();
+  const importNationalAction = useAsyncAction();
+  const createTemplateAction = useAsyncAction();
+  const importTemplateAction = useAsyncAction();
+  const exportTemplateAction = useAsyncAction();
+  const applyTemplateAction = useAsyncAction();
+  const deleteAction = useAsyncAction();
 
   useEffect(() => {
     if (user?.role === 'super_admin') {
@@ -47,6 +58,12 @@ const JoursFeriesPage = () => {
     loadTemplates();
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadEntreprises = async () => {
     try {
       setLoading(true);
@@ -62,7 +79,7 @@ const JoursFeriesPage = () => {
       }
     } catch (err) {
       console.error('Erreur chargement entreprises:', err);
-      setError('Erreur lors du chargement des entreprises');
+      alert.error('Erreur lors du chargement des entreprises');
       setLoading(false);
     }
   };
@@ -77,7 +94,7 @@ const JoursFeriesPage = () => {
       }
     } catch (err) {
       console.error('Erreur chargement modèles:', err);
-      setError('Erreur lors du chargement des modèles de jours fériés');
+      alert.error('Erreur lors du chargement des modèles de jours fériés');
     }
   };
 
@@ -88,7 +105,7 @@ const JoursFeriesPage = () => {
       setJoursFeries(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Erreur chargement jours fériés:', err);
-      setError('Erreur lors du chargement des jours fériés');
+      alert.error('Erreur lors du chargement des jours fériés');
     } finally {
       setLoading(false);
     }
@@ -96,29 +113,30 @@ const JoursFeriesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      setError('');
-      setSuccess('');
+    await saveAction.run(async () => {
+      try {
+        setSuccess('');
 
-      const payload = {
-        ...formData,
-        entreprise_id: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
-      };
+        const payload = {
+          ...formData,
+          entreprise_id: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
+        };
 
-      if (editingJourFerie) {
-        await joursFeriesService.update(editingJourFerie.id, payload);
-      } else {
-        await joursFeriesService.create(payload);
+        if (editingJourFerie) {
+          await joursFeriesService.update(editingJourFerie.id, payload);
+        } else {
+          await joursFeriesService.create(payload);
+        }
+        setShowModal(false);
+        setEditingJourFerie(null);
+        setFormData({ date: '', libelle: '', recurrent: false, est_travail: false });
+        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+        setSuccess('Jour férié enregistré avec succès.');
+      } catch (err) {
+        console.error('Erreur sauvegarde jour férié:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
       }
-      setShowModal(false);
-      setEditingJourFerie(null);
-      setFormData({ date: '', libelle: '', recurrent: false, est_travail: false });
-      await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      setSuccess('Jour férié enregistré avec succès.');
-    } catch (err) {
-      console.error('Erreur sauvegarde jour férié:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde du jour férié');
-    }
+    });
   };
 
   const handleEdit = (jourFerie) => {
@@ -133,16 +151,25 @@ const JoursFeriesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce jour férié ?')) return;
-
-    try {
-      await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-      setSuccess('Jour férié supprimé.');
-    } catch (err) {
-      console.error('Erreur suppression jour férié:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
-    }
+    confirm({
+      title: 'Supprimer ce jour férié ?',
+      description: 'Cette action est irréversible et affectera les calculs de congés des utilisateurs.',
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await deleteAction.run(async () => {
+          try {
+            await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+            await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+            alert.success('Jour férié supprimé.');
+          } catch (err) {
+            console.error('Erreur suppression jour férié:', err);
+            alert.error(err.response?.data?.message || 'Erreur lors de la suppression du jour férié');
+          }
+        });
+      }
+    });
   };
 
   const handleNew = () => {
@@ -152,124 +179,146 @@ const JoursFeriesPage = () => {
   };
 
   const handleImportNational = async () => {
-    try {
-      setError('');
-      setSuccess('');
+    await importNationalAction.run(async () => {
+      try {
+        setSuccess('');
 
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
+        if (importYear < 2000 || importYear > 2100) {
+          alert.error('Veuillez saisir une année valide entre 2000 et 2100.');
+          return;
+        }
 
-      await loadJoursFeries(params);
-      setSuccess(response.data?.message || 'Import terminé.');
-    } catch (err) {
-      console.error('Erreur import jours fériés:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
-    }
+        if (!/^[A-Z]{2}$/.test(importCountry)) {
+          alert.error('Le code pays doit contenir exactement 2 lettres, par exemple FR.');
+          return;
+        }
+
+        if (user?.role === 'super_admin' && !selectedEntrepriseId) {
+          alert.error('Sélectionnez une entreprise avant de lancer l\'import API.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
+
+        await loadJoursFeries(params);
+        setSuccess(response.data?.message || 'Import terminé.');
+      } catch (err) {
+        console.error('Erreur import jours fériés:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
+      }
+    });
   };
 
   const handleCreateTemplateFromCurrent = async () => {
-    try {
-      setError('');
-      setSuccess('');
+    await createTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!templateName.trim()) {
-        setError('Nom du modèle requis.');
-        return;
+        if (!templateName.trim()) {
+          alert.error('Nom du modèle requis.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const payload = {
+          name: templateName.trim(),
+          region: templateRegion.trim() || null,
+          sourceEntrepriseId: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
+        };
+
+        await joursFeriesService.createTemplate(payload, params);
+        await loadTemplates();
+        setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
+      } catch (err) {
+        console.error('Erreur création modèle:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la création du modèle');
       }
-
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const payload = {
-        name: templateName.trim(),
-        region: templateRegion.trim() || null,
-        sourceEntrepriseId: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
-      };
-
-      await joursFeriesService.createTemplate(payload, params);
-      await loadTemplates();
-      setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
-    } catch (err) {
-      console.error('Erreur création modèle:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la création du modèle');
-    }
+    });
   };
 
   const handleExportTemplateCsv = async () => {
-    try {
-      setError('');
-      setSuccess('');
-      if (!selectedTemplateId) {
-        setError('Sélectionnez un modèle à exporter.');
-        return;
-      }
+    await exportTemplateAction.run(async () => {
+      try {
+        setSuccess('');
+        if (!selectedTemplateId) {
+          alert.error('Sélectionnez un modèle à exporter.');
+          return;
+        }
 
-      const response = await joursFeriesService.exportTemplateCSV(selectedTemplateId);
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `modele_jours_feries_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Erreur export modèle CSV:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
-    }
+        const response = await joursFeriesService.exportTemplateCSV(selectedTemplateId);
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `modele_jours_feries_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Erreur export modèle CSV:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
+      }
+    });
   };
 
   const handleImportTemplateCsv = async () => {
-    try {
-      setError('');
-      setSuccess('');
+    await importTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!templateName.trim()) {
-        setError('Nom du modèle requis pour l\'import CSV.');
-        return;
+        if (!templateName.trim()) {
+          alert.error('Nom du modèle requis pour l\'import CSV.');
+          return;
+        }
+        if (!templateCsvContent.trim()) {
+          alert.error('Collez le contenu CSV avant import.');
+          return;
+        }
+
+        await joursFeriesService.importTemplateCSV({
+          name: templateName.trim(),
+          region: templateRegion.trim() || null,
+          csvContent: templateCsvContent,
+        });
+
+        await loadTemplates();
+        setSuccess('Modèle importé depuis CSV avec succès.');
+      } catch (err) {
+        console.error('Erreur import modèle CSV:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
       }
-      if (!templateCsvContent.trim()) {
-        setError('Collez le contenu CSV avant import.');
-        return;
-      }
-
-      await joursFeriesService.importTemplateCSV({
-        name: templateName.trim(),
-        region: templateRegion.trim() || null,
-        csvContent: templateCsvContent,
-      });
-
-      await loadTemplates();
-      setSuccess('Modèle importé depuis CSV avec succès.');
-    } catch (err) {
-      console.error('Erreur import modèle CSV:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
-    }
+    });
   };
 
   const handleApplyTemplate = async () => {
-    try {
-      setError('');
-      setSuccess('');
+    await applyTemplateAction.run(async () => {
+      try {
+        setSuccess('');
 
-      if (!selectedTemplateId) {
-        setError('Sélectionnez un modèle à appliquer.');
-        return;
+        if (!selectedTemplateId) {
+          alert.error('Sélectionnez un modèle à appliquer.');
+          return;
+        }
+
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const response = await joursFeriesService.applyTemplate(
+          selectedTemplateId,
+          { replaceExisting: false },
+          params
+        );
+
+        await loadJoursFeries(params);
+        setSuccess(response.data?.message || 'Modèle appliqué.');
+      } catch (err) {
+        console.error('Erreur application modèle:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
       }
-
-      const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-      const response = await joursFeriesService.applyTemplate(
-        selectedTemplateId,
-        { replaceExisting: false },
-        params
-      );
-
-      await loadJoursFeries(params);
-      setSuccess(response.data?.message || 'Modèle appliqué.');
-    } catch (err) {
-      console.error('Erreur application modèle:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
-    }
+    });
   };
+
+  const importLoading = importNationalAction.isRunning;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -284,7 +333,7 @@ const JoursFeriesPage = () => {
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des jours fériés...</p>
@@ -294,21 +343,23 @@ const JoursFeriesPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Jours fériés</h1>
-          <p className="text-muted">Gestion des jours fériés et jours travaillés</p>
+          <h1 className="h4 mb-1">Jours fériés</h1>
+          <p className="text-muted small mb-0">Gestion des jours fériés et jours travaillés</p>
         </div>
         {canManage && (
-          <Button
-            variant="primary"
-            onClick={handleNew}
-            className="d-flex align-items-center"
-          >
-            <FaPlus className="me-2" />
-            Nouveau jour férié
-          </Button>
+          <div className="page-header-actions">
+            <Button
+              variant="primary"
+              onClick={handleNew}
+              className="d-flex align-items-center justify-content-center"
+            >
+              <FaPlus className="me-2" />
+              Nouveau jour férié
+            </Button>
+          </div>
         )}
       </div>
 
@@ -331,25 +382,24 @@ const JoursFeriesPage = () => {
         </TipCard>
       )}
 
-      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
-      {success && <Alert variant="success" className="mb-4" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
-      {user?.role === 'super_admin' && (
+      {canManage && (
         <Card className="mb-3">
           <Card.Body>
             <Row className="g-3 align-items-end">
-              <Col md={5}>
-                <Form.Label>Entreprise</Form.Label>
-                <Form.Select
-                  value={selectedEntrepriseId}
-                  onChange={(e) => setSelectedEntrepriseId(e.target.value)}
-                >
-                  {entreprises.map((e) => (
-                    <option key={e.id} value={e.id}>{e.nom}</option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col md={2}>
+              {user?.role === 'super_admin' && (
+                <Col xs={12} md={5}>
+                  <Form.Label>Entreprise</Form.Label>
+                  <Form.Select
+                    value={selectedEntrepriseId}
+                    onChange={(e) => setSelectedEntrepriseId(e.target.value)}
+                  >
+                    {entreprises.map((e) => (
+                      <option key={e.id} value={e.id}>{e.nom}</option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              )}
+              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Année</Form.Label>
                 <Form.Control
                   type="number"
@@ -357,7 +407,7 @@ const JoursFeriesPage = () => {
                   onChange={(e) => setImportYear(Number(e.target.value))}
                 />
               </Col>
-              <Col md={2}>
+              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
                 <Form.Label>Pays</Form.Label>
                 <Form.Control
                   type="text"
@@ -366,12 +416,23 @@ const JoursFeriesPage = () => {
                   maxLength={2}
                 />
               </Col>
-              <Col md={3}>
-                <Button variant="outline-primary" onClick={handleImportNational} disabled={!selectedEntrepriseId}>
-                  Import API jours fériés
-                </Button>
+              <Col xs={12} md={user?.role === 'super_admin' ? 3 : 6}>
+                <AsyncButton
+                  variant="outline-primary"
+                  onClick={handleImportNational}
+                  disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
+                  className="w-100"
+                  action={importNationalAction}
+                  loadingText="Import en cours..."
+                >
+                  Importer les jours fériés via API
+                </AsyncButton>
               </Col>
             </Row>
+            <div className="text-muted small mt-3">
+              L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
+              puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
+            </div>
           </Card.Body>
         </Card>
       )}
@@ -383,7 +444,7 @@ const JoursFeriesPage = () => {
           </Card.Header>
           <Card.Body>
             <Row className="g-3 align-items-end">
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Form.Label>Nom du modèle</Form.Label>
                 <Form.Control
                   type="text"
@@ -392,7 +453,7 @@ const JoursFeriesPage = () => {
                   placeholder="Ex: FR - Réunion"
                 />
               </Col>
-              <Col md={3}>
+              <Col xs={12} md={3}>
                 <Form.Label>Région</Form.Label>
                 <Form.Control
                   type="text"
@@ -401,18 +462,30 @@ const JoursFeriesPage = () => {
                   placeholder="Ex: Reunion"
                 />
               </Col>
-              <Col md={5} className="d-flex gap-2">
-                <Button variant="outline-primary" onClick={handleCreateTemplateFromCurrent}>
+              <Col xs={12} md={5} className="d-flex flex-column flex-md-row gap-2">
+                <AsyncButton
+                  variant="outline-primary"
+                  onClick={handleCreateTemplateFromCurrent}
+                  className="w-100"
+                  action={createTemplateAction}
+                  loadingText="Création du modèle..."
+                >
                   Créer depuis l'entreprise
-                </Button>
-                <Button variant="outline-success" onClick={handleImportTemplateCsv}>
+                </AsyncButton>
+                <AsyncButton
+                  variant="outline-success"
+                  onClick={handleImportTemplateCsv}
+                  className="w-100"
+                  action={importTemplateAction}
+                  loadingText="Import du modèle..."
+                >
                   Importer CSV en modèle
-                </Button>
+                </AsyncButton>
               </Col>
             </Row>
 
             <Row className="g-3 align-items-end mt-1">
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Label>Modèles disponibles</Form.Label>
                 <Form.Select
                   value={selectedTemplateId}
@@ -426,13 +499,27 @@ const JoursFeriesPage = () => {
                   ))}
                 </Form.Select>
               </Col>
-              <Col md={6} className="d-flex gap-2">
-                <Button variant="outline-secondary" onClick={handleExportTemplateCsv} disabled={!selectedTemplateId}>
+              <Col xs={12} md={6} className="d-flex flex-column flex-md-row gap-2">
+                <AsyncButton
+                  variant="outline-secondary"
+                  onClick={handleExportTemplateCsv}
+                  disabled={!selectedTemplateId}
+                  className="w-100"
+                  action={exportTemplateAction}
+                  loadingText="Export du modèle..."
+                >
                   Exporter modèle CSV
-                </Button>
-                <Button variant="primary" onClick={handleApplyTemplate} disabled={!selectedTemplateId}>
+                </AsyncButton>
+                <AsyncButton
+                  variant="primary"
+                  onClick={handleApplyTemplate}
+                  disabled={!selectedTemplateId}
+                  className="w-100"
+                  action={applyTemplateAction}
+                  loadingText="Application..."
+                >
                   Appliquer à l'entreprise
-                </Button>
+                </AsyncButton>
               </Col>
             </Row>
 
@@ -458,15 +545,60 @@ const JoursFeriesPage = () => {
               <h5 className="text-muted">Aucun jour férié</h5>
               <p className="text-muted">Aucun jour férié n'est configuré</p>
               {canManage && (
-                <Button variant="primary" onClick={handleNew}>
+                <Button variant="primary" onClick={handleNew} className="w-100 w-sm-auto">
                   <FaPlus className="me-2" />
                   Ajouter le premier jour férié
                 </Button>
               )}
             </div>
           ) : (
-            <div className="table-responsive">
-              <Table hover className="mb-0">
+            <>
+              <div className="d-md-none mobile-card-list px-3 py-2">
+                {joursFeries.map((jourFerie) => (
+                  <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div>
+                        <div className="fw-semibold">{jourFerie.libelle}</div>
+                        <div className="small text-muted">{formatDate(jourFerie.date)}</div>
+                      </div>
+                      <div className="d-flex flex-column align-items-end gap-1">
+                        <Badge bg={jourFerie.est_travail ? 'success' : 'secondary'}>
+                          {jourFerie.est_travail ? 'Travaillé' : 'Férié'}
+                        </Badge>
+                        <Badge bg={jourFerie.recurrent ? 'info' : 'secondary'}>
+                          {jourFerie.recurrent ? 'Récurrent' : 'Ponctuel'}
+                        </Badge>
+                      </div>
+                    </div>
+                    {canManage && (
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="flex-fill justify-content-center"
+                          onClick={() => handleEdit(jourFerie)}
+                        >
+                          <FaEdit className="me-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="flex-fill justify-content-center"
+                          onClick={() => handleDelete(jourFerie.id)}
+                          disabled={deleteAction.isRunning}
+                        >
+                          <FaTrash className="me-1" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="table-responsive d-none d-md-block">
+                <Table hover className="mb-0">
                 <thead className="table-light">
                   <tr>
                     <th>Date</th>
@@ -505,6 +637,7 @@ const JoursFeriesPage = () => {
                               variant="outline-danger"
                               size="sm"
                               onClick={() => handleDelete(jourFerie.id)}
+                              disabled={deleteAction.isRunning}
                             >
                               <FaTrash />
                             </Button>
@@ -514,15 +647,16 @@ const JoursFeriesPage = () => {
                     </tr>
                   ))}
                 </tbody>
-              </Table>
-            </div>
+                </Table>
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>
 
       {/* Modal d'édition/ajout */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
+      <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static" keyboard={!saveAction.isRunning} centered>
+        <Modal.Header closeButton={!saveAction.isRunning}>
           <Modal.Title>
             {editingJourFerie ? 'Modifier le jour férié' : 'Nouveau jour férié'}
           </Modal.Title>
@@ -538,6 +672,7 @@ const JoursFeriesPage = () => {
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                     required
+                    disabled={saveAction.isRunning}
                   />
                 </Form.Group>
               </Col>
@@ -549,6 +684,7 @@ const JoursFeriesPage = () => {
                     label="Jour travaillé"
                     checked={formData.est_travail}
                     onChange={(e) => setFormData(prev => ({ ...prev, est_travail: e.target.checked }))}
+                    disabled={saveAction.isRunning}
                   />
                 </Form.Group>
               </Col>
@@ -559,6 +695,7 @@ const JoursFeriesPage = () => {
                 label="Jour férié récurrent (chaque année)"
                 checked={formData.recurrent}
                 onChange={(e) => setFormData(prev => ({ ...prev, recurrent: e.target.checked }))}
+                disabled={saveAction.isRunning}
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -569,16 +706,23 @@ const JoursFeriesPage = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, libelle: e.target.value }))}
                 placeholder="Ex: Jour de l'An, Noël..."
                 required
+                disabled={saveAction.isRunning}
               />
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Modal.Footer className="d-flex flex-column-reverse flex-sm-row gap-2">
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saveAction.isRunning} className="w-100 w-sm-auto">
               Annuler
             </Button>
-            <Button variant="primary" type="submit">
+            <AsyncButton
+              variant="primary"
+              type="submit"
+              action={saveAction}
+              loadingText={editingJourFerie ? 'Modification...' : 'Création...'}
+              className="w-100 w-sm-auto"
+            >
               {editingJourFerie ? 'Modifier' : 'Créer'}
-            </Button>
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

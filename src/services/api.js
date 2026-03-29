@@ -1,8 +1,80 @@
+// Export Statistiques CSV
+export const exportStatistiquesCSV = (params = {}) => api.get('/exports/statistiques/csv', {
+  params,
+  responseType: 'blob'
+});
 import axios from 'axios';
+import {
+  isNotificationDisabledForCurrentRoute,
+  setNotificationDisabledRoutes,
+  getNotificationDisabledRoutes,
+} from '../utils/notificationRules';
+
+let apiNotificationHandler = null;
+
+export const registerApiNotificationHandler = (handler) => {
+  apiNotificationHandler = typeof handler === 'function' ? handler : null;
+};
+
+export const configureApiNotificationDisabledRoutes = (routes = []) => {
+  setNotificationDisabledRoutes(routes);
+};
+
+export const getApiNotificationDisabledRoutes = () => getNotificationDisabledRoutes();
+
+const MUTATING_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+const MESSAGE_REPLACEMENTS = [
+  [/\bsucces\b/gi, 'succès'],
+  [/\bcree\b/gi, 'créé'],
+  [/\bcreee\b/gi, 'créée'],
+  [/\bsupprime\b/gi, 'supprimé'],
+  [/\bdesactive\b/gi, 'désactivé'],
+  [/\bactive\b/gi, 'activé'],
+  [/\bdonnees\b/gi, 'données'],
+  [/\ba\b jour/gi, 'à jour'],
+  [/\breessayer\b/gi, 'réessayer'],
+  [/\bconges\b/gi, 'congés'],
+];
+
+const normalizeNotificationMessage = (message, type = 'info') => {
+  if (!message || typeof message !== 'string') return message;
+
+  let normalized = message.trim();
+  if (!normalized) return normalized;
+
+  MESSAGE_REPLACEMENTS.forEach(([pattern, replacement]) => {
+    normalized = normalized.replace(pattern, replacement);
+  });
+
+  normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+  if (!/[.!?]$/.test(normalized)) {
+    normalized += type === 'error' ? '.' : '.';
+  }
+
+  return normalized;
+};
+
+const shouldNotify = (config = {}) => {
+  if (isNotificationDisabledForCurrentRoute()) return false;
+
+  const method = (config.method || '').toLowerCase();
+  if (!MUTATING_METHODS.has(method)) return false;
+
+  const url = config.url || '';
+  if (url.includes('/auth/login')) return false;
+  return true;
+};
+
+const emitApiNotification = (message, type = 'success', duration = 4000) => {
+  if (!apiNotificationHandler || !message) return;
+  apiNotificationHandler({ message: normalizeNotificationMessage(message, type), type, duration });
+};
 
 // Configuration de base d'axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5500/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://teamoff-backend-acqc.onrender.com/api',
   timeout: 10000,
 });
 
@@ -22,9 +94,14 @@ api.interceptors.request.use(
 
 // Intercepteur pour gérer les erreurs d'authentification et de maintenance
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url || '';
+    const isLoginRequest = requestUrl.includes('/auth/login');
+
+    if (error.response?.status === 401 && !isLoginRequest) {
       // Token expiré ou invalide
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -42,6 +119,8 @@ api.interceptors.response.use(
       window.location.href = `/maintenance?message=${message}`;
     }
 
+    // Notifications flottantes désactivées : les erreurs sont gérées par les alertes centrales des pages
+
     return Promise.reject(error);
   }
 );
@@ -49,17 +128,28 @@ api.interceptors.response.use(
 // Services API
 export const authService = {
   login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
   register: (data) => api.post('/auth/register', data),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  changePassword: (data) => api.post('/auth/change-password', data),
   getProfile: () => api.get('/me'),
+  updateProfile: (data) => api.put('/me', data),
+};
+
+export const systemService = {
+  health: () => api.get('/health'),
 };
 
 export const congesService = {
   getAll: (params = {}) => api.get('/conges', { params }),
-  create: (data) => api.post('/conges/demande', data),
+  checkOverlap: (data) => api.post('/conges/check-overlap', data),
+  getValidationOverlap: (id) => api.get(`/conges/${id}/validation-overlap`),
+  create: (data) => api.post('/conges/demande', data, { timeout: 30000 }),
   update: (id, data) => api.put(`/conges/${id}`, data),
-  delete: (id) => api.delete(`/conges/${id}`),
-  validate: (id, data) => api.post(`/conges/${id}/validate`, data),
-  reject: (id, data) => api.post(`/conges/${id}/reject`, data),
+  delete: (id, data = {}) => api.delete(`/conges/${id}`, { data }),
+  validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),
+  reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
   getById: (id) => api.get(`/conges/${id}`),
 };
 
@@ -67,6 +157,7 @@ export const usersService = {
   getAll: (params = {}) => api.get('/users', { params }),
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
+  updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
   delete: (id) => api.delete(`/users/${id}`),
   getById: (id) => api.get(`/users/${id}`),
 };
@@ -76,12 +167,26 @@ export const entreprisesService = {
   create: (data) => api.post('/entreprises', data),
   update: (id, data) => api.put(`/entreprises/${id}`, data),
   getById: (id) => api.get(`/entreprises/${id}`),
+  getPolitique: (id) => api.get(`/entreprises/${id}/politique`),
+  updatePolitique: (id, politique) => api.put(`/entreprises/${id}/politique`, { politique_conges: politique }),
+  getParametres: (id) => api.get(`/entreprises/${id}/parametres`),
+  updateParametres: (id, data) => api.put(`/entreprises/${id}/parametres`, { parametres: data }),
+  getServices: (id) => api.get(`/entreprises/${id}/services`),
+  createService: (id, data) => api.post(`/entreprises/${id}/services`, data),
+  updateService: (id, serviceName, data) => api.put(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`, data),
+  deleteService: (id, serviceName) => api.delete(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`),
   delete: (id) => api.delete(`/entreprises/${id}`),
   updateStatus: (id, statut) => api.patch(`/entreprises/${id}/statut`, { statut }),
 };
 
 export const quotasService = {
+  getSolde: (userId, congeTypeId) => api.get(`/quotas/solde/${userId}/${congeTypeId}`),
   getSoldes: (userId, params = {}) => api.get(`/quotas/soldes/${userId}`, { params }),
+  getUserCounters: (userId, params = {}) => api.get(`/quotas/counters/${userId}`, { params }),
+  upsertUserCounter: (userId, data) => api.post(`/quotas/counters/${userId}`, data),
+  deleteUserCounter: (counterId) => api.delete(`/quotas/counters/${counterId}`),
+  monthlyAccrual: (data = {}) => api.post('/quotas/monthly-accrual', data),
+  recalculateProrata: (data = {}) => api.post('/quotas/recalculate-prorata', data),
   getUsage: () => api.get('/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
 };
@@ -94,6 +199,7 @@ export const calendrierService = {
 
 export const joursFeriesService = {
   getAll: (params = {}) => api.get('/jours-feries', { params }),
+  getById: (id, params = {}) => api.get(`/jours-feries/${id}`, { params }),
   create: (data) => api.post('/jours-feries', data),
   update: (id, data) => api.put(`/jours-feries/${id}`, data),
   delete: (id, params = {}) => api.delete(`/jours-feries/${id}`, { params }),
@@ -106,13 +212,22 @@ export const joursFeriesService = {
 };
 
 export const notificationsService = {
-  getAll: (params = {}) => api.get('/notifications', { params }),
+  getAll: (params = {}) => {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const normalizedTimezone = typeof browserTimezone === 'string' ? browserTimezone.trim() : '';
+    const finalParams = normalizedTimezone
+      ? { ...params, timezone: params.timezone || normalizedTimezone }
+      : params;
+
+    return api.get('/notifications', { params: finalParams });
+  },
   markAsRead: (id) => api.put(`/notifications/${id}/lue`),
   markAllAsRead: () => api.put('/notifications/lire-tout'),
 };
 
 export const congeTypesService = {
-  getAll: () => api.get('/conge-types'),
+  getAll: (params = {}) => api.get('/conge-types', { params }),
+  getById: (id, params = {}) => api.get(`/conge-types/${id}`, { params }),
   create: (data) => api.post('/conge-types', data),
   update: (id, data) => api.put(`/conge-types/${id}`, data),
   delete: (id) => api.delete(`/conge-types/${id}`),
@@ -135,6 +250,22 @@ export const exportsService = {
     params,
     responseType: 'blob'
   }),
+  exportAbsencesCSV: (params = {}) => api.get('/exports/absences/csv', {
+    params,
+    responseType: 'blob'
+  }),
+  exportAbsencesPDF: (params = {}) => api.get('/exports/absences/pdf', {
+    params,
+    responseType: 'blob'
+  }),
+  exportArretsMaladieCSV: (params = {}) => api.get('/exports/arrets-maladie/csv', {
+    params,
+    responseType: 'blob'
+  }),
+  exportArretsMaladiePDF: (params = {}) => api.get('/exports/arrets-maladie/pdf', {
+    params,
+    responseType: 'blob'
+  }),
   exportUtilisateursCSV: () => api.get('/exports/utilisateurs/csv', {
     responseType: 'blob'
   }),
@@ -146,6 +277,10 @@ export const exportsService = {
     responseType: 'blob'
   }),
   exportUsagePDF: () => api.get('/exports/usage/pdf', {
+    responseType: 'blob'
+  }),
+  exportStatistiquesCSV: (params = {}) => api.get('/exports/statistiques/csv', {
+    params,
     responseType: 'blob'
   }),
 };
@@ -171,3 +306,11 @@ export const settingsService = {
   setMaintenance: (enabled, maintenanceMessage) => api.post('/settings/actions/maintenance', { enabled, maintenanceMessage }),
   sendTestEmail: (to) => api.post('/settings/actions/test-email', { to }),
 };
+
+export const absencesService = {
+  getAll: (params = {}) => api.get('/absences', { params }),
+  // Vous pouvez ajouter d'autres méthodes ici si besoin (create, update, etc.)
+};
+
+// Exporter l'instance axios personnalisée pour les imports nommés
+export { api };

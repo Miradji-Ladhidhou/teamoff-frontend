@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, ProgressBar } from 'react-bootstrap';
 import { FaBuilding, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const RegisterPage = () => {
   const [step, setStep] = useState(1);
@@ -22,8 +25,8 @@ const RegisterPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const submitAction = useAsyncAction();
+  const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
 
   const { register } = useAuth();
@@ -42,7 +45,6 @@ const RegisterPage = () => {
         [name]: ''
       }));
     }
-    if (error) setError('');
   };
 
   const validateStep1 = () => {
@@ -86,25 +88,25 @@ const RegisterPage = () => {
     e.preventDefault();
     if (!validateStep2()) return;
 
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await register(formData);
-      if (result.success) {
-        alert('Inscription réussie ! Un email de confirmation a été envoyé à l\'administrateur.');
-        navigate('/login');
-      } else {
-        setError(result.error);
+    await submitAction.run(async () => {
+      try {
+        const result = await register(formData);
+        if (result.success) {
+          alert.success('Inscription réussie. Un email de confirmation a été envoyé à l\'administrateur.');
+          navigate('/login');
+        } else {
+          alert.error(result.error);
+        }
+      } catch (err) {
+        // Affiche le message d'erreur du backend s'il existe
+        const message = err.response?.data?.message || err.message || 'Une erreur inattendue s\'est produite';
+        alert.error('Erreur d\'inscription : ' + message);
       }
-    } catch (err) {
-      setError('Une erreur inattendue s\'est produite');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const progress = (step / 2) * 100;
+  const loading = submitAction.isRunning;
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
@@ -116,7 +118,7 @@ const RegisterPage = () => {
                 <div className="text-center mb-4">
                   <h1 className="h3 fw-bold text-primary mb-2">TeamOff</h1>
                   <p className="text-muted">Créer un compte entreprise</p>
-                  <ProgressBar now={progress} className="mb-3" style={{ height: '4px' }} />
+                  <ProgressBar now={progress} className="mb-3 progress-xs" />
                   <small className="text-muted">Étape {step} sur 2</small>
                 </div>
 
@@ -135,12 +137,6 @@ const RegisterPage = () => {
                 <SuccessCardInfo title="Résultat attendu">
                   Une fois l'inscription validée, votre espace est prêt pour configurer les types de congés, les jours fériés et les utilisateurs.
                 </SuccessCardInfo>
-
-                {error && (
-                  <Alert variant="danger" className="mb-4">
-                    {error}
-                  </Alert>
-                )}
 
                 <Form onSubmit={step === 2 ? handleSubmit : (e) => e.preventDefault()}>
                   {step === 1 && (
@@ -345,21 +341,15 @@ const RegisterPage = () => {
                         >
                           Précédent
                         </Button>
-                        <Button
+                        <AsyncButton
                           type="submit"
                           variant="primary"
                           className="flex-fill d-flex align-items-center justify-content-center"
-                          disabled={loading}
+                          action={submitAction}
+                          loadingText="Création..."
                         >
-                          {loading ? (
-                            <>
-                              <Spinner animation="border" size="sm" className="me-2" />
-                              Création...
-                            </>
-                          ) : (
-                            'Créer le compte'
-                          )}
-                        </Button>
+                          Créer le compte
+                        </AsyncButton>
                       </div>
                     </>
                   )}

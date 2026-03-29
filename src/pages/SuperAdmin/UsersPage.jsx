@@ -1,15 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaBuilding, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_FORM = {
   prenom: '',
   nom: '',
   email: '',
+  date_embauche: '',
   role: 'employe',
+  service: '',
   entreprise_id: '',
   statut: 'actif',
   password: ''
@@ -18,6 +23,8 @@ const DEFAULT_FORM = {
 const UsersManagement = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
 
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -28,9 +35,11 @@ const UsersManagement = () => {
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [exportLoading, setExportLoading] = useState(false);
+  const [servicesByCompany, setServicesByCompany] = useState({});
+  const [activeUserActionId, setActiveUserActionId] = useState(null);
+  const submitAction = useAsyncAction();
+  const exportAction = useAsyncAction();
+  const mutateUserAction = useAsyncAction();
 
   useEffect(() => {
     loadData();
@@ -39,7 +48,6 @@ const UsersManagement = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      setError('');
 
       const requests = [api.usersService.getAll()];
       if (isSuperAdmin) {
@@ -47,11 +55,33 @@ const UsersManagement = () => {
       }
 
       const [usersRes, companiesRes] = await Promise.all(requests);
-      setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-      setCompanies(Array.isArray(companiesRes?.data) ? companiesRes.data : []);
+      const loadedUsers = Array.isArray(usersRes.data) ? usersRes.data : [];
+      const loadedCompanies = Array.isArray(companiesRes?.data) ? companiesRes.data : [];
+
+      setUsers(loadedUsers);
+      setCompanies(loadedCompanies);
+
+      if (isSuperAdmin) {
+        const serviceEntries = await Promise.all(
+          loadedCompanies.map(async (company) => {
+            try {
+              const response = await api.entreprisesService.getServices(company.id);
+              const items = Array.isArray(response.data?.items) ? response.data.items : [];
+              return [company.id, items.map((item) => item.name)];
+            } catch {
+              return [company.id, []];
+            }
+          })
+        );
+        setServicesByCompany(Object.fromEntries(serviceEntries));
+      } else if (user?.entreprise_id) {
+        const response = await api.entreprisesService.getServices(user.entreprise_id);
+        const items = Array.isArray(response.data?.items) ? response.data.items : [];
+        setServicesByCompany({ [user.entreprise_id]: items.map((item) => item.name) });
+      }
     } catch (loadError) {
       console.error('Erreur chargement donnees:', loadError);
-      setError('Erreur lors du chargement des donnees');
+      alert.error('Erreur lors du chargement des donnees');
     } finally {
       setLoading(false);
     }
@@ -72,40 +102,59 @@ const UsersManagement = () => {
     });
   };
 
+  const getSelectableServices = () => {
+    const entrepriseId = isSuperAdmin ? formData.entreprise_id : user?.entreprise_id;
+    if (!entrepriseId) return [];
+    const baseServices = Array.isArray(servicesByCompany[entrepriseId]) ? servicesByCompany[entrepriseId] : [];
+    return baseServices;
+  };
+
+  const selectableServices = getSelectableServices();
+  const isServiceRole = ['employe', 'manager'].includes(formData.role);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    try {
-      setError('');
-      const payload = {
-        prenom: formData.prenom,
-        nom: formData.nom,
-        email: formData.email,
-        role: formData.role,
-        entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
-        statut: formData.statut
-      };
+    await submitAction.run(async () => {
+      try {
+        // Validation obligatoire du service pour les employés
+        if (formData.role === 'employe' && !formData.service?.trim()) {
+          alert.error('Le service est obligatoire pour un employé');
+          return;
+        }
 
-      if (editingUser && formData.password) {
-        payload.password = formData.password;
+        const payload = {
+          prenom: formData.prenom,
+          nom: formData.nom,
+          email: formData.email,
+          date_embauche: formData.date_embauche || null,
+          role: formData.role,
+          service: formData.service || null,
+          entreprise_id: isSuperAdmin ? formData.entreprise_id : user?.entreprise_id,
+          statut: formData.statut
+        };
+
+        if (editingUser && formData.password) {
+          payload.password = formData.password;
+        }
+
+        if (editingUser) {
+          await api.usersService.update(editingUser.id, payload);
+          alert.success('Utilisateur mis à jour avec succès');
+        } else {
+          await api.usersService.create(payload);
+          alert.success('Utilisateur créé avec succès');
+        }
+
+        setShowModal(false);
+        setEditingUser(null);
+        resetForm();
+        loadData();
+      } catch (submitError) {
+        console.error('Erreur sauvegarde utilisateur:', submitError);
+        alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
       }
-
-      if (editingUser) {
-        await api.usersService.update(editingUser.id, payload);
-        setSuccess('Utilisateur mis a jour avec succes');
-      } else {
-        await api.usersService.create(payload);
-        setSuccess('Utilisateur cree avec succes');
-      }
-
-      setShowModal(false);
-      setEditingUser(null);
-      resetForm();
-      loadData();
-    } catch (submitError) {
-      console.error('Erreur sauvegarde utilisateur:', submitError);
-      setError(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
-    }
+    });
   };
 
   const handleEdit = (targetUser) => {
@@ -114,7 +163,9 @@ const UsersManagement = () => {
       prenom: targetUser.prenom || '',
       nom: targetUser.nom || '',
       email: targetUser.email || '',
+      date_embauche: targetUser.date_embauche ? String(targetUser.date_embauche).slice(0, 10) : '',
       role: targetUser.role || 'employe',
+      service: targetUser.service || '',
       entreprise_id: targetUser.entreprise_id || '',
       statut: targetUser.statut || 'actif',
       password: ''
@@ -123,57 +174,72 @@ const UsersManagement = () => {
   };
 
   const handleDelete = async (userId) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
-      return;
-    }
-
-    try {
-      await api.usersService.delete(userId);
-      setSuccess('Utilisateur supprime avec succes');
-      loadData();
-    } catch (deleteError) {
-      console.error('Erreur suppression utilisateur:', deleteError);
-      setError(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-    }
+    const targetUser = users.find(u => u.id === userId);
+    confirm({
+      title: 'Supprimer cet utilisateur ?',
+      description: `Êtes-vous sûr de vouloir supprimer ${targetUser?.prenom} ${targetUser?.nom} ? Cette action est irréversible.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await mutateUserAction.run(async () => {
+          setActiveUserActionId(userId);
+          try {
+            await api.usersService.delete(userId);
+            alert.success('Utilisateur supprimé avec succès');
+            loadData();
+          } catch (deleteError) {
+            console.error('Erreur suppression utilisateur:', deleteError);
+            alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+          } finally {
+            setActiveUserActionId(null);
+          }
+        });
+      }
+    });
   };
 
   const toggleUserStatus = async (targetUser) => {
     const nextStatus = targetUser.statut === 'actif' ? 'inactif' : 'actif';
 
-    try {
-      await api.usersService.update(targetUser.id, { statut: nextStatus });
-      setSuccess(`Utilisateur ${nextStatus === 'actif' ? 'active' : 'desactive'} avec succes`);
-      loadData();
-    } catch (statusError) {
-      console.error('Erreur changement statut:', statusError);
-      setError(statusError.response?.data?.message || 'Erreur lors du changement de statut');
-    }
+    await mutateUserAction.run(async () => {
+      setActiveUserActionId(targetUser.id);
+      try {
+        await api.usersService.update(targetUser.id, { statut: nextStatus });
+        alert.success(`Utilisateur ${nextStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`);
+        loadData();
+      } catch (statusError) {
+        console.error('Erreur changement statut:', statusError);
+        alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
+      } finally {
+        setActiveUserActionId(null);
+      }
+    });
   };
 
   const handleExportCsv = async () => {
-    try {
-      setExportLoading(true);
-      setError('');
+    await exportAction.run(async () => {
+      try {
+        const response = await api.exportsService.exportUtilisateursCSV();
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
 
-      const response = await api.exportsService.exportUtilisateursCSV();
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const date = new Date().toISOString().slice(0, 10);
-
-      link.href = url;
-      link.download = `utilisateurs_${date}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (exportError) {
-      console.error('Erreur export utilisateurs CSV:', exportError);
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
-    } finally {
-      setExportLoading(false);
-    }
+        link.href = url;
+        link.download = `utilisateurs_${date}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (exportError) {
+        console.error('Erreur export utilisateurs CSV:', exportError);
+        alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
+      }
+    });
   };
+
+  const exportLoading = exportAction.isRunning;
 
   const filteredUsers = users.filter((targetUser) => {
     const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''}`.toLowerCase();
@@ -232,23 +298,25 @@ const UsersManagement = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">Gestion des Utilisateurs</h1>
-          <p className="text-muted">
+          <h1 className="h4 mb-1">Gestion des Utilisateurs</h1>
+          <p className="text-muted small mb-0">
             {isSuperAdmin ? 'Administrer les utilisateurs de la plateforme' : 'Administrer les utilisateurs de votre entreprise'}
           </p>
         </div>
-        <div className="d-flex gap-2">
-          <Button
+        <div className="page-header-actions">
+          <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
-            disabled={exportLoading}
+            action={exportAction}
+            loadingText="Export..."
           >
             <FaDownload className="me-2" />
-            {exportLoading ? 'Export...' : 'Exporter CSV'}
-          </Button>
+            CSV
+          </AsyncButton>
           <Button
             variant="primary"
             onClick={() => {
@@ -258,13 +326,12 @@ const UsersManagement = () => {
             }}
           >
             <FaPlus className="me-2" />
-            Nouvel Utilisateur
+            <span className="d-none d-sm-inline">Nouvel </span>Utilisateur
           </Button>
         </div>
       </div>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      
 
       <InfoCardInfo title="Répartition des rôles">
         <ul className="mb-0">
@@ -281,21 +348,21 @@ const UsersManagement = () => {
 
       <Card className="mb-4">
         <Card.Body>
-          <Row>
-            <Col md={4}>
+          <Row className="g-2 align-items-center">
+            <Col xs={12} md={4}>
               <InputGroup>
                 <InputGroup.Text>
                   <FaSearch />
                 </InputGroup.Text>
                 <Form.Control
                   type="text"
-                  placeholder="Rechercher un utilisateur..."
+                  placeholder="Rechercher..."
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                 />
               </InputGroup>
             </Col>
-            <Col md={3}>
+            <Col xs={6} md={3}>
               {isSuperAdmin ? (
                 <Form.Select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)}>
                   <option value="">Toutes les entreprises</option>
@@ -309,7 +376,7 @@ const UsersManagement = () => {
                 <Form.Control value={companiesById[user?.entreprise_id] || 'Entreprise courante'} disabled />
               )}
             </Col>
-            <Col md={3}>
+            <Col xs={6} md={3}>
               <Form.Select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
                 <option value="">Tous les roles</option>
                 {isSuperAdmin && <option value="super_admin">Super Admin</option>}
@@ -318,7 +385,7 @@ const UsersManagement = () => {
                 <option value="employe">Employe</option>
               </Form.Select>
             </Col>
-            <Col md={2} className="text-end">
+            <Col xs={12} md={2} className="text-md-end">
               <Badge bg="info">
                 {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
               </Badge>
@@ -328,117 +395,198 @@ const UsersManagement = () => {
       </Card>
 
       <Card>
-        <Card.Body>
-          <Table hover responsive>
-            <thead>
-              <tr>
-                <th>Utilisateur</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Entreprise</th>
-                <th>Statut</th>
-                <th>Mise a jour</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((targetUser) => (
-                <tr key={targetUser.id}>
-                  <td>
-                    <div>
-                      <strong>{targetUser.prenom} {targetUser.nom}</strong>
-                      <br />
-                      <small className="text-muted">ID: {targetUser.id}</small>
-                    </div>
-                  </td>
-                  <td>{targetUser.email}</td>
-                  <td>{getRoleBadge(targetUser.role)}</td>
-                  <td>
-                    {companiesById[targetUser.entreprise_id] ? (
-                      <div>
-                        <FaBuilding className="me-1" />
-                        {companiesById[targetUser.entreprise_id]}
+        <Card.Body className="p-0 p-md-3">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-4">
+              <FaUsers size={48} className="text-muted mb-3" />
+              <h5>Aucun utilisateur trouvé</h5>
+              <p className="text-muted small">
+                {searchTerm || companyFilter || roleFilter
+                  ? 'Aucun utilisateur ne correspond à vos critères.'
+                  : 'Commencez par créer votre premier utilisateur.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Vue carte — mobile uniquement */}
+              <div className="d-md-none mobile-card-list px-3">
+                {filteredUsers.map((targetUser) => (
+                  <div key={targetUser.id} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                      <div className="min-w-0">
+                        <div className="fw-semibold small">{targetUser.prenom} {targetUser.nom}</div>
+                        <div className="text-muted text-xs text-break">{targetUser.email}</div>
                       </div>
-                    ) : (
-                      <Badge bg="secondary">Aucune</Badge>
-                    )}
-                  </td>
-                  <td>{getStatusBadge(targetUser.statut)}</td>
-                  <td>{targetUser.updatedAt ? new Date(targetUser.updatedAt).toLocaleDateString('fr-FR') : 'Jamais'}</td>
-                  <td>
+                      {getStatusBadge(targetUser.statut)}
+                    </div>
+                    <div className="d-flex gap-1 flex-wrap mb-2 text-xxs">
+                      {getRoleBadge(targetUser.role)}
+                      {targetUser.service && <Badge bg="secondary">{targetUser.service}</Badge>}
+                      {companiesById[targetUser.entreprise_id] && (
+                        <Badge bg="light" text="dark"><FaBuilding className="me-1" />{companiesById[targetUser.entreprise_id]}</Badge>
+                      )}
+                    </div>
                     <div className="d-flex gap-1">
-                      <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
-                        <FaEdit />
+                      <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(targetUser)}>
+                        <FaEdit className="me-1" /> Modifier
                       </Button>
-                      <Button
+                      <AsyncButton
                         variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                         size="sm"
                         onClick={() => toggleUserStatus(targetUser)}
-                        title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
+                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                        loadingText=""
+                        disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
                       >
                         {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
-                      </Button>
-                      <Button
+                      </AsyncButton>
+                      <AsyncButton
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDelete(targetUser.id)}
-                        title="Supprimer"
                         disabled={targetUser.id === user?.id}
+                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                        loadingText=""
                       >
                         <FaTrash />
-                      </Button>
+                      </AsyncButton>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+                  </div>
+                ))}
+              </div>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-4">
-              <FaUsers size={48} className="text-muted mb-3" />
-              <h5>Aucun utilisateur trouve</h5>
-              <p className="text-muted">
-                {searchTerm || companyFilter || roleFilter
-                  ? 'Aucun utilisateur ne correspond a vos criteres.'
-                  : 'Commencez par creer votre premier utilisateur.'}
-              </p>
-            </div>
+              {/* Vue tableau — desktop uniquement */}
+              <div className="d-none d-md-block">
+                <Table hover responsive>
+                  <thead>
+                    <tr>
+                      <th>Utilisateur</th>
+                      <th>Email</th>
+                      <th>Date d'embauche</th>
+                      <th>Role</th>
+                      <th>Service</th>
+                      <th>Entreprise</th>
+                      <th>Statut</th>
+                      <th>Mise a jour</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((targetUser) => (
+                      <tr key={targetUser.id}>
+                        <td>
+                          <div>
+                            <strong>{targetUser.prenom} {targetUser.nom}</strong>
+                          </div>
+                        </td>
+                        <td>{targetUser.email}</td>
+                        <td>
+                          {targetUser.date_embauche
+                            ? new Date(`${targetUser.date_embauche}T00:00:00`).toLocaleDateString('fr-FR')
+                            : <span className="text-muted">Non définie</span>}
+                        </td>
+                        <td>{getRoleBadge(targetUser.role)}</td>
+                        <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
+                        <td>
+                          {companiesById[targetUser.entreprise_id] ? (
+                            <div>
+                              <FaBuilding className="me-1" />
+                              {companiesById[targetUser.entreprise_id]}
+                            </div>
+                          ) : (
+                            <Badge bg="secondary">Aucune</Badge>
+                          )}
+                        </td>
+                        <td>{getStatusBadge(targetUser.statut)}</td>
+                        <td>{targetUser.updatedAt ? new Date(targetUser.updatedAt).toLocaleDateString('fr-FR') : 'Jamais'}</td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
+                              <FaEdit />
+                            </Button>
+                            <AsyncButton
+                              variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
+                              size="sm"
+                              onClick={() => toggleUserStatus(targetUser)}
+                              title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
+                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                              loadingText=""
+                              disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
+                            >
+                              {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
+                            </AsyncButton>
+                            <AsyncButton
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => handleDelete(targetUser.id)}
+                              title="Supprimer"
+                              disabled={targetUser.id === user?.id}
+                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
+                              loadingText=""
+                            >
+                              <FaTrash />
+                            </AsyncButton>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered>
+        <Modal.Header closeButton={!submitAction.isRunning}>
           <Modal.Title>{editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+            
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Prenom *</Form.Label>
-                  <Form.Control type="text" value={formData.prenom} onChange={(event) => setFormData({ ...formData, prenom: event.target.value })} required />
+                  <Form.Control type="text" value={formData.prenom} onChange={(event) => setFormData({ ...formData, prenom: event.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nom *</Form.Label>
-                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required />
+                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
             </Row>
 
             <Form.Group className="mb-3">
               <Form.Label>Email *</Form.Label>
-              <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required />
+              <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required disabled={submitAction.isRunning} />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Date d'embauche</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date_embauche}
+                onChange={(event) => setFormData({ ...formData, date_embauche: event.target.value })}
+                disabled={submitAction.isRunning}
+              />
+              <Form.Text className="text-muted">
+                Utilisée pour le calcul proratisé des congés lors d'une arrivée en cours d'année.
+              </Form.Text>
             </Form.Group>
 
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Role *</Form.Label>
-                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value })} required>
+                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value, service: ['employe', 'manager'].includes(event.target.value) ? formData.service : '' })} required disabled={submitAction.isRunning}>
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                     {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
@@ -448,9 +596,40 @@ const UsersManagement = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
+                  <Form.Label>Service {formData.role === 'employe' ? '*' : ''}</Form.Label>
+                  <Form.Select
+                    value={formData.service}
+                    onChange={(event) => setFormData({ ...formData, service: event.target.value })}
+                    required={formData.role === 'employe'}
+                    disabled={submitAction.isRunning || selectableServices.length === 0 || !isServiceRole}
+                  >
+                    <option value="">{selectableServices.length > 0 ? 'Sélectionner un service' : 'Aucun service disponible'}</option>
+                    {selectableServices.map((serviceName) => (
+                      <option key={serviceName} value={serviceName}>{serviceName}</option>
+                    ))}
+                  </Form.Select>
+                  <Form.Text className="text-muted">
+                    {selectableServices.length === 0 && isServiceRole
+                      ? '⚠️ Aucun service disponible. Créez des services depuis la page Services avant d\'assigner ce rôle.'
+                      : !isServiceRole
+                      ? 'Les services s\'appliquent aux employés et aux managers.'
+                      : 'Les services sont gérés depuis la page Services.'}
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
                   <Form.Label>Entreprise *</Form.Label>
                   {isSuperAdmin ? (
-                    <Form.Select value={formData.entreprise_id} onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value })} required>
+                    <Form.Select
+                      value={formData.entreprise_id}
+                      onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value, service: '' })}
+                      required
+                      disabled={submitAction.isRunning}
+                    >
                       <option value="">Selectionner une entreprise</option>
                       {companies.map((company) => (
                         <option key={company.id} value={company.id}>
@@ -463,13 +642,10 @@ const UsersManagement = () => {
                   )}
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>
-                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })}>
+                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })} disabled={submitAction.isRunning}>
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                     <option value="en_attente">En attente</option>
@@ -484,14 +660,22 @@ const UsersManagement = () => {
                     value={formData.password}
                     onChange={(event) => setFormData({ ...formData, password: event.target.value })}
                     placeholder={editingUser ? 'Laisser vide pour conserver le mot de passe actuel' : 'Un mot de passe temporaire sera genere si vous laissez vide'}
+                    disabled={submitAction.isRunning}
                   />
                 </Form.Group>
               </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-            <Button variant="primary" type="submit">{editingUser ? 'Mettre a jour' : 'Creer'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitAction.isRunning}>Annuler</Button>
+            <AsyncButton
+              variant="primary"
+              type="submit"
+              action={submitAction}
+              loadingText={editingUser ? 'Mise a jour...' : 'Creation...'}
+            >
+              {editingUser ? 'Mettre a jour' : 'Creer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

@@ -4,6 +4,7 @@ import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer } from '
 import { useAuth } from '../../contexts/AuthContext';
 import { metricsService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const normalizeMetrics = (raw = {}) => {
   const totalRequests = Number(raw.totalRequests ?? raw.requests ?? 0);
@@ -55,6 +56,7 @@ const MetricsPage = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     if (user.role === 'super_admin') {
@@ -65,11 +67,13 @@ const MetricsPage = () => {
   const loadMetrics = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await metricsService.getMetrics();
       setMetrics(normalizeMetrics(response.data));
     } catch (err) {
       console.error('Erreur lors du chargement des métriques:', err);
       setError('Erreur lors du chargement des métriques');
+      alert.error('Erreur lors du chargement des métriques');
     } finally {
       setLoading(false);
     }
@@ -97,17 +101,17 @@ const MetricsPage = () => {
   // Vérifier les permissions
   if (user.role !== 'super_admin') {
     return (
-      <Container>
-        <Alert variant="danger" className="text-center">
+      <Container fluid="sm">
+        <div className="alert alert-danger text-center" role="alert">
           Accès non autorisé. Cette page est réservée aux super administrateurs.
-        </Alert>
+        </div>
       </Container>
     );
   }
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Chargement des métriques...</span>
         </Spinner>
@@ -117,36 +121,26 @@ const MetricsPage = () => {
 
   if (error) {
     return (
-      <Container>
-        <Alert variant="danger">
+      <Container fluid="sm">
+        <div className="alert alert-danger" role="alert">
           <FaExclamationTriangle className="me-2" />
           {error}
-        </Alert>
+        </div>
       </Container>
     );
   }
 
   return (
-    <Container>
-      <div className="d-flex align-items-center mb-4">
-        <FaChartLine className="text-primary me-3" size={32} />
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-0">Métriques Système</h1>
+          <div className="d-flex align-items-center gap-3 mb-1">
+            <FaChartLine className="text-primary" size={28} />
+            <h1 className="h3 mb-0">Métriques Système</h1>
+          </div>
           <p className="text-muted mb-0">Surveillance des performances et utilisation</p>
         </div>
       </div>
-
-      <InfoCardInfo title="Comment interpréter les métriques">
-        <ul className="mb-0">
-          <li>Uptime et erreurs indiquent la stabilité</li>
-          <li>Temps de réponse et requêtes/minute indiquent la charge</li>
-          <li>Usage par entreprise aide à anticiper la capacité</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Seuils d'alerte suggérés">
-        Surveillez de près un taux d'erreur au-dessus de 1% et des pics prolongés de latence.
-      </TipCard>
 
       {metrics && (
         <Row>
@@ -206,7 +200,7 @@ const MetricsPage = () => {
                   <ProgressBar
                     variant={metrics.errorRate > 0.05 ? 'danger' : metrics.errorRate > 0.01 ? 'warning' : 'success'}
                     now={Math.min(metrics.errorRate * 100, 100)}
-                    style={{ height: '8px' }}
+                    className="progress-sm-bar"
                   />
                 </div>
 
@@ -237,30 +231,47 @@ const MetricsPage = () => {
               </Card.Header>
               <Card.Body>
                 {metrics.enterpriseUsage && metrics.enterpriseUsage.length > 0 ? (
-                  <div className="table-responsive">
-                    <table className="table table-sm">
-                      <thead>
-                        <tr>
-                          <th>Entreprise</th>
-                          <th>Requêtes</th>
-                          <th>% du total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {metrics.enterpriseUsage.map((usage, index) => (
-                          <tr key={index}>
-                            <td>{usage.entreprise_nom || `Entreprise ${usage.entreprise_id}`}</td>
-                            <td>{usage.count}</td>
-                            <td>
-                              <Badge bg="info">
-                                {metrics.requests > 0 ? ((usage.count / metrics.requests) * 100).toFixed(1) : '0.0'}%
-                              </Badge>
-                            </td>
+                  <>
+                    <div className="d-md-none mobile-card-list">
+                      {metrics.enterpriseUsage.map((usage, index) => (
+                        <div key={index} className="mobile-card-list__item">
+                          <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                              <div className="fw-semibold">{usage.entreprise_nom || 'Entreprise non renseignee'}</div>
+                              <small className="text-muted">{usage.count} requêtes</small>
+                            </div>
+                            <Badge bg="info">
+                              {metrics.requests > 0 ? ((usage.count / metrics.requests) * 100).toFixed(1) : '0.0'}%
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="table-responsive d-none d-md-block">
+                      <table className="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Entreprise</th>
+                            <th>Requêtes</th>
+                            <th>% du total</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {metrics.enterpriseUsage.map((usage, index) => (
+                            <tr key={index}>
+                              <td>{usage.entreprise_nom || 'Entreprise non renseignee'}</td>
+                              <td>{usage.count}</td>
+                              <td>
+                                <Badge bg="info">
+                                  {metrics.requests > 0 ? ((usage.count / metrics.requests) * 100).toFixed(1) : '0.0'}%
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 ) : (
                   <p className="text-muted mb-0">Aucune donnée d'utilisation disponible</p>
                 )}
@@ -332,9 +343,8 @@ const MetricsPage = () => {
                       <small className="text-muted">Cache hit rate</small>
                       <div className="d-flex align-items-center">
                         <ProgressBar
-                          className="flex-grow-1 me-2"
+                          className="flex-grow-1 me-2 progress-sm-bar"
                           now={metrics.cacheHitRate * 100}
-                          style={{ height: '8px' }}
                         />
                         <small>{(metrics.cacheHitRate * 100).toFixed(1)}%</small>
                       </div>
@@ -346,6 +356,19 @@ const MetricsPage = () => {
           </Col>
         </Row>
       )}
+
+      <InfoCardInfo title="Comment interpréter les métriques">
+        <ul className="mb-0">
+          <li>Uptime et erreurs indiquent la stabilité</li>
+          <li>Temps de réponse et requêtes/minute indiquent la charge</li>
+          <li>Usage par entreprise aide à anticiper la capacité</li>
+        </ul>
+      </InfoCardInfo>
+
+      <TipCard title="Seuils d'alerte suggérés">
+        Surveillez de près un taux d'erreur au-dessus de 1% et des pics prolongés de latence.
+      </TipCard>
+
     </Container>
   );
 };

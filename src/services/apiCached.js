@@ -3,7 +3,7 @@ import { apiCache } from '../utils/cache';
 
 // Configuration de base d'axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
 });
 
@@ -97,6 +97,7 @@ export const entreprisesService = {
 
 export const quotasService = {
   getSoldes: (userId, params = {}) => cachedRequest('get', `/quotas/soldes/${userId}`, { params }),
+  monthlyAccrual: (data = {}) => api.post('/quotas/monthly-accrual', data),
   getUsage: () => cachedRequest('get', '/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
 };

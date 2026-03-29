@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
+  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const canAccessPage = isEditMode
+    ? ['employe', 'manager', 'admin_entreprise'].includes(user?.role)
+    : canCreateLeave;
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
 
   const [formData, setFormData] = useState({
@@ -24,15 +32,32 @@ const NouveauCongePage = () => {
 
   const [congeTypes, setCongeTypes] = useState([]);
   const [soldes, setSoldes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const submitCongeAction = useAsyncAction();
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
   const [joursCalcules, setJoursCalcules] = useState(0);
+  const [initialCongeStatut, setInitialCongeStatut] = useState(null);
+  const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
+  const [showOverlapModal, setShowOverlapModal] = useState(false);
+  useEffect(() => {
+    if (isEditMode) return;
+    const params = new URLSearchParams(location.search);
+    const dateDebut = params.get('date_debut') || '';
+    const dateFin = params.get('date_fin') || '';
+
+    if (dateDebut || dateFin) {
+      setFormData((prev) => ({
+        ...prev,
+        date_debut: dateDebut || prev.date_debut,
+        date_fin: dateFin || prev.date_fin,
+      }));
+    }
+  }, [location.search, isEditMode]);
 
   useEffect(() => {
     loadInitialData();
-  }, [id, user?.id]);
+  }, [id, user?.id, user?.role]);
 
   useEffect(() => {
     // Calculer les jours automatiquement quand les dates changent
@@ -44,31 +69,53 @@ const NouveauCongePage = () => {
   const loadInitialData = async () => {
     try {
       setLoadingData(true);
-      setError('');
 
-      const [typesResponse, soldesResponse, congeResponse] = await Promise.all([
-        congeTypesService.getAll(),
-        quotasService.getSoldes(user.id),
-        isEditMode ? congesService.getById(id) : Promise.resolve(null)
-      ]);
-
-      setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
-      setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
-
-      if (congeResponse?.data) {
-        const conge = congeResponse.data;
-        setFormData({
-          conge_type_id: conge.conge_type_id || '',
-          date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
-          date_fin: conge.date_fin ? conge.date_fin.split('T')[0] : '',
-          debut_demi_journee: conge.debut_demi_journee || '',
-          fin_demi_journee: conge.fin_demi_journee || '',
-          commentaire_employe: conge.commentaire_employe || ''
-        });
+      if (!canAccessPage) {
+        alert.error('Vous n\'êtes pas autorisé à accéder à cette page');
+        return;
       }
+
+      if (isEditMode) {
+        const [typesResponse, congeResponse] = await Promise.all([
+          congeTypesService.getAll(),
+          congesService.getById(id)
+        ]);
+
+        setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
+
+        if (congeResponse?.data) {
+          const conge = congeResponse.data;
+          setInitialCongeStatut(conge.statut || null);
+          setInitialCongeSnapshot({
+            conge_type_id: conge.conge_type_id || '',
+            date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
+            jours_calcules: Number(conge.jours_calcules || conge.nombre_jours || conge.jours_pris || 0),
+          });
+          const targetUserId = conge.utilisateur_id || user.id;
+          const soldesResponse = await quotasService.getSoldes(targetUserId);
+          setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+
+          setFormData({
+            conge_type_id: conge.conge_type_id || '',
+            date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
+            date_fin: conge.date_fin ? conge.date_fin.split('T')[0] : '',
+            debut_demi_journee: conge.debut_demi_journee || '',
+            fin_demi_journee: conge.fin_demi_journee || '',
+            commentaire_employe: conge.commentaire_employe || ''
+          });
+        }
+      } else {
+        const [typesResponse, soldesResponse] = await Promise.all([
+          congeTypesService.getAll(),
+          quotasService.getSoldes(user.id),
+        ]);
+
+        setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
+        setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+      }
+
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
-      setError(isEditMode ? 'Erreur lors du chargement du congé à modifier' : 'Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);
     }
@@ -117,6 +164,11 @@ const NouveauCongePage = () => {
 
   const validateForm = () => {
     const errors = {};
+    const isAdminEditingValidatedConge =
+      isEditMode
+      && user?.role === 'admin_entreprise'
+      && initialCongeStatut === 'valide_final';
+    const isEditingPendingConge = isEditMode && initialCongeStatut === 'en_attente_manager';
 
     if (!formData.conge_type_id) errors.conge_type_id = 'Le type de congé est requis';
     if (!formData.date_debut) errors.date_debut = 'La date de début est requise';
@@ -155,12 +207,22 @@ const NouveauCongePage = () => {
     }
 
     // Vérifier le solde disponible
-    if (formData.conge_type_id && joursCalcules > 0) {
-      const selectedType = congeTypes.find(type => type.id === formData.conge_type_id);
+    if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules > 0) {
       const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
+      const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
+      const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
+      const initialYear = initialCongeSnapshot?.date_debut
+        ? new Date(initialCongeSnapshot.date_debut).getFullYear()
+        : null;
+      const nextYear = formData.date_debut ? new Date(formData.date_debut).getFullYear() : null;
+      const sameCounterAsInitial = isEditingPendingConge
+        && initialTypeId === formData.conge_type_id
+        && initialYear !== null
+        && initialYear === nextYear;
+      const effectiveAvailable = Number(soldeType?.solde_disponible || 0) + (sameCounterAsInitial ? currentRequestDays : 0);
 
-      if (soldeType && joursCalcules > soldeType.solde_disponible) {
-        errors.conge_type_id = `Solde insuffisant (${soldeType.solde_disponible} jours disponibles)`;
+      if (soldeType && joursCalcules > effectiveAvailable) {
+        errors.conge_type_id = `Solde insuffisant (${effectiveAvailable} jours disponibles)`;
       }
     }
 
@@ -168,34 +230,131 @@ const NouveauCongePage = () => {
     return Object.keys(errors).length === 0;
   };
 
+  const extractApiErrorMessage = (err, fallbackMessage) => {
+    const data = err?.response?.data;
+
+    if (typeof data?.message === 'string' && data.message.trim()) {
+      return data.message.trim();
+    }
+
+    if (typeof data?.error === 'string' && data.error.trim()) {
+      return data.error.trim();
+    }
+
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      const firstError = data.errors[0];
+      if (typeof firstError === 'string' && firstError.trim()) {
+        return firstError.trim();
+      }
+      if (typeof firstError?.msg === 'string' && firstError.msg.trim()) {
+        return firstError.msg.trim();
+      }
+      if (typeof firstError?.message === 'string' && firstError.message.trim()) {
+        return firstError.message.trim();
+      }
+    }
+
+    if (err?.code === 'ECONNABORTED') {
+      return 'Le serveur met trop de temps à répondre. Réessayez dans quelques instants.';
+    }
+
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message.trim();
+    }
+
+    return fallbackMessage;
+  };
+
+  const submitCreateLeave = async (precheckWarning = null) => {
+    try {
+      const response = await congesService.create(formData);
+      const warningMessage = response?.data?.overlap_warning?.message;
+      if (warningMessage && warningMessage !== precheckWarning) {
+        alert.showErrorModal(warningMessage, {
+          title: 'Chevauchement détecté',
+          autoCloseMs: 0,
+        });
+      }
+      navigate(returnPath);
+    } catch (err) {
+      console.error('Erreur lors de la création du congé:', err);
+      const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
+      alert.error(finalMessage);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!isEditMode && !canCreateLeave) {
+      alert.error('Seuls les employés et managers peuvent poser un congé');
+      return;
+    }
+
     if (!validateForm()) return;
 
-    setLoading(true);
-    setError('');
+    await submitCongeAction.run(async () => {
+      try {
+        let response;
+        let precheckWarningMessage = null;
 
-    try {
-      if (isEditMode) {
-        await congesService.update(id, formData);
-      } else {
-        await congesService.create(formData);
-      }
+        if (isEditMode) {
+          response = await congesService.update(id, formData);
+        } else {
+          const overlapCheck = await congesService.checkOverlap(formData);
+          const overlapAction = overlapCheck?.data?.action;
+          const overlapMessage = overlapCheck?.data?.message;
 
-      navigate(returnPath, {
-        state: {
-          message: isEditMode ? 'Demande de congé modifiée avec succès' : 'Demande de congé créée avec succès',
-          type: 'success'
+          if (overlapAction === 'block') {
+            const blockMessage = overlapMessage || 'Cette demande est bloquée par la politique de chevauchement.';
+            alert.error(blockMessage);
+            return;
+          }
+
+          if (overlapAction === 'warning') {
+            const warningMessage = overlapMessage || 'Attention: un chevauchement a été détecté.';
+            precheckWarningMessage = warningMessage;
+            alert.confirm({
+              title: 'Chevauchement détecté',
+              description: `${warningMessage}\n\nVous pouvez poursuivre l'envoi, mais cette demande nécessitera une vigilance particulière côté validation.`,
+              confirmLabel: 'Confirmer et envoyer',
+              cancelLabel: 'Modifier ma demande',
+              danger: true,
+              onConfirm: async () => {
+                await submitCreateLeave(precheckWarningMessage);
+              },
+              onCancel: () => {
+                alert.error('Demande non envoyée.');
+              },
+            });
+            return;
+          }
+
+          await submitCreateLeave(precheckWarningMessage);
+          return;
         }
-      });
-    } catch (err) {
-      console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
-      setError(err.response?.data?.message || `Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé`);
-    } finally {
-      setLoading(false);
-    }
+
+        const warningMessage = response?.data?.overlap_warning?.message;
+        if (warningMessage && warningMessage !== precheckWarningMessage) {
+          alert.showErrorModal(warningMessage, {
+            title: 'Chevauchement détecté',
+            autoCloseMs: 0,
+          });
+        }
+
+        navigate(returnPath);
+      } catch (err) {
+        console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
+        const fallbackMessage = isEditMode
+          ? 'Impossible de modifier la demande de congé.'
+          : 'Impossible de créer la demande de congé.';
+        const finalMessage = extractApiErrorMessage(err, fallbackMessage);
+        alert.error(finalMessage);
+      }
+    });
   };
+
+  const loading = submitCongeAction.isRunning;
 
   const getSelectedType = () => {
     return congeTypes.find(type => type.id === formData.conge_type_id);
@@ -207,7 +366,7 @@ const NouveauCongePage = () => {
 
   if (loadingData) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement des données...</p>
@@ -216,8 +375,17 @@ const NouveauCongePage = () => {
     );
   }
 
+  if (!canAccessPage) {
+    return (
+      <Container fluid="sm">
+        <div className="alert alert-warning">Seuls les employés et managers peuvent poser un congé.</div>
+        <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
+      </Container>
+    );
+  }
+
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="d-flex align-items-center mb-4">
         <Button as={Link} to={returnPath} variant="outline-secondary" className="me-3">
           <FaArrowLeft />
@@ -227,12 +395,6 @@ const NouveauCongePage = () => {
           <p className="text-muted">{isEditMode ? 'Mettez à jour les informations de votre demande' : 'Remplissez le formulaire ci-dessous'}</p>
         </div>
       </div>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       <InfoCardInfo title={isEditMode ? 'Conseils pour modifier votre demande' : 'Avant de soumettre votre demande'}>
         <ul className="mb-0">
@@ -350,9 +512,9 @@ const NouveauCongePage = () => {
                 </Row>
 
                 {getSelectedType()?.demi_journee_autorisee === false && (
-                  <Alert variant="info" className="mb-3 py-2">
+                  <div className="alert alert-info mb-3 py-2" role="status">
                     Le type de congé sélectionné n'autorise pas les demi-journées.
-                  </Alert>
+                  </div>
                 )}
 
                 {/* Commentaire */}
@@ -373,21 +535,15 @@ const NouveauCongePage = () => {
                 </Form.Group>
 
                 <div className="d-flex gap-2">
-                  <Button
+                  <AsyncButton
                     type="submit"
                     variant="primary"
-                    disabled={loading}
                     className="flex-fill"
+                    action={submitCongeAction}
+                    loadingText={isEditMode ? 'Modification en cours...' : 'Création en cours...'}
                   >
-                    {loading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        {isEditMode ? 'Modification en cours...' : 'Création en cours...'}
-                      </>
-                    ) : (
-                      isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande'
-                    )}
-                  </Button>
+                    {isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande'}
+                  </AsyncButton>
                   <Button
                     as={Link}
                     to={returnPath}
@@ -475,6 +631,7 @@ const NouveauCongePage = () => {
           )}
         </Col>
       </Row>
+
     </Container>
   );
 };

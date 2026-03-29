@@ -1,134 +1,206 @@
-/* Styles personnalisés pour React Big Calendar */
-.rbc-calendar {
-  font-family: inherit;
+/* ---------------- WRAPPER ---------------- */
+.calendar-grid-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.rbc-header {
-  padding: 8px 6px;
-  font-weight: 600;
-  color: #495057;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.rbc-event {
-  border-radius: 4px;
-  border: none;
-  color: white;
-  font-size: 0.875rem;
-  padding: 2px 6px;
-}
-
-.rbc-event.rbc-selected {
-  outline: 2px solid #007bff;
-}
-
-.rbc-today {
-  background-color: rgba(0, 123, 255, 0.1);
-}
-
-.rbc-toolbar {
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  padding: 10px 0;
-}
-
-.rbc-toolbar button {
-  color: #495057;
-  border: 1px solid #ced4da;
-  background-color: #fff;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  transition: all 0.15s ease-in-out;
-}
-
-.rbc-toolbar button:hover {
-  background-color: #f8f9fa;
-  border-color: #adb5bd;
-}
-
-.rbc-toolbar button.rbc-active {
-  background-color: #007bff;
-  border-color: #007bff;
-  color: white;
-}
-
-.rbc-toolbar-label {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #495057;
-  margin: 0 20px;
-}
-
-.rbc-month-view {
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
+/* ---------------- GRID ---------------- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(140px, 1fr)); /* 🔥 FIX PRINCIPAL */
+  min-width: 980px; /* 🔥 empêche l’écrasement */
+  gap: 1px;
+  background-color: #d0d7de;
+  border: 1px solid #d0d7de;
+  border-radius: 16px;
   overflow: hidden;
 }
 
-.rbc-month-row {
-  border-bottom: 1px solid #dee2e6;
-}
-
-.rbc-day-bg {
-  border-right: 1px solid #dee2e6;
-}
-
-.rbc-day-bg.rbc-today {
-  background-color: rgba(0, 123, 255, 0.05);
-}
-
-.rbc-date-cell {
-  padding: 4px;
+/* ---------------- HEADER ---------------- */
+.calendar-header {
+  background: linear-gradient(180deg, #f8f9fa 0%, #eef2f6 100%);
+  padding: 12px 10px;
   text-align: center;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.rbc-date-cell.rbc-now {
   font-weight: 600;
-  color: #007bff;
+  color: #495057;
+  font-size: 0.85rem;
 }
 
-.rbc-event-content {
-  font-size: 0.75rem;
-  font-weight: 500;
+/* ---------------- DAY CELL ---------------- */
+.calendar-day {
+  background-color: #ffffff;
+  min-height: 130px;
+  padding: 8px;
+  position: relative;
+  transition: all 0.15s ease;
+  overflow: hidden; /* 🔥 empêche débordement */
 }
 
-.rbc-day-unavailable {
-  background-color: #f8f9fa !important;
-  opacity: 0.6;
+/* hover */
+.calendar-day-clickable {
+  cursor: pointer;
 }
 
-.rbc-day-unavailable .rbc-date-cell {
-  color: #6c757d;
-  text-decoration: line-through;
+.calendar-day-clickable:hover {
+  background-color: #f4f9ff;
 }
 
-.rbc-day-weekend {
-  background-color: #fff3cd !important;
-  opacity: 0.8;
+/* états */
+.calendar-day-other-month {
+  background-color: #f8f9fa;
+  color: #9ca3af;
 }
 
-.rbc-day-weekend .rbc-date-cell {
-  color: #856404;
-  font-weight: 500;
+.calendar-day-today {
+  background-color: #eef6ff;
 }
 
-/* Responsive */
+.calendar-day-weekend {
+  background-color: #fbfbfc;
+}
+
+.calendar-day-ferie {
+  background: linear-gradient(180deg, #fff8e1 0%, #ffffff 40%);
+}
+
+/* sélection */
+.calendar-day-selected {
+  background-color: #e7f1ff;
+  box-shadow: inset 0 0 0 1px #b6d4fe;
+}
+
+.calendar-day-selection-edge {
+  box-shadow: inset 0 0 0 2px #0d6efd;
+}
+
+/* ---------------- DATE NUMBER ---------------- */
+.calendar-day-number {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1f2937;
+}
+
+/* ---------------- HOLIDAY ---------------- */
+.calendar-ferie {
+  margin-bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background-color: #fff3cd;
+  display: inline-block;
+  max-width: 100%;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------- EVENTS ---------------- */
+.calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* EVENT */
+.calendar-event {
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: white;
+  overflow: hidden;
+
+  /* 🔥 FIX TEXT OVERFLOW */
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* +X events */
+.calendar-event-more {
+  padding: 3px 6px;
+  background-color: #6c757d;
+  border-radius: 6px;
+  font-size: 10px;
+  color: white;
+  text-align: center;
+}
+
+/* ---------------- LEGEND ---------------- */
+.legend-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.legend-color-holiday {
+  background: linear-gradient(180deg, #fff3cd 0%, #ffe69c 100%);
+  border: 1px solid #f0ad4e;
+}
+
+/* ---------------- TABLET ---------------- */
+@media (max-width: 992px) {
+  .calendar-day {
+    min-height: 110px;
+    padding: 6px;
+  }
+
+  .calendar-event {
+    font-size: 9px;
+  }
+}
+
+/* ---------------- MOBILE ---------------- */
 @media (max-width: 768px) {
-  .rbc-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+  .calendar-grid-wrapper {
+    overflow-x: visible; /* 🔥 important */
   }
 
-  .rbc-toolbar-label {
-    margin: 10px 0;
-    font-size: 1.1rem;
+  .calendar-grid {
+    display: block;
+    min-width: 100%;
+    background: transparent;
+    border: none;
   }
 
-  .rbc-toolbar button {
-    margin: 2px;
+  .calendar-header {
+    display: none;
   }
+
+  .calendar-day {
+    margin-bottom: 10px;
+    border: 1px solid #d0d7de;
+    border-radius: 14px;
+    min-height: auto;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  }
+
+  .calendar-day-number::after {
+    content: ' · ' attr(data-weekday);
+    font-weight: 400;
+    color: #6b7280;
+  }
+
+  .calendar-event {
+    white-space: normal;
+  }
+}
+
+/* ---------------- TIMELINE (optionnel) ---------------- */
+.timeline-item {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.timeline-content {
+  padding-bottom: 10px;
 }

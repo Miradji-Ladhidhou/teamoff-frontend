@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } from 'react-icons/fa';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { settingsService } from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
+import AsyncButton from '../../components/AsyncButton';
 
 const SystemSettings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +41,7 @@ const SystemSettings = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [systemInfo, setSystemInfo] = useState({});
   const [confirmModal, setConfirmModal] = useState({ show: false, action: '', label: '' });
@@ -70,6 +72,12 @@ const SystemSettings = () => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadSettings = async () => {
     try {
       const response = await settingsService.getAll();
@@ -80,7 +88,7 @@ const SystemSettings = () => {
       }));
     } catch (error) {
       console.error('Erreur chargement paramètres:', error);
-      setError('Impossible de charger les paramètres système');
+      alert.error('Impossible de charger les paramètres système');
     }
   };
 
@@ -90,7 +98,7 @@ const SystemSettings = () => {
       setSystemInfo(response.data || {});
     } catch (error) {
       console.error('Erreur chargement info système:', error);
-      setError('Impossible de charger les informations système');
+      alert.error('Impossible de charger les informations système');
     }
   };
 
@@ -124,7 +132,6 @@ const SystemSettings = () => {
   const handleSave = async (section, label) => {
     try {
       setLoading(true);
-      setError('');
       setSuccess('');
 
       const sectionFields = {
@@ -150,7 +157,7 @@ const SystemSettings = () => {
       setSuccess(`Paramètres ${label} sauvegardés avec succès`);
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
-      setError(error.response?.data?.message || 'Erreur lors de la sauvegarde');
+      alert.error(error.response?.data?.message || 'Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
     }
@@ -163,6 +170,25 @@ const SystemSettings = () => {
     }));
   };
 
+  const renderSectionActions = ({ onSave, extraActions = null, hint = 'Les modifications sont appliquées après sauvegarde.' }) => (
+    <div className="d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2 border-top pt-3 mt-4">
+      <small className="text-muted">{hint}</small>
+      <div className="d-grid d-sm-flex gap-2">
+        {extraActions}
+        <AsyncButton
+          variant="primary"
+          onClick={onSave}
+          isLoading={loading}
+          showSpinner={loading}
+          loadingText="Sauvegarde..."
+        >
+          <FaSave className="me-2" />
+          Enregistrer les modifications
+        </AsyncButton>
+      </div>
+    </div>
+  );
+
   const openConfirm = (action, label) => setConfirmModal({ show: true, action, label });
   const closeConfirm = () => setConfirmModal({ show: false, action: '', label: '' });
 
@@ -171,7 +197,6 @@ const SystemSettings = () => {
     closeConfirm();
     try {
       setLoading(true);
-      setError('');
 
       let message = 'Action exécutée.';
 
@@ -209,7 +234,7 @@ const SystemSettings = () => {
       await loadHistory({ page: 1 });
       setSuccess(message);
     } catch {
-      setError('Erreur lors de l\'exécution de l\'action.');
+      alert.error('Erreur lors de l\'exécution de l\'action.');
     } finally {
       setLoading(false);
     }
@@ -218,13 +243,12 @@ const SystemSettings = () => {
   const handleSendTestEmail = async () => {
     try {
       setLoading(true);
-      setError('');
       setSuccess('');
 
       await settingsService.sendTestEmail(testEmailRecipient || settings.emailFrom || settings.smtpUser);
       setSuccess('Email de test envoyé avec succès.');
     } catch (error) {
-      setError(error.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de test.');
+      alert.error(error.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de test.');
     } finally {
       setLoading(false);
     }
@@ -233,7 +257,6 @@ const SystemSettings = () => {
   const handleExportHistoryCSV = async () => {
     try {
       setLoading(true);
-      setError('');
 
       const response = await settingsService.exportHistoryCSV();
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -246,7 +269,7 @@ const SystemSettings = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (exportError) {
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV de l\'historique.');
+      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV de l\'historique.');
     } finally {
       setLoading(false);
     }
@@ -301,8 +324,8 @@ const SystemSettings = () => {
   };
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Paramètres Système</h1>
           <p className="text-muted">Configuration globale de l'application</p>
@@ -314,6 +337,7 @@ const SystemSettings = () => {
           <li>Documentez le changement et son objectif</li>
           <li>Appliquez d'abord en environnement de test</li>
           <li>Validez l'impact sur les utilisateurs et les notifications</li>
+          <li>Utilisez l'historique pour tracer chaque action sensible.</li>
         </ul>
       </InfoCardInfo>
 
@@ -321,8 +345,25 @@ const SystemSettings = () => {
         Conservez une sauvegarde des valeurs précédentes pour revenir rapidement en arrière si besoin.
       </TipCard>
 
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+      <Card className="mb-4 border-0 bg-light">
+        <Card.Body>
+          <div className="fw-semibold mb-2">Par quoi commencer</div>
+          <ol className="mb-0 ps-3">
+            <li>Commencez par l'onglet Général pour les réglages globaux de l'application.</li>
+            <li>Validez ensuite Sécurité et Email, puis testez l'envoi SMTP.</li>
+            <li>Terminez par les onglets Informations système et Historique.</li>
+          </ol>
+        </Card.Body>
+      </Card>
+
+      <InfoCardInfo title="Exemples concrets de réglages">
+        <ul className="mb-0">
+          <li>Sécurité standard: session 60 min, 5 tentatives, mot de passe min 8 avec caractères spéciaux.</li>
+          <li>Email Gmail: SMTP hôte smtp.gmail.com, port 587, expéditeur noreply@votredomaine.com.</li>
+          <li>Sauvegardes: fréquence quotidienne + rétention 30 jours pour un bon compromis sécurité/coût.</li>
+          <li>Maintenance: activez le mode maintenance avant une migration de base.</li>
+        </ul>
+      </InfoCardInfo>
 
       <Tabs
         activeKey={activeTab}
@@ -331,7 +372,7 @@ const SystemSettings = () => {
           setActiveTab(nextTab);
           setSearchParams({ tab: nextTab });
         }}
-        className="mb-4"
+        className="mb-4 settings-tabs-mobile"
       >
         {/* Onglet Général */}
         <Tab eventKey="general" title="Général">
@@ -408,16 +449,9 @@ const SystemSettings = () => {
                 </Col>
               </Row>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('general', 'généraux')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('general', 'généraux'),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -438,6 +472,7 @@ const SystemSettings = () => {
                       value={settings.sessionTimeout}
                       onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 60 = déconnexion automatique après 1h d'inactivité.</Form.Text>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -448,6 +483,7 @@ const SystemSettings = () => {
                       value={settings.maxLoginAttempts}
                       onChange={(e) => handleInputChange('maxLoginAttempts', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 5 = blocage temporaire après 5 échecs.</Form.Text>
                   </Form.Group>
                 </Col>
               </Row>
@@ -475,16 +511,9 @@ const SystemSettings = () => {
                 </Col>
               </Row>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('security', 'de sécurité')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('security', 'de sécurité'),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -551,27 +580,26 @@ const SystemSettings = () => {
                   onChange={(e) => handleInputChange('emailFrom', e.target.value)}
                   placeholder="noreply@teamoff.com"
                 />
+                <Form.Text className="text-muted">Exemple: utilisez une adresse dédiée type noreply@entreprise.com.</Form.Text>
               </Form.Group>
 
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="outline-secondary"
-                  className="me-2"
-                  onClick={handleSendTestEmail}
-                  disabled={loading || (!testEmailRecipient && !settings.emailFrom && !settings.smtpUser)}
-                >
-                  <FaEnvelope className="me-2" />
-                  Tester l'envoi
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('email', 'email')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('email', 'email'),
+                hint: 'Testez d\'abord la configuration SMTP, puis enregistrez.',
+                extraActions: (
+                  <AsyncButton
+                    variant="outline-secondary"
+                    onClick={handleSendTestEmail}
+                    isLoading={loading}
+                    showSpinner={loading}
+                    loadingText="Envoi..."
+                    disabled={!testEmailRecipient && !settings.emailFrom && !settings.smtpUser}
+                  >
+                    <FaEnvelope className="me-2" />
+                    Tester l'envoi
+                  </AsyncButton>
+                ),
+              })}
 
               <Form.Group className="mt-3">
                 <Form.Label>Destinataire email de test</Form.Label>
@@ -616,28 +644,25 @@ const SystemSettings = () => {
                       value={settings.dbRetentionDays}
                       onChange={(e) => handleInputChange('dbRetentionDays', parseInt(e.target.value))}
                     />
+                    <Form.Text className="text-muted">Exemple: 30 = conservation des sauvegardes pendant 1 mois.</Form.Text>
                   </Form.Group>
                 </Col>
               </Row>
 
-              <div className="d-flex gap-2 justify-content-end">
-                <Button
-                  variant="outline-info"
-                  onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
-                  disabled={loading}
-                >
-                  <FaDatabase className="me-2" />
-                  Sauvegarde manuelle
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => handleSave('database', 'base de données')}
-                  disabled={loading}
-                >
-                  <FaSave className="me-2" />
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
+              {renderSectionActions({
+                onSave: () => handleSave('database', 'base de données'),
+                hint: 'Conservez des valeurs prudentes pour éviter une perte de sauvegardes.',
+                extraActions: (
+                  <Button
+                    variant="outline-info"
+                    onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
+                    disabled={loading}
+                  >
+                    <FaDatabase className="me-2" />
+                    Sauvegarde manuelle
+                  </Button>
+                ),
+              })}
             </Card.Body>
           </Card>
         </Tab>
@@ -649,7 +674,9 @@ const SystemSettings = () => {
               <h5 className="mb-0">État du système</h5>
             </Card.Header>
             <Card.Body>
-              <Table bordered>
+              <div className="settings-table-wrap">
+                <div className="settings-table-hint d-md-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
+                <Table bordered responsive className="settings-table">
                 <tbody>
                   <tr>
                     <td><strong>Version Node.js</strong></td>
@@ -692,9 +719,10 @@ const SystemSettings = () => {
                     </td>
                   </tr>
                 </tbody>
-              </Table>
+                </Table>
+              </div>
 
-              <div className="d-flex gap-2 justify-content-end mt-3">
+              <div className="settings-system-actions justify-content-end mt-3">
                 <Button
                   variant="outline-warning"
                   onClick={() => openConfirm('restart', 'Redémarrer les services applicatifs ? Les sessions actives seront maintenues.')}
@@ -726,10 +754,10 @@ const SystemSettings = () => {
             <Card.Header>
               <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <h5 className="mb-0">Historique des modifications systeme</h5>
-                <div className="d-flex align-items-center gap-2 flex-wrap">
+                <div className="settings-history-toolbar align-items-center flex-wrap">
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 180 }}
+                    className="settings-history-control"
                     value={historySortBy}
                     onChange={(e) => {
                       setHistorySortBy(e.target.value);
@@ -742,7 +770,7 @@ const SystemSettings = () => {
                   </Form.Select>
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 140 }}
+                    className="settings-history-control"
                     value={historySortOrder}
                     onChange={(e) => {
                       setHistorySortOrder(e.target.value);
@@ -754,7 +782,7 @@ const SystemSettings = () => {
                   </Form.Select>
                   <Form.Select
                     size="sm"
-                    style={{ minWidth: 120 }}
+                    className="settings-history-control"
                     value={historyPageSize}
                     onChange={(e) => {
                       setHistoryPageSize(Number(e.target.value));
@@ -765,20 +793,22 @@ const SystemSettings = () => {
                     <option value={20}>20 / page</option>
                     <option value={50}>50 / page</option>
                   </Form.Select>
-                  <Button
+                  <AsyncButton
                     variant="outline-primary"
                     size="sm"
                     onClick={handleExportHistoryCSV}
-                    disabled={loading}
+                    isLoading={loading}
+                    showSpinner={loading}
+                    loadingText="Export..."
                   >
                     <FaDownload className="me-2" />
                     Export CSV
-                  </Button>
+                  </AsyncButton>
                 </div>
               </div>
             </Card.Header>
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="settings-history-meta justify-content-between align-items-center mb-2">
                 <small className="text-muted">
                   {historyTotal} action(s) trouvee(s)
                 </small>
@@ -786,7 +816,9 @@ const SystemSettings = () => {
                   Page {historyPage} / {historyTotalPages}
                 </small>
               </div>
-              <Table bordered responsive>
+              <div className="settings-table-wrap">
+                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir l'historique complet.</div>
+                <Table bordered responsive className="settings-table">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -810,9 +842,10 @@ const SystemSettings = () => {
                     </tr>
                   ))}
                 </tbody>
-              </Table>
+                </Table>
+              </div>
 
-              <div className="d-flex justify-content-end gap-2">
+              <div className="settings-history-pagination justify-content-end gap-2">
                 <Button
                   variant="outline-secondary"
                   size="sm"
@@ -843,7 +876,15 @@ const SystemSettings = () => {
         <Modal.Body>{confirmModal.label}</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeConfirm}>Annuler</Button>
-          <Button variant="primary" onClick={executeSystemAction}>Confirmer</Button>
+          <AsyncButton
+            variant="primary"
+            onClick={executeSystemAction}
+            isLoading={loading}
+            showSpinner={loading}
+            loadingText="Exécution..."
+          >
+            Confirmer
+          </AsyncButton>
         </Modal.Footer>
       </Modal>
     </Container>

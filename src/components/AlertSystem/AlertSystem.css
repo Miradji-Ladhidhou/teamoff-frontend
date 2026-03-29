@@ -1,0 +1,642 @@
+/**
+ * ALERT SYSTEM — Design System unifié
+ * =====================================
+ * Architecture :
+ *   - TOASTS : fixed bottom-center, empilés, animations slide-up
+ *   - MODALES : overlay full-screen flex-center → modale en position relative
+ *               → centrage garanti, aucun hack translate/margin
+ * Variables CSS centralisées (tokens) : couleurs, spacing, shadows, radius
+ * Mobile-first : base = mobile, overrides pour ≥641px et ≥1025px
+ * Contraste WCAG AA garanti sur tous les types
+ * Aucune couleur hardcodée en dehors de :root
+ */
+
+/* ===================================================================
+   DESIGN TOKENS
+   =================================================================== */
+:root {
+  --alert-radius:    12px;
+  --alert-radius-sm:  8px;
+
+  --alert-shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --alert-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.13);
+  --alert-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.20);
+
+  --z-toast:   999999;
+  --z-overlay: 10000;
+  --z-modal:   10001;
+
+  /* SUCCESS — texte #15803d sur fond #f0fdf4 : ratio 5.7:1 ✓ */
+  --clr-success:        #15803d;
+  --clr-success-bg:     #f0fdf4;
+  --clr-success-border: #86efac;
+  --clr-success-icon:   #16a34a;
+
+  /* ERROR — texte #b91c1c sur fond #fff1f2 : ratio 5.5:1 ✓ */
+  --clr-error:          #b91c1c;
+  --clr-error-bg:       #fff1f2;
+  --clr-error-border:   #fca5a5;
+  --clr-error-icon:     #dc2626;
+
+  /* WARNING — texte #92400e sur fond #fffbeb : ratio 6.1:1 ✓ */
+  --clr-warning:        #92400e;
+  --clr-warning-bg:     #fffbeb;
+  --clr-warning-border: #fcd34d;
+  --clr-warning-icon:   #d97706;
+
+  /* INFO — texte #1e40af sur fond #eff6ff : ratio 7.0:1 ✓ */
+  --clr-info:           #1e40af;
+  --clr-info-bg:        #eff6ff;
+  --clr-info-border:    #93c5fd;
+  --clr-info-icon:      #2563eb;
+
+  /* DANGER (modal) */
+  --clr-danger:        #dc3545;
+  --clr-danger-dark:   #bb2d3b;
+  --clr-danger-darker: #a71d2a;
+
+  /* PRIMARY */
+  --clr-primary:        #0d6efd;
+  --clr-primary-dark:   #0b5ed7;
+  --clr-primary-darker: #0a58ca;
+
+  /* NEUTRES */
+  --clr-text-primary:   #1e293b;
+  --clr-text-secondary: #475569;
+  --clr-text-muted:     #64748b;
+  --clr-border:         #e2e8f0;
+  --clr-bg-subtle:      #f8fafc;
+  --clr-modal-bg:       #ffffff;
+}
+
+/* ===================================================================
+   KEYFRAMES
+   =================================================================== */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(10px) scale(0.97); }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes modalOut {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(0.94) translateY(10px); }
+}
+
+/* ===================================================================
+   TOAST CONTAINER — fixed bottom-center
+   =================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  top: auto;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  width: min(460px, calc(100vw - 32px));
+  align-items: stretch;
+}
+
+/* ===================================================================
+   TOAST ITEM
+   =================================================================== */
+.toast-item {
+  pointer-events: auto;
+  border-radius: var(--alert-radius-sm);
+  box-shadow: var(--alert-shadow-md);
+  background: #fef08a;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: toastIn 0.25s ease-out forwards;
+  min-height: 52px;
+  border-left: 3px solid #ca8a04;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toast-item.toast-exit {
+  animation: toastOut 0.25s ease-in forwards;
+}
+
+/* Tous les types partagent le même style — géré par .toast-item */
+
+/* ===================================================================
+   TOAST CONTENT
+   =================================================================== */
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.toast-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  color: #111827;
+}
+
+/* Texte sombre sur fond pastel clair — contraste WCAG AA garanti */
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: break-word;
+  color: #111827;
+}
+
+/* Couleur couverte par .toast-message */
+
+.toast-close-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  margin-left: auto;
+  color: #111827;
+  opacity: 0.65;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+/* Couleur couverte par .toast-close-btn */
+
+.toast-close-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* ===================================================================
+   MODAL OVERLAY
+   L'overlay est le flex-container et centre la modale.
+   La modale est en position: relative — aucun hack translate/margin.
+   =================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* Centrage parfait de la modale enfant */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Padding respectant les safe areas iOS/Android */
+  padding: 16px;
+  padding-top:    max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left:   max(16px, env(safe-area-inset-left));
+  padding-right:  max(16px, env(safe-area-inset-right));
+  box-sizing: border-box;
+
+  background: rgba(15, 23, 42, 0.60);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-overlay);
+  animation: overlayIn 0.2s ease-out forwards;
+}
+
+/* ===================================================================
+   CONFIRMATION MODAL
+   position: relative — centré par l'overlay flex
+   Aucune transformation CSS nécessaire
+   =================================================================== */
+.confirmation-modal {
+  position: relative;
+  z-index: var(--z-modal);
+  background: var(--clr-modal-bg);
+  border-radius: var(--alert-radius);
+  box-shadow: var(--alert-shadow-lg);
+
+  width: 100%;
+  max-width: 480px;
+
+  /* Ne jamais dépasser la hauteur de l'écran */
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.confirmation-modal.modal-exit {
+  animation: modalOut 0.2s ease-in forwards;
+}
+
+.confirmation-modal.modal-danger {
+  border-top: 4px solid var(--clr-danger);
+}
+
+.confirmation-modal.modal-notification {
+  max-width: 520px;
+}
+
+.confirmation-modal.modal-notification .modal-footer {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.confirmation-modal.modal-notification .modal-btn {
+  width: auto;
+  min-width: 112px;
+}
+
+.confirmation-modal.modal-notification-success {
+  border-top: 4px solid var(--clr-success-icon);
+}
+
+.confirmation-modal.modal-notification-success .modal-header {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, transparent 100%);
+}
+
+.confirmation-modal.modal-notification-success .modal-title {
+  color: var(--clr-success);
+}
+
+.confirmation-modal.modal-notification-success .modal-btn-confirm {
+  background: var(--clr-success-icon);
+  border-color: var(--clr-success-icon);
+}
+
+.confirmation-modal.modal-notification-success .modal-btn-confirm:hover:not(:disabled) {
+  background: var(--clr-success);
+  border-color: var(--clr-success);
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.28);
+}
+
+.confirmation-modal.modal-notification-error {
+  border-top: 4px solid var(--clr-danger);
+}
+
+.confirmation-modal.modal-notification-error .modal-header {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.08) 0%, transparent 100%);
+}
+
+.confirmation-modal.modal-notification-error .modal-title {
+  color: var(--clr-danger);
+}
+
+.confirmation-modal.modal-notification-info {
+  border-top: 4px solid var(--clr-info-icon);
+}
+
+.confirmation-modal.modal-notification-info .modal-header {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, transparent 100%);
+}
+
+.confirmation-modal.modal-notification-info .modal-title {
+  color: var(--clr-info);
+}
+
+/* ===================================================================
+   MODAL HEADER
+   =================================================================== */
+.modal-header {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--clr-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.confirmation-modal.modal-danger .modal-header {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, transparent 100%);
+  border-bottom-color: rgba(220, 53, 69, 0.12);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  line-height: 1.35;
+  flex: 1;
+  word-break: break-word;
+}
+
+.confirmation-modal.modal-danger .modal-title {
+  color: var(--clr-danger);
+}
+
+.modal-close-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  color: var(--clr-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-close-btn:hover {
+  background: var(--clr-bg-subtle);
+  color: var(--clr-text-primary);
+}
+
+.modal-close-btn:focus-visible {
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 1px;
+}
+
+/* ===================================================================
+   MODAL BODY
+   =================================================================== */
+.modal-body {
+  padding: 16px 20px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.confirmation-modal.modal-danger .modal-body {
+  background: rgba(220, 53, 69, 0.02);
+}
+
+.modal-description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--clr-text-secondary);
+  line-height: 1.65;
+}
+
+/* ===================================================================
+   MODAL FOOTER
+   Mobile  : colonne (empilé)
+   ≥641px  : ligne row-reverse
+   =================================================================== */
+.modal-footer {
+  padding: 12px 20px 18px;
+  border-top: 1px solid var(--clr-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.confirmation-modal.modal-danger .modal-footer {
+  border-top-color: rgba(220, 53, 69, 0.10);
+}
+
+/* ===================================================================
+   MODAL BUTTONS
+   =================================================================== */
+.modal-btn {
+  padding: 12px 20px;
+  border-radius: var(--alert-radius-sm);
+  border: 1.5px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  letter-spacing: 0.01em;
+  box-sizing: border-box;
+}
+
+.modal-btn:focus-visible {
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 2px;
+}
+
+.modal-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.modal-btn-danger {
+  background: var(--clr-danger);
+  border-color: var(--clr-danger);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.20);
+}
+
+.modal-btn-danger:hover:not(:disabled) {
+  background: var(--clr-danger-dark);
+  border-color: var(--clr-danger-darker);
+  box-shadow: 0 4px 14px rgba(220, 53, 69, 0.28);
+}
+
+.modal-btn-danger:active:not(:disabled) {
+  background: var(--clr-danger-darker);
+  transform: scale(0.99);
+}
+
+.modal-btn-confirm {
+  background: var(--clr-primary);
+  border-color: var(--clr-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.20);
+}
+
+.modal-btn-confirm:hover:not(:disabled) {
+  background: var(--clr-primary-dark);
+  border-color: var(--clr-primary-darker);
+  box-shadow: 0 4px 14px rgba(13, 110, 253, 0.28);
+}
+
+.modal-btn-confirm:active:not(:disabled) {
+  background: var(--clr-primary-darker);
+  transform: scale(0.99);
+}
+
+.modal-btn-cancel {
+  background: var(--clr-bg-subtle);
+  border-color: var(--clr-border);
+  color: var(--clr-text-secondary);
+}
+
+.modal-btn-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: var(--clr-text-primary);
+}
+
+.modal-btn-cancel:active:not(:disabled) {
+  background: var(--clr-border);
+}
+
+/* ===================================================================
+   RESPONSIVE — Tablet ≥ 641px
+   =================================================================== */
+@media (min-width: 641px) {
+  .toast-container {
+    bottom: 24px;
+    bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .modal-overlay {
+    padding: 24px;
+  }
+
+  .modal-footer {
+    flex-direction: row-reverse;
+    gap: 10px;
+    padding: 14px 20px 18px;
+  }
+
+  .modal-btn {
+    width: auto;
+    min-width: 110px;
+    flex: none;
+  }
+}
+
+/* ===================================================================
+   RESPONSIVE — Desktop ≥ 1025px
+   =================================================================== */
+@media (min-width: 1025px) {
+  .confirmation-modal {
+    max-width: 500px;
+  }
+
+  .modal-header {
+    padding: 22px 24px 14px;
+  }
+
+  .modal-body {
+    padding: 16px 24px;
+  }
+
+  .modal-footer {
+    padding: 14px 24px 20px;
+    gap: 12px;
+  }
+
+  .modal-title {
+    font-size: 17px;
+  }
+
+  .toast-container {
+    width: min(480px, calc(100vw - 48px));
+  }
+}
+
+/* ===================================================================
+   ACCESSIBILITY
+   =================================================================== */
+.toast-item:focus {
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item,
+  .toast-item.toast-exit,
+  .modal-overlay,
+  .confirmation-modal,
+  .confirmation-modal.modal-exit {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===================================================================
+   DARK MODE — redéfinition des tokens uniquement
+   Tous les composants héritent automatiquement
+   =================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --clr-success:        #4ade80;
+    --clr-success-bg:     rgba(22, 163, 74, 0.12);
+    --clr-success-border: #4ade80;
+    --clr-success-icon:   #4ade80;
+
+    --clr-error:          #f87171;
+    --clr-error-bg:       rgba(220, 53, 69, 0.12);
+    --clr-error-border:   #f87171;
+    --clr-error-icon:     #f87171;
+
+    --clr-warning:        #fbbf24;
+    --clr-warning-bg:     rgba(217, 119, 6, 0.12);
+    --clr-warning-border: #fbbf24;
+    --clr-warning-icon:   #fbbf24;
+
+    --clr-info:           #93c5fd;
+    --clr-info-bg:        rgba(37, 99, 235, 0.12);
+    --clr-info-border:    #60a5fa;
+    --clr-info-icon:      #60a5fa;
+
+    --clr-danger:        #f87171;
+    --clr-danger-dark:   #ef4444;
+    --clr-danger-darker: #dc2626;
+
+    --clr-text-primary:   #f1f5f9;
+    --clr-text-secondary: #cbd5e1;
+    --clr-text-muted:     #94a3b8;
+    --clr-border:         #334155;
+    --clr-bg-subtle:      #1e293b;
+    --clr-modal-bg:       #1e293b;
+  }
+
+  .toast-item {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .confirmation-modal {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  }
+
+  .modal-btn-cancel:hover:not(:disabled) {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  .modal-btn-cancel:active:not(:disabled) {
+    background: #475569;
+  }
+}

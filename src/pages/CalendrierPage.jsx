@@ -3,17 +3,95 @@ import { Container, Row, Col, Card, Button, Badge, Form, Alert, Spinner } from '
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { calendrierService, congesService } from '../services/api';
+import { calendrierService, api } from '../services/api';
 import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import { useAlert } from '../hooks/useAlert';
+import '../styles/calendar.css';
+
+const normalizeLocalDate = (value) => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  if (typeof value === 'string') {
+    const rawDate = value.slice(0, 10);
+    const parts = rawDate.split('-').map(Number);
+    if (parts.length === 3 && parts.every(Number.isFinite)) {
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+};
+
+const formatDateParam = (value) => {
+  const date = normalizeLocalDate(value);
+  if (!date) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateLabel = (value) => {
+  const date = normalizeLocalDate(value);
+  if (!date) return '-';
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const getCongeFirstName = (conge) => {
+  const directCandidates = [
+    conge?.utilisateur_prenom,
+    conge?.prenom,
+    conge?.utilisateur?.prenom,
+  ];
+
+  for (const candidate of directCandidates) {
+    const value = String(candidate || '').trim();
+    if (value) return value;
+  }
+
+  const fullNameCandidates = [
+    conge?.utilisateur_nom,
+    conge?.utilisateur?.nom_complet,
+    `${conge?.utilisateur?.prenom || ''} ${conge?.utilisateur?.nom || ''}`,
+  ];
+
+  for (const candidate of fullNameCandidates) {
+    const value = String(candidate || '').trim();
+    if (value) return value.split(/\s+/)[0];
+  }
+
+  return 'Salarié';
+};
+
+const getCongeTypeLabel = (conge) => {
+  if (typeof conge?.conge_type === 'string') return conge.conge_type;
+  if (conge?.conge_type?.libelle) return conge.conge_type.libelle;
+  return conge?.conge_type_libelle || 'Congé';
+};
 
 const CalendrierPage = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [conges, setConges] = useState([]);
   const [joursFeries, setJoursFeries] = useState([]);
+  const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
+  const [selectionStart, setSelectionStart] = useState(null);
+  const [selectionEnd, setSelectionEnd] = useState(null);
   const [filters, setFilters] = useState({
     statut: 'all',
     utilisateur: 'all'
@@ -34,13 +112,17 @@ const CalendrierPage = () => {
       const congesResponse = await calendrierService.getCongesByMonth(year, month, filters);
       setConges(congesResponse.data);
 
+      // Charger les absences (filtrage côté client)
+      const absencesResponse = await api.get('/absences');
+      setAbsences(absencesResponse.data || []);
+
       // Charger les jours fériés pour le mois
       const feriesResponse = await calendrierService.getJoursFeriesByMonth(year, month);
       setJoursFeries(feriesResponse.data);
 
     } catch (err) {
       console.error('Erreur lors du chargement du calendrier:', err);
-      setError('Erreur lors du chargement du calendrier');
+      alert.error('Erreur lors du chargement du calendrier');
     } finally {
       setLoading(false);
     }
@@ -60,7 +142,7 @@ const CalendrierPage = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
     const days = [];
 
@@ -96,42 +178,108 @@ const CalendrierPage = () => {
     return days;
   };
 
-  const getCongesForDay = (date) => {
-    return conges.filter(conge => {
-      const startDate = new Date(conge.date_debut);
-      const endDate = new Date(conge.date_fin);
-
-      // Vérifier si la date est dans la période du congé
-      return date >= startDate && date <= endDate;
+  // Retourne tous les événements (congés + absences) pour un jour donné
+  const getEventsForDay = (date) => {
+    const targetDate = normalizeLocalDate(date);
+    // Congés
+    const dayConges = conges.filter(conge => {
+      const startDate = normalizeLocalDate(conge.date_debut);
+      const endDate = normalizeLocalDate(conge.date_fin);
+      if (!targetDate || !startDate || !endDate) return false;
+      return targetDate >= startDate && targetDate <= endDate;
     });
+    // Absences
+    const dayAbsences = absences.filter(abs => {
+      const startDate = normalizeLocalDate(abs.date_debut);
+      const endDate = normalizeLocalDate(abs.date_fin);
+      if (!targetDate || !startDate || !endDate) return false;
+      return targetDate >= startDate && targetDate <= endDate;
+    });
+    // On tague chaque événement pour l’affichage
+    const mappedConges = dayConges.map(c => ({ ...c, _eventType: 'conge' }));
+    const mappedAbsences = dayAbsences.map(a => ({ ...a, _eventType: 'absence' }));
+    return [...mappedConges, ...mappedAbsences];
   };
 
   const isJourFerie = (date) => {
     return joursFeries.some(jf => {
-      const jfDate = new Date(jf.date);
-      return jfDate.toDateString() === date.toDateString();
+      const jfDate = normalizeLocalDate(jf.date);
+      const currentDate = normalizeLocalDate(date);
+      return jfDate?.getTime() === currentDate?.getTime();
     });
   };
 
   const getJourFerieForDay = (date) => {
     return joursFeries.find(jf => {
-      const jfDate = new Date(jf.date);
-      return jfDate.toDateString() === date.toDateString();
+      const jfDate = normalizeLocalDate(jf.date);
+      const currentDate = normalizeLocalDate(date);
+      return jfDate?.getTime() === currentDate?.getTime();
     });
   };
 
   const getStatusColor = (statut) => {
     const colors = {
-      en_attente: 'warning',
-      approuve: 'success',
-      refuse: 'danger',
-      annule: 'secondary'
+      en_attente_manager: 'warning',
+      valide_manager: 'info',
+      valide_final: 'success',
+      refuse_manager: 'danger',
+      refuse_final: 'danger'
     };
     return colors[statut] || 'secondary';
   };
 
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  };
+
+  const isWeekend = (d) => {
+    const date = normalizeLocalDate(d);
+    const day = date?.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const isDaySelectable = (d) => Boolean(normalizeLocalDate(d));
+
+  const handleSelectDay = (dateObj) => {
+    const date = normalizeLocalDate(dateObj);
+    if (!date) return;
+
+    if (!isDaySelectable(date)) return;
+
+    if (!selectionStart || (selectionStart && selectionEnd)) {
+      setSelectionStart(date);
+      setSelectionEnd(null);
+      return;
+    }
+
+    if (date < selectionStart) {
+      setSelectionEnd(selectionStart);
+      setSelectionStart(date);
+    } else {
+      setSelectionEnd(date);
+    }
+  };
+
+  const handleDayClick = (dayInfo) => {
+    const date = normalizeLocalDate(dayInfo?.date);
+    if (!date) return;
+
+    handleSelectDay(date);
+  };
+
+  const isDateInSelection = (dateObj) => {
+    if (!selectionStart) return false;
+    const d = normalizeLocalDate(dateObj);
+    if (!d) return false;
+    const end = selectionEnd || selectionStart;
+    return d >= selectionStart && d <= end;
+  };
+
+  const isSelectionEdge = (dateObj) => {
+    const date = normalizeLocalDate(dateObj);
+    if (!date || !selectionStart) return false;
+    const end = selectionEnd || selectionStart;
+    return date.getTime() === selectionStart.getTime() || date.getTime() === end.getTime();
   };
 
   const handleFilterChange = (e) => {
@@ -143,11 +291,11 @@ const CalendrierPage = () => {
   };
 
   const days = getDaysInMonth(currentDate);
-  const weekDays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading py-3">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement du calendrier...</p>
@@ -157,41 +305,41 @@ const CalendrierPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h3 mb-0">Calendrier des congés</h1>
-        <div className="d-flex gap-2">
-          <Button
-            variant="outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FaFilter className="me-1" />
-            Filtres
-          </Button>
-          <Button as={Link} to="/conges/nouveau" variant="primary">
-            <FaPlus className="me-1" />
-            Nouveau congé
-          </Button>
-        </div>
+    <Container fluid="sm">
+      <div className="page-header">
+        <h1 className="h4 mb-1">Calendrier des absences et congés</h1>
+        <p className="text-muted small mb-0">
+          Visualisez toutes les absences et congés de l'équipe sur une seule vue calendrier.
+        </p>
       </div>
 
-      <InfoCardInfo title="Lisez le calendrier des congés">
-        <p>Ce calendrier affiche tous les congés validés et les jours fériés. Les couleurs vous aident à identifier rapidement les périodes:</p>
-        <ul className="mb-0">
-          <li><Badge bg="success">Vert</Badge> = Congé validé</li>
-          <li><Badge bg="warning">Orange</Badge> = Jour férié</li>
-          <li><Badge bg="danger">Rouge</Badge> = Congé refusé</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Lecture efficace du planning">
-        Activez les filtres pour isoler un statut ou un utilisateur, puis naviguez mois par mois pour préparer les périodes sensibles.
-      </TipCard>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
+      {selectionStart && (
+        <div className="alert alert-info d-flex justify-content-between align-items-center" role="status">
+          <div>
+            Période sélectionnée: <strong>{formatDateLabel(selectionStart)}</strong>
+            {selectionEnd ? (
+              <>
+                {' '}au <strong>{formatDateLabel(selectionEnd)}</strong>
+              </>
+            ) : (
+              ' (sélectionnez une date de fin)'
+            )}
+          </div>
+          <div className="d-flex gap-2">
+            <Button variant="outline-secondary" size="sm" onClick={() => { setSelectionStart(null); setSelectionEnd(null); }}>
+              Réinitialiser
+            </Button>
+            {selectionEnd && (
+              <Button
+                as={Link}
+                to={`/conges/nouveau?date_debut=${formatDateParam(selectionStart)}&date_fin=${formatDateParam(selectionEnd)}`}
+                size="sm"
+              >
+                Poser ce congé
+              </Button>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Filtres */}
@@ -208,10 +356,11 @@ const CalendrierPage = () => {
                     onChange={handleFilterChange}
                   >
                     <option value="all">Tous les statuts</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="approuve">Approuvé</option>
-                    <option value="refuse">Refusé</option>
-                    <option value="annule">Annulé</option>
+                    <option value="en_attente_manager">En attente manager</option>
+                    <option value="valide_manager">Validé manager</option>
+                    <option value="valide_final">Validé final</option>
+                    <option value="refuse_manager">Refusé manager</option>
+                    <option value="refuse_final">Refusé final</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -247,62 +396,88 @@ const CalendrierPage = () => {
           </Button>
         </Card.Header>
 
-        <Card.Body className="p-0">
+        <Card.Body className="p-0" style={{ maxWidth: '100%', overflowX: 'auto' }}>
           {/* En-têtes des jours */}
-          <div className="calendar-grid">
-            {weekDays.map(day => (
-              <div key={day} className="calendar-header">
-                {day}
-              </div>
-            ))}
+          <div className="calendar-grid-wrapper">
+            <div className="calendar-grid">
+              {weekDays.map(day => (
+                <div key={day} className="calendar-header">
+                  {day}
+                </div>
+              ))}
 
-            {/* Jours du calendrier */}
-            {days.map((dayInfo, index) => {
-              const dayConges = getCongesForDay(dayInfo.date);
-              const jourFerie = getJourFerieForDay(dayInfo.date);
-              const isToday = dayInfo.date.toDateString() === new Date().toDateString();
+              {/* Jours du calendrier */}
+              {days.map((dayInfo, index) => {
+                const events = getEventsForDay(dayInfo.date);
+                const jourFerie = getJourFerieForDay(dayInfo.date);
+                const isToday = normalizeLocalDate(dayInfo.date)?.getTime() === normalizeLocalDate(new Date())?.getTime();
+                const isSelected = isDateInSelection(dayInfo.date);
+                const isSelectionLimit = isSelectionEdge(dayInfo.date);
+                const weekend = isWeekend(dayInfo.date);
+                const selectable = isDaySelectable(dayInfo.date);
 
-              return (
-                <div
-                  key={index}
-                  className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''}`}
-                >
-                  <div className="calendar-day-number">
-                    {dayInfo.dayNumber}
-                  </div>
-
-                  {/* Jour férié */}
-                  {jourFerie && (
-                    <div className="calendar-ferie">
-                      <small className="text-danger fw-bold">{jourFerie.nom}</small>
+                return (
+                  <div
+                    key={index}
+                    className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
+                    onClick={() => selectable && handleDayClick(dayInfo)}
+                  >
+                    <div
+                      className="calendar-day-number"
+                      data-weekday={normalizeLocalDate(dayInfo.date)?.toLocaleDateString('fr-FR', { weekday: 'short' }) || ''}
+                    >
+                      {dayInfo.dayNumber}
                     </div>
-                  )}
 
-                  {/* Congés */}
-                  <div className="calendar-events">
-                    {dayConges.slice(0, 3).map((conge, idx) => (
-                      <div
-                        key={idx}
-                        className={`calendar-event bg-${getStatusColor(conge.statut)}`}
-                        title={`${conge.utilisateur_nom} - ${conge.conge_type}`}
-                      >
-                        <small className="text-white">
-                          {(['admin_entreprise', 'super_admin'].includes(user.role) || user.role === 'manager' || conge.utilisateur_id === user.id)
-                            ? conge.utilisateur_nom
-                            : 'Congé'
-                          }
-                        </small>
-                      </div>
-                    ))}
-                    {dayConges.length > 3 && (
-                      <div className="calendar-event-more">
-                        <small>+{dayConges.length - 3} autres</small>
+                    {/* Jour férié */}
+                    {jourFerie && (
+                      <div className="calendar-ferie">
+                        <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
                       </div>
                     )}
+
+                    {/* Événements (congés + absences) */}
+                    <div className="calendar-events">
+                      {events.slice(0, 3).map((event, idx) => {
+                        if (event._eventType === 'conge') {
+                          return (
+                            <div
+                              key={idx}
+                              className={`calendar-event bg-${getStatusColor(event.statut)}`}
+                              title={`${getCongeFirstName(event)} - ${getCongeTypeLabel(event)}`}
+                            >
+                              <small className="text-white">
+                                {`${getCongeFirstName(event)} - ${getCongeTypeLabel(event)}`}
+                              </small>
+                            </div>
+                          );
+                        } else if (event._eventType === 'absence') {
+                          // Couleur : maladie = vert, exceptionnelle = bleu
+                          const absColor = event.type_absence === 'maladie' ? 'success' : 'primary';
+                          return (
+                            <div
+                              key={idx}
+                              className={`calendar-event bg-${absColor}`}
+                              title={`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''} (${event.type_absence})${event.commentaire ? ' : ' + event.commentaire : ''}`}
+                            >
+                              <small className="text-white">
+                                {`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''}`}
+                              </small>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                      {events.length > 3 && (
+                        <div className="calendar-event-more">
+                          <small>+{events.length - 3} autres</small>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </Card.Body>
       </Card>
@@ -315,11 +490,11 @@ const CalendrierPage = () => {
             <Col md={6}>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-success me-2"></div>
-                <small>Congé approuvé</small>
+                <small>Congé validé final</small>
               </div>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-warning me-2"></div>
-                <small>Congé en attente</small>
+                <small>Congé en attente manager</small>
               </div>
               <div className="d-flex align-items-center mb-2">
                 <div className="legend-color bg-danger me-2"></div>
@@ -328,11 +503,11 @@ const CalendrierPage = () => {
             </Col>
             <Col md={6}>
               <div className="d-flex align-items-center mb-2">
-                <div className="legend-color bg-secondary me-2"></div>
-                <small>Congé annulé</small>
+                <div className="legend-color bg-info me-2"></div>
+                <small>Congé validé manager</small>
               </div>
               <div className="d-flex align-items-center mb-2">
-                <div className="legend-color bg-light border me-2"></div>
+                <div className="legend-color legend-color-holiday me-2"></div>
                 <small>Jour férié</small>
               </div>
               <div className="d-flex align-items-center mb-2">
@@ -343,102 +518,6 @@ const CalendrierPage = () => {
           </Row>
         </Card.Body>
       </Card>
-
-      <style jsx>{`
-        .calendar-grid {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 1px;
-          background-color: #dee2e6;
-        }
-
-        .calendar-header {
-          background-color: #f8f9fa;
-          padding: 10px;
-          text-align: center;
-          font-weight: bold;
-          color: #495057;
-        }
-
-        .calendar-day {
-          background-color: white;
-          min-height: 120px;
-          padding: 5px;
-          position: relative;
-        }
-
-        .calendar-day-other-month {
-          background-color: #f8f9fa;
-          color: #6c757d;
-        }
-
-        .calendar-day-today {
-          background-color: #e3f2fd;
-        }
-
-        .calendar-day-ferie {
-          background-color: #fff3cd;
-        }
-
-        .calendar-day-number {
-          font-size: 14px;
-          font-weight: bold;
-          margin-bottom: 5px;
-        }
-
-        .calendar-ferie {
-          margin-bottom: 5px;
-        }
-
-        .calendar-events {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .calendar-event {
-          padding: 2px 4px;
-          border-radius: 3px;
-          font-size: 11px;
-          line-height: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .calendar-event-more {
-          padding: 2px 4px;
-          background-color: #6c757d;
-          border-radius: 3px;
-          font-size: 10px;
-          color: white;
-          text-align: center;
-        }
-
-        .legend-color {
-          width: 20px;
-          height: 20px;
-          border-radius: 3px;
-        }
-
-        .timeline-item {
-          position: relative;
-          padding-left: 30px;
-        }
-
-        .timeline-marker {
-          position: absolute;
-          left: 0;
-          top: 5px;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .timeline-content {
-          padding-bottom: 10px;
-        }
-      `}</style>
     </Container>
   );
 };

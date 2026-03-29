@@ -1,3 +1,7 @@
+  // Scroll en haut à chaque changement de page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
@@ -17,11 +21,15 @@ import {
   FaHistory,
   FaCog,
   FaCalendarAlt,
-  FaUser
+  FaUser,
+  FaEllipsisH
 } from 'react-icons/fa';
 import { notificationsService } from '../../services/api';
 import { getDefaultRoute, getNavigationForRole } from '../../utils/navigation';
+import AppFooter from './AppFooter';
 import './Layout.css';
+
+const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -33,17 +41,33 @@ const Layout = () => {
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const response = await notificationsService.getAll({ non_lu: 'true' });
-        const items = Array.isArray(response.data) ? response.data : [];
-        setUnreadNotifications(items.length);
+        const response = await notificationsService.getAll({ non_lu: 'true', page: 1, limit: 1 });
+        const total = Number(response.data?.pagination?.total);
+        setUnreadNotifications(Number.isFinite(total) ? total : 0);
       } catch (error) {
         console.error('Erreur chargement notifications:', error);
       }
     };
 
+    const handleNotificationsUpdated = (event) => {
+      const unreadCount = Number(event?.detail?.unreadCount);
+      if (Number.isFinite(unreadCount)) {
+        setUnreadNotifications(Math.max(0, unreadCount));
+        return;
+      }
+
+      loadUnreadCount();
+    };
+
     if (user) {
       loadUnreadCount();
     }
+
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+    };
   }, [user]);
 
   const navigationItems = getNavigationForRole(user?.role);
@@ -62,8 +86,17 @@ const Layout = () => {
     chart: FaChartLine,
     audit: FaHistory,
     settings: FaCog,
-    user: FaUser
+    user: FaUser,
+    more: FaEllipsisH
   };
+
+  // Bottom nav : 4 premiers items primaires + "Plus" si items secondaires
+  const bottomNavItems = [
+    ...primaryItems.slice(0, 4),
+    ...(secondaryItems.length > 0 || primaryItems.length > 4
+      ? [{ path: '__more__', label: 'Plus', icon: 'more', section: 'bottom' }]
+      : [])
+  ];
 
   const roleMeta = {
     admin_entreprise: { label: 'Administrateur entreprise', className: 'role-admin_entreprise' },
@@ -76,7 +109,7 @@ const Layout = () => {
 
   const entrepriseLabel = user?.entreprise_nom
     ? user.entreprise_nom
-    : (user?.entreprise_id ? `Entreprise ${user.entreprise_id.slice(0, 8)}...` : 'Entreprise non renseignee');
+    : 'Entreprise non renseignee';
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -100,8 +133,7 @@ const Layout = () => {
             setShowSidebar(false);
           }
         }}
-        className={`role-nav-link mb-2 d-flex align-items-center ${isActive(item.path) ? 'active' : ''}`}
-        style={{ cursor: 'pointer' }}
+        className={`role-nav-link mb-2 d-flex align-items-center cursor-pointer ${isActive(item.path) ? 'active' : ''}`}
       >
         <Icon className="me-3" size={17} />
         <span>{item.label}</span>
@@ -118,8 +150,7 @@ const Layout = () => {
     <div className={`role-shell ${currentRoleMeta.className}`}>
       {/* Sidebar desktop */}
       <div className="d-none d-md-block role-sidebar">
-        <div className="p-3">
-          <div className="d-flex align-items-center mb-4">
+        <div className="p-3">          <div className="d-flex align-items-center mb-4">
             <FaShieldAlt size={24} className="me-2 role-brand-icon" />
             <h5 className="mb-0 role-brand-title">TeamOff</h5>
           </div>
@@ -138,6 +169,16 @@ const Layout = () => {
           </Nav>
 
           <hr className="my-4 role-divider" />
+
+          <Button 
+            variant="outline-light" 
+            size="sm" 
+            onClick={() => navigate('/my-profile')}
+            className="w-100 mb-2"
+          >
+            <FaUser className="me-2" />
+            Mes informations
+          </Button>
 
           <Button variant="outline-light" size="sm" onClick={handleLogout} className="w-100">
             <FaSignOutAlt className="me-2" />
@@ -169,6 +210,16 @@ const Layout = () => {
           </Nav>
 
           <hr className="my-4" />
+          <Button 
+            variant="outline-info" 
+            size="sm" 
+            onClick={() => navigate('/my-profile')}
+            className="w-100 mb-2"
+          >
+            <FaUser className="me-2" />
+            Mes informations
+          </Button>
+
           <Button variant="outline-danger" size="sm" onClick={handleLogout} className="w-100">
             <FaSignOutAlt className="me-2" />
             Deconnexion
@@ -184,18 +235,23 @@ const Layout = () => {
             size="sm"
             className="d-md-none me-2"
             onClick={() => setShowSidebar(true)}
+            aria-label="Menu"
           >
             <FaBars />
           </Button>
 
-          <Navbar.Brand className="d-none d-md-block" style={{ cursor: 'pointer' }} onClick={() => navigate(getDefaultRoute(user?.role))}>
-            <FaShieldAlt className="me-2 role-brand-icon" />
-            Espace {currentRoleMeta.label}
+          <Navbar.Brand
+            className="role-topbar-brand cursor-pointer"
+            onClick={() => navigate(getDefaultRoute(user?.role))}
+          >
+            <FaShieldAlt className="me-2 role-brand-icon d-none d-md-inline" />
+            <span className="d-none d-md-inline">Espace {currentRoleMeta.label}</span>
+            <span className="d-md-none fw-bold fs-6">TeamOff</span>
           </Navbar.Brand>
 
           <Navbar.Collapse className="justify-content-end">
-            <div className="d-flex align-items-center gap-2">
-              <small className="ui-text-soft me-3 d-none d-sm-inline">
+            <div className="d-flex align-items-center">
+              <small className="ui-text-soft d-none d-sm-inline">
                 {new Date().toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
@@ -203,11 +259,6 @@ const Layout = () => {
                   day: 'numeric'
                 })}
               </small>
-              <div className="text-end">
-                <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-                <small className="d-block ui-text-soft">{entrepriseLabel}</small>
-                <small className="ui-text-soft">{currentRoleMeta.label}</small>
-              </div>
             </div>
           </Navbar.Collapse>
         </Navbar>
@@ -215,7 +266,41 @@ const Layout = () => {
         <main className="role-content">
           <Outlet />
         </main>
+        <AppFooter />
       </div>
+
+      {/* Bottom Navigation Mobile */}
+      <nav className="mobile-bottom-nav d-md-none" role="navigation" aria-label="Navigation principale">
+        {bottomNavItems.map((item) => {
+          const Icon = iconComponentMap[item.icon] || FaHome;
+          const isMore = item.path === '__more__';
+          const active = !isMore && isActive(item.path);
+          const badgeValue = item.badgeKey === 'notifications' ? unreadNotifications : 0;
+
+          return (
+            <button
+              key={item.path}
+              className={`mobile-bottom-nav__item${active ? ' active' : ''}`}
+              onClick={() => {
+                if (isMore) {
+                  setShowSidebar(true);
+                } else {
+                  navigate(item.path);
+                }
+              }}
+              aria-label={item.label}
+            >
+              <span className="mobile-bottom-nav__icon">
+                <Icon size={20} />
+                {badgeValue > 0 && (
+                  <span className="mobile-bottom-nav__badge">{badgeValue > 9 ? '9+' : badgeValue}</span>
+                )}
+              </span>
+              <span className="mobile-bottom-nav__label">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };

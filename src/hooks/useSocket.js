@@ -17,7 +17,7 @@ const useSocket = () => {
       user = {};
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5500';
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
     const socket = io(baseUrl, {
       auth: { token },
       transports: ['websocket'],

@@ -1,34 +1,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Table, Form, InputGroup, Spinner, Alert, Pagination, Nav, Tab } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { FaPlus, FaEye, FaEdit, FaFilter, FaSearch, FaCalendarAlt, FaList, FaLightbulb, FaCheckCircle } from 'react-icons/fa';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import '../../styles/calendar.css';
+import { Container, Row, Col, Card, Button, Badge, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Link, useLocation } from 'react-router-dom';
+import { FaPlus, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService, joursFeriesService, entreprisesService } from '../../services/api';
+import { congesService } from '../../services/api';
 import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
-
-// Configuration du calendrier
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales: {
-    fr: fr,
-  },
-});
+import { useAlert } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
+  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const location = useLocation();
   const [conges, setConges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
   const [filters, setFilters] = useState({
     statut: '',
+    conge_type_id: '',
     search: '',
     joursRestantsMin: '',
     joursRestantsMax: '',
@@ -42,12 +32,16 @@ const CongesPage = () => {
   const [serverTotalPages, setServerTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // États pour le calendrier
-  const [joursFeries, setJoursFeries] = useState([]);
-  const [entreprise, setEntreprise] = useState(null);
-  const [calendarEvents, setCalendarEvents] = useState([]);
-  const [viewMode, setViewMode] = useState('list'); // 'list' ou 'calendar'
+  const [showValidateModal, setShowValidateModal] = useState(false);
+  const [selectedCongeToValidate, setSelectedCongeToValidate] = useState(null);
+  const [validateComment, setValidateComment] = useState('');
+  const [validationOverlapByCongeId, setValidationOverlapByCongeId] = useState({});
+  const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
+  const [rejectComment, setRejectComment] = useState('');
+  const validateAction = useAsyncAction();
+  const rejectAction = useAsyncAction();
 
   const loadConges = useCallback(async () => {
     try {
@@ -56,6 +50,10 @@ const CongesPage = () => {
 
       if (filters.statut) {
         params.statut = filters.statut;
+      }
+
+      if (filters.conge_type_id) {
+        params.conge_type_id = filters.conge_type_id;
       }
 
       // Filtrage selon le rôle
@@ -78,44 +76,29 @@ const CongesPage = () => {
       setServerTotalPages(Math.ceil((response.total || response.data.length) / filters.limit));
     } catch (err) {
       console.error('Erreur lors du chargement des congés:', err);
-      setError('Erreur lors du chargement des congés');
+      alert.error('Erreur lors du chargement des congés');
     } finally {
       setLoading(false);
     }
-  }, [filters.limit, filters.statut, user?.id, user?.role]);
-
-  const loadCalendarData = useCallback(async () => {
-    try {
-      // Charger les jours fériés (seulement pour admins)
-      if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
-        try {
-          const joursFeriesResponse = await joursFeriesService.getAll();
-          setJoursFeries(joursFeriesResponse.data || []);
-        } catch (err) {
-          console.warn('Impossible de charger les jours fériés:', err);
-          setJoursFeries([]);
-        }
-      }
-
-      // Charger l'entreprise pour la politique de congés
-      if (user?.entreprise_id) {
-        try {
-          const entrepriseResponse = await entreprisesService.getById(user.entreprise_id);
-          setEntreprise(entrepriseResponse.data);
-        } catch (err) {
-          console.warn('Impossible de charger l\'entreprise:', err);
-          setEntreprise(null);
-        }
-      }
-    } catch (err) {
-      console.error('Erreur lors du chargement des données calendrier:', err);
-    }
-  }, [user?.entreprise_id, user?.role]);
+  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role]);
 
   useEffect(() => {
     loadConges();
-    loadCalendarData();
-  }, [loadConges, loadCalendarData]);
+  }, [loadConges]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const congeTypeId = params.get('conge_type_id') || '';
+
+    if (!congeTypeId) return;
+
+    setCurrentPage(1);
+    setFilters((prev) => ({
+      ...prev,
+      conge_type_id: congeTypeId,
+      page: 1
+    }));
+  }, [location.search]);
 
   const getCongeTypeLabel = (conge) => {
     if (typeof conge?.conge_type === 'string') return conge.conge_type;
@@ -135,52 +118,6 @@ const CongesPage = () => {
     return 'Entreprise inconnue';
   };
 
-  // Créer les événements pour le calendrier
-  const createCalendarEvents = useCallback(() => {
-    const events = [];
-
-    // Ajouter les congés
-    conges.forEach(conge => {
-      const startDate = new Date(conge.date_debut);
-      const endDate = new Date(conge.date_fin);
-
-      // Pour chaque jour du congé
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        events.push({
-          id: `conge-${conge.id}-${d.getTime()}`,
-          title: `${getEmployeLabel(conge)} - ${getCongeTypeLabel(conge)}`,
-          start: new Date(d),
-          end: new Date(d),
-          resource: {
-            type: 'conge',
-            conge: conge,
-            status: conge.statut
-          }
-        });
-      }
-    });
-
-    // Ajouter les jours fériés
-    joursFeries.forEach(jourFerie => {
-      events.push({
-        id: `ferie-${jourFerie.id}`,
-        title: jourFerie.libelle,
-        start: new Date(jourFerie.date),
-        end: new Date(jourFerie.date),
-        resource: {
-          type: 'ferie',
-          jourFerie: jourFerie
-        }
-      });
-    });
-
-    setCalendarEvents(events);
-  }, [conges, joursFeries]);
-
-  useEffect(() => {
-    createCalendarEvents();
-  }, [createCalendarEvents]);
-
   // Filtrage des congés côté client pour la recherche rapide
   const filteredConges = useMemo(() => {
     return conges.filter((conge) => {
@@ -190,6 +127,8 @@ const CongesPage = () => {
         || getEmployeLabel(conge).toLowerCase().includes(query)
         || getEntrepriseLabel(conge).toLowerCase().includes(query)
         || conge.commentaire_employe?.toLowerCase().includes(query);
+
+      const matchesCongeType = !filters.conge_type_id || conge.conge_type_id === filters.conge_type_id;
 
       const joursRestants = Number(conge.jours_restants);
       const joursRestantsMin = filters.joursRestantsMin === '' ? null : Number(filters.joursRestantsMin);
@@ -202,7 +141,7 @@ const CongesPage = () => {
       const matchesDateDemande = (!filters.dateDemandeDebut || (dateDemandeKey && dateDemandeKey >= filters.dateDemandeDebut))
         && (!filters.dateDemandeFin || (dateDemandeKey && dateDemandeKey <= filters.dateDemandeFin));
 
-      return matchesSearch && matchesJoursRestants && matchesDateDemande;
+      return matchesSearch && matchesCongeType && matchesJoursRestants && matchesDateDemande;
     });
   }, [conges, filters]);
 
@@ -244,29 +183,154 @@ const CongesPage = () => {
     }));
   };
 
-  const handleValidateConge = async (congeId) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir valider cette demande de congé ?')) return;
+  const openValidateModal = (congeId) => {
+    setSelectedCongeToValidate(congeId);
+    setValidateComment('');
+    setShowValidateModal(true);
+    fetchValidationOverlap(congeId);
+  };
 
+  const closeValidateModal = () => {
+    setShowValidateModal(false);
+    setSelectedCongeToValidate(null);
+    setValidateComment('');
+  };
+
+  const fetchValidationOverlap = async (congeId) => {
+    if (!congeId) return;
+
+    setValidationOverlapLoading(true);
     try {
-      await congesService.validate(congeId);
-      loadConges(); // Recharger la liste
+      const response = await congesService.getValidationOverlap(congeId);
+      setValidationOverlapByCongeId((prev) => ({
+        ...prev,
+        [congeId]: response.data,
+      }));
     } catch (err) {
-      console.error('Erreur lors de la validation:', err);
-      setError('Erreur lors de la validation du congé');
+      setValidationOverlapByCongeId((prev) => ({
+        ...prev,
+        [congeId]: {
+          has_overlap: null,
+          message: 'Impossible de vérifier le chevauchement pour le moment.',
+        },
+      }));
+    } finally {
+      setValidationOverlapLoading(false);
     }
   };
 
-  const handleRejectConge = async (congeId) => {
-    const motif = window.prompt('Motif du rejet (optionnel):');
-    if (motif === null) return; // Annulé par l'utilisateur
+  useEffect(() => {
+    let cancelled = false;
 
-    try {
-      await congesService.reject(congeId, { commentaire: motif });
-      loadConges(); // Recharger la liste
-    } catch (err) {
-      console.error('Erreur lors du rejet:', err);
-      setError('Erreur lors du rejet du congé');
+    const loadValidationOverlapsForPage = async () => {
+      const targetConges = paginatedConges.filter((conge) => canValidateConge(conge));
+      if (!targetConges.length) return;
+
+      const results = await Promise.all(
+        targetConges.map(async (conge) => {
+          try {
+            const response = await congesService.getValidationOverlap(conge.id);
+            return [conge.id, response.data];
+          } catch (_) {
+            return [conge.id, { has_overlap: null, message: 'Vérification indisponible.' }];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      setValidationOverlapByCongeId((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, data]) => {
+          next[id] = data;
+        });
+        return next;
+      });
+    };
+
+    loadValidationOverlapsForPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paginatedConges]);
+
+  const openRejectModal = (congeId) => {
+    setSelectedCongeToReject(congeId);
+    setRejectComment('');
+    setShowRejectModal(true);
+  };
+
+  const closeRejectModal = () => {
+    setShowRejectModal(false);
+    setSelectedCongeToReject(null);
+    setRejectComment('');
+  };
+
+  const canValidateConge = (conge) => {
+    const workflow = conge?.effective_approval_workflow;
+
+    if (workflow === 'auto') return false;
+
+    if (user?.role === 'manager') {
+      if (workflow === 'admin_only') return false;
+      return conge.statut === 'en_attente_manager';
     }
+
+    if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+      if (workflow === 'manager' || workflow === 'manager_only') return false;
+      if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
+      return conge.statut === 'valide_manager';
+    }
+
+    return false;
+  };
+
+  const canRejectConge = (conge) => {
+    if (user?.role === 'manager') {
+      return conge.statut === 'en_attente_manager';
+    }
+
+    if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+      return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
+    }
+
+    return false;
+  };
+
+  const handleValidateConge = async () => {
+    if (!selectedCongeToValidate) return;
+    await validateAction.run(async () => {
+      try {
+        await congesService.validate(selectedCongeToValidate, {
+          commentaire: validateComment.trim(),
+        });
+        closeValidateModal();
+        loadConges(); // Recharger la liste
+      } catch (err) {
+        console.error('Erreur lors de la validation:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
+      }
+    });
+  };
+
+  const handleRejectConge = async () => {
+    if (!selectedCongeToReject) return;
+
+    if (!rejectComment.trim()) {
+      alert.error('Veuillez renseigner un motif de rejet.');
+      return;
+    }
+
+    await rejectAction.run(async () => {
+      try {
+        await congesService.reject(selectedCongeToReject, { commentaire: rejectComment.trim() });
+        closeRejectModal();
+        loadConges(); // Recharger la liste
+      } catch (err) {
+        console.error('Erreur lors du rejet:', err);
+        alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
+      }
+    });
   };
 
   const getStatusBadge = (status) => {
@@ -311,113 +375,15 @@ const CongesPage = () => {
     return parsedDate.toLocaleDateString('fr-FR');
   };
 
-  // Gestionnaire d'événement du calendrier
-  const handleSelectEvent = (event) => {
-    if (event.resource.type === 'conge') {
-      // Ouvrir les détails du congé
-      window.open(`/conges/${event.resource.conge.id}`, '_blank');
-    }
-  };
-
-  // Personnalisation des événements du calendrier
-  const eventStyleGetter = (event) => {
-    let className = 'rbc-event';
-
-    if (event.resource.type === 'conge') {
-      const status = event.resource.status;
-      switch (status) {
-        case 'en_attente_manager':
-          className += ' conge-en-attente';
-          break;
-        case 'valide_manager':
-          className += ' conge-valide-manager';
-          break;
-        case 'valide_final':
-          className += ' conge-valide-final';
-          break;
-        case 'refuse_manager':
-        case 'refuse_final':
-          className += ' conge-refuse';
-          break;
-        default:
-          className += ' conge-default';
-      }
-    } else if (event.resource.type === 'ferie') {
-      className += ' jour-ferie';
-    }
-
-    return {
-      className,
-      style: {
-        borderRadius: '4px',
-        border: 'none',
-        color: 'white',
-        display: 'block',
-        fontSize: '0.75rem',
-        fontWeight: '500',
-        padding: '2px 6px'
-      }
-    };
-  };
-
-  // Vérifier si une date est disponible selon la politique congés
-  const isDateAvailable = (date) => {
-    if (!entreprise?.politique_conges) return true;
-
-    const dayOfWeek = date.getDay(); // 0 = dimanche, 1 = lundi, etc.
-    const politique = entreprise.politique_conges;
-
-    // Vérifier les jours travaillés de la semaine
-    if (politique.jours_travailles && !politique.jours_travailles.includes(dayOfWeek)) {
-      return false; // Jour non travaillé
-    }
-
-    // Vérifier les périodes de blocage
-    if (politique.periodes_bloquees) {
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return !politique.periodes_bloquees.some(periode =>
-        month >= periode.mois_debut && month <= periode.mois_fin &&
-        day >= periode.jour_debut && day <= periode.jour_fin
-      );
-    }
-
-    return true;
-  };
-
-  // Fonction pour personnaliser l'apparence des cellules du calendrier
-  const dayPropGetter = (date) => {
-    const isAvailable = isDateAvailable(date);
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-
-    let className = '';
-    let style = {};
-
-    if (!isAvailable) {
-      className = 'rbc-day-unavailable';
-      style = {
-        backgroundColor: '#f8f9fa',
-        opacity: 0.6
-      };
-    } else if (isWeekend) {
-      className = 'rbc-day-weekend';
-      style = {
-        backgroundColor: '#fff3cd',
-        opacity: 0.8
-      };
-    }
-
-    return { className, style };
-  };
-
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
         <div>
-          <h1 className="h3 mb-1">
+          <h1 className="h4 mb-1">
             {isAdmin() ? 'Gestion des Congés' : 'Mes Congés'}
           </h1>
-          <p className="text-muted">
+          <p className="text-muted small mb-0">
             {user?.role === 'super_admin'
               ? 'Superviser l\'ensemble des demandes de congé de la plateforme'
               : isAdmin()
@@ -425,17 +391,15 @@ const CongesPage = () => {
                 : 'Consulter et gérer vos demandes de congés'}
           </p>
         </div>
-        <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-          <FaPlus className="me-2" />
-          Nouveau congé
-        </Button>
+        {canCreateLeave && (
+          <div className="page-header-actions">
+            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center justify-content-center">
+              <FaPlus className="me-2" />
+              Nouveau congé
+            </Button>
+          </div>
+        )}
       </div>
-
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {/* Contenu d'aide selon le rôle */}
       {user?.role === 'employe' && (
@@ -465,371 +429,406 @@ const CongesPage = () => {
         </>
       )}
 
-      {/* Onglets pour basculer entre vue liste et calendrier */}
-      <Tab.Container activeKey={viewMode} onSelect={(key) => setViewMode(key)}>
-        <Row className="mb-4">
-          <Col>
-            <Nav variant="tabs" className="border-bottom-0">
-              <Nav.Item>
-                <Nav.Link eventKey="list" className="d-flex align-items-center">
-                  <FaList className="me-2" />
-                  Vue Liste
-                </Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="calendar" className="d-flex align-items-center">
-                  <FaCalendarAlt className="me-2" />
-                  Calendrier
-                </Nav.Link>
-              </Nav.Item>
-            </Nav>
-          </Col>
-        </Row>
+      <Card className="mb-4">
+        <Card.Header>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="d-flex align-items-center"
+          >
+            <FaFilter className="me-2" />
+            Filtres
+          </Button>
+        </Card.Header>
 
-        <Tab.Content>
-          {/* Vue Liste */}
-          <Tab.Pane eventKey="list">
-            {/* Filtres */}
-            <Card className="mb-4">
-              <Card.Header>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="d-flex align-items-center"
-                >
-                  <FaFilter className="me-2" />
-                  Filtres
-                </Button>
-              </Card.Header>
-
-              {showFilters && (
-                <Card.Body>
-                  <Row>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Statut</Form.Label>
-                        <Form.Select
-                          value={filters.statut}
-                          onChange={(e) => handleFilterChange('statut', e.target.value)}
-                        >
-                          <option value="">Tous les statuts</option>
-                          <option value="en_attente_manager">En attente manager</option>
-                          <option value="valide_manager">Validé manager</option>
-                          <option value="valide_final">Validé final</option>
-                          <option value="refuse_manager">Refusé manager</option>
-                          <option value="refuse_final">Refusé final</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={5}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Recherche</Form.Label>
-                        <InputGroup>
-                          <InputGroup.Text>
-                            <FaSearch />
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            placeholder={isAdmin() ? "Rechercher par employé ou type de congé..." : "Rechercher par type de congé..."}
-                            value={filters.search}
-                            onChange={(e) => handleFilterChange('search', e.target.value)}
-                          />
-                        </InputGroup>
-                      </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Jours restant min</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={filters.joursRestantsMin}
-                          onChange={(e) => handleFilterChange('joursRestantsMin', e.target.value)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Jours restant max</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={filters.joursRestantsMax}
-                          onChange={(e) => handleFilterChange('joursRestantsMax', e.target.value)}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Date demande du</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={filters.dateDemandeDebut}
-                          onChange={(e) => handleFilterChange('dateDemandeDebut', e.target.value)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Date demande au</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={filters.dateDemandeFin}
-                          onChange={(e) => handleFilterChange('dateDemandeFin', e.target.value)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Trier par</Form.Label>
-                        <Form.Select
-                          value={filters.sortBy}
-                          onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                        >
-                          <option value="date_demande">Date demande</option>
-                          <option value="jours_restants">Jours restant</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Ordre</Form.Label>
-                        <Form.Select
-                          value={filters.sortOrder}
-                          onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                        >
-                          <option value="desc">Décroissant</option>
-                          <option value="asc">Croissant</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              )}
-            </Card>
-
-            {/* Liste des congés */}
-            <Card>
-              <Card.Body className="p-0">
-                {loading ? (
-                  <div className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="text-muted mt-2">Chargement des congés...</p>
-                  </div>
-                ) : paginatedConges.length === 0 ? (
-                  <div className="text-center py-5">
-                    <FaSearch size={48} className="text-muted mb-3" />
-                    <h5 className="text-muted">Aucun congé trouvé</h5>
-                    <p className="text-muted">
-                      {filters.search || filters.statut ?
-                        'Essayez de modifier vos filtres' :
-                        'Créez votre première demande de congé'
-                      }
-                    </p>
-                    <Button as={Link} to="/conges/nouveau" variant="primary">
-                      <FaPlus className="me-2" />
-                      Nouveau congé
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="table-responsive">
-                      <Table hover className="mb-0">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Employé</th>
-                            {user?.role === 'super_admin' && <th>Entreprise</th>}
-                            <th>Type</th>
-                            <th>Période</th>
-                            <th>Jours pris</th>
-                            <th>Jours restant</th>
-                            <th>Statut</th>
-                            <th>Date demande</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {paginatedConges.map((conge) => (
-                            <tr key={conge.id}>
-                              <td>{getEmployeLabel(conge)}</td>
-                              {user?.role === 'super_admin' && <td>{getEntrepriseLabel(conge)}</td>}
-                              <td>{getCongeTypeLabel(conge)}</td>
-                              <td>
-                                {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
-                              </td>
-                              <td>{formatDays(conge.jours_pris ?? conge.jours_calcules)}</td>
-                              <td>{formatDays(conge.jours_restants)}</td>
-                              <td>{getStatusBadge(conge.statut)}</td>
-                              <td>{formatDate(conge.date_demande || conge.created_at || conge.createdAt)}</td>
-                              <td>
-                                <div className="d-flex gap-1">
-                                  <Button
-                                    as={Link}
-                                    to={`/conges/${conge.id}`}
-                                    variant="outline-primary"
-                                    size="sm"
-                                  >
-                                    <FaEye />
-                                  </Button>
-
-                                  {/* Boutons de validation pour managers/admins */}
-                                  {(user?.role === 'manager' || user?.role === 'admin_entreprise' || user?.role === 'super_admin') &&
-                                   (conge.statut === 'en_attente_manager' || ((user?.role === 'admin_entreprise' || user?.role === 'super_admin') && conge.statut === 'valide_manager')) && (
-                                    <>
-                                      <Button
-                                        variant="outline-success"
-                                        size="sm"
-                                        onClick={() => handleValidateConge(conge.id)}
-                                        title="Valider le congé"
-                                      >
-                                        ✓
-                                      </Button>
-                                      <Button
-                                        variant="outline-danger"
-                                        size="sm"
-                                        onClick={() => handleRejectConge(conge.id)}
-                                        title="Rejeter le congé"
-                                      >
-                                        ✗
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="d-flex justify-content-center p-3 border-top">
-                        <Pagination>
-                          <Pagination.First
-                            disabled={currentPage === 1}
-                            onClick={() => handlePageChange(1)}
-                          />
-                          <Pagination.Prev
-                            disabled={currentPage === 1}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                          />
-
-                          {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                            const pageNumber = Math.max(1, currentPage - 2) + index;
-                            if (pageNumber > totalPages) return null;
-
-                            return (
-                              <Pagination.Item
-                                key={pageNumber}
-                                active={pageNumber === currentPage}
-                                onClick={() => handlePageChange(pageNumber)}
-                              >
-                                {pageNumber}
-                              </Pagination.Item>
-                            );
-                          })}
-
-                          <Pagination.Next
-                            disabled={currentPage === totalPages}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                          />
-                          <Pagination.Last
-                            disabled={currentPage === totalPages}
-                            onClick={() => handlePageChange(totalPages)}
-                          />
-                        </Pagination>
-                      </div>
-                    )}
-                  </>
-                )}
-              </Card.Body>
-            </Card>
-          </Tab.Pane>
-
-          {/* Vue Calendrier */}
-          <Tab.Pane eventKey="calendar">
-            <Card>
-              <Card.Body>
-                <div style={{ height: '600px' }}>
-                  <Calendar
-                    localizer={localizer}
-                    events={calendarEvents}
-                    startAccessor="start"
-                    endAccessor="end"
-                    style={{ height: '100%' }}
-                    culture="fr"
-                    messages={{
-                      allDay: 'Toute la journée',
-                      previous: 'Précédent',
-                      next: 'Suivant',
-                      today: 'Aujourd\'hui',
-                      month: 'Mois',
-                      week: 'Semaine',
-                      day: 'Jour',
-                      agenda: 'Agenda',
-                      date: 'Date',
-                      time: 'Heure',
-                      event: 'Événement',
-                      noEventsInRange: 'Aucun événement dans cette période.',
-                      showMore: (total) => `+ ${total} de plus`,
-                    }}
-                    onSelectEvent={handleSelectEvent}
-                    eventPropGetter={eventStyleGetter}
-                    dayPropGetter={dayPropGetter}
-                    views={['month', 'week', 'day']}
-                    defaultView="month"
-                    popup
-                    selectable
+        {showFilters && (
+          <Card.Body>
+            <Row>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Statut</Form.Label>
+                  <Form.Select
+                    value={filters.statut}
+                    onChange={(e) => handleFilterChange('statut', e.target.value)}
+                  >
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente_manager">En attente manager</option>
+                    <option value="valide_manager">Validé manager</option>
+                    <option value="valide_final">Validé final</option>
+                    <option value="refuse_manager">Refusé manager</option>
+                    <option value="refuse_final">Refusé final</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={5}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Recherche</Form.Label>
+                  <InputGroup>
+                    <InputGroup.Text>
+                      <FaSearch />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder={isAdmin() ? "Rechercher par employé ou type de congé..." : "Rechercher par type de congé..."}
+                      value={filters.search}
+                      onChange={(e) => handleFilterChange('search', e.target.value)}
+                    />
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Jours restant min</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={filters.joursRestantsMin}
+                    onChange={(e) => handleFilterChange('joursRestantsMin', e.target.value)}
                   />
-                </div>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Jours restant max</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={filters.joursRestantsMax}
+                    onChange={(e) => handleFilterChange('joursRestantsMax', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Date demande du</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={filters.dateDemandeDebut}
+                    onChange={(e) => handleFilterChange('dateDemandeDebut', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Date demande au</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={filters.dateDemandeFin}
+                    onChange={(e) => handleFilterChange('dateDemandeFin', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Trier par</Form.Label>
+                  <Form.Select
+                    value={filters.sortBy}
+                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  >
+                    <option value="date_demande">Date demande</option>
+                    <option value="jours_restants">Jours restant</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Ordre</Form.Label>
+                  <Form.Select
+                    value={filters.sortOrder}
+                    onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
+                  >
+                    <option value="desc">Décroissant</option>
+                    <option value="asc">Croissant</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card.Body>
+        )}
+      </Card>
 
-                {/* Légende du calendrier */}
-                <div className="mt-3">
-                  <h6>Légende:</h6>
-                  <div className="d-flex flex-wrap gap-3 mb-3">
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#ffc107', borderRadius: '4px', marginRight: '8px' }}></div>
-                      <small>En attente validation</small>
+      <Card>
+        <Card.Body className="p-0">
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" />
+              <p className="text-muted mt-2">Chargement des congés...</p>
+            </div>
+          ) : paginatedConges.length === 0 ? (
+            <div className="text-center py-5">
+              <FaSearch size={48} className="text-muted mb-3" />
+              <h5 className="text-muted">Aucun congé trouvé</h5>
+              <p className="text-muted small">
+                {filters.search || filters.statut ?
+                  'Essayez de modifier vos filtres' :
+                  (canCreateLeave ? 'Créez votre première demande de congé' : 'Aucune demande trouvée')
+                }
+              </p>
+              {canCreateLeave && (
+                <Button as={Link} to="/conges/nouveau" variant="primary">
+                  <FaPlus className="me-2" />
+                  Nouveau congé
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Vue carte — mobile uniquement */}
+              <div className="d-md-none mobile-card-list">
+                {paginatedConges.map((conge) => (
+                  <div key={conge.id} className="mobile-card-list__item">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div className="min-w-0">
+                        <div className="fw-semibold small text-truncate">{getCongeTypeLabel(conge)}</div>
+                        <div className="text-muted text-xs">{getEmployeLabel(conge)}</div>
+                        {user?.role === 'super_admin' && (
+                          <div className="text-muted text-2xs">{getEntrepriseLabel(conge)}</div>
+                        )}
+                        {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
+                          <div className="mt-1 text-xxs">
+                            {validationOverlapByCongeId[conge.id].has_overlap === true ? (
+                              <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
+                            ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
+                              <Badge bg="success">Pas de chevauchement</Badge>
+                            ) : (
+                              <Badge bg="secondary">Chevauchement: indisponible</Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
                     </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#17a2b8', borderRadius: '4px', marginRight: '8px' }}></div>
-                      <small>Validé manager</small>
+                    <div className="text-muted mb-2 small">
+                      📅 {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                      {(conge.jours_pris ?? conge.jours_calcules) && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)} j`}
                     </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#28a745', borderRadius: '4px', marginRight: '8px' }}></div>
-                      <small>Validé final</small>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#dc3545', borderRadius: '4px', marginRight: '8px' }}></div>
-                      <small>Refusé</small>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#fd7e14', borderRadius: '4px', marginRight: '8px' }}></div>
-                      <small>Jour férié</small>
+                    <div className="d-flex gap-2">
+                      <Button as={Link} to={`/conges/${conge.id}`} variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center">
+                        <FaEye className="me-1" /> Voir
+                      </Button>
+                      {canValidateConge(conge) && (
+                        <Button variant="outline-success" size="sm" onClick={() => openValidateModal(conge.id)}>✓</Button>
+                      )}
+                      {canRejectConge(conge) && (
+                        <Button variant="outline-danger" size="sm" onClick={() => openRejectModal(conge.id)}>✗</Button>
+                      )}
                     </div>
                   </div>
-                  <div className="d-flex flex-wrap gap-3">
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginRight: '8px', border: '1px solid #dee2e6' }}></div>
-                      <small>Jour non disponible</small>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: '#fff3cd', borderRadius: '4px', marginRight: '8px', border: '1px solid #dee2e6' }}></div>
-                      <small>Week-end</small>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '4px', marginRight: '8px', border: '1px solid #dee2e6' }}></div>
-                      <small>Jour disponible</small>
-                    </div>
-                  </div>
+                ))}
+              </div>
+
+              {/* Vue tableau — desktop uniquement */}
+              <div className="d-none d-md-block table-responsive">
+                <Table hover className="mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Employé</th>
+                      {user?.role === 'super_admin' && <th>Entreprise</th>}
+                      <th>Type</th>
+                      <th>Période</th>
+                      <th>Jours pris</th>
+                      <th>Jours restant</th>
+                      <th>Statut</th>
+                      <th>Date demande</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedConges.map((conge) => (
+                      <tr key={conge.id}>
+                        <td>{getEmployeLabel(conge)}</td>
+                        {user?.role === 'super_admin' && <td>{getEntrepriseLabel(conge)}</td>}
+                        <td>{getCongeTypeLabel(conge)}</td>
+                        <td>
+                          {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
+                        </td>
+                        <td>{formatDays(conge.jours_pris ?? conge.jours_calcules)}</td>
+                        <td>{formatDays(conge.jours_restants)}</td>
+                        <td>{getStatusBadge(conge.statut)}</td>
+                        <td>
+                          <div>{formatDate(conge.date_demande || conge.created_at || conge.createdAt)}</div>
+                          {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
+                            <div className="mt-1 text-xxs">
+                              {validationOverlapByCongeId[conge.id].has_overlap === true ? (
+                                <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
+                              ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
+                                <Badge bg="success">Pas de chevauchement</Badge>
+                              ) : (
+                                <Badge bg="secondary">Chevauchement: indisponible</Badge>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            <Button
+                              as={Link}
+                              to={`/conges/${conge.id}`}
+                              variant="outline-primary"
+                              size="sm"
+                            >
+                              <FaEye />
+                            </Button>
+
+                            {(canValidateConge(conge) || canRejectConge(conge)) && (
+                              <>
+                                {canValidateConge(conge) && (
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => openValidateModal(conge.id)}
+                                    title="Valider le congé"
+                                  >
+                                    ✓
+                                  </Button>
+                                )}
+                                {canRejectConge(conge) && (
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => openRejectModal(conge.id)}
+                                    title="Rejeter le congé"
+                                  >
+                                    ✗
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>{/* fin .d-none.d-md-block */}
+
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center p-3 border-top">
+                  <Pagination>
+                    <Pagination.First
+                      disabled={currentPage === 1}
+                      onClick={() => handlePageChange(1)}
+                    />
+                    <Pagination.Prev
+                      disabled={currentPage === 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                    />
+
+                    {[...Array(Math.min(5, totalPages))].map((_, index) => {
+                      const pageNumber = Math.max(1, currentPage - 2) + index;
+                      if (pageNumber > totalPages) return null;
+
+                      return (
+                        <Pagination.Item
+                          key={pageNumber}
+                          active={pageNumber === currentPage}
+                          onClick={() => handlePageChange(pageNumber)}
+                        >
+                          {pageNumber}
+                        </Pagination.Item>
+                      );
+                    })}
+
+                    <Pagination.Next
+                      disabled={currentPage === totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                    />
+                    <Pagination.Last
+                      disabled={currentPage === totalPages}
+                      onClick={() => handlePageChange(totalPages)}
+                    />
+                  </Pagination>
                 </div>
-              </Card.Body>
-            </Card>
-          </Tab.Pane>
-        </Tab.Content>
-      </Tab.Container>
+              )}
+            </>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Modal show={showValidateModal} onHide={closeValidateModal} centered backdrop="static" keyboard={!validateAction.isRunning}>
+        <Modal.Header closeButton={!validateAction.isRunning}>
+          <Modal.Title>Confirmer la validation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        {selectedCongeToValidate && validationOverlapByCongeId[selectedCongeToValidate] && (
+          <Alert
+            variant={validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'warning' : 'success'}
+            className={`mb-3 overlap-alert ${validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
+          >
+            <strong>
+              {validationOverlapByCongeId[selectedCongeToValidate].has_overlap
+                ? 'Alerte chevauchement détectée.'
+                : 'Pas de chevauchement détecté.'}
+            </strong>
+            <div className="small mt-1">{validationOverlapByCongeId[selectedCongeToValidate].message}</div>
+          </Alert>
+        )}
+        {validationOverlapLoading && (
+          <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+        )}
+          <p className="mb-3">Confirmez-vous la validation de cette demande de congé ?</p>
+          <Form.Group>
+            <Form.Label>Commentaire de validation</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={validateComment}
+              onChange={(e) => setValidateComment(e.target.value)}
+              placeholder="Ajoutez un commentaire (obligatoire en cas de chevauchement)"
+              disabled={validateAction.isRunning}
+            />
+            <Form.Text className="text-muted">
+              Ce commentaire est obligatoire si la demande est en chevauchement.
+            </Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeValidateModal} disabled={validateAction.isRunning}>
+            Annuler
+          </Button>
+          <AsyncButton
+            variant="success"
+            onClick={handleValidateConge}
+            action={validateAction}
+            loadingText="Validation..."
+          >
+            Valider
+          </AsyncButton>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showRejectModal} onHide={closeRejectModal} centered backdrop="static" keyboard={!rejectAction.isRunning}>
+        <Modal.Header closeButton={!rejectAction.isRunning}>
+          <Modal.Title>Confirmer le rejet</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Motif du rejet</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+              placeholder="Saisissez le motif du rejet"
+              disabled={rejectAction.isRunning}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeRejectModal} disabled={rejectAction.isRunning}>
+            Annuler
+          </Button>
+          <AsyncButton
+            variant="danger"
+            onClick={handleRejectConge}
+            action={rejectAction}
+            loadingText="Rejet..."
+          >
+            Rejeter
+          </AsyncButton>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

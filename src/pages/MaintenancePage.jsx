@@ -28,10 +28,10 @@ export default function MaintenancePage() {
   };
 
   return (
-    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <Card className="shadow border-0" style={{ maxWidth: 680, width: '100%' }}>
+    <Container className="d-flex align-items-center justify-content-center min-vh-100">
+      <Card className="shadow border-0 maintenance-card">
         <Card.Body className="p-4 p-md-5 text-center">
-          <div className="mb-3" style={{ fontSize: '2.25rem' }}>Maintenance</div>
+          <div className="mb-3 fs-1">Maintenance</div>
           <h1 className="h4 mb-3">Service temporairement indisponible</h1>
           <p className="text-muted mb-4">{message}</p>
           <Button variant="outline-primary" onClick={handleRetour}>

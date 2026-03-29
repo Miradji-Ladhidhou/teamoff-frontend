@@ -3,11 +3,12 @@ import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, In
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
+import { useAlert, useConfirmation } from '../../hooks/useAlert';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
+import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_PARAMETRES = {
-  devise: 'EUR',
-  langue: 'fr',
-  timezone: 'Indian/Reunion',
+  timezone: 'Europe/Paris',
   notifications_email: true,
 };
 
@@ -16,6 +17,19 @@ const DEFAULT_POLITIQUE = {
   rtt_annuels: 0,
   report_autorise: false,
   report_max_jours: 0,
+  overlap_policy: 'block',
+  max_employees_on_leave: {
+    global: '',
+    by_service: {}
+  },
+  approval_workflow: 'manager_admin',
+  minimum_notice_days: 0,
+  max_consecutive_days: 365,
+  notification_settings: {
+    on_create: true,
+    on_validate: true,
+    on_reject: true,
+  }
 };
 
 const TIMEZONE_OPTIONS = [
@@ -29,40 +43,70 @@ const TIMEZONE_OPTIONS = [
 
 const DEFAULT_FORM = {
   nom: '',
-  logo: '',
   statut: 'active',
   politique_conges: DEFAULT_POLITIQUE,
   parametres: DEFAULT_PARAMETRES,
 };
 
+const normalizeByServiceLimits = (byService = {}) => {
+  const normalized = {};
+
+  Object.entries(byService || {}).forEach(([service, rawLimit]) => {
+    const serviceName = String(service || '').trim();
+    if (!serviceName) {
+      return;
+    }
+
+    if (rawLimit === '' || rawLimit === null || typeof rawLimit === 'undefined') {
+      return;
+    }
+
+    const numericLimit = Number(rawLimit);
+    if (Number.isFinite(numericLimit) && numericLimit >= 0) {
+      normalized[serviceName] = numericLimit;
+    }
+  });
+
+  return normalized;
+};
+
 const CompaniesManagement = () => {
+  const alert = useAlert();
+  const { confirm } = useConfirmation();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [exportLoading, setExportLoading] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   const [showReportValidation, setShowReportValidation] = useState(false);
+  const [activeCompanyActionId, setActiveCompanyActionId] = useState(null);
+  const submitAction = useAsyncAction();
+  const exportAction = useAsyncAction();
+  const deleteAction = useAsyncAction();
 
   useEffect(() => {
     loadCompanies();
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+    alert.showSuccessModal(success, { autoCloseMs: 4000 });
+    setSuccess('');
+  }, [success, alert]);
+
   const loadCompanies = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await api.entreprisesService.getAll();
       setCompanies(Array.isArray(response.data) ? response.data : []);
     } catch (loadError) {
       console.error('Erreur chargement entreprises:', loadError);
-      setError('Erreur lors du chargement des entreprises');
+      alert.error('Erreur lors du chargement des entreprises');
     } finally {
       setLoading(false);
     }
@@ -79,65 +123,78 @@ const CompaniesManagement = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    try {
-      setError('');
+    await submitAction.run(async () => {
+      try {
 
-      const parametres = showAdvancedJson
-        ? JSON.parse(advancedParametresJson || '{}')
-        : {
-            devise: formData.parametres.devise,
-            langue: formData.parametres.langue,
-            timezone: formData.parametres.timezone,
-            notifications_email: formData.parametres.notifications_email,
-          };
+        const parametres = showAdvancedJson
+          ? JSON.parse(advancedParametresJson || '{}')
+          : {
+              timezone: formData.parametres.timezone,
+              notifications_email: formData.parametres.notifications_email,
+            };
 
-      const politiqueConges = showAdvancedJson
-        ? JSON.parse(advancedPolitiqueJson || '{}')
-        : {
-            conges_payes_annuels: Number(formData.politique_conges.conges_payes_annuels || 0),
-            rtt_annuels: Number(formData.politique_conges.rtt_annuels || 0),
-            report_autorise: Boolean(formData.politique_conges.report_autorise),
-            report_max_jours: Number(formData.politique_conges.report_max_jours || 0),
-          };
+        const politiqueConges = showAdvancedJson
+          ? JSON.parse(advancedPolitiqueJson || '{}')
+          : {
+              conges_payes_annuels: Number(formData.politique_conges.conges_payes_annuels || 0),
+              rtt_annuels: Number(formData.politique_conges.rtt_annuels || 0),
+              report_autorise: Boolean(formData.politique_conges.report_autorise),
+              report_max_jours: Number(formData.politique_conges.report_max_jours || 0),
+              overlap_policy: formData.politique_conges.overlap_policy,
+              max_employees_on_leave: {
+                global: formData.politique_conges.max_employees_on_leave.global === ''
+                  ? null
+                  : Number(formData.politique_conges.max_employees_on_leave.global || 0),
+                by_service: normalizeByServiceLimits(formData.politique_conges.max_employees_on_leave.by_service || {}),
+              },
+              approval_workflow: formData.politique_conges.approval_workflow,
+              minimum_notice_days: Number(formData.politique_conges.minimum_notice_days || 0),
+              max_consecutive_days: Number(formData.politique_conges.max_consecutive_days || 365),
+              notification_settings: {
+                on_create: Boolean(formData.politique_conges.notification_settings.on_create),
+                on_validate: Boolean(formData.politique_conges.notification_settings.on_validate),
+                on_reject: Boolean(formData.politique_conges.notification_settings.on_reject),
+              }
+            };
 
-      if (!showAdvancedJson) {
-        if (!String(parametres.timezone || '').trim()) {
-          throw new Error('La timezone est obligatoire');
+        if (!showAdvancedJson) {
+          if (!String(parametres.timezone || '').trim()) {
+            throw new Error('La timezone est obligatoire');
+          }
+          if (politiqueConges.report_autorise && politiqueConges.report_max_jours <= 0) {
+            setShowReportValidation(true);
+            throw new Error('Si le report est autorisé, le maximum de jours reportables doit être supérieur à 0');
+          }
         }
-        if (politiqueConges.report_autorise && politiqueConges.report_max_jours <= 0) {
-          setShowReportValidation(true);
-          throw new Error('Si le report est autorisé, le maximum de jours reportables doit être supérieur à 0');
+
+        const payload = {
+          nom: formData.nom,
+          statut: formData.statut,
+          politique_conges: politiqueConges,
+          parametres,
+        };
+
+        if (editingCompany) {
+          await api.entreprisesService.update(editingCompany.id, payload);
+          setSuccess('Entreprise mise a jour avec succes');
+        } else {
+          await api.entreprisesService.create(payload);
+          setSuccess('Entreprise creee avec succes');
         }
+
+        setShowModal(false);
+        setEditingCompany(null);
+        resetForm();
+        loadCompanies();
+      } catch (submitError) {
+        console.error('Erreur sauvegarde entreprise:', submitError);
+        alert.error(
+          submitError instanceof SyntaxError
+            ? 'Les champs JSON sont invalides'
+            : submitError?.message || 'Erreur lors de la sauvegarde'
+        );
       }
-
-      const payload = {
-        nom: formData.nom,
-        logo: formData.logo || null,
-        statut: formData.statut,
-        politique_conges: politiqueConges,
-        parametres,
-      };
-
-      if (editingCompany) {
-        await api.entreprisesService.update(editingCompany.id, payload);
-        setSuccess('Entreprise mise a jour avec succes');
-      } else {
-        await api.entreprisesService.create(payload);
-        setSuccess('Entreprise creee avec succes');
-      }
-
-      setShowModal(false);
-      setEditingCompany(null);
-      resetForm();
-      loadCompanies();
-    } catch (submitError) {
-      console.error('Erreur sauvegarde entreprise:', submitError);
-      setError(
-        submitError instanceof SyntaxError
-          ? 'Les champs JSON sont invalides'
-          : submitError?.message || 'Erreur lors de la sauvegarde'
-      );
-    }
+    });
   };
 
   const handleEdit = (company) => {
@@ -147,11 +204,8 @@ const CompaniesManagement = () => {
     setEditingCompany(company);
     setFormData({
       nom: company.nom || '',
-      logo: company.logo || '',
       statut: company.statut || 'active',
       parametres: {
-        devise: companyParametres.devise || DEFAULT_PARAMETRES.devise,
-        langue: companyParametres.langue || DEFAULT_PARAMETRES.langue,
         timezone: companyParametres.timezone || DEFAULT_PARAMETRES.timezone,
         notifications_email: typeof companyParametres.notifications_email === 'boolean'
           ? companyParametres.notifications_email
@@ -164,6 +218,19 @@ const CompaniesManagement = () => {
           ? companyPolitique.report_autorise
           : DEFAULT_POLITIQUE.report_autorise,
         report_max_jours: companyPolitique.report_max_jours ?? DEFAULT_POLITIQUE.report_max_jours,
+        overlap_policy: companyPolitique.overlap_policy || DEFAULT_POLITIQUE.overlap_policy,
+        max_employees_on_leave: {
+          global: companyPolitique.max_employees_on_leave?.global ?? '',
+          by_service: companyPolitique.max_employees_on_leave?.by_service || DEFAULT_POLITIQUE.max_employees_on_leave.by_service,
+        },
+        approval_workflow: companyPolitique.approval_workflow || DEFAULT_POLITIQUE.approval_workflow,
+        minimum_notice_days: companyPolitique.minimum_notice_days ?? DEFAULT_POLITIQUE.minimum_notice_days,
+        max_consecutive_days: companyPolitique.max_consecutive_days ?? DEFAULT_POLITIQUE.max_consecutive_days,
+        notification_settings: {
+          on_create: companyPolitique.notification_settings?.on_create ?? DEFAULT_POLITIQUE.notification_settings.on_create,
+          on_validate: companyPolitique.notification_settings?.on_validate ?? DEFAULT_POLITIQUE.notification_settings.on_validate,
+          on_reject: companyPolitique.notification_settings?.on_reject ?? DEFAULT_POLITIQUE.notification_settings.on_reject,
+        },
       },
     });
     setAdvancedParametresJson(JSON.stringify(companyParametres, null, 2));
@@ -203,6 +270,19 @@ const CompaniesManagement = () => {
     }
   };
 
+  const handleNestedPolitiqueChange = (parentKey, key, value) => {
+    setFormData((previous) => ({
+      ...previous,
+      politique_conges: {
+        ...previous.politique_conges,
+        [parentKey]: {
+          ...previous.politique_conges[parentKey],
+          [key]: value,
+        },
+      },
+    }));
+  };
+
   const handleAdvancedModeToggle = (enabled) => {
     setShowAdvancedJson(enabled);
 
@@ -212,45 +292,89 @@ const CompaniesManagement = () => {
     }
   };
 
-  const handleDelete = async (companyId) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cette entreprise ?')) {
-      return;
-    }
+  const handleServiceLimitChange = (serviceName, value) => {
+    setFormData((previous) => ({
+      ...previous,
+      politique_conges: {
+        ...previous.politique_conges,
+        max_employees_on_leave: {
+          ...previous.politique_conges.max_employees_on_leave,
+          by_service: {
+            ...(previous.politique_conges.max_employees_on_leave.by_service || {}),
+            [serviceName]: value,
+          },
+        },
+      },
+    }));
+  };
 
-    try {
-      await api.entreprisesService.delete(companyId);
-      setSuccess('Entreprise supprimee avec succes');
-      loadCompanies();
-    } catch (deleteError) {
-      console.error('Erreur suppression entreprise:', deleteError);
-      setError(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-    }
+  const handleRemoveServiceLimit = (serviceName) => {
+    setFormData((previous) => {
+      const currentByService = { ...(previous.politique_conges.max_employees_on_leave.by_service || {}) };
+      delete currentByService[serviceName];
+
+      return {
+        ...previous,
+        politique_conges: {
+          ...previous.politique_conges,
+          max_employees_on_leave: {
+            ...previous.politique_conges.max_employees_on_leave,
+            by_service: currentByService,
+          },
+        },
+      };
+    });
+  };
+
+  const handleDelete = async (companyId) => {
+    const targetCompany = companies.find(c => c.id === companyId);
+    confirm({
+      title: 'Supprimer cette entreprise ?',
+      description: `Êtes-vous sûr de vouloir supprimer "${targetCompany?.nom}" ? Cette action est irréversible et supprimera tous les conges associes.`,
+      confirmLabel: 'Supprimer définitivement',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await deleteAction.run(async () => {
+          setActiveCompanyActionId(companyId);
+          try {
+            await api.entreprisesService.delete(companyId);
+            alert.success('Entreprise supprimee avec succes');
+            loadCompanies();
+          } catch (deleteError) {
+            console.error('Erreur suppression entreprise:', deleteError);
+            alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+          } finally {
+            setActiveCompanyActionId(null);
+          }
+        });
+      }
+    });
   };
 
   const handleExportCsv = async () => {
-    try {
-      setExportLoading(true);
-      setError('');
+    await exportAction.run(async () => {
+      try {
+        const response = await api.exportsService.exportEntreprisesCSV();
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
 
-      const response = await api.exportsService.exportEntreprisesCSV();
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const date = new Date().toISOString().slice(0, 10);
-
-      link.href = url;
-      link.download = `entreprises_${date}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (exportError) {
-      console.error('Erreur export entreprises CSV:', exportError);
-      setError(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des entreprises');
-    } finally {
-      setExportLoading(false);
-    }
+        link.href = url;
+        link.download = `entreprises_${date}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (exportError) {
+        console.error('Erreur export entreprises CSV:', exportError);
+        alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des entreprises');
+      }
+    });
   };
+
+  const exportLoading = exportAction.isRunning;
 
   const filteredCompanies = companies.filter((company) => {
     const searchableText = `${company.nom || ''} ${company.statut || ''}`.toLowerCase();
@@ -259,7 +383,7 @@ const CompaniesManagement = () => {
 
   if (loading) {
     return (
-      <Container>
+      <Container fluid="sm">
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Chargement...</span>
@@ -271,21 +395,22 @@ const CompaniesManagement = () => {
   }
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <Container fluid="sm">
+      <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Gestion des Entreprises</h1>
           <p className="text-muted">Administrer toutes les entreprises de la plateforme</p>
         </div>
         <div className="d-flex gap-2">
-          <Button
+          <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
-            disabled={exportLoading}
+            action={exportAction}
+            loadingText="Export..."
           >
             <FaDownload className="me-2" />
-            {exportLoading ? 'Export...' : 'Exporter CSV'}
-          </Button>
+            Exporter CSV
+          </AsyncButton>
           <Button
             variant="primary"
             onClick={() => {
@@ -299,9 +424,6 @@ const CompaniesManagement = () => {
           </Button>
         </div>
       </div>
-
-      {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-      {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
       <InfoCardInfo title="Gérer les entreprises efficacement">
         <p className="mb-2">Chaque entreprise possède sa politique de congés et ses paramètres.</p>
@@ -359,12 +481,6 @@ const CompaniesManagement = () => {
                   <td>
                     <div>
                       <strong>{company.nom}</strong>
-                      {company.logo && (
-                        <>
-                          <br />
-                          <small className="text-muted">{company.logo}</small>
-                        </>
-                      )}
                     </div>
                   </td>
                   <td>
@@ -383,9 +499,18 @@ const CompaniesManagement = () => {
                       <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
                         <FaEdit />
                       </Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(company.id)} title="Supprimer">
+                      <AsyncButton
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleDelete(company.id)}
+                        title="Supprimer"
+                        isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
+                        showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
+                        loadingText=""
+                        disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
+                      >
                         <FaTrash />
-                      </Button>
+                      </AsyncButton>
                     </div>
                   </td>
                 </tr>
@@ -405,23 +530,17 @@ const CompaniesManagement = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered>
+        <Modal.Header closeButton={!submitAction.isRunning}>
           <Modal.Title>{editingCompany ? 'Modifier l\'entreprise' : 'Nouvelle entreprise'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Row>
-              <Col md={6}>
+              <Col md={12}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nom de l'entreprise *</Form.Label>
-                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>URL du logo</Form.Label>
-                  <Form.Control type="url" value={formData.logo} onChange={(event) => setFormData({ ...formData, logo: event.target.value })} placeholder="https://..." />
+                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
             </Row>
@@ -430,7 +549,7 @@ const CompaniesManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>
-                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })}>
+                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })} disabled={submitAction.isRunning}>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                     <option value="suspendue">Suspendue</option>
@@ -446,6 +565,7 @@ const CompaniesManagement = () => {
                     checked={showAdvancedJson}
                     onChange={(event) => handleAdvancedModeToggle(event.target.checked)}
                     label={showAdvancedJson ? 'Actif' : 'Inactif'}
+                    disabled={submitAction.isRunning}
                   />
                 </Form.Group>
               </Col>
@@ -457,33 +577,7 @@ const CompaniesManagement = () => {
                   <Card.Body>
                     <h6 className="mb-3">Paramètres</h6>
                     <Row>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Devise</Form.Label>
-                          <Form.Select
-                            value={formData.parametres.devise}
-                            onChange={(event) => handleParametreChange('devise', event.target.value)}
-                          >
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="CHF">CHF</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Langue</Form.Label>
-                          <Form.Select
-                            value={formData.parametres.langue}
-                            onChange={(event) => handleParametreChange('langue', event.target.value)}
-                          >
-                            <option value="fr">Français</option>
-                            <option value="en">English</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
+                      <Col md={8}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             Timezone{' '}
@@ -494,6 +588,7 @@ const CompaniesManagement = () => {
                           <Form.Select
                             value={formData.parametres.timezone}
                             onChange={(event) => handleParametreChange('timezone', event.target.value)}
+                            disabled={submitAction.isRunning}
                           >
                             {TIMEZONE_OPTIONS.map((timezone) => (
                               <option key={timezone} value={timezone}>{timezone}</option>
@@ -501,7 +596,7 @@ const CompaniesManagement = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label>Emails</Form.Label>
                           <Form.Check
@@ -510,6 +605,7 @@ const CompaniesManagement = () => {
                             checked={Boolean(formData.parametres.notifications_email)}
                             onChange={(event) => handleParametreChange('notifications_email', event.target.checked)}
                             label={formData.parametres.notifications_email ? 'Actifs' : 'Inactifs'}
+                            disabled={submitAction.isRunning}
                           />
                         </Form.Group>
                       </Col>
@@ -521,6 +617,74 @@ const CompaniesManagement = () => {
                   <Card.Body>
                     <h6 className="mb-3">Politique de congés</h6>
                     <Row>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Gestion des chevauchements</Form.Label>
+                          <Form.Select
+                            value={formData.politique_conges.overlap_policy}
+                            onChange={(event) => handlePolitiqueChange('overlap_policy', event.target.value)}
+                            disabled={submitAction.isRunning}
+                          >
+                            <option value="block">Bloquer</option>
+                            <option value="warning">Avertir</option>
+                            <option value="allow">Autoriser</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Workflow validation</Form.Label>
+                          <Form.Select
+                            value={formData.politique_conges.approval_workflow}
+                            onChange={(event) => handlePolitiqueChange('approval_workflow', event.target.value)}
+                            disabled={submitAction.isRunning}
+                          >
+                            <option value="auto">Auto</option>
+                            <option value="manager">Manager</option>
+                            <option value="manager_admin">Manager + Admin</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Limite simultanée (globale)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={formData.politique_conges.max_employees_on_leave.global}
+                            onChange={(event) => handleNestedPolitiqueChange('max_employees_on_leave', 'global', event.target.value)}
+                            placeholder="Aucune limite"
+                            disabled={submitAction.isRunning}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={3}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Délai mini (jours)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={formData.politique_conges.minimum_notice_days}
+                            onChange={(event) => handlePolitiqueChange('minimum_notice_days', event.target.value)}
+                            disabled={submitAction.isRunning}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Max jours consécutifs</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min={1}
+                            value={formData.politique_conges.max_consecutive_days}
+                            onChange={(event) => handlePolitiqueChange('max_consecutive_days', event.target.value)}
+                            disabled={submitAction.isRunning}
+                          />
+                        </Form.Group>
+                      </Col>
                       <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
@@ -534,6 +698,7 @@ const CompaniesManagement = () => {
                             min={0}
                             value={formData.politique_conges.conges_payes_annuels}
                             onChange={(event) => handlePolitiqueChange('conges_payes_annuels', event.target.value)}
+                            disabled={submitAction.isRunning}
                           />
                         </Form.Group>
                       </Col>
@@ -550,6 +715,7 @@ const CompaniesManagement = () => {
                             min={0}
                             value={formData.politique_conges.rtt_annuels}
                             onChange={(event) => handlePolitiqueChange('rtt_annuels', event.target.value)}
+                            disabled={submitAction.isRunning}
                           />
                         </Form.Group>
                       </Col>
@@ -567,6 +733,7 @@ const CompaniesManagement = () => {
                             checked={Boolean(formData.politique_conges.report_autorise)}
                             onChange={(event) => handlePolitiqueChange('report_autorise', event.target.checked)}
                             label={formData.politique_conges.report_autorise ? 'Oui' : 'Non'}
+                            disabled={submitAction.isRunning}
                           />
                         </Form.Group>
                       </Col>
@@ -584,6 +751,7 @@ const CompaniesManagement = () => {
                             value={formData.politique_conges.report_max_jours}
                             onChange={(event) => handlePolitiqueChange('report_max_jours', event.target.value)}
                             disabled={!formData.politique_conges.report_autorise}
+                            readOnly={submitAction.isRunning}
                             isInvalid={
                               Boolean(formData.politique_conges.report_autorise)
                               && showReportValidation
@@ -593,6 +761,81 @@ const CompaniesManagement = () => {
                           <Form.Control.Feedback type="invalid">
                             Entrez une valeur supérieure à 0 lorsque le report est activé.
                           </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={12}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Limites simultanées par service</Form.Label>
+                          <Form.Text className="text-muted d-block mb-2">
+                            L'ajout de services se fait uniquement depuis la page Services.
+                          </Form.Text>
+
+                          {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).length === 0 && (
+                            <Form.Text className="text-muted">
+                              Aucune limite par service configuree.
+                            </Form.Text>
+                          )}
+
+                          {Object.entries(formData.politique_conges.max_employees_on_leave.by_service || {}).map(([serviceName, limit]) => (
+                            <InputGroup className="mb-2" key={serviceName}>
+                              <InputGroup.Text className="input-label-w">{serviceName}</InputGroup.Text>
+                              <Form.Control
+                                type="number"
+                                min={0}
+                                value={limit}
+                                onChange={(event) => handleServiceLimitChange(serviceName, event.target.value)}
+                                disabled={submitAction.isRunning}
+                              />
+                              <Button variant="outline-danger" onClick={() => handleRemoveServiceLimit(serviceName)} disabled={submitAction.isRunning}>
+                                Supprimer
+                              </Button>
+                            </InputGroup>
+                          ))}
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications création</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-create"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_create)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_create', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_create ? 'Actives' : 'Inactives'}
+                            disabled={submitAction.isRunning}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications validation</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-validate"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_validate)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_validate', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_validate ? 'Actives' : 'Inactives'}
+                            disabled={submitAction.isRunning}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Notifications refus</Form.Label>
+                          <Form.Check
+                            type="switch"
+                            id="notif-on-reject"
+                            checked={Boolean(formData.politique_conges.notification_settings.on_reject)}
+                            onChange={(event) => handleNestedPolitiqueChange('notification_settings', 'on_reject', event.target.checked)}
+                            label={formData.politique_conges.notification_settings.on_reject ? 'Actives' : 'Inactives'}
+                            disabled={submitAction.isRunning}
+                          />
                         </Form.Group>
                       </Col>
                     </Row>
@@ -610,6 +853,7 @@ const CompaniesManagement = () => {
                     rows={6}
                     value={advancedParametresJson}
                     onChange={(event) => setAdvancedParametresJson(event.target.value)}
+                    disabled={submitAction.isRunning}
                   />
                 </Form.Group>
 
@@ -620,14 +864,22 @@ const CompaniesManagement = () => {
                     rows={8}
                     value={advancedPolitiqueJson}
                     onChange={(event) => setAdvancedPolitiqueJson(event.target.value)}
+                    disabled={submitAction.isRunning}
                   />
                 </Form.Group>
               </>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-            <Button variant="primary" type="submit">{editingCompany ? 'Mettre a jour' : 'Creer'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitAction.isRunning}>Annuler</Button>
+            <AsyncButton
+              variant="primary"
+              type="submit"
+              action={submitAction}
+              loadingText={editingCompany ? 'Mise a jour...' : 'Creation...'}
+            >
+              {editingCompany ? 'Mettre a jour' : 'Creer'}
+            </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>

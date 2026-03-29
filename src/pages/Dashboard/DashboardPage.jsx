@@ -3,8 +3,9 @@ import { Container, Row, Col, Card, Badge, Button, Alert, Spinner } from 'react-
 import { Link } from 'react-router-dom';
 import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService, quotasService, notificationsService } from '../../services/api';
+import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
+import { useAlert } from '../../hooks/useAlert';
 
 const DashboardPage = () => {
   const { user, isAdmin } = useAuth();
@@ -19,8 +20,9 @@ const DashboardPage = () => {
   const [recentConges, setRecentConges] = useState([]);
   const [soldes, setSoldes] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [recentOverlapByCongeId, setRecentOverlapByCongeId] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const alert = useAlert();
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -31,7 +33,6 @@ const DashboardPage = () => {
 
       try {
         setLoading(true);
-        setError('');
 
         // Paramètres pour les congés selon le rôle
         let congesParams = {};
@@ -46,7 +47,7 @@ const DashboardPage = () => {
         ]);
 
         const conges = Array.isArray(congesResponse.data) ? congesResponse.data : [];
-        const notifs = Array.isArray(notificationsResponse.data) ? notificationsResponse.data : [];
+        const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
 
         // Calcul des statistiques selon le rôle
         let statsData = {
@@ -67,11 +68,49 @@ const DashboardPage = () => {
         setRecentConges(conges.slice(0, 5));
         setNotifications(notifs);
 
-        // Charger les soldes pour les employés
-        if (user?.role === 'employe' && user.id) {
+        // Charger les soldes pour les employés et managers
+        if (['employe', 'manager'].includes(user?.role) && user.id) {
           try {
-            const soldesResponse = await quotasService.getSoldes(user.id);
-            setSoldes(Array.isArray(soldesResponse.data.soldes) ? soldesResponse.data.soldes : []);
+            const [soldesResponse, congeTypesResponse] = await Promise.all([
+              quotasService.getSoldes(user.id),
+              congeTypesService.getAll()
+            ]);
+
+            const soldesData = Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : [];
+            const congeTypesData = Array.isArray(congeTypesResponse.data) ? congeTypesResponse.data : [];
+
+            const soldesByTypeId = new Map(
+              soldesData
+                .filter((item) => item?.conge_type_id)
+                .map((item) => [String(item.conge_type_id), item])
+            );
+
+            const mergedSoldes = congeTypesData
+              .slice()
+              .sort((a, b) => String(a?.libelle || '').localeCompare(String(b?.libelle || ''), 'fr'))
+              .map((type) => {
+                const existing = soldesByTypeId.get(String(type.id));
+                if (existing) {
+                  return {
+                    ...existing,
+                    conge_type_id: existing.conge_type_id || type.id,
+                    conge_type: typeof existing.conge_type === 'string'
+                      ? existing.conge_type
+                      : (existing.conge_type || { id: type.id, libelle: type.libelle }),
+                    conge_type_libelle: existing.conge_type_libelle || type.libelle,
+                    solde_disponible: existing.solde_disponible ?? existing.solde_restant ?? 0,
+                  };
+                }
+
+                return {
+                  conge_type_id: type.id,
+                  conge_type: { id: type.id, libelle: type.libelle },
+                  conge_type_libelle: type.libelle,
+                  solde_disponible: 0,
+                };
+              });
+
+            setSoldes(mergedSoldes);
           } catch (soldesError) {
             console.warn('Erreur chargement soldes:', soldesError);
             setSoldes([]);
@@ -80,7 +119,7 @@ const DashboardPage = () => {
 
       } catch (err) {
         console.error('Erreur dashboard:', err);
-        setError('Impossible de charger les données du tableau de bord.');
+        alert.error('Impossible de charger les données du tableau de bord.');
       } finally {
         setLoading(false);
       }
@@ -88,6 +127,57 @@ const DashboardPage = () => {
 
     loadDashboardData();
   }, [user?.id, user?.role]);
+
+  useEffect(() => {
+    const canSeeOverlapAnnotations = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
+    if (!canSeeOverlapAnnotations || !recentConges.length) {
+      setRecentOverlapByCongeId({});
+      return;
+    }
+
+    const canValidateConge = (conge) => {
+      if (!conge) return false;
+      if (user?.role === 'manager') return conge.statut === 'en_attente_manager';
+      if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+        return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
+      }
+      return false;
+    };
+
+    const targetConges = recentConges.filter(canValidateConge);
+    if (!targetConges.length) {
+      setRecentOverlapByCongeId({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadRecentOverlaps = async () => {
+      const results = await Promise.all(
+        targetConges.map(async (conge) => {
+          try {
+            const response = await congesService.getValidationOverlap(conge.id);
+            return [conge.id, response.data];
+          } catch (_) {
+            return [conge.id, null];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      const next = {};
+      results.forEach(([congeId, data]) => {
+        next[congeId] = data;
+      });
+      setRecentOverlapByCongeId(next);
+    };
+
+    loadRecentOverlaps();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [recentConges, user?.role]);
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -104,6 +194,19 @@ const DashboardPage = () => {
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR');
 
+  const getSoldeTypeLabel = (solde) => {
+    if (solde?.conge_type?.libelle) return solde.conge_type.libelle;
+    if (solde?.conge_type_libelle) return solde.conge_type_libelle;
+    if (typeof solde?.conge_type === 'string' && solde.conge_type.trim()) return solde.conge_type;
+    return 'Type inconnu';
+  };
+
+  const getSoldeJours = (solde) => {
+    const raw = solde?.solde_restant ?? solde?.solde_disponible ?? solde?.solde ?? 0;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : 0;
+  };
+
   const getRoleLabel = (role) => {
     const map = {
       super_admin: 'Super administrateur',
@@ -117,13 +220,12 @@ const DashboardPage = () => {
   const getEntrepriseLabel = () => {
     if (user?.role === 'super_admin') return 'Multi-entreprises';
     if (user?.entreprise_nom) return user.entreprise_nom;
-    if (user?.entreprise_id) return `Entreprise ${user.entreprise_id.slice(0, 8)}...`;
     return 'Entreprise non renseignée';
   };
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <Container fluid="sm" className="page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="ui-text-soft">Chargement du tableau de bord...</p>
@@ -133,24 +235,24 @@ const DashboardPage = () => {
   }
 
   return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="h3 mb-2 ui-page-title">Tableau de bord</h1>
-          <p className="mb-1"><span className="ui-user-name">Bienvenue, {user?.prenom || 'Utilisateur'} {user?.nom || ''}</span></p>
-          <p className="ui-text-soft mb-1">{getRoleLabel(user?.role)}</p>
-          <p className="mb-0">
-            <span className="ui-text-soft"><strong>Entreprise:</strong> {getEntrepriseLabel()}</span>
-          </p>
+    <Container fluid="sm">
+      {/* En-tête responsive */}
+      <div className="page-header">
+        <div className="page-header-content">
+          <h1 className="h4 mb-1 ui-page-title">Tableau de bord</h1>
+          <p className="mb-0"><span className="ui-user-name fw-semibold">{user?.prenom || 'Utilisateur'} {user?.nom || ''}</span></p>
+          <p className="ui-text-soft small mb-0">{getRoleLabel(user?.role)} — {getEntrepriseLabel()}</p>
         </div>
-        {user?.role === 'employe' && (
-          <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-            <FaPlus className="me-2" /> Nouveau congé
-          </Button>
+        {['employe', 'manager'].includes(user?.role) && (
+          <div className="page-header-actions">
+            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
+              <FaPlus className="me-2" /> Nouveau congé
+            </Button>
+          </div>
         )}
       </div>
 
-      {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
+      
 
       <InfoCardInfo title="Comment utiliser ce tableau de bord">
         <p className="mb-1">Cette vue vous donne l'essentiel en un coup d'oeil:</p>
@@ -162,12 +264,12 @@ const DashboardPage = () => {
       </InfoCardInfo>
 
       {notifications.filter(n => !n.lu).length > 0 && (
-        <Alert variant="info" className="mb-4">
+        <div className="alert alert-info mb-4" role="status">
           <div className="d-flex justify-content-between align-items-center">
             <span>Vous avez {notifications.filter(n => !n.lu).length} notification(s) non lue(s)</span>
             <Button as={Link} to="/notifications" variant="outline-info" size="sm">Voir</Button>
           </div>
-        </Alert>
+        </div>
       )}
 
       <Row className="mb-4">
@@ -195,12 +297,16 @@ const DashboardPage = () => {
             <Card>
               <Card.Header><h5 className="mb-0">Mes soldes de congés</h5></Card.Header>
               <Card.Body>
-                {soldes.map((solde, idx) => (
-                  <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
-                    <span>{solde.conge_type?.libelle || 'Type inconnu'}</span>
-                    <Badge bg="info">{solde.solde_restant} jours</Badge>
-                  </div>
-                ))}
+                {soldes.length === 0 ? (
+                  <p className="ui-text-soft mb-0">Aucun solde disponible</p>
+                ) : (
+                  soldes.map((solde, idx) => (
+                    <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
+                      <span>{getSoldeTypeLabel(solde)}</span>
+                      <Badge bg="info">{getSoldeJours(solde)} jours</Badge>
+                    </div>
+                  ))
+                )}
               </Card.Body>
             </Card>
           </Col>
@@ -224,22 +330,37 @@ const DashboardPage = () => {
               ) : (
                 <div className="list-group list-group-flush">
                   {recentConges.map((conge) => (
-                    <div key={conge.id} className="list-group-item px-0 py-3 d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="fw-semibold">
-                          {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
+                    <div key={conge.id} className="list-group-item px-0 py-2">
+                      <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <div className="flex-grow-1 min-w-0">
+                          <div className="fw-semibold text-truncate small">
+                            {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
+                          </div>
+                          <br />
+                          <div className="ui-text-soft text-xs">
+                            {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                          </div>
+                           <br />
+                          {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
+                            <div className="overlap-dash-annotation overlap">
+                              Chevauchement
+                            </div>
+                          )}
+                          {recentOverlapByCongeId[conge.id]?.has_overlap === false && (
+                            <div className="overlap-dash-annotation no-overlap">
+                              Aucun chevauchement
+                            </div>
+                          )}
+                          
+                          <div className="text-xxs">
+                            {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
+                            {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
+                          </div>
                         </div>
-                        <small className="ui-text-soft d-block">
-                          {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
-                        </small>
-                        <small className="ui-text-soft d-block">
-                          {conge.jours_calcules && <span className="badge bg-info me-2">{conge.jours_calcules} jours</span>}
-                          {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
-                        </small>
-                      </div>
-                      <div className="d-flex align-items-center gap-2 ms-2">
-                        {getStatusBadge(conge.statut)}
-                        <Button as={Link} to={`/conges/${conge.id}`} variant="outline-secondary" size="sm"><FaEye /></Button>
+                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                          {getStatusBadge(conge.statut)}
+                          <Button as={Link} to={`/conges/${conge.id}`} variant="outline-secondary" size="sm"><FaEye /></Button>
+                        </div>
                       </div>
                     </div>
                   ))}
