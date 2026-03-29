@@ -1,7 +1,3 @@
-  // Scroll en haut à chaque changement de page
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
@@ -31,12 +27,18 @@ import './Layout.css';
 
 const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
 
+
 const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showSidebar, setShowSidebar] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // Scroll en haut à chaque changement de page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const loadUnreadCount = async () => {
