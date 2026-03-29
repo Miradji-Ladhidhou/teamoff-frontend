@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table } fr
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../services/api';
-import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { useAlert } from '../hooks/useAlert';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import AsyncButton from '../components/AsyncButton';
@@ -353,18 +353,18 @@ const ExportsPage = () => {
         </div>
       </div>
 
-      <InfoCardInfo title="Guide rapide des exports">
+      <AccordionInfo type="info" title="Guide rapide des exports">
         <p className="mb-2">Suivez ces étapes pour obtenir un fichier propre et exploitable :</p>
         <ol className="mb-0">
           <li>Choisissez le type de données à exporter</li>
           <li>Exportez vos données au format CSV</li>
           <li>Affinez la période et les filtres, puis lancez l'export</li>
         </ol>
-      </InfoCardInfo>
+      </AccordionInfo>
 
-      <TipCard title="Astuce qualité de données">
+      <AccordionInfo type="tip" title="Astuce qualité de données">
         Pour des exports plus lisibles, commencez par un intervalle court puis élargissez progressivement.
-      </TipCard>
+      </AccordionInfo>
 
       <Row>
         <Col lg={8}>

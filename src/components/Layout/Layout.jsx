@@ -1,3 +1,7 @@
+  // Scroll en haut à chaque changement de page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';

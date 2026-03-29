@@ -1,6 +1,6 @@
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
 import { FaEnvelope, FaHeadset, FaLifeRing } from 'react-icons/fa';
-import { InfoCardInfo } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { Link } from 'react-router-dom';
 
 const ContactPage = () => {
@@ -11,9 +11,9 @@ const ContactPage = () => {
         <p className="text-muted mb-0">Canaux de support et d'assistance définis par votre organisation.</p>
       </div>
 
-      <InfoCardInfo title="Canaux recommandés">
+      <AccordionInfo type="info" title="Canaux recommandés">
         <p className="mb-0">Privilégiez les canaux tracés (ticket, email d'entreprise, support prioritaire) pour le suivi opérationnel.</p>
-      </InfoCardInfo>
+      </AccordionInfo>
 
       <Row>
         <Col md={4} className="mb-4">

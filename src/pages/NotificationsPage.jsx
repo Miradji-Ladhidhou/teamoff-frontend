@@ -4,7 +4,7 @@ import { FaBell, FaCheck, FaCheckDouble } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationsService } from '../services/api';
-import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { useAlert } from '../hooks/useAlert';
 
 const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
@@ -302,7 +302,7 @@ const NotificationsPage = () => {
         )}
       </div>
 
-      <InfoCardInfo title="Comment lire vos notifications">
+      <AccordionInfo type="info" title="Comment lire vos notifications">
         <p className="mb-2">
           Cette page centralise les événements importants: validation/refus de congé,
           rappels d'actions et messages système.
@@ -312,11 +312,11 @@ const NotificationsPage = () => {
           <li>Bouton "Marquer comme lu" : nettoyage rapide</li>
           <li>"Tout marquer comme lu" : remise à zéro de la liste</li>
         </ul>
-      </InfoCardInfo>
+      </AccordionInfo>
 
-      <TipCard title="Conseil d'organisation">
+      <AccordionInfo type="tip" title="Conseil d'organisation">
         Consultez cette page au début de journée pour ne manquer aucune validation ou action prioritaire.
-      </TipCard>
+      </AccordionInfo>
 
       
 

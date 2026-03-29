@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Accordion, Container, Card, Button } from 'react-bootstrap';
-import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -95,13 +95,13 @@ const HelpPage = () => {
         <p className="text-muted mb-0">Retrouvez ici les réponses et astuces adaptées à votre profil TeamOff.</p>
       </div>
 
-      <InfoCardInfo title="Astuces pour votre profil">
+      <AccordionInfo type="info" title="Astuces pour votre profil">
         <ul className="mb-0">
           {(tips[role] || tips['employe']).map((tip, idx) => (
             <li key={idx}>{tip}</li>
           ))}
         </ul>
-      </InfoCardInfo>
+      </AccordionInfo>
 
       <Card className="mb-4">
         <Card.Body>
@@ -117,9 +117,9 @@ const HelpPage = () => {
       </Card>
 
       {user && (
-        <TipCard title="Besoin d'aide supplémentaire ?">
+        <AccordionInfo type="tip" title="Besoin d'aide supplémentaire ?">
           Consultez le <a href="/USER_GUIDE.md" target="_blank" rel="noopener noreferrer">guide utilisateur complet</a> ou contactez le support TeamOff à <a href="mailto:saas.teamoff@gmail.com">saas.teamoff@gmail.com</a>.
-        </TipCard>
+        </AccordionInfo>
       )}
     </Container>
   );

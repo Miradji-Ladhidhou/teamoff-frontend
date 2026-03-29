@@ -98,7 +98,9 @@ const RegisterPage = () => {
           alert.error(result.error);
         }
       } catch (err) {
-        alert.error('Une erreur inattendue s\'est produite');
+        // Affiche le message d'erreur du backend s'il existe
+        const message = err.response?.data?.message || err.message || 'Une erreur inattendue s\'est produite';
+        alert.error('Erreur d\'inscription : ' + message);
       }
     });
   };

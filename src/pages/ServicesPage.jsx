@@ -3,7 +3,7 @@ import { Container, Card, Table, Button, Badge, Modal, Form, Alert, Row, Col } f
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { entreprisesService } from '../services/api';
-import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { useAlert, useConfirmation } from '../hooks/useAlert';
 import AsyncButton from '../components/AsyncButton';
 
@@ -154,13 +154,13 @@ const ServicesPage = () => {
         </Button>
       </div>
 
-      <InfoCardInfo title="Gestion des services">
+      <AccordionInfo type="info" title="Gestion des services">
         <p className="mb-0">Un employé doit être rattaché à un service existant. Les règles définies ici sont appliquées de manière isolée par service.</p>
-      </InfoCardInfo>
+      </AccordionInfo>
 
-      <TipCard title="Bonnes pratiques">
+      <AccordionInfo type="tip" title="Bonnes pratiques">
         Commencez par créer vos services avant de créer des employés pour garantir une affectation propre dès le départ.
-      </TipCard>
+      </AccordionInfo>
 
       <Card>
         <Card.Body>

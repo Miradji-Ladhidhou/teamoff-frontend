@@ -14,7 +14,7 @@ import {
 } from 'react-bootstrap';
 import { entreprisesService, congeTypesService, quotasService, usersService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { InfoCardInfo, TipCard } from '../components/InfoCard';
+import AccordionInfo from '../components/AccordionInfo';
 import { useInlineConfirmation } from '../hooks/useInlineConfirmation';
 import { useAlert } from '../hooks/useAlert';
 import AsyncButton from '../components/AsyncButton';
@@ -332,15 +332,15 @@ const JoursBloquesPage = () => {
         </div>
       </div>
 
-      <InfoCardInfo title="Impact métier">
+      <AccordionInfo type="info" title="Impact métier">
         <p className="mb-0">
           Les paramètres de cette page sont appliqués lors du calcul des jours déduits et des acquisitions mensuelles automatiques.
         </p>
-      </InfoCardInfo>
+      </AccordionInfo>
 
-      <TipCard title="Cas d'entrée en cours d'année">
+      <AccordionInfo type="tip" title="Cas d'entrée en cours d'année">
         Utilisez le tableau des compteurs pour ajuster précisément acquis, pris, reportés et réservés par type de congé.
-      </TipCard>
+      </AccordionInfo>
 
       <Card className="mb-4 border-0 bg-light">
         <Card.Body>
@@ -353,14 +353,14 @@ const JoursBloquesPage = () => {
         </Card.Body>
       </Card>
 
-      <InfoCardInfo title="Exemples de configuration">
+      <AccordionInfo type="info" title="Exemples de configuration">
         <ul className="mb-0">
           <li>Entreprise classique: week-ends exclus, jours fériés exclus, aucun autre jour bloqué.</li>
           <li>Activité 6j/7: week-ends exclus désactivé, puis blocage manuel uniquement du dimanche.</li>
           <li>Règle RH stricte: ajouter automatiquement samedi/dimanche si le congé finit un vendredi.</li>
           <li>Ajustement de compteur: "Acquis 10, Pris 2" donne un solde disponible de 8 (hors réservés/reportés).</li>
         </ul>
-      </InfoCardInfo>
+      </AccordionInfo>
 
       {confirmationMessage && (
         <div className="alert alert-warning inline-confirmation-alert fw-semibold d-flex justify-content-between align-items-center" role="status">
