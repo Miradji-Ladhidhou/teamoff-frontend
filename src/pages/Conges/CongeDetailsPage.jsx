@@ -1,3 +1,4 @@
+import './conge-details.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';

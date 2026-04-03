@@ -1,3 +1,4 @@
+import './dashboard.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -254,13 +255,8 @@ const DashboardPage = () => {
 
       
 
-      <InfoCardInfo title="Comment utiliser ce tableau de bord">
-        <p className="mb-1">Cette vue vous donne l'essentiel en un coup d'oeil:</p>
-        <ul className="mb-0">
-          <li>Les indicateurs en haut montrent votre situation globale</li>
-          <li>La section "Congés récents" permet de suivre les derniers changements</li>
-          <li>Le bouton d'action vous amène directement à une nouvelle demande</li>
-        </ul>
+      <InfoCardInfo title="Repères rapides">
+        <p className="mb-0">Indicateurs en haut, historique en bas.</p>
       </InfoCardInfo>
 
       {notifications.filter(n => !n.lu).length > 0 && (

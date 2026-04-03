@@ -18,55 +18,55 @@
   --alert-radius:    12px;
   --alert-radius-sm:  8px;
 
-  --alert-shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --alert-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.13);
-  --alert-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.20);
+  --alert-shadow-sm: var(--dk-shadow-sm);
+  --alert-shadow-md: var(--dk-shadow-md);
+  --alert-shadow-lg: var(--dk-shadow-lg);
 
   --z-toast:   999999;
   --z-overlay: 10000;
   --z-modal:   10001;
 
   /* SUCCESS — texte #15803d sur fond #f0fdf4 : ratio 5.7:1 ✓ */
-  --clr-success:        #15803d;
-  --clr-success-bg:     #f0fdf4;
-  --clr-success-border: #86efac;
-  --clr-success-icon:   #16a34a;
+  --clr-success:        #bbf7d0;
+  --clr-success-bg:     rgba(34, 197, 94, 0.14);
+  --clr-success-border: #22c55e;
+  --clr-success-icon:   #22c55e;
 
   /* ERROR — texte #b91c1c sur fond #fff1f2 : ratio 5.5:1 ✓ */
-  --clr-error:          #b91c1c;
-  --clr-error-bg:       #fff1f2;
-  --clr-error-border:   #fca5a5;
-  --clr-error-icon:     #dc2626;
+  --clr-error:          #fecaca;
+  --clr-error-bg:       rgba(239, 68, 68, 0.14);
+  --clr-error-border:   #ef4444;
+  --clr-error-icon:     #ef4444;
 
   /* WARNING — texte #92400e sur fond #fffbeb : ratio 6.1:1 ✓ */
-  --clr-warning:        #92400e;
-  --clr-warning-bg:     #fffbeb;
-  --clr-warning-border: #fcd34d;
-  --clr-warning-icon:   #d97706;
+  --clr-warning:        #fde68a;
+  --clr-warning-bg:     rgba(245, 158, 11, 0.14);
+  --clr-warning-border: #f59e0b;
+  --clr-warning-icon:   #f59e0b;
 
   /* INFO — texte #1e40af sur fond #eff6ff : ratio 7.0:1 ✓ */
-  --clr-info:           #1e40af;
-  --clr-info-bg:        #eff6ff;
-  --clr-info-border:    #93c5fd;
-  --clr-info-icon:      #2563eb;
+  --clr-info:           #bfdbfe;
+  --clr-info-bg:        rgba(59, 130, 246, 0.14);
+  --clr-info-border:    #3b82f6;
+  --clr-info-icon:      #3b82f6;
 
   /* DANGER (modal) */
-  --clr-danger:        #dc3545;
-  --clr-danger-dark:   #bb2d3b;
-  --clr-danger-darker: #a71d2a;
+  --clr-danger:        var(--dk-error);
+  --clr-danger-dark:   #dc2626;
+  --clr-danger-darker: #b91c1c;
 
   /* PRIMARY */
-  --clr-primary:        #0d6efd;
-  --clr-primary-dark:   #0b5ed7;
-  --clr-primary-darker: #0a58ca;
+  --clr-primary:        var(--dk-accent);
+  --clr-primary-dark:   #2f73b7;
+  --clr-primary-darker: #245f9d;
 
   /* NEUTRES */
-  --clr-text-primary:   #1e293b;
-  --clr-text-secondary: #475569;
-  --clr-text-muted:     #64748b;
-  --clr-border:         #e2e8f0;
-  --clr-bg-subtle:      #f8fafc;
-  --clr-modal-bg:       #ffffff;
+  --clr-text-primary:   var(--dk-text);
+  --clr-text-secondary: var(--dk-text-soft);
+  --clr-text-muted:     var(--dk-text-muted);
+  --clr-border:         var(--dk-border);
+  --clr-bg-subtle:      var(--dk-elevated);
+  --clr-modal-bg:       var(--dk-card);
 }
 
 /* ===================================================================
@@ -123,14 +123,14 @@
   pointer-events: auto;
   border-radius: var(--alert-radius-sm);
   box-shadow: var(--alert-shadow-md);
-  background: #fef08a;
+  background: var(--dk-elevated);
   padding: 14px 16px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   animation: toastIn 0.25s ease-out forwards;
   min-height: 52px;
-  border-left: 3px solid #ca8a04;
+  border-left: 3px solid var(--clr-warning-border);
   width: 100%;
   box-sizing: border-box;
 }
@@ -139,7 +139,32 @@
   animation: toastOut 0.25s ease-in forwards;
 }
 
-/* Tous les types partagent le même style — géré par .toast-item */
+.toast-success {
+  border-left-color: var(--clr-success-border);
+  background: var(--clr-success-bg);
+}
+
+.toast-error {
+  border-left-color: var(--clr-error-border);
+  background: var(--clr-error-bg);
+}
+
+.toast-info {
+  border-left-color: var(--clr-info-border);
+  background: var(--clr-info-bg);
+}
+
+.toast-icon-success {
+  color: var(--clr-success-icon);
+}
+
+.toast-icon-error {
+  color: var(--clr-error-icon);
+}
+
+.toast-icon-info {
+  color: var(--clr-info-icon);
+}
 
 /* ===================================================================
    TOAST CONTENT
@@ -162,7 +187,7 @@
   width: 18px;
   height: 18px;
   display: flex;
-  color: #111827;
+  color: var(--clr-text-primary);
 }
 
 /* Texte sombre sur fond pastel clair — contraste WCAG AA garanti */
@@ -172,7 +197,7 @@
   font-weight: 500;
   line-height: 1.5;
   word-break: break-word;
-  color: #111827;
+  color: var(--clr-text-primary);
 }
 
 /* Couleur couverte par .toast-message */
@@ -190,7 +215,7 @@
   height: 22px;
   border-radius: 4px;
   margin-left: auto;
-  color: #111827;
+  color: var(--clr-text-primary);
   opacity: 0.65;
   transition: opacity 0.15s, background 0.15s;
 }
@@ -199,7 +224,7 @@
 
 .toast-close-btn:hover {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.07);
+  background: var(--dk-hover);
 }
 
 /* ===================================================================
@@ -501,13 +526,13 @@
 }
 
 .modal-btn-cancel:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--dk-hover);
+  border-color: var(--dk-border);
   color: var(--clr-text-primary);
 }
 
 .modal-btn-cancel:active:not(:disabled) {
-  background: var(--clr-border);
+  background: var(--dk-surface);
 }
 
 /* ===================================================================
@@ -582,61 +607,5 @@
   .confirmation-modal.modal-exit {
     animation: none !important;
     transition: none !important;
-  }
-}
-
-/* ===================================================================
-   DARK MODE — redéfinition des tokens uniquement
-   Tous les composants héritent automatiquement
-   =================================================================== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --clr-success:        #4ade80;
-    --clr-success-bg:     rgba(22, 163, 74, 0.12);
-    --clr-success-border: #4ade80;
-    --clr-success-icon:   #4ade80;
-
-    --clr-error:          #f87171;
-    --clr-error-bg:       rgba(220, 53, 69, 0.12);
-    --clr-error-border:   #f87171;
-    --clr-error-icon:     #f87171;
-
-    --clr-warning:        #fbbf24;
-    --clr-warning-bg:     rgba(217, 119, 6, 0.12);
-    --clr-warning-border: #fbbf24;
-    --clr-warning-icon:   #fbbf24;
-
-    --clr-info:           #93c5fd;
-    --clr-info-bg:        rgba(37, 99, 235, 0.12);
-    --clr-info-border:    #60a5fa;
-    --clr-info-icon:      #60a5fa;
-
-    --clr-danger:        #f87171;
-    --clr-danger-dark:   #ef4444;
-    --clr-danger-darker: #dc2626;
-
-    --clr-text-primary:   #f1f5f9;
-    --clr-text-secondary: #cbd5e1;
-    --clr-text-muted:     #94a3b8;
-    --clr-border:         #334155;
-    --clr-bg-subtle:      #1e293b;
-    --clr-modal-bg:       #1e293b;
-  }
-
-  .toast-item {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-  }
-
-  .confirmation-modal {
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
-  }
-
-  .modal-btn-cancel:hover:not(:disabled) {
-    background: #334155;
-    border-color: #475569;
-  }
-
-  .modal-btn-cancel:active:not(:disabled) {
-    background: #475569;
   }
 }

@@ -1,0 +1,84 @@
+.exports-page {
+	overflow-x: hidden;
+}
+
+.exports-page__header,
+.exports-page__card,
+.exports-page__aside {
+	min-width: 0;
+}
+
+.exports-options-list .form-check {
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 0.75rem 0.875rem;
+	border: 1px solid rgba(15, 23, 42, 0.12);
+	border-radius: 0.875rem;
+	background: #fff;
+}
+
+.exports-options-list .form-check-input {
+	flex-shrink: 0;
+}
+
+.exports-options-list .form-check-label {
+	display: block;
+	min-width: 0;
+}
+
+.exports-options-list .form-check-label > div {
+	align-items: flex-start;
+	min-width: 0;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.exports-page__actions > * {
+	min-width: 0;
+}
+
+.export-preview-header,
+.export-preview-mobile-card__body,
+.export-preview-mobile-card__row,
+.export-preview-details__row {
+	min-width: 0;
+}
+
+.export-preview-mobile-card__row {
+	align-items: flex-start;
+}
+
+.export-preview-mobile-card__row span:last-child,
+.export-preview-details__row {
+	text-align: right;
+	overflow-wrap: anywhere;
+}
+
+.export-preview-table-wrap {
+	overflow-x: auto;
+}
+
+.export-preview-details {
+	word-break: break-word;
+}
+
+@media (max-width: 991.98px) {
+	.exports-page__content {
+		row-gap: 1rem;
+	}
+}
+
+@media (max-width: 767.98px) {
+	.exports-page__header {
+		margin-bottom: 1rem;
+	}
+
+	.exports-page__card .card-body {
+		padding: 0.875rem;
+	}
+
+	.exports-options-list .form-check {
+		padding: 0.75rem;
+	}
+}

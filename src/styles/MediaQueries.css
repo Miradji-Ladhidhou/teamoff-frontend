@@ -1,0 +1,11 @@
+/*
+ * MediaQueries.css — DÉPRÉCIÉ
+ *
+ * Le contenu de ce fichier a été redistribué vers les fichiers dédiés :
+ *   - .auth-hero-title  → styles/ResetPasswordPage.css
+ *   - #login-form       → supprimé (ID jamais utilisé dans le JSX)
+ *   - .glass-card       → styles/Cards.css
+ *   - .lead-constrained → supprimé (classe jamais utilisée dans le JSX)
+ *
+ * Ce fichier n'est plus importé et peut être supprimé si souhaité.
+ */

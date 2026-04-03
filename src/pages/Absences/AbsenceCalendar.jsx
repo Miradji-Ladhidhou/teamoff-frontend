@@ -38,6 +38,7 @@ import { api } from '../../services/api';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './absence-calendar.css';
 
 const localizer = momentLocalizer(moment);
 
@@ -112,7 +113,7 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
           href={event.justificatif}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ marginLeft: 8, color: '#4caf50', fontWeight: 500, textDecoration: 'underline' }}
+          className="absence-calendar-link"
         >
           Justificatif
         </a>
@@ -141,23 +142,23 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
   };
 
   return (
-    <div style={{ minHeight: 600 }} {...(editAbsence ? { inert: true } : {})}>
+    <div className="absence-calendar-shell" {...(editAbsence ? { inert: true } : {})}>
       {/* Modale d'édition accessible */}
       {editAbsence && (
-        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.25)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#fff',padding:32,borderRadius:12,minWidth:320,maxWidth:400,boxShadow:'0 2px 16px rgba(0,0,0,0.15)'}} role="dialog" aria-modal="true" aria-labelledby="edit-absence-title">
-            <h3 id="edit-absence-title">Éditer l'absence</h3>
-            <div style={{marginBottom:16}}>
+        <div className="absence-calendar-modal-bg">
+          <div className="absence-calendar-modal" role="dialog" aria-modal="true" aria-labelledby="edit-absence-title">
+            <h3 id="edit-absence-title" className="absence-calendar-modal-title">Éditer l'absence</h3>
+            <div className="absence-calendar-modal-dates">
               <b>{editAbsence.type_absence === 'maladie' ? 'Maladie' : 'Absence'} - {editAbsence.utilisateur?.prenom} {editAbsence.utilisateur?.nom}</b><br/>
-              <span style={{fontSize:13}}>{editAbsence.date_debut} au {editAbsence.date_fin}</span>
+              <span>{editAbsence.date_debut} au {editAbsence.date_fin}</span>
             </div>
             <label>Commentaire :</label>
             <textarea
               value={editComment}
               onChange={e => setEditComment(e.target.value)}
-              style={{width:'100%',minHeight:60,marginBottom:16,padding:8,borderRadius:6,border:'1px solid #ccc'}}
+              className="absence-calendar-textarea"
             />
-            <div style={{display:'flex',justifyContent:'flex-end',gap:8}}>
+            <div className="absence-calendar-modal-actions">
               <button type="button" className="ui-btn-secondary" onClick={() => setEditAbsence(null)} disabled={editLoading}>Annuler</button>
               <button type="button" className="ui-btn-primary" onClick={handleEditSave} disabled={editLoading}>
                 {editLoading ? 'Enregistrement…' : 'Enregistrer'}
@@ -166,9 +167,9 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
           </div>
         </div>
       )}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-        <h2 className="ui-page-title" style={{fontSize:'1.4rem'}}>Planning des absences</h2>
-        <div style={{display:'flex',gap:8}}>
+      <div className="absence-calendar-header">
+        <h2 className="ui-page-title absence-calendar-title">Planning des absences</h2>
+        <div className="absence-calendar-header-actions">
           <button type="button" className="ui-btn-secondary" onClick={() => exportAbsencesToCSV(absences)}>
             Export CSV
           </button>
@@ -177,8 +178,8 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
           </button>
         </div>
       </div>
-      {loading && <div className="ui-text-soft" style={{marginBottom:12}}>Chargement…</div>}
-      {error && <div className="error" style={{color:'var(--danger-color)',marginBottom:12}}>{error}</div>}
+      {loading && <div className="ui-text-soft absence-calendar-loading">Chargement…</div>}
+      {error && <div className="error absence-calendar-error">{error}</div>}
       <Calendar
         localizer={localizer}
         events={events}
@@ -188,14 +189,15 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
         views={['month', 'week', 'day']}
         defaultView="month"
         popup
-        style={{ height: 500, margin: '20px 0', background:'#fff',borderRadius:10,boxShadow:'0 1px 6px rgba(0,0,0,0.06)' }}
+        className="absence-calendar-grid"
+        style={{ height: 500 }}
         tooltipAccessor={event => event.title}
         components={{ event: EventComponent }}
       />
-      <div style={{marginTop:16,display:'flex',flexWrap:'wrap',gap:8,alignItems:'center'}}>
-        <b style={{marginRight:8}}>Légende :</b>
-        <span style={{background:'#4caf50',padding:'2px 10px',borderRadius:6,margin:'0 4px',color:'#fff'}}>Maladie</span>
-        <span style={{background:'#2196f3',padding:'2px 10px',borderRadius:6,margin:'0 4px',color:'#fff'}}>Absence exceptionnelle</span>
+      <div className="absence-calendar-legend">
+        <b className="absence-calendar-legend-label">Légende :</b>
+        <span className="absence-calendar-legend-maladie">Maladie</span>
+        <span className="absence-calendar-legend-exceptionnelle">Absence exceptionnelle</span>
       </div>
     </div>
   );

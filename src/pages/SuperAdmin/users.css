@@ -1,0 +1,62 @@
+.users-management-page {
+	overflow-x: hidden;
+}
+
+.users-management-filters,
+.users-management-table-wrap,
+.users-management-modal__body,
+.users-management-details-grid {
+	min-width: 0;
+}
+
+.users-management-filters__badge {
+	max-width: 100%;
+	white-space: normal;
+}
+
+.users-management-mobile-list__item {
+	overflow: hidden;
+}
+
+.users-management-mobile-list__actions {
+	flex-wrap: wrap;
+}
+
+.users-management-mobile-list__actions > * {
+	flex: 1 1 calc(50% - 0.25rem);
+	min-width: 0;
+}
+
+.users-management-table-wrap {
+	overflow-x: auto;
+}
+
+.users-management-table-actions {
+	flex-wrap: wrap;
+}
+
+.users-management-modal .modal-dialog,
+.users-management-details-modal .modal-dialog {
+	margin: 0.75rem;
+}
+
+.users-management-modal__body,
+.users-management-details-grid {
+	word-break: break-word;
+}
+
+@media (max-width: 767.98px) {
+	.users-management-page .page-header {
+		margin-bottom: 1rem;
+	}
+
+	.users-management-filters .card-body,
+	.users-management-page .card-body {
+		padding-left: 0.875rem;
+		padding-right: 0.875rem;
+	}
+
+	.users-management-filters__count {
+		text-align: left !important;
+	}
+}

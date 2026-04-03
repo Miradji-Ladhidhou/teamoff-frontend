@@ -1,0 +1,37 @@
+.login-landing-bg {
+  /* Login page background */
+  background-color: var(--dk-bg);
+  min-height: 100vh;
+}
+
+/* dark-card et dark-input définis dans ForgotPasswordPage.css — utilisés ici aussi */
+
+.feature-card {
+  text-align: center;
+  padding: 1rem;
+  border-radius: var(--card-radius);
+  background-color: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  color: var(--dk-text);
+  transition: background-color 0.15s ease;
+}
+
+.feature-card:hover {
+  background-color: var(--dk-hover);
+}
+
+.feature-card h5 {
+  margin-bottom: 0.25rem;
+  color: var(--dk-text);
+}
+
+.feature-card p {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: var(--dk-text-soft);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .feature-card { margin-bottom: 1rem; }
+}

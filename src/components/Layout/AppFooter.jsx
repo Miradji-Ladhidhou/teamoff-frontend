@@ -6,20 +6,6 @@ import { FaLinkedin, FaFacebook, FaInstagram, FaXTwitter, FaArrowRight } from 'r
 import { useAuth } from '../../contexts/AuthContext';
 import { getNavigationForRole } from '../../utils/navigation';
 
-const socialLinks = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com', icon: FaLinkedin },
-  { label: 'X', href: 'https://x.com', icon: FaXTwitter },
-  { label: 'Facebook', href: 'https://www.facebook.com', icon: FaFacebook },
-  { label: 'Instagram', href: 'https://www.instagram.com', icon: FaInstagram },
-];
-
-const trustItems = [
-  'Controle des acces par role',
-  'Journal d\'audit des actions',
-  'Sauvegardes et export des donnees',
-  'Confidentialite des informations collaborateurs',
-];
-
 const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
   const { user } = useAuth();
   const role = publicMode ? null : (isSuperAdmin ? 'super_admin' : user?.role);
@@ -27,14 +13,14 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
 
   const legalLinks = publicMode
     ? [
-        { label: 'Informations legales', to: '/legal' },
-        { label: 'Confidentialite', to: '/privacy' },
+        { label: 'Mentions légales', to: '/legal' },
+        { label: 'Confidentialité', to: '/privacy' },
         { label: 'Contact', to: '/contact' },
         { label: 'Centre d\'aide', to: '/help' },
       ]
     : [
-        { label: 'Informations legales', to: `${routePrefix}/legal` },
-        { label: 'Confidentialite', to: `${routePrefix}/privacy` },
+        { label: 'Mentions légales', to: `${routePrefix}/legal` },
+        { label: 'Confidentialité', to: `${routePrefix}/privacy` },
         { label: 'Contact', to: `${routePrefix}/contact` },
         { label: 'Centre d\'aide', to: `${routePrefix}/help` },
       ];
@@ -43,7 +29,7 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
     if (publicMode) {
       return [
         { label: 'Connexion', to: '/' },
-        { label: 'Creer un compte', to: '/register' },
+        { label: 'Créer un compte', to: '/register' },
         { label: 'Contact', to: '/contact' },
         { label: 'Centre d\'aide', to: '/help' },
       ];
@@ -56,46 +42,70 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
   const ctaButtons = useMemo(() => {
     if (publicMode) {
       return [
-        { label: 'Creer un compte', to: '/register', variant: 'primary' },
-        { label: 'Contacter l\'equipe', to: '/contact', variant: 'outline-primary' },
+        { label: 'Créer un compte', to: '/register', variant: 'primary' },
+        { label: 'Contactez-nous', to: '/contact', variant: 'outline-light' },
       ];
     }
 
     if (isSuperAdmin) {
       return [
-        { label: 'Voir le dashboard', to: '/superadmin/dashboard', variant: 'primary' },
-        { label: 'Gerer les entreprises', to: '/superadmin/companies', variant: 'outline-primary' },
+        { label: 'Dashboard', to: '/superadmin/dashboard', variant: 'primary' },
+        { label: 'Entreprises', to: '/superadmin/companies', variant: 'outline-light' },
       ];
     }
 
     return [
-      { label: 'Demander un conge', to: '/conges/nouveau', variant: 'primary' },
-      { label: 'Ouvrir le calendrier', to: '/calendrier', variant: 'outline-primary' },
+      { label: 'Demander un congé', to: '/conges/nouveau', variant: 'primary' },
+      { label: 'Calendrier', to: '/calendrier', variant: 'outline-light' },
     ];
   }, [isSuperAdmin, publicMode]);
 
   return (
-    <footer className="app-footer mt-4">
-      <div className="app-footer__panel">
-        <div className="app-footer__grid">
-          <section>
-            <p className="app-footer__eyebrow">TeamOff</p>
-            <h2 className="app-footer__title">Une navigation utile jusqu'au dernier pixel.</h2>
-            <p className="app-footer__text">
-              Retrouvez toutes les informations utiles, moyens de contact, liens populaires et gages de confiance dans l'accordéon ci-dessous.
+    <footer className="app-footer bg-dark text-light py-5 mt-5">
+      <div className="container">
+        <div className="row">
+          {/* Section principale */}
+          <div className="col-lg-6 mb-4">
+            <h2 className="h5 fw-bold text-white">TeamOff</h2>
+            <p className="text-light-50">
+              Tous les liens et informations essentiels à portée de main.
             </p>
             <div className="d-flex flex-wrap gap-2 mt-3">
               {ctaButtons.map((item) => (
-                <Button as={Link} key={item.to} to={item.to} variant={item.variant} size="sm">
+                <Button
+                  as={Link}
+                  key={item.to}
+                  to={item.to}
+                  variant={item.variant}
+                  size="sm"
+                  className="d-flex align-items-center gap-1"
+                >
                   {item.label}
-                  <FaArrowRight className="ms-2" />
+                  <FaArrowRight className="ms-1" />
                 </Button>
               ))}
             </div>
-          </section>
-          <section className="w-100 mt-3">
-            <FooterAccordion />
-          </section>
+          </div>
+
+          {/* Accordéon footer */}
+          <div className="col-lg-6">
+            <FooterAccordion darkMode />
+          </div>
+        </div>
+
+        <hr className="border-light mt-4" />
+
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+          <small className="text-light-50 mb-2 mb-md-0">
+            © 2026 TeamOff - Tous droits réservés
+          </small>
+          <div className="d-flex gap-3">
+            {legalLinks.map((link) => (
+              <Link key={link.to} to={link.to} className="text-light-50 text-decoration-none small">
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

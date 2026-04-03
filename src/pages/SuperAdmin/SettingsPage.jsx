@@ -1,3 +1,4 @@
+import './settings.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Tab, Tabs, Table, Badge, Modal } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';

@@ -1,3 +1,4 @@
+import './companies.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';

@@ -1,3 +1,4 @@
+import './metrics.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Badge } from 'react-bootstrap';
 import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer } from 'react-icons/fa';

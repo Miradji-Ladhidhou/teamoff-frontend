@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../styles/absence-form.css';
+import './absence-form.css';
 import { useAlert } from '../../hooks/useAlert';
 import { api } from '../../services/api';
 

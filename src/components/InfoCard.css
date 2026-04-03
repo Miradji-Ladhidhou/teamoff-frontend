@@ -1,0 +1,13 @@
+.info-card .alert-heading {
+  text-align: left;
+}
+
+.info-card-content.compact {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.info-card-content.expanded {
+  max-height: 900px;
+  overflow: auto;
+}

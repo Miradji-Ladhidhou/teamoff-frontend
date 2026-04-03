@@ -1,10 +1,10 @@
+import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaBuilding, FaDownload } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -31,6 +31,9 @@ const UsersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedUserDetails, setSelectedUserDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -284,6 +287,23 @@ const UsersManagement = () => {
     return <Badge bg={variants[status] || 'secondary'}>{labels[status] || status}</Badge>;
   };
 
+  const openDetailsModal = (targetUser) => {
+    setSelectedUserDetails(targetUser);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedUserDetails(null);
+  };
+
+  const formatDate = (value) => {
+    if (!value) return 'Non definie';
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) return 'Non definie';
+    return parsedDate.toLocaleDateString('fr-FR');
+  };
+
   if (loading) {
     return (
       <Container>
@@ -298,7 +318,7 @@ const UsersManagement = () => {
   }
 
   return (
-    <Container fluid="sm">
+    <Container fluid="sm" className="users-management-page">
       {/* En-tête responsive */}
       <div className="page-header">
         <div>
@@ -308,6 +328,9 @@ const UsersManagement = () => {
           </p>
         </div>
         <div className="page-header-actions">
+          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
+            Info
+          </Button>
           <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
@@ -331,24 +354,9 @@ const UsersManagement = () => {
         </div>
       </div>
 
-      
-
-      <InfoCardInfo title="Répartition des rôles">
-        <ul className="mb-0">
-          <li>Super Admin: gouvernance globale de la plateforme</li>
-          <li>Admin entreprise: administration de son entreprise</li>
-          <li>Manager: validation opérationnelle des congés</li>
-          <li>Employé: création et suivi de ses demandes</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Sécurité des accès">
-        Privilégiez le principe du moindre privilège et désactivez les comptes inactifs régulièrement.
-      </TipCard>
-
-      <Card className="mb-4">
+      <Card className="mb-4 users-management-filters">
         <Card.Body>
-          <Row className="g-2 align-items-center">
+          <Row className="g-2 align-items-center users-management-filters__row">
             <Col xs={12} md={4}>
               <InputGroup>
                 <InputGroup.Text>
@@ -385,8 +393,8 @@ const UsersManagement = () => {
                 <option value="employe">Employe</option>
               </Form.Select>
             </Col>
-            <Col xs={12} md={2} className="text-md-end">
-              <Badge bg="info">
+            <Col xs={12} md={2} className="text-md-end users-management-filters__count">
+              <Badge bg="info" className="users-management-filters__badge">
                 {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
               </Badge>
             </Col>
@@ -409,26 +417,22 @@ const UsersManagement = () => {
           ) : (
             <>
               {/* Vue carte — mobile uniquement */}
-              <div className="d-md-none mobile-card-list px-3">
+              <div className="d-md-none mobile-card-list px-3 users-management-mobile-list">
                 {filteredUsers.map((targetUser) => (
-                  <div key={targetUser.id} className="mobile-card-list__item">
+                  <div key={targetUser.id} className="mobile-card-list__item users-management-mobile-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
                       <div className="min-w-0">
                         <div className="fw-semibold small">{targetUser.prenom} {targetUser.nom}</div>
-                        <div className="text-muted text-xs text-break">{targetUser.email}</div>
+                        <div className="text-muted text-xs">{targetUser.role || 'Role inconnu'}</div>
                       </div>
                       {getStatusBadge(targetUser.statut)}
                     </div>
-                    <div className="d-flex gap-1 flex-wrap mb-2 text-xxs">
-                      {getRoleBadge(targetUser.role)}
-                      {targetUser.service && <Badge bg="secondary">{targetUser.service}</Badge>}
-                      {companiesById[targetUser.entreprise_id] && (
-                        <Badge bg="light" text="dark"><FaBuilding className="me-1" />{companiesById[targetUser.entreprise_id]}</Badge>
-                      )}
-                    </div>
-                    <div className="d-flex gap-1">
+                    <div className="d-flex gap-1 users-management-mobile-list__actions">
+                      <Button variant="outline-secondary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openDetailsModal(targetUser)}>
+                        Detail
+                      </Button>
                       <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(targetUser)}>
-                        <FaEdit className="me-1" /> Modifier
+                        Modifier
                       </Button>
                       <AsyncButton
                         variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
@@ -458,18 +462,13 @@ const UsersManagement = () => {
               </div>
 
               {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-md-block">
+              <div className="d-none d-md-block users-management-table-wrap">
                 <Table hover responsive>
                   <thead>
                     <tr>
                       <th>Utilisateur</th>
-                      <th>Email</th>
-                      <th>Date d'embauche</th>
                       <th>Role</th>
-                      <th>Service</th>
-                      <th>Entreprise</th>
                       <th>Statut</th>
-                      <th>Mise a jour</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -481,28 +480,13 @@ const UsersManagement = () => {
                             <strong>{targetUser.prenom} {targetUser.nom}</strong>
                           </div>
                         </td>
-                        <td>{targetUser.email}</td>
-                        <td>
-                          {targetUser.date_embauche
-                            ? new Date(`${targetUser.date_embauche}T00:00:00`).toLocaleDateString('fr-FR')
-                            : <span className="text-muted">Non définie</span>}
-                        </td>
                         <td>{getRoleBadge(targetUser.role)}</td>
-                        <td>{targetUser.service || <span className="text-muted">Non défini</span>}</td>
-                        <td>
-                          {companiesById[targetUser.entreprise_id] ? (
-                            <div>
-                              <FaBuilding className="me-1" />
-                              {companiesById[targetUser.entreprise_id]}
-                            </div>
-                          ) : (
-                            <Badge bg="secondary">Aucune</Badge>
-                          )}
-                        </td>
                         <td>{getStatusBadge(targetUser.statut)}</td>
-                        <td>{targetUser.updatedAt ? new Date(targetUser.updatedAt).toLocaleDateString('fr-FR') : 'Jamais'}</td>
                         <td>
-                          <div className="d-flex gap-1">
+                          <div className="d-flex gap-1 users-management-table-actions">
+                            <Button variant="outline-secondary" size="sm" onClick={() => openDetailsModal(targetUser)} title="Detail">
+                              Detail
+                            </Button>
                             <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
                               <FaEdit />
                             </Button>
@@ -542,12 +526,12 @@ const UsersManagement = () => {
         </Card.Body>
       </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered dialogClassName="users-management-modal">
         <Modal.Header closeButton={!submitAction.isRunning}>
           <Modal.Title>{editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
-          <Modal.Body>
+          <Modal.Body className="users-management-modal__body">
             
             <Row>
               <Col md={6}>
@@ -678,6 +662,45 @@ const UsersManagement = () => {
             </AsyncButton>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Info utilisateurs</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul className="mb-0">
+            <li>La liste affiche uniquement le minimum.</li>
+            <li>Utilisez Detail pour voir email, entreprise et date d'embauche.</li>
+            <li>Modifier/Activer/Supprimer restent dans les actions.</li>
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDetailsModal} onHide={closeDetailsModal} centered dialogClassName="users-management-details-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Detail utilisateur</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUserDetails && (
+            <div className="d-grid gap-2 small users-management-details-grid">
+              <div><strong>Nom:</strong> {selectedUserDetails.prenom} {selectedUserDetails.nom}</div>
+              <div><strong>Email:</strong> {selectedUserDetails.email || 'Non defini'}</div>
+              <div><strong>Role:</strong> {selectedUserDetails.role || 'Non defini'}</div>
+              <div><strong>Statut:</strong> {selectedUserDetails.statut || 'Non defini'}</div>
+              <div><strong>Service:</strong> {selectedUserDetails.service || 'Non defini'}</div>
+              <div><strong>Entreprise:</strong> {companiesById[selectedUserDetails.entreprise_id] || 'Non definie'}</div>
+              <div><strong>Date embauche:</strong> {formatDate(selectedUserDetails.date_embauche)}</div>
+              <div><strong>Mise a jour:</strong> {formatDate(selectedUserDetails.updatedAt)}</div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

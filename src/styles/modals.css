@@ -48,8 +48,8 @@
 
   .modal-content {
     border-radius: 12px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+    border: 1px solid var(--dk-border);
+    box-shadow: var(--dk-shadow-md);
   }
 }
 
@@ -62,8 +62,8 @@
 
   .modal-content {
     border-radius: 16px;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--dk-border);
+    box-shadow: var(--dk-shadow-md);
   }
 }
 
@@ -75,8 +75,8 @@
 
   .modal-content {
     border-radius: 16px;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--dk-border);
+    box-shadow: var(--dk-shadow-lg);
   }
 }
 
@@ -85,7 +85,8 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--dk-card);
+  color: var(--dk-text);
   overflow: hidden;
 }
 
@@ -103,7 +104,8 @@
 /* ==================== MODAL HEADER ==================== */
 
 .modal-header {
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
   padding: 20px 24px;
   gap: 12px;
 }
@@ -119,7 +121,7 @@
 .modal-title {
   font-size: 18px;
   font-weight: 600;
-  color: #3d87d1;
+  color: var(--dk-accent);
   margin: 0;
   line-height: 1.4;
 }
@@ -159,7 +161,7 @@
 
 .btn-close:focus {
   opacity: 1;
-  outline: 2px solid #0d6efd;
+  outline: 2px solid var(--dk-accent);
   outline-offset: 2px;
 }
 
@@ -171,7 +173,8 @@
   overflow-x: hidden;
   max-height: calc(100vh - 200px);
   max-height: calc(100dvh - 200px);
-  color: #334155;
+  background: var(--dk-card);
+  color: var(--dk-text);
   font-size: 14px;
   line-height: 1.6;
   overscroll-behavior: contain;
@@ -210,7 +213,7 @@
 .modal-body .form-label {
   font-size: 13px;
   font-weight: 500;
-  color: #334155;
+  color: var(--dk-text-soft);
   margin-bottom: 6px;
 }
 
@@ -239,17 +242,17 @@
 
 .modal-body .form-control:focus,
 .modal-body .form-select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  border-color: var(--dk-accent);
+  box-shadow: 0 0 0 0.2rem rgba(61, 135, 209, 0.25);
 }
 
 /* ==================== MODAL FOOTER ==================== */
 
 .modal-footer {
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--dk-border);
   padding: 16px 24px;
   gap: 12px;
-  background: #f8f9fa;
+  background: var(--dk-elevated);
 }
 
 /* Mobile footer */
@@ -303,41 +306,41 @@
 }
 
 .modal-footer .btn-primary {
-  background: #0d6efd;
-  border-color: #0d6efd;
-  color: white;
+  background: var(--dk-accent);
+  border-color: var(--dk-accent);
+  color: var(--dk-text);
 }
 
 .modal-footer .btn-primary:hover:not(:disabled) {
-  background: #0b5ed7;
-  border-color: #0a58ca;
+  background: #2f73b7;
+  border-color: #2f73b7;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 4px 12px rgba(61, 135, 209, 0.35);
 }
 
 .modal-footer .btn-secondary {
-  background: white;
-  border: 1px solid #dee2e6;
-  color: #212529;
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  color: var(--dk-text);
 }
 
 .modal-footer .btn-secondary:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  background: var(--dk-hover);
+  border-color: var(--dk-border);
   transform: translateY(-1px);
 }
 
 .modal-footer .btn-danger {
-  background: #dc3545;
-  border-color: #dc3545;
-  color: white;
+  background: var(--dk-error);
+  border-color: var(--dk-error);
+  color: var(--dk-text);
 }
 
 .modal-footer .btn-danger:hover:not(:disabled) {
-  background: #bb2d3b;
-  border-color: #b02a37;
+  background: #dc2626;
+  border-color: #dc2626;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
 
 .modal-footer .btn:disabled {
@@ -346,7 +349,7 @@
 }
 
 .modal-footer .btn:focus {
-  outline: 2px solid #0d6efd;
+  outline: 2px solid var(--dk-accent);
   outline-offset: 2px;
 }
 
@@ -436,12 +439,12 @@
 /* High contrast mode support */
 @media (prefers-contrast: more) {
   .modal-content {
-    border: 2px solid #212529;
+    border: 2px solid var(--dk-text);
   }
 
   .modal-header,
   .modal-footer {
-    border-color: #212529;
+    border-color: var(--dk-text);
   }
 }
 

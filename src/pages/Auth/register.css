@@ -1,0 +1,22 @@
+.register-bg {
+  /* Register page background */
+  background-color: var(--dk-bg);
+  min-height: 100vh;
+}
+
+/* dark-card et dark-input définis dans ForgotPasswordPage.css */
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--dk-text-muted);
+  transition: color 0.15s;
+}
+
+.password-toggle:hover {
+  color: var(--dk-text-soft);
+}

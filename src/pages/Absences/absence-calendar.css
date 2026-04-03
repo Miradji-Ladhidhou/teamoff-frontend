@@ -1,0 +1,194 @@
+/* Styles pour le calendrier d'absences */
+.absence-calendar-shell {
+  min-height: 24rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.absence-calendar-alert {
+  font-size: 13px;
+  border-radius: 8px;
+}
+.absence-calendar-link {
+  margin-left: 8px;
+  color: #4caf50;
+  font-weight: 500;
+  text-decoration: underline;
+}
+.absence-calendar-modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.25);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+.absence-calendar-modal {
+  background: var(--dk-card, #fff);
+  color: var(--dk-text, #111);
+  padding: 1rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 26rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+.absence-calendar-modal-title {
+  margin-bottom: 0.75rem;
+  font-weight: bold;
+}
+.absence-calendar-modal-dates {
+  font-size: 13px;
+  margin-bottom: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.absence-calendar-textarea {
+  width: 100%;
+  min-height: 60px;
+  margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dk-border, #ccc);
+  background: var(--dk-elevated, #fff);
+  color: var(--dk-text, #111);
+}
+.absence-calendar-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.absence-calendar-modal-actions .ui-btn-secondary,
+.absence-calendar-modal-actions .ui-btn-primary {
+  width: 100%;
+}
+.absence-calendar-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-bottom: 12px;
+}
+.absence-calendar-title {
+  font-size: 1.05rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.absence-calendar-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.absence-calendar-header-actions .ui-btn-secondary {
+  width: 100%;
+}
+.absence-calendar-loading {
+  margin-bottom: 12px;
+}
+.absence-calendar-error {
+  color: var(--danger-color);
+  margin-bottom: 12px;
+}
+.absence-calendar-grid {
+  margin: 1rem 0;
+  background: var(--dk-card, #fff);
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.absence-calendar-shell .rbc-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+.absence-calendar-shell .rbc-toolbar .rbc-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.absence-calendar-shell .rbc-toolbar button {
+  min-height: 2rem;
+  font-size: 0.78rem;
+}
+.absence-calendar-shell .rbc-toolbar-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.absence-calendar-legend {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+.absence-calendar-legend-label {
+  margin-right: 0;
+  font-weight: bold;
+}
+.absence-calendar-legend-maladie {
+  background: #4caf50;
+  padding: 2px 10px;
+  border-radius: 6px;
+  margin: 0 4px;
+  color: #fff;
+}
+.absence-calendar-legend-exceptionnelle {
+  background: #2196f3;
+  padding: 2px 10px;
+  border-radius: 6px;
+  margin: 0 4px;
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .absence-calendar-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .absence-calendar-title {
+    font-size: 1.25rem;
+  }
+
+  .absence-calendar-header-actions {
+    flex-direction: row;
+  }
+
+  .absence-calendar-header-actions .ui-btn-secondary {
+    width: auto;
+  }
+
+  .absence-calendar-modal {
+    padding: 1.25rem;
+  }
+
+  .absence-calendar-modal-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .absence-calendar-modal-actions .ui-btn-secondary,
+  .absence-calendar-modal-actions .ui-btn-primary {
+    width: auto;
+  }
+
+  .absence-calendar-shell .rbc-toolbar {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+
+  .absence-calendar-legend {
+    flex-direction: row;
+    align-items: center;
+  }
+}

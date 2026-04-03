@@ -22,22 +22,20 @@ const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const CongesPage = lazy(() => import('./pages/Conges/CongesPage'));
 const CongeDetailsPage = lazy(() => import('./pages/Conges/CongeDetailsPage'));
 const NouveauCongePage = lazy(() => import('./pages/Conges/NouveauCongePage'));
-const UsersPage = lazy(() => import('./pages/UsersPage'));
-const CalendrierPage = lazy(() => import('./pages/CalendrierPage'));
-const ExportsPage = lazy(() => import('./pages/ExportsPage'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const JoursFeriesPage = lazy(() => import('./pages/JoursFeriesPage'));
-const PolitiqueCongesPage = lazy(() => import('./pages/PolitiqueCongesPage'));
-const ServicesPage = lazy(() => import('./pages/ServicesPage'));
-const JoursBloquesPage = lazy(() => import('./pages/JoursBloquesPage'));
-const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
-const LegalPage = lazy(() => import('./pages/LegalPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
-const HelpPage = lazy(() => import('./pages/HelpPage'));
-const MyProfilePage = lazy(() => import('./pages/MyProfilePage'));
-const AbsencesEquipePage = lazy(() => import('./pages/Absences/AbsencesEquipePage'));
-import AbsencesPage from './pages/Absences';
+const UsersPage = lazy(() => import('./pages/Users/UsersPage'));
+const CalendrierPage = lazy(() => import('./pages/Calendrier/CalendrierPage'));
+const ExportsPage = lazy(() => import('./pages/Exports/ExportsPage'));
+const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage'));
+const JoursFeriesPage = lazy(() => import('./pages/JoursFeries/JoursFeriesPage'));
+const PolicyServicesPage = lazy(() => import('./pages/PolicyServices/PolicyServicesPage'));
+const HolidaysBlockedPage = lazy(() => import('./pages/HolidaysBlocked/HolidaysBlockedPage'));
+const MaintenancePage = lazy(() => import('./pages/Maintenance/MaintenancePage'));
+const LegalPage = lazy(() => import('./pages/Legal/LegalPage'));
+const ContactPage = lazy(() => import('./pages/Contact/ContactPage'));
+const PrivacyPage = lazy(() => import('./pages/Privacy/PrivacyPage'));
+const HelpPage = lazy(() => import('./pages/Help/HelpPage'));
+const MyProfilePage = lazy(() => import('./pages/MyProfile/MyProfilePage'));
+const AbsencesPage = lazy(() => import('./pages/Absences/AbsencesPage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
@@ -270,7 +268,7 @@ function App() {
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
             <Route path="/absences" element={<AbsencesPage />} />
-            <Route path="/absences/equipe" element={<AbsencesEquipePage />} />
+            <Route path="/absences/equipe" element={<Navigate to="/absences" replace />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
@@ -287,10 +285,10 @@ function App() {
         <Route element={<ProtectedRoute roles={['admin_entreprise']} />}>
           <Route element={<Layout />}>
             <Route path="/users" element={<UsersPage />} />
-            <Route path="/jours-feries" element={<JoursFeriesPage />} />
-            <Route path="/politique-conges" element={<PolitiqueCongesPage />} />
-            <Route path="/parametres-jours-bloques" element={<JoursBloquesPage />} />
-            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/jours-feries" element={<HolidaysBlockedPage />} />
+            <Route path="/politique-conges" element={<PolicyServicesPage />} />
+            <Route path="/parametres-jours-bloques" element={<Navigate to="/jours-feries?tab=bloques" replace />} />
+            <Route path="/services" element={<Navigate to="/politique-conges?tab=services" replace />} />
           </Route>
         </Route>
 
@@ -306,6 +304,7 @@ function App() {
             <Route path="leaves/new" element={<NouveauCongePage />} />
             <Route path="leaves/:id/edit" element={<NouveauCongePage />} />
             <Route path="leaves/:id" element={<CongeDetailsPage />} />
+            <Route path="absences" element={<AbsencesPage />} />
             <Route path="metrics" element={<MetricsPage />} />
             <Route path="exports" element={<ExportsPage />} />
             <Route path="holidays" element={<JoursFeriesPage />} />

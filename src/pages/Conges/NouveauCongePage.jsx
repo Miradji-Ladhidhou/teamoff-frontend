@@ -1,10 +1,10 @@
+import './nouveau-conge.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -40,6 +40,7 @@ const NouveauCongePage = () => {
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
   const [showOverlapModal, setShowOverlapModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   useEffect(() => {
     if (isEditMode) return;
     const params = new URLSearchParams(location.search);
@@ -391,22 +392,11 @@ const NouveauCongePage = () => {
           <FaArrowLeft />
         </Button>
         <div>
-          <h1 className="h3 mb-1">{isEditMode ? 'Modifier la demande de congé' : 'Nouvelle demande de congé'}</h1>
-          <p className="text-muted">{isEditMode ? 'Mettez à jour les informations de votre demande' : 'Remplissez le formulaire ci-dessous'}</p>
+          <h1 className="h3 mb-1">{isEditMode ? 'Modifier la demande' : 'Nouvelle demande'}</h1>
+          <p className="text-muted">{isEditMode ? 'Modification' : 'Création'}</p>
         </div>
+        <Button variant="outline-secondary" className="ms-auto" onClick={() => setShowInfoModal(true)}>Info</Button>
       </div>
-
-      <InfoCardInfo title={isEditMode ? 'Conseils pour modifier votre demande' : 'Avant de soumettre votre demande'}>
-        <ul className="mb-0">
-          <li>Choisissez un type de congé compatible avec votre solde</li>
-          <li>Vérifiez les dates et les demi-journées pour un calcul exact</li>
-          <li>Ajoutez un commentaire clair pour faciliter la validation</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Exemple de commentaire utile">
-        Absence familiale du 12 au 14 avril, relais opérationnel préparé avec l'équipe support.
-      </TipCard>
 
       <Row>
         <Col lg={8}>
@@ -526,12 +516,9 @@ const NouveauCongePage = () => {
                     name="commentaire_employe"
                     value={formData.commentaire_employe}
                     onChange={handleChange}
-                    placeholder="Ajoutez un commentaire pour justifier votre demande..."
+                    placeholder="Commentaire"
                     maxLength={1000}
                   />
-                  <Form.Text className="text-muted">
-                    {formData.commentaire_employe.length}/1000 caractères
-                  </Form.Text>
                 </Form.Group>
 
                 <div className="d-flex gap-2">
@@ -595,24 +582,6 @@ const NouveauCongePage = () => {
             </Card.Body>
           </Card>
 
-          {/* Informations importantes */}
-          <Card>
-            <Card.Header>
-              <h6 className="mb-0 d-flex align-items-center">
-                <FaInfoCircle className="me-2" />
-                Informations importantes
-              </h6>
-            </Card.Header>
-            <Card.Body className="small">
-              <ul className="mb-0">
-                <li>La demande sera soumise à validation</li>
-                <li>Vous recevrez une notification par email</li>
-                <li>Le délai de traitement est généralement de 48h</li>
-                <li>Vous pouvez annuler votre demande tant qu'elle n'est pas validée</li>
-              </ul>
-            </Card.Body>
-          </Card>
-
           {/* Soldes disponibles */}
           {soldes.length > 0 && (
             <Card className="mt-4">
@@ -631,6 +600,22 @@ const NouveauCongePage = () => {
           )}
         </Col>
       </Row>
+
+      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Info demande</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul className="mb-0">
+            <li>Renseignez type, dates, puis envoyez.</li>
+            <li>Le solde est affiché à droite.</li>
+            <li>Vous pouvez modifier tant que la demande n'est pas validée.</li>
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
+        </Modal.Footer>
+      </Modal>
 
     </Container>
   );

@@ -1,10 +1,10 @@
+import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
-import { InfoCardInfo, TipCard, SuccessCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -40,6 +40,9 @@ const CongesPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
   const [rejectComment, setRejectComment] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedCongeDetails, setSelectedCongeDetails] = useState(null);
   const validateAction = useAsyncAction();
   const rejectAction = useAsyncAction();
 
@@ -266,6 +269,16 @@ const CongesPage = () => {
     setRejectComment('');
   };
 
+  const openDetailsModal = (conge) => {
+    setSelectedCongeDetails(conge);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedCongeDetails(null);
+  };
+
   const canValidateConge = (conge) => {
     const workflow = conge?.effective_approval_workflow;
 
@@ -376,66 +389,41 @@ const CongesPage = () => {
   };
 
   return (
-    <Container fluid="sm">
+    <Container fluid="sm" className="conges-page">
       {/* En-tête responsive */}
       <div className="page-header">
         <div>
           <h1 className="h4 mb-1">
-            {isAdmin() ? 'Gestion des Congés' : 'Mes Congés'}
+            {isAdmin() ? 'Congés' : 'Mes congés'}
           </h1>
           <p className="text-muted small mb-0">
             {user?.role === 'super_admin'
-              ? 'Superviser l\'ensemble des demandes de congé de la plateforme'
+              ? 'Vue globale'
               : isAdmin()
-                ? 'Gérer tous les congés de l\'entreprise'
-                : 'Consulter et gérer vos demandes de congés'}
+                ? 'Vue entreprise'
+                : 'Mes demandes'}
           </p>
         </div>
-        {canCreateLeave && (
-          <div className="page-header-actions">
+        <div className="page-header-actions">
+          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
+            Info
+          </Button>
+          {canCreateLeave && (
             <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center justify-content-center">
               <FaPlus className="me-2" />
-              Nouveau congé
+              Nouveau
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Contenu d'aide selon le rôle */}
-      {user?.role === 'employe' && (
-        <>
-          <InfoCardInfo title="Comment demander un congé ?">
-            <p>Cliquez sur le bouton "Nouveau congé" pour soumettre une demande. Remplissez le formulaire avec:</p>
-            <ul className="mb-2">
-              <li>Les dates de début et fin du congé</li>
-              <li>Le type de congé (congé payé, RTT, etc.)</li>
-              <li>Un commentaire optionnel</li>
-            </ul>
-            <p className="mb-0">Votre manager devra ensuite valider votre demande.</p>
-          </InfoCardInfo>
-
-          <TipCard title="Conseil: Check votre solde">
-            Pensez à consulter votre solde de congés disponibles avant de faire une demande ! Vous pouvez le voir dans votre tableau de bord.
-          </TipCard>
-        </>
-      )}
-
-      {(user?.role === 'manager' || user?.role === 'admin_entreprise') && (
-        <>
-          <SuccessCardInfo title="Vous êtes chargé de valider les demandes">
-            <p>En tant que manager ou administrateur, vous devez valider ou refuser les demandes de congé de votre équipe.</p>
-            <p className="mb-0">Accédez à la liste des congés en attente et cliquez sur chaque demande pour l'approuver ou la rejeter.</p>
-          </SuccessCardInfo>
-        </>
-      )}
-
-      <Card className="mb-4">
+      <Card className="mb-4 conges-filters-card">
         <Card.Header>
           <Button
             variant="outline-secondary"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="d-flex align-items-center"
+            className="d-flex align-items-center conges-filters-toggle"
           >
             <FaFilter className="me-2" />
             Filtres
@@ -443,8 +431,8 @@ const CongesPage = () => {
         </Card.Header>
 
         {showFilters && (
-          <Card.Body>
-            <Row>
+          <Card.Body className="conges-filters-body">
+            <Row className="g-3">
               <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>
@@ -498,7 +486,7 @@ const CongesPage = () => {
                 </Form.Group>
               </Col>
             </Row>
-            <Row>
+            <Row className="g-3">
               <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label>Date demande du</Form.Label>
@@ -575,26 +563,15 @@ const CongesPage = () => {
           ) : (
             <>
               {/* Vue carte — mobile uniquement */}
-              <div className="d-md-none mobile-card-list">
+              <div className="d-md-none mobile-card-list conges-mobile-list">
                 {paginatedConges.map((conge) => (
-                  <div key={conge.id} className="mobile-card-list__item">
+                  <div key={conge.id} className="mobile-card-list__item conges-mobile-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                       <div className="min-w-0">
                         <div className="fw-semibold small text-truncate">{getCongeTypeLabel(conge)}</div>
-                        <div className="text-muted text-xs">{getEmployeLabel(conge)}</div>
+                        {isAdmin() && <div className="text-muted text-xs">{getEmployeLabel(conge)}</div>}
                         {user?.role === 'super_admin' && (
                           <div className="text-muted text-2xs">{getEntrepriseLabel(conge)}</div>
-                        )}
-                        {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
-                          <div className="mt-1 text-xxs">
-                            {validationOverlapByCongeId[conge.id].has_overlap === true ? (
-                              <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
-                            ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
-                              <Badge bg="success">Pas de chevauchement</Badge>
-                            ) : (
-                              <Badge bg="secondary">Chevauchement: indisponible</Badge>
-                            )}
-                          </div>
                         )}
                       </div>
                       <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
@@ -603,9 +580,14 @@ const CongesPage = () => {
                       📅 {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                       {(conge.jours_pris ?? conge.jours_calcules) && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)} j`}
                     </div>
-                    <div className="d-flex gap-2">
-                      <Button as={Link} to={`/conges/${conge.id}`} variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center">
-                        <FaEye className="me-1" /> Voir
+                    <div className="d-flex gap-2 conges-mobile-list__actions">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="flex-grow-1 justify-content-center"
+                        onClick={() => openDetailsModal(conge)}
+                      >
+                        Détail
                       </Button>
                       {canValidateConge(conge) && (
                         <Button variant="outline-success" size="sm" onClick={() => openValidateModal(conge.id)}>✓</Button>
@@ -619,56 +601,36 @@ const CongesPage = () => {
               </div>
 
               {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-md-block table-responsive">
+              <div className="d-none d-md-block table-responsive conges-table-wrapper">
                 <Table hover className="mb-0">
                   <thead className="table-light">
                     <tr>
-                      <th>Employé</th>
+                      {isAdmin() && <th>Employé</th>}
                       {user?.role === 'super_admin' && <th>Entreprise</th>}
                       <th>Type</th>
                       <th>Période</th>
-                      <th>Jours pris</th>
-                      <th>Jours restant</th>
                       <th>Statut</th>
-                      <th>Date demande</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedConges.map((conge) => (
                       <tr key={conge.id}>
-                        <td>{getEmployeLabel(conge)}</td>
+                        {isAdmin() && <td>{getEmployeLabel(conge)}</td>}
                         {user?.role === 'super_admin' && <td>{getEntrepriseLabel(conge)}</td>}
                         <td>{getCongeTypeLabel(conge)}</td>
                         <td>
                           {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
                         </td>
-                        <td>{formatDays(conge.jours_pris ?? conge.jours_calcules)}</td>
-                        <td>{formatDays(conge.jours_restants)}</td>
                         <td>{getStatusBadge(conge.statut)}</td>
                         <td>
-                          <div>{formatDate(conge.date_demande || conge.created_at || conge.createdAt)}</div>
-                          {canValidateConge(conge) && validationOverlapByCongeId[conge.id] && (
-                            <div className="mt-1 text-xxs">
-                              {validationOverlapByCongeId[conge.id].has_overlap === true ? (
-                                <Badge bg="warning" text="dark">Alerte chevauchement</Badge>
-                              ) : validationOverlapByCongeId[conge.id].has_overlap === false ? (
-                                <Badge bg="success">Pas de chevauchement</Badge>
-                              ) : (
-                                <Badge bg="secondary">Chevauchement: indisponible</Badge>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <div className="d-flex gap-1">
+                          <div className="d-flex gap-1 conges-table-actions">
                             <Button
-                              as={Link}
-                              to={`/conges/${conge.id}`}
                               variant="outline-primary"
                               size="sm"
+                              onClick={() => openDetailsModal(conge)}
                             >
-                              <FaEye />
+                              Détail
                             </Button>
 
                             {(canValidateConge(conge) || canRejectConge(conge)) && (
@@ -704,8 +666,8 @@ const CongesPage = () => {
               </div>{/* fin .d-none.d-md-block */}
 
               {totalPages > 1 && (
-                <div className="d-flex justify-content-center p-3 border-top">
-                  <Pagination>
+                <div className="d-flex justify-content-center p-3 border-top conges-pagination-wrap">
+                  <Pagination className="conges-pagination">
                     <Pagination.First
                       disabled={currentPage === 1}
                       onClick={() => handlePageChange(1)}
@@ -827,6 +789,70 @@ const CongesPage = () => {
           >
             Rejeter
           </AsyncButton>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDetailsModal} onHide={closeDetailsModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Détail du congé</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedCongeDetails && (
+            <div className="d-grid gap-2 small">
+              {isAdmin() && (
+                <div>
+                  <strong>Employé:</strong> {getEmployeLabel(selectedCongeDetails)}
+                </div>
+              )}
+              {user?.role === 'super_admin' && (
+                <div>
+                  <strong>Entreprise:</strong> {getEntrepriseLabel(selectedCongeDetails)}
+                </div>
+              )}
+              <div>
+                <strong>Type:</strong> {getCongeTypeLabel(selectedCongeDetails)}
+              </div>
+              <div>
+                <strong>Période:</strong> {formatDate(selectedCongeDetails.date_debut)} - {formatDate(selectedCongeDetails.date_fin)}
+              </div>
+              <div>
+                <strong>Jours pris:</strong> {formatDays(selectedCongeDetails.jours_pris ?? selectedCongeDetails.jours_calcules)}
+              </div>
+              <div>
+                <strong>Jours restants:</strong> {formatDays(selectedCongeDetails.jours_restants)}
+              </div>
+              <div>
+                <strong>Date demande:</strong> {formatDate(selectedCongeDetails.date_demande || selectedCongeDetails.created_at || selectedCongeDetails.createdAt)}
+              </div>
+              <div>
+                <strong>Statut:</strong> {getStatusBadge(selectedCongeDetails.statut)}
+              </div>
+              {selectedCongeDetails.commentaire_employe && (
+                <div>
+                  <strong>Commentaire:</strong> {selectedCongeDetails.commentaire_employe}
+                </div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Info congés</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul className="mb-0">
+            <li>Utilisez les filtres pour aller vite.</li>
+            <li>Cliquez sur Détail pour voir toutes les données.</li>
+            <li>Les validations/rejets restent dans les actions.</li>
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
         </Modal.Footer>
       </Modal>
     </Container>

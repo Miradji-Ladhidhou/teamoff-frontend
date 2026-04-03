@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
 import { useAlert } from '../../hooks/useAlert';
@@ -9,25 +9,17 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
 
+import './login.css';
+
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const submitAction = useAsyncAction();
   const alert = useAlert();
-
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,158 +30,104 @@ const LoginPage = () => {
           const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
           navigate(getDefaultRoute(savedUser?.role));
         } else {
-          const message = result.error || 'Identifiant ou mot de passe incorrect';
-          alert.showErrorModal(message, {
-            title: 'Connexion refusee',
-            confirmLabel: 'Reessayer',
-            autoCloseMs: 0,
+          alert.showErrorModal(result.error || 'Identifiant ou mot de passe incorrect', {
+            title: 'Connexion refusée', confirmLabel: 'Réessayer', autoCloseMs: 0
           });
         }
-      } catch (err) {
-        const message = 'Une erreur inattendue s\'est produite';
-        alert.showErrorModal(message, {
-          title: 'Erreur de connexion',
-          confirmLabel: 'Fermer',
-          autoCloseMs: 0,
+      } catch {
+        alert.showErrorModal('Une erreur inattendue s\'est produite', {
+          title: 'Erreur de connexion', confirmLabel: 'Fermer', autoCloseMs: 0
         });
       }
     });
   };
 
-  const loading = submitAction.isRunning;
-
   if (isAuthenticated && user) {
-    // Redirige automatiquement si déjà connecté
     navigate(getDefaultRoute(user.role));
     return null;
   }
 
+  const loading = submitAction.isRunning;
+
   return (
-    <div className="min-vh-100 auth-bg">
-      <Container className="py-4 py-lg-5">
-        <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
-          <Col lg={7}>
-            <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">Plateforme RH pour équipes structurées</Badge>
-            <h1 className="fw-bold mb-3 auth-hero-title">
-              La connexion devient votre page d'accueil utile.
-            </h1>
-            <p className="lead text-muted mb-4 lead-constrained">
-              Centralisez les demandes de conges, les validations par service, les quotas et le calendrier d'equipe dans une interface claire des la premiere visite.
-            </p>
+    <div className="min-vh-100 login-landing-bg d-flex flex-column justify-content-center">
+      <Container>
+        <Row className="align-items-center justify-content-between g-4">
+
+          {/* Hero + Features */}
+          <Col lg={7} className="mb-4 mb-lg-0">
+            <h1 className="text-white fw-bold mb-3">TeamOff</h1>
+            <p className="text-light lead mb-4">Gérez vos congés, quotas et équipes depuis une interface claire et moderne.</p>
 
             <div className="d-flex flex-wrap gap-2 mb-4">
-              <Button as={Link} to="/register" variant="dark" size="lg">
-                Creer un espace
-                <FaArrowRight className="ms-2" />
-              </Button>
-              <Button as={Link} to="/contact" variant="outline-dark" size="lg">
-                Parler a l'equipe
-              </Button>
+              <Button as={Link} to="/register" className="btn-dark btn-lg">Créer un compte</Button>
+              <Button as={Link} to="/contact" className="btn-outline-light btn-lg">Contact</Button>
             </div>
 
-            <Row className="g-3 mb-4">
-              <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100 glass-card">
-                  <Card.Body>
-                    <div className="text-muted small mb-1">Demandes suivies</div>
-                    <div className="fs-2 fw-bold">24/7</div>
-                    <div className="small text-muted">Vue centralisee des validations et historiques</div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100 glass-card">
-                  <Card.Body>
-                    <div className="text-muted small mb-1">Workflow</div>
-                    <div className="fs-2 fw-bold">Par service</div>
-                    <div className="small text-muted">Manager, admin ou parcours multi-etapes</div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm={4}>
-                <Card className="border-0 shadow-sm h-100 glass-card">
-                  <Card.Body>
-                    <div className="text-muted small mb-1">Confiance</div>
-                    <div className="fs-2 fw-bold">Audit</div>
-                    <div className="small text-muted">Traçabilite des actions et controle d'acces</div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
-            <Row className="g-3">
+            <Row className="g-3 mt-2">
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm glass-card-light">
-                  <Card.Body>
-                    <FaCalendarCheck className="mb-3 text-brand" size={22} />
-                    <h2 className="h5">Calendrier lisible</h2>
-                    <p className="text-muted mb-0">Vision equipe, jours bloques, feries et calcul detaille des jours pris.</p>
-                  </Card.Body>
+                <Card className="feature-card dark-card">
+                  <FaCalendarCheck size={28} className="mb-2 text-info" />
+                  <h5 className="text-white">Calendrier</h5>
+                  <p className="text-light small">Suivi équipe et jours bloqués.</p>
                 </Card>
               </Col>
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm glass-card-light">
-                  <Card.Body>
-                    <FaUsersCog className="mb-3 text-brand" size={22} />
-                    <h2 className="h5">Services gouvernes</h2>
-                    <p className="text-muted mb-0">Regles de validation, quotas et parametres adaptes aux realites de chaque equipe.</p>
-                  </Card.Body>
+                <Card className="feature-card dark-card">
+                  <FaUsersCog size={28} className="mb-2 text-info" />
+                  <h5 className="text-white">Workflow</h5>
+                  <p className="text-light small">Validations par service et quotas.</p>
                 </Card>
               </Col>
               <Col md={4}>
-                <Card className="h-100 border-0 shadow-sm glass-card-light">
-                  <Card.Body>
-                    <FaShieldAlt className="mb-3 text-brand" size={22} />
-                    <h2 className="h5">Acces maitrises</h2>
-                    <p className="text-muted mb-0">Permissions par role, journaux d'audit et exposition limitee des donnees sensibles.</p>
-                  </Card.Body>
+                <Card className="feature-card dark-card">
+                  <FaShieldAlt size={28} className="mb-2 text-info" />
+                  <h5 className="text-white">Sécurité</h5>
+                  <p className="text-light small">Permissions et audit accessibles.</p>
                 </Card>
               </Col>
             </Row>
           </Col>
 
+          {/* Formulaire Login */}
           <Col lg={5} xl={4}>
-            <Card id="login-form" className="shadow-lg border-0 fade-in card-radius-lg">
-              <Card.Body className="p-3 p-sm-4 p-lg-4">
-                <div className="mb-3 text-center text-lg-start">
-                  <p className="text-uppercase small fw-semibold mb-2 text-brand ls-label">Acces plateforme</p>
-                  <h2 className="h3 fw-bold mb-1">Connexion</h2>
-                  <p className="text-muted mb-0">Accedez a votre espace TeamOff.</p>
-                </div>
-
+            <Card className="shadow-lg border-0 dark-card">
+              <Card.Body className="p-4">
+                <h3 className="text-white mb-4 text-center">Connexion</h3>
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
+                    <Form.Label className="text-light">Email</Form.Label>
                     <Form.Control
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="votre.email@entreprise.com"
+                      placeholder="email@entreprise.com"
                       required
                       disabled={loading}
+                      className="dark-input"
                     />
                   </Form.Group>
 
                   <Form.Group className="mb-4">
-                    <Form.Label>Mot de passe</Form.Label>
+                    <Form.Label className="text-light">Mot de passe</Form.Label>
                     <div className="position-relative">
                       <Form.Control
                         type={showPassword ? 'text' : 'password'}
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        placeholder="Votre mot de passe"
+                        placeholder="Mot de passe"
                         required
                         disabled={loading}
-                        className="pe-5"
+                        className="dark-input pe-5"
                       />
                       <Button
                         type="button"
                         variant="link"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={loading}
-                        className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2 z-overlay"
+                        className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2"
                       >
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </Button>
@@ -201,40 +139,27 @@ const LoginPage = () => {
                     variant="dark"
                     className="w-100 mb-3 d-flex align-items-center justify-content-center"
                     action={submitAction}
-                    loadingText="Connexion en cours..."
+                    loadingText="Connexion..."
                   >
-                    {!loading && (
-                      <>
-                        <FaSignInAlt className="me-2" />
-                        Se connecter
-                      </>
-                    )}
+                    {!loading && <><FaSignInAlt className="me-2" />Se connecter</>}
                   </AsyncButton>
                 </Form>
 
-                <div className="text-center mb-3">
-                  <Link to="/forgot-password" className="text-decoration-none text-muted small">
-                    Mot de passe oublié ?
-                  </Link>
-                </div>
-                <div className="rounded-4 p-3 mb-3 bg-brand-warm">
-                  <div className="small text-uppercase fw-semibold mb-2 text-brand ls-label">Pourquoi TeamOff</div>
-                  <div className="text-muted small">Validation adaptee a vos services, compteurs visibles, calendrier mobile et informations legales accessibles sans friction.</div>
+                <div className="text-center mt-2">
+                  <Link to="/forgot-password" className="text-secondary small text-decoration-none">Mot de passe oublié ?</Link>
                 </div>
 
-                <div className="text-center">
-                  <p className="text-muted mb-1">Premiere connexion ?</p>
-                  <Link to="/register" className="text-decoration-none fw-semibold text-brand">
-                    Creer un compte
-                  </Link>
+                <div className="text-center mt-3">
+                  <p className="text-light mb-1">Première connexion ?</p>
+                  <Link to="/register" className="text-info fw-semibold text-decoration-none">Créer un compte</Link>
                 </div>
               </Card.Body>
             </Card>
           </Col>
-        </Row>
 
-        <AppFooter publicMode />
+        </Row>
       </Container>
+      <AppFooter publicMode />
     </div>
   );
 };

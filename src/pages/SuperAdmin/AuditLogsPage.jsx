@@ -1,3 +1,4 @@
+import './audit-logs.css';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container, Row, Col, Card, Table, Button, Badge, Form,

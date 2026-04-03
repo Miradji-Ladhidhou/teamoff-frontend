@@ -7,6 +7,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
+import './reset-password.css';
 
 const ResetPasswordPage = () => {
   const { token: tokenFromPath } = useParams();
