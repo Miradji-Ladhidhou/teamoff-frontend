@@ -80,7 +80,7 @@
    Topbar
 ────────────────────────────── */
 .role-topbar {
-  background: var(--dk-surface) !important;
+  background: var(--role-sidebar-bg, var(--dk-sidebar-bg-default)) !important;
   border-bottom: 1px solid var(--dk-border) !important;
   height: 64px;
   width: 100%;
@@ -122,6 +122,8 @@
 }
 
 .superadmin-topbar {
+  background: var(--role-sidebar-bg, var(--dk-sidebar-bg-default)) !important;
+  border-bottom: 1px solid var(--dk-border) !important;
   height: 64px;
   width: 100%;
   box-sizing: border-box;
@@ -570,4 +572,22 @@ body.show-inline-help .superadmin-content .accordion.mb-3 {
     width: 24px;
     height: 24px;
   }
+}
+
+/* ──────────────────────────────
+   Logo TeamOff & tagline
+────────────────────────────── */
+.ls-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--dk-text);
+  line-height: 1.2;
+}
+
+.ls-logo + div {
+  font-size: 0.75rem;
+  color: var(--dk-text-muted);
+  font-weight: 400;
+  margin-top: 0.25rem;
 }

@@ -54,6 +54,23 @@ const normalizeBlockedWeekdays = (days) => (
     : []
 );
 
+const enumerateDateRange = (startDate, endDate, maxDays = 366) => {
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    return [];
+  }
+
+  const dates = [];
+  const cursor = new Date(start);
+  while (cursor <= end && dates.length < maxDays) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+};
+
 const JoursBloquesPage = () => {
   const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
@@ -70,6 +87,8 @@ const JoursBloquesPage = () => {
   const [reportAutorise, setReportAutorise] = useState(false);
   const [reportMaxJours, setReportMaxJours] = useState(0);
   const [specificDateInput, setSpecificDateInput] = useState('');
+  const [specificDateRangeStart, setSpecificDateRangeStart] = useState('');
+  const [specificDateRangeEnd, setSpecificDateRangeEnd] = useState('');
   const [showAdvancedWeekendRules, setShowAdvancedWeekendRules] = useState(false);
   const [showCountersSection, setShowCountersSection] = useState(false);
 
@@ -205,6 +224,35 @@ const JoursBloquesPage = () => {
       ...prev,
       specific_dates: (prev.specific_dates || []).filter((item) => item !== date),
     }));
+  };
+
+  const addSpecificDateRange = () => {
+    const start = String(specificDateRangeStart || '').trim();
+    const end = String(specificDateRangeEnd || '').trim();
+
+    if (!start || !end) {
+      alert.error('Veuillez renseigner une date de début et une date de fin.');
+      return;
+    }
+
+    const rangeDates = enumerateDateRange(start, end);
+    if (rangeDates.length === 0) {
+      alert.error('Plage de dates invalide.');
+      return;
+    }
+
+    if (rangeDates.length >= 366) {
+      alert.error('La plage est trop grande (maximum 366 jours).');
+      return;
+    }
+
+    setBlockedDays((prev) => ({
+      ...prev,
+      specific_dates: [...new Set([...(prev.specific_dates || []), ...rangeDates])].sort(),
+    }));
+
+    setSpecificDateRangeStart('');
+    setSpecificDateRangeEnd('');
   };
 
   const toggleWeekday = (weekday) => {
@@ -438,6 +486,30 @@ const JoursBloquesPage = () => {
                   </Button>
                 </Col>
               </Row>
+
+              <Row className="g-2 mt-1">
+                <Col xs={12} md={4}>
+                  <Form.Control
+                    type="date"
+                    value={specificDateRangeStart}
+                    onChange={(event) => setSpecificDateRangeStart(event.target.value)}
+                  />
+                </Col>
+                <Col xs={12} md={4}>
+                  <Form.Control
+                    type="date"
+                    value={specificDateRangeEnd}
+                    onChange={(event) => setSpecificDateRangeEnd(event.target.value)}
+                  />
+                </Col>
+                <Col xs={12} md={3}>
+                  <Button type="button" variant="outline-secondary" onClick={addSpecificDateRange} className="w-100">
+                    Ajouter la plage
+                  </Button>
+                </Col>
+              </Row>
+
+              <small className="text-muted d-block mt-2">Vous pouvez ajouter une date unique ou une plage complète.</small>
               <div className="d-flex flex-wrap gap-2 mt-3">
                 {(blockedDays.specific_dates || []).map((date) => (
                   <Badge key={date} bg="secondary" className="d-flex align-items-center gap-2">

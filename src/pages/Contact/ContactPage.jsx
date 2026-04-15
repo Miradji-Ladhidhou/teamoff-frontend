@@ -1,7 +1,6 @@
 import './contact.css';
 import { Container, Card, Row, Col, Button } from 'react-bootstrap';
 import { FaEnvelope, FaHeadset, FaLifeRing } from 'react-icons/fa';
-import AccordionInfo from '../../components/AccordionInfo';
 import { Link } from 'react-router-dom';
 
 const ContactPage = () => {
@@ -11,11 +10,6 @@ const ContactPage = () => {
         <h1 className="h3 mb-1">Contact</h1>
         <p className="text-muted mb-0">Canaux de support et d'assistance définis par votre organisation.</p>
       </div>
-
-      <AccordionInfo type="info" title="Canaux recommandés">
-        <p className="mb-0">Privilégiez les canaux tracés (ticket, email d'entreprise, support prioritaire) pour le suivi opérationnel.</p>
-      </AccordionInfo>
-
       <Row>
         <Col md={4} className="mb-4">
           <Card className="h-100">

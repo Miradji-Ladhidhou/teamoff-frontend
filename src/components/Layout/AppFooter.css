@@ -1,0 +1,52 @@
+.app-footer {
+    background: var(--role-sidebar-bg, var(--dk-sidebar-bg-default)) !important;
+    border-top: 1px solid var(--dk-border);
+    color: var(--dk-text-soft);
+}
+
+.app-footer .footer-accordion .accordion-item {
+    border: 1px solid var(--dk-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.app-footer .footer-accordion {
+    --bs-accordion-bg: var(--dk-card);
+    --bs-accordion-border-color: var(--dk-border);
+    --bs-accordion-btn-bg: var(--dk-card);
+    --bs-accordion-btn-color: var(--dk-text);
+    --bs-accordion-active-bg: var(--dk-elevated);
+    --bs-accordion-active-color: var(--dk-text);
+    --bs-accordion-color: var(--dk-text-soft);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 0.18rem var(--dk-accent-soft);
+}
+
+.app-footer .footer-accordion .accordion-button {
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.app-footer .footer-accordion .accordion-button::after {
+    filter: invert(1) grayscale(1) brightness(1.35);
+}
+
+.app-footer .footer-accordion ul {
+    padding-left: 1rem;
+}
+
+.app-footer .footer-accordion li {
+    margin-bottom: 0.35rem;
+}
+
+.app-footer .footer-accordion__link,
+.app-footer .text-light-50 {
+    color: var(--dk-text);
+    text-decoration: none;
+}
+
+.app-footer .footer-accordion__link:hover,
+.app-footer .text-light-50:hover {
+    color: var(--dk-accent);
+    text-decoration: underline;
+}

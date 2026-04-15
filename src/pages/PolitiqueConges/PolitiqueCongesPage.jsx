@@ -3,14 +3,21 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../../services/api';
+import leavePoliciesAPI from '../../services/leavePoliciesAPI';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
+import SectionTabs from './components/SectionTabs';
+import GeneralRulesSection from './components/GeneralRulesSection';
+import CancellationSection from './components/CancellationSection';
+import TimezoneSection from './components/TimezoneSection';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
   minimum_notice_days: 0,
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
+  allow_employee_cancel_own_pending: true,
+  allow_manager_cancel_own_pending: true,
   conges_payes_annuels: 25,
   rtt_annuels: 0,
   report_autorise: false,
@@ -35,6 +42,15 @@ const DEFAULT_CONGE_TYPE_FORM = {
   libelle: '',
   quota_annuel: 0,
   demi_journee_autorisee: false,
+};
+
+const DEFAULT_LEAVE_POLICY = {
+  allow_modify_validated: false,
+  allow_cancel_validated: false,
+  min_notice_days: 0,
+  max_backdate_days: 0,
+  require_manager_approval: true,
+  require_admin_approval: true,
 };
 
 const TIMEZONE_OPTIONS = [
@@ -84,6 +100,8 @@ const PolitiqueCongesPage = () => {
   const [savingTz, setSavingTz] = useState(false);
   const [tzError, setTzError] = useState('');
   const [tzSuccess, setTzSuccess] = useState('');
+  const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
+  const [activeSection, setActiveSection] = useState('all');
 
   const entrepriseId = user?.entreprise_id;
 
@@ -92,11 +110,12 @@ const PolitiqueCongesPage = () => {
       if (!entrepriseId) return;
       try {
         setLoading(true);
-        const [policyResponse, usersResponse, typesResponse, parametresResponse] = await Promise.all([
+        const [policyResponse, usersResponse, typesResponse, parametresResponse, leavePolicyResponse] = await Promise.all([
           entreprisesService.getPolitique(entrepriseId),
           usersService.getAll(),
           congeTypesService.getAll({ entreprise_id: entrepriseId }),
           entreprisesService.getParametres(entrepriseId).catch(() => null),
+          leavePoliciesAPI.getPolicy().catch(() => null),
         ]);
 
         const data = policyResponse.data?.politique_conges || policyResponse.data || {};
@@ -129,6 +148,10 @@ const PolitiqueCongesPage = () => {
 
         setPolicy(merged);
         setServicePolicies(normalizedServicePolicies);
+        setLeavePolicy({
+          ...DEFAULT_LEAVE_POLICY,
+          ...(leavePolicyResponse || {}),
+        });
         setCongeTypes(types.sort((a, b) => String(a.libelle || '').localeCompare(String(b.libelle || ''), 'fr')));
         if (parametresResponse?.data?.parametres?.timezone) {
           setTimezone(parametresResponse.data.parametres.timezone);
@@ -165,6 +188,8 @@ const PolitiqueCongesPage = () => {
   const setField = (name, value) => {
     setPolicy((prev) => ({ ...prev, [name]: value }));
   };
+
+  const isSectionVisible = (section) => activeSection === 'all' || activeSection === section;
 
   const handleSaveTimezone = async (e) => {
     e.preventDefault();
@@ -408,6 +433,14 @@ const PolitiqueCongesPage = () => {
       };
 
       await entreprisesService.updatePolitique(entrepriseId, payload);
+      await leavePoliciesAPI.updatePolicy({
+        allow_modify_validated: Boolean(leavePolicy.allow_modify_validated),
+        allow_cancel_validated: Boolean(leavePolicy.allow_cancel_validated),
+        min_notice_days: Number(leavePolicy.min_notice_days || 0),
+        max_backdate_days: Number(leavePolicy.max_backdate_days || 0),
+        require_manager_approval: Boolean(leavePolicy.require_manager_approval),
+        require_admin_approval: Boolean(leavePolicy.require_admin_approval),
+      });
       setSuccess('Politique de congé mise à jour avec succès.');
     } catch (err) {
       console.error('Erreur sauvegarde politique:', err);
@@ -432,10 +465,18 @@ const PolitiqueCongesPage = () => {
           <h1 className="h3 mb-1">Politique de congé</h1>
           <p className="text-muted mb-0">Paramétrage entreprise.</p>
         </div>
-        <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
+        </div>
       </div>
 
-      <Card className="mb-4">
+      <SectionTabs
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+      />
+
+      {isSectionVisible('types') && (
+      <Card id="section-types-conge" className="mb-4">
         <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
           <div>
             <strong>Types de congé</strong>
@@ -514,128 +555,31 @@ const PolitiqueCongesPage = () => {
           )}
         </Card.Body>
       </Card>
+      )}
 
       <Card>
         <Card.Body>
           <Form onSubmit={handleSave}>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Politique de chevauchement</Form.Label>
-                  <Form.Select
-                    value={policy.overlap_policy}
-                    onChange={(e) => setField('overlap_policy', e.target.value)}
-                  >
-                    <option value="block">Bloquer</option>
-                    <option value="warning">Autoriser et alerter</option>
-                    <option value="allow">Autoriser</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Workflow d'approbation</Form.Label>
-                  <Form.Select
-                    value={policy.approval_workflow}
-                    onChange={(e) => setField('approval_workflow', e.target.value)}
-                  >
-                    <option value="manager_admin">Manager puis Admin</option>
-                    <option value="admin_only">Admin uniquement</option>
-                    <option value="manager_only">Manager uniquement</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Préavis minimum (jours)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={policy.minimum_notice_days}
-                    onChange={(e) => setField('minimum_notice_days', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Max jours consécutifs</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    value={policy.max_consecutive_days}
-                    onChange={(e) => setField('max_consecutive_days', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Max absences simultanées (global)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={policy.max_employees_on_leave?.global ?? ''}
-                    onChange={(e) => setPolicy((prev) => ({
-                      ...prev,
-                      max_employees_on_leave: {
-                        ...(prev.max_employees_on_leave || {}),
-                        global: e.target.value,
-                      },
-                    }))}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Congés payés annuels</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={policy.conges_payes_annuels}
-                    onChange={(e) => setField('conges_payes_annuels', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>RTT annuels</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={policy.rtt_annuels}
-                    onChange={(e) => setField('rtt_annuels', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Report max (jours)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={policy.report_max_jours}
-                    onChange={(e) => setField('report_max_jours', e.target.value)}
-                    disabled={!policy.report_autorise}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="switch"
-                label="Autoriser le report annuel"
-                checked={Boolean(policy.report_autorise)}
-                onChange={(e) => setField('report_autorise', e.target.checked)}
+            {isSectionVisible('general') && (
+              <GeneralRulesSection
+                policy={policy}
+                setField={setField}
+                setPolicy={setPolicy}
               />
-            </Form.Group>
+            )}
 
-            <Card className="mb-4 border-0 bg-light">
+            {isSectionVisible('cancellation') && (
+              <CancellationSection
+                policy={policy}
+                setField={setField}
+                leavePolicy={leavePolicy}
+                setLeavePolicy={setLeavePolicy}
+              />
+            )}
+
+            {isSectionVisible('services') && (
+            <div id="section-politiques-services">
+            <Card className="mb-4">
               <Card.Body className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                   <div className="fw-semibold">Politiques par service</div>
@@ -675,7 +619,7 @@ const PolitiqueCongesPage = () => {
               )}
 
               {Object.keys(servicePolicies).length > 0 && (
-                <Card className="mb-3 border-0 bg-light">
+                <Card className="mb-3">
                   <Card.Body className="py-3">
                     <Row className="g-2 align-items-center">
                       <Col xs={12} md={5}>
@@ -921,6 +865,8 @@ const PolitiqueCongesPage = () => {
               )}
             </Form.Group>
             )}
+            </div>
+            )}
 
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
               <small className="text-muted">Les modifications sont prises en compte après enregistrement.</small>
@@ -941,62 +887,16 @@ const PolitiqueCongesPage = () => {
       </Card>
 
       {/* ── Fuseau horaire ─────────────────────────────────────────── */}
-      <Card className="mt-4">
-        <Card.Header>
-          <h5 className="mb-0">Fuseau horaire de l'entreprise</h5>
-        </Card.Header>
-        <Card.Body>
-          <p className="text-muted small mb-3">
-            Ce fuseau horaire est utilisé pour l'affichage des dates et heures dans les notifications et les exports.
-          </p>
-
-          <Form onSubmit={handleSaveTimezone}>
-            <Row className="align-items-end g-3">
-              <Col md={6}>
-                <Form.Group controlId="timezoneSelect">
-                  <Form.Label className="fw-semibold">Fuseau horaire</Form.Label>
-                  {(() => {
-                    const groups = [...new Set(TIMEZONE_OPTIONS.map((o) => o.group))];
-                    return (
-                      <Form.Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                        {groups.map((group) => (
-                          <optgroup key={group} label={group}>
-                            {TIMEZONE_OPTIONS.filter((o) => o.group === group).map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </Form.Select>
-                    );
-                  })()}
-                </Form.Group>
-              </Col>
-
-              {tzPreview && (
-                <Col md={6}>
-                  <div className="border rounded p-3 bg-light font-monospace small">
-                    <div className="fw-bold">{tzPreview.timeLine}</div>
-                    <div className="text-muted">{tzPreview.dateLine}</div>
-                    <div className="text-muted">{tzPreview.tzLine}</div>
-                  </div>
-                </Col>
-              )}
-            </Row>
-
-            <div className="d-flex justify-content-end mt-3">
-              <AsyncButton
-                type="submit"
-                isLoading={savingTz}
-                showSpinner={savingTz}
-                loadingText="Enregistrement..."
-                className="w-100 w-sm-auto"
-              >
-                Enregistrer le fuseau horaire
-              </AsyncButton>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
+      {isSectionVisible('timezone') && (
+        <TimezoneSection
+          timezone={timezone}
+          setTimezone={setTimezone}
+          tzPreview={tzPreview}
+          savingTz={savingTz}
+          handleSaveTimezone={handleSaveTimezone}
+          timezoneOptions={TIMEZONE_OPTIONS}
+        />
+      )}
 
       <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
         <Modal.Header closeButton>

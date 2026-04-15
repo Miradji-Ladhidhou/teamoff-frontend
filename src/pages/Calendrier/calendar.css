@@ -122,6 +122,10 @@
   background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, var(--dk-card) 40%);
 }
 
+.calendar-day-blocked-specific {
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.45);
+}
+
 /* sélection */
 .calendar-day-selected {
   background-color: rgba(61, 135, 209, 0.2);
@@ -148,6 +152,21 @@
   background-color: rgba(245, 158, 11, 0.22);
   color: #fde68a;
   border: 1px solid rgba(245, 158, 11, 0.4);
+  display: inline-block;
+  max-width: 100%;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-blocked-specific {
+  margin-bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background-color: rgba(234, 88, 12, 0.2);
+  color: #fdba74;
+  border: 1px solid rgba(234, 88, 12, 0.45);
   display: inline-block;
   max-width: 100%;
   font-size: 10px;
@@ -199,6 +218,11 @@
 .legend-color-holiday {
   background: linear-gradient(180deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.34) 100%);
   border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.legend-color-blocked {
+  background: linear-gradient(180deg, rgba(234, 88, 12, 0.22) 0%, rgba(234, 88, 12, 0.34) 100%);
+  border: 1px solid rgba(234, 88, 12, 0.45);
 }
 
 .calendar-legend-grid {
@@ -289,6 +313,23 @@
     border: none;
     border-radius: 999px;
     background: #f59e0b;
+    font-size: 0;
+    color: transparent;
+    overflow: hidden;
+    text-indent: -9999px;
+  }
+
+  .calendar-blocked-specific {
+    position: absolute;
+    top: 4px;
+    right: 14px;
+    width: 6px;
+    height: 6px;
+    margin-bottom: 0;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #ea580c;
     font-size: 0;
     color: transparent;
     overflow: hidden;

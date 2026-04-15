@@ -4,11 +4,18 @@ import { Container, Row, Col, Card, Badge, Button, Alert, Spinner, Modal, Form }
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService } from '../../services/api';
+import { congesService, entreprisesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import useLeavePolicy from '../../hooks/useLeavePolicy';
+import { LeaveActionRestriction } from '../../components/LeaveActionRestriction';
 import AsyncButton from '../../components/AsyncButton';
+
+const DEFAULT_SELF_CANCELLATION_POLICY = {
+  allow_employee_cancel_own_pending: true,
+  allow_manager_cancel_own_pending: true,
+};
 
 const CongeDetailsPage = () => {
   const { id } = useParams();
@@ -27,6 +34,15 @@ const CongeDetailsPage = () => {
   const [validationComment, setValidationComment] = useState('');
   const [validationOverlapInfo, setValidationOverlapInfo] = useState(null);
   const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
+  const [policyValidation, setPolicyValidation] = useState({
+    loading: false,
+    canModify: true,
+    canCancel: true,
+    reason: null,
+    code: null,
+  });
+  const [selfCancellationPolicy, setSelfCancellationPolicy] = useState(DEFAULT_SELF_CANCELLATION_POLICY);
+  const { validateModification, validateCancellation } = useLeavePolicy();
   const action = useAsyncAction();
 
   useEffect(() => {
@@ -64,6 +80,99 @@ const CongeDetailsPage = () => {
       cancelled = true;
     };
   }, [conge, id, user?.role]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const runPolicyValidation = async () => {
+      if (!conge || conge.statut !== 'valide_final') {
+        setPolicyValidation({
+          loading: false,
+          canModify: true,
+          canCancel: true,
+          reason: null,
+          code: null,
+        });
+        return;
+      }
+
+      if (user?.role !== 'admin_entreprise' && user?.role !== 'super_admin') {
+        setPolicyValidation({
+          loading: false,
+          canModify: false,
+          canCancel: false,
+          reason: null,
+          code: null,
+        });
+        return;
+      }
+
+      setPolicyValidation((prev) => ({ ...prev, loading: true }));
+      const [modifyResult, cancelResult] = await Promise.all([
+        validateModification({
+          congeId: conge.id,
+          congeStatus: conge.statut,
+          congeStartDate: conge.date_debut,
+        }),
+        validateCancellation({
+          congeId: conge.id,
+          congeStatus: conge.statut,
+          congeStartDate: conge.date_debut,
+        }),
+      ]);
+
+      if (cancelled) return;
+
+      setPolicyValidation({
+        loading: false,
+        canModify: Boolean(modifyResult?.allowed),
+        canCancel: Boolean(cancelResult?.allowed),
+        reason: modifyResult?.allowed ? cancelResult?.reason : modifyResult?.reason,
+        code: modifyResult?.allowed ? cancelResult?.code : modifyResult?.code,
+      });
+    };
+
+    runPolicyValidation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conge, user?.role, validateCancellation, validateModification]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSelfCancellationPolicy = async () => {
+      if (!conge?.entreprise_id) return;
+
+      try {
+        const response = await entreprisesService.getPolitique(conge.entreprise_id);
+        const entreprisePolicy = response?.data?.politique_conges || response?.data || {};
+
+        if (cancelled) return;
+        setSelfCancellationPolicy({
+          allow_employee_cancel_own_pending:
+            entreprisePolicy.allow_employee_cancel_own_pending !== undefined
+              ? Boolean(entreprisePolicy.allow_employee_cancel_own_pending)
+              : true,
+          allow_manager_cancel_own_pending:
+            entreprisePolicy.allow_manager_cancel_own_pending !== undefined
+              ? Boolean(entreprisePolicy.allow_manager_cancel_own_pending)
+              : true,
+        });
+      } catch (_err) {
+        if (!cancelled) {
+          setSelfCancellationPolicy(DEFAULT_SELF_CANCELLATION_POLICY);
+        }
+      }
+    };
+
+    loadSelfCancellationPolicy();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conge?.entreprise_id]);
 
   const loadCongeDetails = async () => {
     try {
@@ -163,8 +272,8 @@ const CongeDetailsPage = () => {
   const canEdit = () => {
     if (!conge) return false;
 
-    if (user?.role === 'admin_entreprise' && conge.statut === 'valide_final') {
-      return true;
+    if ((user?.role === 'admin_entreprise' || user?.role === 'super_admin') && conge.statut === 'valide_final') {
+      return policyValidation.canModify;
     }
 
     return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
@@ -173,11 +282,25 @@ const CongeDetailsPage = () => {
   const canDelete = () => {
     if (!conge) return false;
 
-    if (user?.role === 'admin_entreprise' && conge.statut === 'valide_final') {
+    const isOwnLeave = conge.utilisateur_id === user?.id;
+
+    if (isOwnLeave && conge.statut === 'en_attente_manager') {
+      if (user?.role === 'employe') {
+        return selfCancellationPolicy.allow_employee_cancel_own_pending;
+      }
+
+      if (user?.role === 'manager') {
+        return selfCancellationPolicy.allow_manager_cancel_own_pending;
+      }
+
       return true;
     }
 
-    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
+    if ((user?.role === 'admin_entreprise' || user?.role === 'super_admin') && conge.statut === 'valide_final') {
+      return policyValidation.canCancel;
+    }
+
+    return false;
   };
 
   const canApprove = () => {
@@ -260,6 +383,15 @@ const CongeDetailsPage = () => {
           </div>
         </div>
         <div className="d-flex gap-2">
+          {conge.statut === 'valide_final' && !policyValidation.loading && (
+            <LeaveActionRestriction
+              isValidated
+              canModify={policyValidation.canModify}
+              canCancel={policyValidation.canCancel}
+              reason={policyValidation.reason}
+              code={policyValidation.code}
+            />
+          )}
           {canEdit() && (
             <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
               <FaEdit className="me-1" />
@@ -566,7 +698,7 @@ const CongeDetailsPage = () => {
                 <li>Un email de notification est envoyé au demandeur</li>
                 <li>Les refus doivent être justifiés</li>
                 <li>Les demandes en attente peuvent être modifiées par le demandeur</li>
-                <li>Un congé validé ne peut être modifié ou annulé que par un admin entreprise</li>
+                <li>Les congés validés suivent la politique d'entreprise (modification/annulation).</li>
               </ul>
             </Card.Body>
           </Card>

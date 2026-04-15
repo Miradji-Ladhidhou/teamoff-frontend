@@ -1,29 +1,27 @@
 import React from 'react';
 import Accordion from 'react-bootstrap/Accordion';
+import { Link } from 'react-router-dom';
 
 const FooterAccordion = ({ darkMode = false }) => {
-  const headerClass = darkMode ? 'bg-secondary text-light' : '';
-  const bodyClass = darkMode ? 'bg-dark text-light' : '';
-
-  const linkClass = darkMode ? 'text-light text-decoration-none' : '';
+  const linkClass = darkMode ? 'footer-accordion__link' : '';
 
   return (
-    <Accordion className="mb-3">
+    <Accordion className="mb-3 footer-accordion">
       <Accordion.Item eventKey="0">
-        <Accordion.Header className={headerClass}>Informations utiles</Accordion.Header>
-        <Accordion.Body className={bodyClass}>
+        <Accordion.Header>Informations utiles</Accordion.Header>
+        <Accordion.Body>
           <ul className="mb-0">
-            <li><a href="/legal" className={linkClass}>Informations légales</a></li>
-            <li><a href="/privacy" className={linkClass}>Confidentialité</a></li>
-            <li><a href="/contact" className={linkClass}>Contact</a></li>
-            <li><a href="/help" className={linkClass}>Centre d'aide</a></li>
+            <li><Link to="/legal" className={linkClass}>Informations légales</Link></li>
+            <li><Link to="/privacy" className={linkClass}>Confidentialité</Link></li>
+            <li><Link to="/contact" className={linkClass}>Contact</Link></li>
+            <li><Link to="/help" className={linkClass}>Centre d'aide</Link></li>
           </ul>
         </Accordion.Body>
       </Accordion.Item>
 
       <Accordion.Item eventKey="1">
-        <Accordion.Header className={headerClass}>Moyens de contact</Accordion.Header>
-        <Accordion.Body className={bodyClass}>
+        <Accordion.Header>Moyens de contact</Accordion.Header>
+        <Accordion.Body>
           <ul className="mb-0">
             <li><strong>Email support :</strong> saas.teamoff@gmail.com</li>
             <li><strong>Support technique :</strong> 24h/24, 7j/7</li>
@@ -33,20 +31,20 @@ const FooterAccordion = ({ darkMode = false }) => {
       </Accordion.Item>
 
       <Accordion.Item eventKey="2">
-        <Accordion.Header className={headerClass}>Les plus consultées</Accordion.Header>
-        <Accordion.Body className={bodyClass}>
+        <Accordion.Header>Les plus consultées</Accordion.Header>
+        <Accordion.Body>
           <ul className="mb-0">
-            <li><a href="/" className={linkClass}>Connexion</a></li>
-            <li><a href="/register" className={linkClass}>Créer un compte</a></li>
-            <li><a href="/contact" className={linkClass}>Contact</a></li>
-            <li><a href="/help" className={linkClass}>Centre d'aide</a></li>
+            <li><Link to="/" className={linkClass}>Connexion</Link></li>
+            <li><Link to="/register" className={linkClass}>Créer un compte</Link></li>
+            <li><Link to="/contact" className={linkClass}>Contact</Link></li>
+            <li><Link to="/help" className={linkClass}>Centre d'aide</Link></li>
           </ul>
         </Accordion.Body>
       </Accordion.Item>
 
       <Accordion.Item eventKey="3">
-        <Accordion.Header className={headerClass}>Gages de confiance</Accordion.Header>
-        <Accordion.Body className={bodyClass}>
+        <Accordion.Header>Gages de confiance</Accordion.Header>
+        <Accordion.Body>
           <ul className="mb-0">
             <li>Contrôle des accès par rôle</li>
             <li>Journal d'audit des actions</li>

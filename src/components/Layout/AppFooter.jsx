@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import FooterAccordion from './FooterAccordion';
+import './AppFooter.css';
 import { FaLinkedin, FaFacebook, FaInstagram, FaXTwitter, FaArrowRight } from 'react-icons/fa6';
 import { useAuth } from '../../contexts/AuthContext';
 import { getNavigationForRole } from '../../utils/navigation';
@@ -94,7 +95,7 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
         </div>
 
         <hr className="border-light mt-4" />
-
+        
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
           <small className="text-light-50 mb-2 mb-md-0">
             © 2026 TeamOff - Tous droits réservés

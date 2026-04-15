@@ -6,11 +6,14 @@
  */
 :root {
   /* ── Fonds ───────────────────────────────────── */
-  --dk-bg:         #0f0f0f;   /* fond de page global           */
+  --dk-bg:         #212529;   /* fond de page global           */
   --dk-surface:    #1a1a1a;   /* surface principale (topbar…)  */
   --dk-card:       #1e1e1e;   /* cards / panels                */
   --dk-elevated:   #272727;   /* inputs, hover, surélévé       */
   --dk-hover:      #2e2e2e;   /* hover sur élément interactif  */
+  --dk-sidebar-bg-default: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+  --dk-nav-green:  #14532d;   /* vert commun topbar + footer   */
+  --dk-nav-green-border: #1f6a3f;
 
   /* ── Bordures ────────────────────────────────── */
   --dk-border:     #333333;

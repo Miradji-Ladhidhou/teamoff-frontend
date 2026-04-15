@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Badge, Form, Alert, Spinner, Modal }
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { calendrierService, api } from '../../services/api';
+import { calendrierService, entreprisesService, api } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import './calendar.css';
@@ -86,6 +86,7 @@ const CalendrierPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [conges, setConges] = useState([]);
   const [joursFeries, setJoursFeries] = useState([]);
+  const [blockedSpecificDates, setBlockedSpecificDates] = useState([]);
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
@@ -98,6 +99,7 @@ const CalendrierPage = () => {
     statut: 'all',
     utilisateur: 'all'
   });
+  const entrepriseId = user?.entreprise_id;
 
   useEffect(() => {
     loadCalendarData();
@@ -110,17 +112,22 @@ const CalendrierPage = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      // Charger les congés pour le mois
-      const congesResponse = await calendrierService.getCongesByMonth(year, month, filters);
+      const [congesResponse, absencesResponse, feriesResponse, policyResponse] = await Promise.all([
+        calendrierService.getCongesByMonth(year, month, filters),
+        api.get('/absences'),
+        calendrierService.getJoursFeriesByMonth(year, month),
+        entrepriseId ? entreprisesService.getPolitique(entrepriseId).catch(() => null) : Promise.resolve(null),
+      ]);
+
       setConges(congesResponse.data);
-
-      // Charger les absences (filtrage côté client)
-      const absencesResponse = await api.get('/absences');
       setAbsences(absencesResponse.data || []);
-
-      // Charger les jours fériés pour le mois
-      const feriesResponse = await calendrierService.getJoursFeriesByMonth(year, month);
       setJoursFeries(feriesResponse.data);
+
+      const policy = policyResponse?.data?.politique_conges || {};
+      const specificDates = Array.isArray(policy?.blocked_days?.specific_dates)
+        ? [...new Set(policy.blocked_days.specific_dates.map((item) => String(item).slice(0, 10)).filter(Boolean))].sort()
+        : [];
+      setBlockedSpecificDates(specificDates);
 
     } catch (err) {
       console.error('Erreur lors du chargement du calendrier:', err);
@@ -217,6 +224,12 @@ const CalendrierPage = () => {
       const currentDate = normalizeLocalDate(date);
       return jfDate?.getTime() === currentDate?.getTime();
     });
+  };
+
+  const isSpecificBlockedDay = (date) => {
+    const normalized = formatDateParam(date);
+    if (!normalized) return false;
+    return blockedSpecificDates.includes(normalized);
   };
 
   const getStatusColor = (statut) => {
@@ -423,6 +436,7 @@ const CalendrierPage = () => {
               {days.map((dayInfo, index) => {
                 const events = getEventsForDay(dayInfo.date);
                 const jourFerie = getJourFerieForDay(dayInfo.date);
+                const isSpecificBlocked = isSpecificBlockedDay(dayInfo.date);
                 const isToday = normalizeLocalDate(dayInfo.date)?.getTime() === normalizeLocalDate(new Date())?.getTime();
                 const isSelected = isDateInSelection(dayInfo.date);
                 const isSelectionLimit = isSelectionEdge(dayInfo.date);
@@ -432,7 +446,7 @@ const CalendrierPage = () => {
                 return (
                   <div
                     key={index}
-                    className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
+                    className={`calendar-day ${!dayInfo.isCurrentMonth ? 'calendar-day-other-month' : ''} ${isToday ? 'calendar-day-today' : ''} ${jourFerie ? 'calendar-day-ferie' : ''} ${isSpecificBlocked ? 'calendar-day-blocked-specific' : ''} ${weekend ? 'calendar-day-weekend' : ''} ${selectable ? 'calendar-day-clickable' : ''} ${isSelected ? 'calendar-day-selected' : ''} ${isSelectionLimit ? 'calendar-day-selection-edge' : ''}`}
                     onClick={() => selectable && handleDayClick(dayInfo)}
                   >
                     <div
@@ -446,6 +460,12 @@ const CalendrierPage = () => {
                     {jourFerie && (
                       <div className="calendar-ferie">
                         <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
+                      </div>
+                    )}
+
+                    {isSpecificBlocked && (
+                      <div className="calendar-blocked-specific">
+                        <small className="fw-semibold">Bloqué</small>
                       </div>
                     )}
 
@@ -517,15 +537,27 @@ const CalendrierPage = () => {
                 <div className="legend-color bg-danger me-2"></div>
                 <small>Congé refusé</small>
               </div>
-            </Col>
-            <Col md={6}>
               <div className="calendar-legend-row">
                 <div className="legend-color bg-info me-2"></div>
                 <small>Congé validé manager</small>
               </div>
+            </Col>
+            <Col md={6}>
+              <div className="calendar-legend-row">
+                <div className="legend-color bg-primary me-2"></div>
+                <small>Absence exceptionnelle</small>
+              </div>
+              <div className="calendar-legend-row">
+                <div className="legend-color bg-success me-2"></div>
+                <small>Absence maladie</small>
+              </div>
               <div className="calendar-legend-row">
                 <div className="legend-color legend-color-holiday me-2"></div>
                 <small>Jour férié</small>
+              </div>
+              <div className="calendar-legend-row">
+                <div className="legend-color legend-color-blocked me-2"></div>
+                <small>Date bloquée</small>
               </div>
               <div className="calendar-legend-row">
                 <div className="legend-color border border-primary me-2"></div>

@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import useLeavePolicy from '../../hooks/useLeavePolicy';
 import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
@@ -41,6 +42,7 @@ const NouveauCongePage = () => {
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
   const [showOverlapModal, setShowOverlapModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const { validateModification } = useLeavePolicy();
   useEffect(() => {
     if (isEditMode) return;
     const params = new URLSearchParams(location.search);
@@ -300,6 +302,17 @@ const NouveauCongePage = () => {
         let precheckWarningMessage = null;
 
         if (isEditMode) {
+          const policyValidation = await validateModification({
+            congeId: id,
+            congeStatus: initialCongeStatut,
+            congeStartDate: formData.date_debut,
+          });
+
+          if (!policyValidation?.allowed) {
+            alert.error(policyValidation?.reason || 'Modification non autorisée par la politique de congés.');
+            return;
+          }
+
           response = await congesService.update(id, formData);
         } else {
           const overlapCheck = await congesService.checkOverlap(formData);
