@@ -1,0 +1,72 @@
+/* ────────────── Items per page selector ────────────── */
+.notifications-items-per-page {
+  width: auto;
+  min-width: 62px;
+}
+
+/* ────────────── List items ────────────── */
+.list-group.list-group-flush .list-group-item {
+  padding: 0.85rem 1rem;
+  transition: background 0.15s ease;
+}
+
+/* Item non-lu : fond légèrement plus clair + bordure accent gauche */
+.list-group.list-group-flush .list-group-item.bg-light {
+  border-left: 3px solid var(--role-accent) !important;
+  padding-left: calc(1rem - 3px);
+}
+
+/* Item cliquable : curseur + hover */
+.list-group.list-group-flush .list-group-item.cursor-pointer:hover {
+  background-color: var(--dk-hover) !important;
+}
+
+/* ────────────── Icône bell ────────────── */
+.notif-icon-wrap {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: var(--dk-accent-soft);
+  color: var(--dk-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ────────────── Pagination ────────────── */
+.notifications-pagination .page-item .page-link {
+  background-color: var(--dk-elevated);
+  border-color: var(--dk-border);
+  color: var(--dk-text-soft);
+}
+
+.notifications-pagination .page-item.active .page-link {
+  background-color: var(--role-accent);
+  border-color: var(--role-accent);
+  color: #fff;
+}
+
+.notifications-pagination .page-item.disabled .page-link {
+  background-color: var(--dk-surface);
+  color: var(--dk-text-muted);
+}
+
+/* ────────────── État vide ────────────── */
+.notif-empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--dk-text-muted);
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .list-group.list-group-flush .list-group-item {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .list-group.list-group-flush .list-group-item.bg-light {
+    padding-left: calc(0.75rem - 3px);
+  }
+}

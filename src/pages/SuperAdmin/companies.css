@@ -1,0 +1,54 @@
+/* ────────────── Companies SuperAdmin ────────────── */
+.companies-page {
+  overflow-x: hidden;
+}
+
+.companies-table-wrap {
+  overflow-x: auto;
+}
+
+/* Mobile card list */
+.companies-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.65rem;
+}
+
+.companies-mobile-card {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  padding: 0.75rem;
+}
+
+.companies-mobile-card__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.companies-mobile-card__status-dot--active   { background: var(--dk-success); }
+.companies-mobile-card__status-dot--inactive { background: var(--dk-text-muted); }
+.companies-mobile-card__status-dot--trial    { background: var(--dk-warning); }
+
+.companies-mobile-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.companies-mobile-card__actions .btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .companies-mobile-card {
+    padding: 0.65rem;
+  }
+}

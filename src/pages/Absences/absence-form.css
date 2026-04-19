@@ -4,51 +4,78 @@
   flex-direction: column;
   gap: 18px;
 }
+
 .absence-form-fields {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
 }
+
 .absence-form-field {
   flex: 1 1 180px;
   min-width: 120px;
 }
+
 .absence-form-label {
   font-weight: 500;
   margin-bottom: 4px;
+  color: var(--dk-text-soft);
+  font-size: 0.875rem;
 }
+
 .absence-form-input,
 .absence-form-select,
 .absence-form-textarea {
   width: 100%;
   max-width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
 }
+
+.absence-form-input:focus,
+.absence-form-select:focus,
+.absence-form-textarea:focus {
+  border-color: var(--dk-accent);
+  outline: none;
+  box-shadow: 0 0 0 0.2rem var(--dk-accent-border);
+}
+
 .absence-form-textarea {
   min-height: 60px;
+  resize: vertical;
 }
+
 .absence-form-error {
-  color: var(--danger-color);
+  color: var(--dk-error);
+  font-size: 0.84rem;
   margin-bottom: 8px;
 }
+
 .absence-form-submit {
   align-self: flex-end;
   max-width: 100%;
   padding: 10px 28px;
-  border-radius: 8px;
-  background: var(--primary-color);
+  border-radius: var(--btn-radius);
+  background: var(--dk-accent);
   color: #fff;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 0.9rem;
   border: none;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  box-shadow: var(--dk-shadow-sm);
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: filter 0.2s ease;
 }
+
+.absence-form-submit:hover {
+  filter: brightness(1.1);
+}
+
 .absence-form-submit[disabled] {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.6;
 }

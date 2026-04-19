@@ -1,0 +1,37 @@
+/* ────────────── Page absences ────────────── */
+.absences-page {
+  overflow-x: hidden;
+}
+
+/* Info card règles */
+.absences-rules-card ul {
+  padding-left: 1.1rem;
+  margin-bottom: 0;
+}
+
+.absences-rules-card ul li {
+  font-size: 0.875rem;
+  color: var(--dk-text-soft);
+  margin-bottom: 0.25rem;
+}
+
+.absences-rules-card ul li:last-child {
+  margin-bottom: 0;
+}
+
+/* Note info */
+.absences-note {
+  background: var(--dk-info-bg);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--card-radius);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.84rem;
+  color: var(--dk-text);
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .absences-rules-card ul li {
+    font-size: 0.82rem;
+  }
+}

@@ -2,7 +2,7 @@ import './dashboard.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye } from 'react-icons/fa';
+import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye, FaExclamationCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { InfoCardInfo } from '../../components/InfoCard';
@@ -270,13 +270,13 @@ const DashboardPage = () => {
 
       <Row className="mb-4">
         {[
-          { icon: <FaCalendarCheck size={24} className="text-white mb-2" />, label: 'Total congés', value: stats.totalConges },
-          { icon: <FaClock size={24} className="text-white mb-2" />, label: 'En attente', value: stats.enAttente },
-          { icon: <FaCheckCircle size={24} className="text-white mb-2" />, label: 'Validés', value: stats.valides },
-          { icon: <FaTimesCircle size={24} className="text-white mb-2" />, label: 'Refusés', value: stats.refuses }
+          { icon: <FaCalendarCheck size={24} className="text-white mb-2" />, label: 'Total congés', value: stats.totalConges, variant: 'total' },
+          { icon: <FaClock size={24} className="text-white mb-2" />, label: 'En attente', value: stats.enAttente, variant: 'pending' },
+          { icon: <FaCheckCircle size={24} className="text-white mb-2" />, label: 'Validés', value: stats.valides, variant: 'validated' },
+          { icon: <FaTimesCircle size={24} className="text-white mb-2" />, label: 'Refusés', value: stats.refuses, variant: 'refused' },
         ].map((stat, idx) => (
           <Col xs={12} sm={6} lg={3} className="mb-3" key={idx}>
-            <Card className="dashboard-stat-card h-100">
+            <Card className={`dashboard-stat-card dashboard-stat-card--${stat.variant} h-100`}>
               <Card.Body className="text-center py-3">
                 {stat.icon}
                 <h4 className="h5 mb-1 text-white">{stat.value}</h4>
@@ -285,6 +285,22 @@ const DashboardPage = () => {
             </Card>
           </Col>
         ))}
+        {stats.aValider !== undefined && (
+          <Col xs={12} sm={6} lg={3} className="mb-3">
+            <Card className="dashboard-stat-card dashboard-stat-card--urgent h-100">
+              <Card.Body className="text-center py-3">
+                <FaExclamationCircle size={24} className="text-white mb-2" />
+                <h4 className="h5 mb-1 text-white">{stats.aValider}</h4>
+                <p className="text-white mb-0 small">À valider</p>
+                {stats.aValider > 0 && (
+                  <Button as={Link} to="/conges" variant="outline-light" size="sm" className="mt-2 px-3">
+                    Traiter →
+                  </Button>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
       </Row>
 
       <Row>
@@ -296,12 +312,24 @@ const DashboardPage = () => {
                 {soldes.length === 0 ? (
                   <p className="ui-text-soft mb-0">Aucun solde disponible</p>
                 ) : (
-                  soldes.map((solde, idx) => (
-                    <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
-                      <span>{getSoldeTypeLabel(solde)}</span>
-                      <Badge bg="info">{getSoldeJours(solde)} jours</Badge>
-                    </div>
-                  ))
+                  soldes.map((solde, idx) => {
+                    const restant = getSoldeJours(solde);
+                    const acquis = Number(solde?.jours_acquis ?? solde?.quota_annuel ?? 0) || 0;
+                    const pct = acquis > 0 ? Math.min(100, Math.round((restant / acquis) * 100)) : 100;
+                    return (
+                      <div key={idx} className="solde-row">
+                        <div className="solde-row__header">
+                          <span className="text-truncate me-2">{getSoldeTypeLabel(solde)}</span>
+                          <span className="fw-semibold flex-shrink-0">{restant} j</span>
+                        </div>
+                        {acquis > 0 && (
+                          <div className="solde-row__bar">
+                            <div className="solde-row__bar-fill" style={{ width: `${pct}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </Card.Body>
             </Card>
@@ -332,11 +360,9 @@ const DashboardPage = () => {
                           <div className="fw-semibold text-truncate small">
                             {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
                           </div>
-                          <br />
-                          <div className="ui-text-soft text-xs">
+                          <div className="ui-text-soft text-xs mt-1">
                             {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                           </div>
-                           <br />
                           {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
                             <div className="overlap-dash-annotation overlap">
                               Chevauchement

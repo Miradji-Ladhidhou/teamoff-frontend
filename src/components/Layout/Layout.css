@@ -520,7 +520,7 @@ body.show-inline-help .superadmin-content .accordion.mb-3 {
 
   .role-content {
     padding: 0.55rem;
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.55rem);
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 0.55rem);
   }
 
   .role-topbar,

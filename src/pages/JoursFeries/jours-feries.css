@@ -1,0 +1,63 @@
+/* ────────────── Page jours fériés ────────────── */
+.jours-feries-page {
+  overflow-x: hidden;
+}
+
+/* Badge recurrent */
+.ferie-badge-recurrent {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.18em 0.5em;
+  border-radius: 999px;
+  background: var(--dk-info-bg);
+  color: var(--dk-info);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Ligne travaillé / non travaillé */
+.ferie-row--work {
+  border-left: 3px solid var(--dk-warning) !important;
+}
+
+/* Table wrapper */
+.jours-feries-table-wrap {
+  overflow-x: auto;
+}
+
+/* Mobile cards */
+.jours-feries-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.65rem;
+}
+
+.jours-feries-mobile-card {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  padding: 0.75rem;
+}
+
+.jours-feries-mobile-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.jours-feries-mobile-card__actions .btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .jours-feries-mobile-card {
+    padding: 0.65rem;
+  }
+}

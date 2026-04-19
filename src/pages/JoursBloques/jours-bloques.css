@@ -1,0 +1,50 @@
+/* ────────────── Page jours bloqués ────────────── */
+.jours-bloques-page {
+  overflow-x: hidden;
+}
+
+/* Badge type bloc */
+.bloque-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.18em 0.5em;
+  border-radius: 999px;
+  background: var(--dk-warning-bg);
+  color: var(--dk-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Table */
+.jours-bloques-table-wrap {
+  overflow-x: auto;
+}
+
+/* Mobile */
+.jours-bloques-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.65rem;
+}
+
+.jours-bloques-mobile-card {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-left: 3px solid var(--dk-warning);
+  border-radius: var(--card-radius);
+  padding: 0.75rem;
+}
+
+.jours-bloques-mobile-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.jours-bloques-mobile-card__actions .btn {
+  flex: 1;
+  justify-content: center;
+}

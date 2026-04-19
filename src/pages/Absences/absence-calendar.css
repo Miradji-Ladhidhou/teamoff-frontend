@@ -91,7 +91,7 @@
   margin-bottom: 12px;
 }
 .absence-calendar-error {
-  color: var(--danger-color);
+  color: var(--dk-error);
   margin-bottom: 12px;
 }
 .absence-calendar-grid {

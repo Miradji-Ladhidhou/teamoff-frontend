@@ -1,0 +1,53 @@
+/* ────────────── Metrics SuperAdmin ────────────── */
+.metrics-page {
+  overflow-x: hidden;
+}
+
+/* Stat cards métriques */
+.metric-stat-card {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius-lg);
+  padding: 1rem;
+  transition: box-shadow 0.18s ease;
+}
+
+.metric-stat-card:hover {
+  box-shadow: var(--dk-shadow-md);
+}
+
+.metric-stat-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--dk-text);
+  line-height: 1.1;
+}
+
+.metric-stat-card__label {
+  font-size: 0.78rem;
+  color: var(--dk-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.metric-stat-card__trend {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.metric-stat-card__trend--up   { color: var(--dk-success); }
+.metric-stat-card__trend--down { color: var(--dk-error); }
+
+/* Table overflow */
+.metrics-table-wrap {
+  overflow-x: auto;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .metric-stat-card__value {
+    font-size: 1.4rem;
+  }
+}

@@ -1,0 +1,148 @@
+/* ────────────── Base Layout ────────────── */
+.container-fluid {
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* ────────────── Header ────────────── */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.page-header-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header-actions {
+  width: 100%;
+}
+
+.page-header-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ────────────── Typography ────────────── */
+.text-xs  { font-size: 0.75rem; }
+.text-xxs { font-size: 0.65rem; }
+
+/* ────────────── Stat Cards ────────────── */
+.dashboard-stat-card {
+  border-radius: var(--card-radius-lg) !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--dk-shadow-lg) !important;
+}
+
+/* Variantes couleur */
+.dashboard-stat-card--total {
+  background: linear-gradient(135deg, var(--dk-accent-dark), var(--dk-accent)) !important;
+  border-top-color: var(--dk-accent) !important;
+}
+
+.dashboard-stat-card--pending {
+  background: linear-gradient(135deg, #b45309, var(--dk-warning)) !important;
+  border-top-color: var(--dk-warning) !important;
+}
+
+.dashboard-stat-card--validated {
+  background: linear-gradient(135deg, #15803d, var(--dk-success)) !important;
+  border-top-color: var(--dk-success) !important;
+}
+
+.dashboard-stat-card--refused {
+  background: linear-gradient(135deg, #b91c1c, var(--dk-error)) !important;
+  border-top-color: var(--dk-error) !important;
+}
+
+.dashboard-stat-card--urgent {
+  background: linear-gradient(135deg, #c2410c, #ea580c) !important;
+  border-top-color: #ea580c !important;
+  animation: pulse-urgent 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { box-shadow: var(--dk-shadow-md); }
+  50%       { box-shadow: 0 0 0 5px rgba(234, 88, 12, 0.22), var(--dk-shadow-md); }
+}
+
+/* ────────────── Overlap annotations — dark theme ────────────── */
+.overlap-dash-annotation {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.overlap {
+  background: var(--dk-error-bg);
+  color: var(--dk-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.no-overlap {
+  background: var(--dk-success-bg);
+  color: var(--dk-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* ────────────── Soldes progress bar ────────────── */
+.solde-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 0.65rem;
+}
+
+.solde-row:last-child {
+  margin-bottom: 0;
+}
+
+.solde-row__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.solde-row__bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--dk-border);
+  overflow: hidden;
+}
+
+.solde-row__bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--role-accent);
+  transition: width 0.4s ease;
+}
+
+/* ────────────── Responsive ≥ 576px ────────────── */
+@media (min-width: 576px) {
+  .container-fluid { padding: 20px; }
+
+  .page-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .page-header-actions { width: auto; }
+  .page-header-actions .btn { width: auto; }
+}
+
+/* ────────────── Responsive ≥ 992px ────────────── */
+@media (min-width: 992px) {
+  .container-fluid { padding: 24px 32px; }
+}

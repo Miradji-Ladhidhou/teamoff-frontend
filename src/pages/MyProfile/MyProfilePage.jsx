@@ -128,7 +128,7 @@ const MyProfilePage = () => {
   const passwordLoading = passwordAction.isRunning;
 
   return (
-    <Container className="py-3 py-lg-5">
+    <Container className="py-3 py-lg-5 profile-page">
       <Row className="mb-4">
         <Col md={8}>
           <div className="d-flex align-items-center gap-3">

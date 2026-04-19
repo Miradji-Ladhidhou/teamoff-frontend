@@ -1,0 +1,21 @@
+/* ────────────── Tab switcher jours spéciaux ────────────── */
+.jours-tab-nav .btn-group {
+  border-radius: var(--btn-radius);
+  overflow: hidden;
+}
+
+/* Réinitialiser le page-header des pages enfants */
+.days-merged .page-header:first-of-type {
+  display: none;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .jours-tab-nav .btn-group {
+    width: 100%;
+  }
+
+  .jours-tab-nav .btn-group .btn {
+    flex: 1;
+  }
+}

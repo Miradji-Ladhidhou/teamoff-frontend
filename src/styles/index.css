@@ -132,6 +132,174 @@ h1, h2, h3, h4, h5, h6 {
 .max-w-400    { max-width: 400px !important; }
 .max-w-500    { max-width: 500px !important; }
 .overflow-hidden { overflow: hidden !important; }
+.min-w-0      { min-width: 0 !important; }
+.text-2xs     { font-size: 0.65rem; }
+.text-xs      { font-size: 0.75rem; }
+
+/* ────────────── Mobile card list (vue cards sur mobile) ────────────── */
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+.mobile-card-list__item {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  padding: 0.75rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mobile-card-list__item:active {
+  background: var(--dk-hover);
+}
+
+/* ────────────── Status badges custom ────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22em 0.6em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-badge--pending  { background: var(--dk-warning-bg);  color: var(--dk-warning);  border: 1px solid rgba(245,158,11,0.3); }
+.status-badge--info     { background: var(--dk-info-bg);     color: var(--dk-info);     border: 1px solid rgba(59,130,246,0.3); }
+.status-badge--success  { background: var(--dk-success-bg);  color: var(--dk-success);  border: 1px solid rgba(34,197,94,0.3); }
+.status-badge--danger   { background: var(--dk-error-bg);    color: var(--dk-error);    border: 1px solid rgba(239,68,68,0.3); }
+
+/* ────────────── Bootstrap dark-theme overrides ────────────── */
+
+/* bg-light → surface dark */
+.role-content .bg-light,
+.superadmin-content .bg-light {
+  background-color: var(--dk-elevated) !important;
+  color: var(--dk-text) !important;
+}
+
+.role-content .bg-light.rounded,
+.superadmin-content .bg-light.rounded {
+  border: 1px solid var(--dk-border-soft);
+}
+
+/* btn-light */
+.role-content .btn-light,
+.superadmin-content .btn-light {
+  background-color: var(--dk-elevated) !important;
+  border-color: var(--dk-border) !important;
+  color: var(--dk-text-soft) !important;
+}
+
+.role-content .btn-light:hover,
+.superadmin-content .btn-light:hover {
+  background-color: var(--dk-hover) !important;
+  color: var(--dk-text) !important;
+}
+
+/* Bootstrap subtle backgrounds */
+.role-content .bg-danger-subtle,
+.superadmin-content .bg-danger-subtle   { background-color: var(--dk-error-bg)   !important; }
+.role-content .bg-success-subtle,
+.superadmin-content .bg-success-subtle  { background-color: var(--dk-success-bg) !important; }
+.role-content .bg-info-subtle,
+.superadmin-content .bg-info-subtle     { background-color: var(--dk-info-bg)    !important; }
+.role-content .bg-warning-subtle,
+.superadmin-content .bg-warning-subtle  { background-color: var(--dk-warning-bg) !important; }
+
+.role-content .border-danger-subtle,
+.superadmin-content .border-danger-subtle  { border-color: rgba(239, 68, 68, 0.35)  !important; }
+.role-content .border-success-subtle,
+.superadmin-content .border-success-subtle { border-color: rgba(34, 197, 94, 0.35)  !important; }
+
+/* bg-primary + opacity → accent soft */
+.role-content .bg-primary.bg-opacity-10,
+.superadmin-content .bg-primary.bg-opacity-10 {
+  background-color: var(--dk-accent-soft) !important;
+}
+
+/* Semantic text colors */
+.role-content .text-primary,
+.superadmin-content .text-primary { color: var(--role-accent) !important; }
+.role-content .text-success,
+.superadmin-content .text-success { color: var(--dk-success)  !important; }
+.role-content .text-danger,
+.superadmin-content .text-danger  { color: var(--dk-error)    !important; }
+.role-content .text-warning,
+.superadmin-content .text-warning { color: var(--dk-warning)  !important; }
+.role-content .text-info,
+.superadmin-content .text-info    { color: var(--dk-info)     !important; }
+
+/* Cursor utility */
+.cursor-pointer { cursor: pointer !important; }
+
+/* ────────────── Page section titles ────────────── */
+.page-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dk-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+/* ────────────── Detail rows (label / valeur) ────────────── */
+.detail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dk-text-muted);
+  margin-bottom: 2px;
+  display: block;
+}
+
+.detail-value {
+  color: var(--dk-text);
+  font-size: 0.9rem;
+}
+
+/* ────────────── Timeline ────────────── */
+.timeline {
+  position: relative;
+  padding-left: 22px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  bottom: 0;
+  width: 2px;
+  background: var(--dk-border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -18px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--dk-bg);
+  box-shadow: 0 0 0 2px var(--dk-border);
+}
+
+.timeline-marker.bg-primary { background: var(--role-accent) !important; }
+
+.timeline-content {
+  padding-bottom: 0.5rem;
+}
 
 /* ui-* helpers hérités du Layout */
 .ui-text-strong     { color: var(--dk-text) !important; }

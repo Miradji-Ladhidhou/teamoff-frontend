@@ -1,0 +1,95 @@
+/* ────────────── Header page ────────────── */
+.nouveau-conge-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ────────────── Carte aperçu jours calculés ────────────── */
+.jours-calcules-card {
+  background: linear-gradient(135deg, var(--dk-accent-dark), var(--dk-accent));
+  border-radius: var(--card-radius-lg);
+  padding: 1rem 1.25rem;
+  color: #fff;
+  text-align: center;
+}
+
+.jours-calcules-card__number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.jours-calcules-card__label {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* ────────────── Demi-journée selector ────────────── */
+.demijournee-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.demijournee-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
+  color: var(--dk-text-soft);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.demijournee-btn.active,
+.demijournee-btn:hover {
+  background: var(--dk-accent-soft);
+  border-color: var(--dk-accent-border);
+  color: var(--dk-accent);
+}
+
+/* ────────────── Type congé sélecteur + solde ────────────── */
+.conge-type-solde-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.2em 0.55em;
+  border-radius: 999px;
+  background: var(--dk-info-bg);
+  color: var(--dk-info);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ────────────── Validation errors ────────────── */
+.nouveau-conge-errors {
+  background: var(--dk-error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--card-radius);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.nouveau-conge-errors li {
+  color: var(--dk-error);
+  font-size: 0.85rem;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .jours-calcules-card {
+    padding: 0.75rem;
+  }
+
+  .jours-calcules-card__number {
+    font-size: 1.5rem;
+  }
+}

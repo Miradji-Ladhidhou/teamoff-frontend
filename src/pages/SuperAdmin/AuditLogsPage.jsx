@@ -2,7 +2,7 @@ import './audit-logs.css';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container, Row, Col, Card, Table, Button, Badge, Form,
-  InputGroup, Alert, Modal, Spinner
+  InputGroup, Modal, Spinner
 } from 'react-bootstrap';
 import {
   FaHistory, FaSearch, FaDownload, FaEye, FaUser, FaBuilding,
@@ -11,6 +11,63 @@ import {
 import { auditService, exportsService } from '../../services/api';
 import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
+
+// ---------- Helpers purs (hors composant — stables entre renders) ----------
+
+const ACTION_VARIANTS = {
+  CREATE: 'success',
+  UPDATE: 'info',
+  DELETE: 'danger',
+  LOGIN: 'primary',
+  LOGOUT: 'secondary',
+  VALIDATE: 'success',
+  REJECT: 'warning',
+};
+
+const getActionBadge = (action) => (
+  <Badge bg={ACTION_VARIANTS[action] || 'secondary'}>{action}</Badge>
+);
+
+const getEntityIcon = (entity) => {
+  switch (entity) {
+    case 'USER':
+    case 'UTILISATEUR':
+      return <FaUser />;
+    case 'CONGE':
+      return <FaCalendarCheck />;
+    case 'ENTREPRISE':
+      return <FaBuilding />;
+    default:
+      return <FaHistory />;
+  }
+};
+
+const formatDateTime = (ts) =>
+  new Date(ts).toLocaleString('fr-FR', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+
+const getUserLabel = (log) => {
+  if (log.utilisateur) {
+    return `${log.utilisateur.prenom || ''} ${log.utilisateur.nom}`.trim();
+  }
+  return 'Système';
+};
+
+// Calcul unique date+heure pour éviter le double appel dans la table desktop
+const splitDateTime = (ts) => {
+  const parts = formatDateTime(ts).split(' ');
+  return { date: parts[0], time: parts[1] };
+};
+
+// ---------- Sous-composant label filtre (markup uniquement) ----------
+
+const FilterLabel = ({ children }) => (
+  <Form.Label className="audit-filter-label">{children}</Form.Label>
+);
+
+// ---------- Composant principal ----------
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
@@ -26,6 +83,7 @@ const AuditLogs = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const LIMIT = 20;
 
+  // Logique métier inchangée
   const loadLogs = useCallback(async (overrides = {}) => {
     try {
       setLoading(true);
@@ -34,14 +92,14 @@ const AuditLogs = () => {
         limit: LIMIT,
       };
       const nextActionFilter = overrides.actionFilter ?? actionFilter;
-      const nextSearchTerm = overrides.searchTerm ?? searchTerm;
-      const nextDateDebut = overrides.dateDebut ?? dateDebut;
-      const nextDateFin = overrides.dateFin ?? dateFin;
+      const nextSearchTerm   = overrides.searchTerm  ?? searchTerm;
+      const nextDateDebut    = overrides.dateDebut   ?? dateDebut;
+      const nextDateFin      = overrides.dateFin     ?? dateFin;
 
-      if (nextActionFilter) params.action = nextActionFilter;
-      if (nextSearchTerm) params.search = nextSearchTerm;
-      if (nextDateDebut) params.dateDebut = nextDateDebut;
-      if (nextDateFin) params.dateFin = nextDateFin;
+      if (nextActionFilter) params.action    = nextActionFilter;
+      if (nextSearchTerm)   params.search    = nextSearchTerm;
+      if (nextDateDebut)    params.dateDebut = nextDateDebut;
+      if (nextDateFin)      params.dateFin   = nextDateFin;
 
       const { data } = await auditService.getAll(params);
       setLogs(data.logs || []);
@@ -49,7 +107,7 @@ const AuditLogs = () => {
       setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error('Erreur chargement logs:', err);
-      alert.error('Erreur lors du chargement des logs d\'audit.');
+      alert.error("Erreur lors du chargement des logs d'audit.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +117,8 @@ const AuditLogs = () => {
     loadLogs();
   }, [loadLogs]);
 
-  // Remet la page à 1 quand un filtre change
+  // Remet la page à 1 quand un filtre change.
+  // NOTE : double passe voulue — ne pas modifier.
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, actionFilter, dateDebut, dateFin]);
@@ -70,71 +129,35 @@ const AuditLogs = () => {
     setDateDebut('');
     setDateFin('');
     setCurrentPage(1);
-    loadLogs({
-      page: 1,
-      searchTerm: '',
-      actionFilter: '',
-      dateDebut: '',
-      dateFin: '',
-    });
+    loadLogs({ page: 1, searchTerm: '', actionFilter: '', dateDebut: '', dateFin: '' });
   };
 
+  // Fix Firefox : appendChild/removeChild autour du click
   const exportLogs = async () => {
     try {
       const response = await exportsService.exportAuditCSV({
-        action: actionFilter || undefined,
-        search: searchTerm || undefined,
-        dateDebut: dateDebut || undefined,
-        dateFin: dateFin || undefined,
+        action:    actionFilter || undefined,
+        search:    searchTerm  || undefined,
+        dateDebut: dateDebut   || undefined,
+        dateFin:   dateFin     || undefined,
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
       a.href = url;
       a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
-      alert.error('Erreur lors de l\'export CSV.');
+      alert.error("Erreur lors de l'export CSV.");
     }
-  };
-
-  const getActionBadge = (action) => {
-    const variants = {
-      CREATE: 'success',
-      UPDATE: 'info',
-      DELETE: 'danger',
-      LOGIN: 'primary',
-      LOGOUT: 'secondary',
-      VALIDATE: 'success',
-      REJECT: 'warning',
-    };
-    return <Badge bg={variants[action] || 'secondary'}>{action}</Badge>;
-  };
-
-  const getEntityIcon = (entity) => {
-    switch (entity) {
-      case 'USER': case 'UTILISATEUR': return <FaUser />;
-      case 'CONGE': return <FaCalendarCheck />;
-      case 'ENTREPRISE': return <FaBuilding />;
-      default: return <FaHistory />;
-    }
-  };
-
-  const formatDateTime = (ts) =>
-    new Date(ts).toLocaleString('fr-FR', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-    });
-
-  const getUserLabel = (log) => {
-    if (log.utilisateur) {
-      return `${log.utilisateur.prenom || ''} ${log.utilisateur.nom}`.trim();
-    }
-    return 'Système';
   };
 
   return (
     <Container fluid="sm">
+
+      {/* Header */}
       <div className="page-header">
         <div>
           <h1 className="h3 mb-1">Logs d'Audit</h1>
@@ -147,8 +170,6 @@ const AuditLogs = () => {
           </Button>
         </div>
       </div>
-
-      
 
       <InfoCardInfo title="Utiliser les logs d'audit">
         <ul className="mb-0">
@@ -166,8 +187,10 @@ const AuditLogs = () => {
       <Card className="mb-4">
         <Card.Body>
           <Row className="g-2 align-items-end">
+
+            {/* Recherche : pleine largeur sur mobile */}
             <Col xs={12} md={3}>
-              <Form.Label className="mb-1 small">Recherche</Form.Label>
+              <FilterLabel>Recherche</FilterLabel>
               <InputGroup>
                 <InputGroup.Text><FaSearch /></InputGroup.Text>
                 <Form.Control
@@ -178,8 +201,10 @@ const AuditLogs = () => {
                 />
               </InputGroup>
             </Col>
+
+            {/* Action : demi-largeur sur xs, propre sur sm+ */}
             <Col xs={12} sm={6} md={2}>
-              <Form.Label className="mb-1 small">Action</Form.Label>
+              <FilterLabel>Action</FilterLabel>
               <Form.Select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
                 <option value="">Toutes les actions</option>
                 <option value="LOGIN_SUCCESS">Connexion réussie</option>
@@ -191,20 +216,27 @@ const AuditLogs = () => {
                 <option value="SYSTEM_RESTART_REQUESTED">Redémarrage demandé</option>
               </Form.Select>
             </Col>
+
+            {/* Dates : côte à côte sur mobile (xs=6) */}
             <Col xs={6} sm={3} md={2}>
-              <Form.Label className="mb-1 small">Du</Form.Label>
+              <FilterLabel>Du</FilterLabel>
               <Form.Control type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
             </Col>
             <Col xs={6} sm={3} md={2}>
-              <Form.Label className="mb-1 small">Au</Form.Label>
+              <FilterLabel>Au</FilterLabel>
               <Form.Control type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
             </Col>
-            <Col xs={12} md={3} className="audit-filters-actions align-items-end justify-content-end">
-              <Badge bg="secondary" className="py-2 px-3">{total} résultat{total > 1 ? 's' : ''}</Badge>
+
+            {/* Compteur + reset — séparé visuellement sur mobile via CSS */}
+            <Col xs={12} md={3} className="audit-filters-actions">
+              <Badge bg="secondary" className="py-2 px-3">
+                {total} résultat{total > 1 ? 's' : ''}
+              </Badge>
               <Button variant="outline-secondary" size="sm" onClick={handleReset}>
                 <FaTimes className="me-1" />Réinitialiser
               </Button>
             </Col>
+
           </Row>
         </Card.Body>
       </Card>
@@ -221,41 +253,52 @@ const AuditLogs = () => {
             <>
               {logs.length > 0 && (
                 <>
+                  {/* ── MOBILE : cards empilées (< md) ── */}
                   <div className="d-md-none mobile-card-list">
                     {logs.map((log) => (
                       <div key={log.id} className="audit-log-mobile-card">
+
+                        {/* Ligne 1 : utilisateur + badge action */}
                         <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                           <div>
-                            <div className="fw-semibold">{getUserLabel(log)}</div>
+                            <div className="audit-user-name">{getUserLabel(log)}</div>
                             {log.utilisateur && (
-                              <div><small className="text-muted">{log.utilisateur.email}</small></div>
+                              <span className="audit-user-email">{log.utilisateur.email}</span>
                             )}
                           </div>
                           {getActionBadge(log.action)}
                         </div>
-                        <div className="small text-muted mb-2">{formatDateTime(log.createdAt)}</div>
-                        <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
-                          <span className="d-inline-flex align-items-center gap-1">
+
+                        {/* Ligne 2 : date · entité */}
+                        <div className="audit-log-meta">
+                          <span className="audit-date">{formatDateTime(log.createdAt)}</span>
+                          <span className="audit-entity">
                             {getEntityIcon(log.entity)}
-                            <span>{log.entity || '—'}</span>
+                            {log.entity || '—'}
                           </span>
-                          <Badge bg="light" text="dark">{log.entreprise?.nom || '—'}</Badge>
                         </div>
-                        <div className="small text-muted mb-3">IP: {log.ip_address || '—'}</div>
+
+                        {/* Ligne 3 : IP */}
+                        <div className="audit-log-ip">IP : {log.ip_address || '—'}</div>
+
+                        <div className="audit-log-divider" />
+
+                        {/* CTA */}
                         <Button
                           variant="outline-info"
                           size="sm"
-                          className="w-100 justify-content-center"
                           title="Voir détails complets"
                           onClick={() => setSelectedLog(log)}
                         >
                           <FaEye className="me-2" />
                           Voir les détails
                         </Button>
+
                       </div>
                     ))}
                   </div>
 
+                  {/* ── DESKTOP : table classique (≥ md) ── */}
                   <div className="d-none d-md-block">
                     <Table hover responsive>
                       <thead>
@@ -264,60 +307,63 @@ const AuditLogs = () => {
                           <th>Utilisateur</th>
                           <th>Action</th>
                           <th>Entité</th>
-                          <th>Entreprise</th>
+                          {/* Entreprise masquée sur md étroit, visible dès lg */}
+                          <th className="d-none d-lg-table-cell">Entreprise</th>
                           <th>IP</th>
                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {logs.map((log) => (
-                          <tr key={log.id}>
-                            <td>
-                              <small>
-                                <div>{formatDateTime(log.createdAt).split(' ')[0]}</div>
-                                <span className="text-muted">{formatDateTime(log.createdAt).split(' ')[1]}</span>
-                              </small>
-                            </td>
-                            <td>
-                              <div>
+                        {logs.map((log) => {
+                          const { date, time } = splitDateTime(log.createdAt);
+                          return (
+                            <tr key={log.id}>
+                              <td>
+                                <small>
+                                  <div className="audit-date-line">{date}</div>
+                                  <span className="text-muted">{time}</span>
+                                </small>
+                              </td>
+                              <td>
                                 <strong>{getUserLabel(log)}</strong>
                                 {log.utilisateur && (
                                   <div><small className="text-muted">{log.utilisateur.email}</small></div>
                                 )}
-                              </div>
-                            </td>
-                            <td>{getActionBadge(log.action)}</td>
-                            <td>
-                              <div className="d-flex align-items-center gap-1">
-                                {getEntityIcon(log.entity)}
-                                <span>{log.entity || '—'}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <small>{log.entreprise?.nom || '—'}</small>
-                            </td>
-                            <td><code className="small">{log.ip_address || '—'}</code></td>
-                            <td>
-                              <Button
-                                variant="outline-info"
-                                size="sm"
-                                title="Voir détails complets"
-                                onClick={() => setSelectedLog(log)}
-                              >
-                                <FaEye />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td>{getActionBadge(log.action)}</td>
+                              <td>
+                                <div className="d-flex align-items-center gap-1">
+                                  {getEntityIcon(log.entity)}
+                                  <span>{log.entity || '—'}</span>
+                                </div>
+                              </td>
+                              <td className="d-none d-lg-table-cell">
+                                <small>{log.entreprise?.nom || '—'}</small>
+                              </td>
+                              <td><code className="small">{log.ip_address || '—'}</code></td>
+                              <td>
+                                <Button
+                                  variant="outline-info"
+                                  size="sm"
+                                  title="Voir détails complets"
+                                  onClick={() => setSelectedLog(log)}
+                                >
+                                  <FaEye />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </Table>
                   </div>
                 </>
               )}
 
+              {/* État vide */}
               {logs.length === 0 && (
-                <div className="text-center py-4">
-                  <FaHistory size={48} className="text-muted mb-3" />
+                <div className="audit-empty">
+                  <FaHistory size={48} className="text-muted" />
                   <h5>Aucun log trouvé</h5>
                   <p className="text-muted">Aucun événement ne correspond aux filtres sélectionnés.</p>
                 </div>
@@ -325,7 +371,7 @@ const AuditLogs = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="d-flex justify-content-center align-items-center gap-3 mt-3">
+                <div className="audit-pagination">
                   <Button
                     variant="outline-primary"
                     size="sm"
@@ -356,64 +402,65 @@ const AuditLogs = () => {
           <Modal.Title>Détails du log d'audit</Modal.Title>
         </Modal.Header>
         {selectedLog && (
-          <Modal.Body>
-            <Row className="mb-3">
-              <Col md={6}>
-                <strong>Date / Heure</strong>
-                <div>{formatDateTime(selectedLog.createdAt)}</div>
-              </Col>
-              <Col md={6}>
-                <strong>Action</strong>
-                <div>{getActionBadge(selectedLog.action)}</div>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={6}>
-                <strong>Utilisateur</strong>
-                <div>{getUserLabel(selectedLog)}</div>
-                {selectedLog.utilisateur && (
-                  <div><small className="text-muted">{selectedLog.utilisateur.email}</small></div>
-                )}
-              </Col>
-              <Col md={6}>
-                <strong>Entreprise</strong>
-                <div>{selectedLog.entreprise?.nom || '—'}</div>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={12}>
-                <strong>Entité</strong>
-                <div>{selectedLog.entity || '—'}</div>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={6}>
-                <strong>Adresse IP</strong>
-                <div><code>{selectedLog.ip_address || '—'}</code></div>
-              </Col>
-              <Col md={6}>
-                <strong>User Agent</strong>
-                <div className="text-break">
-                  <small className="text-muted">{selectedLog.user_agent || '—'}</small>
+          <>
+            <Modal.Body>
+              <Row className="mb-3">
+                <Col xs={12} md={6}>
+                  <strong>Date / Heure</strong>
+                  <div>{formatDateTime(selectedLog.createdAt)}</div>
+                </Col>
+                <Col xs={12} md={6}>
+                  <strong>Action</strong>
+                  <div>{getActionBadge(selectedLog.action)}</div>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col xs={12} md={6}>
+                  <strong>Utilisateur</strong>
+                  <div>{getUserLabel(selectedLog)}</div>
+                  {selectedLog.utilisateur && (
+                    <small className="text-muted">{selectedLog.utilisateur.email}</small>
+                  )}
+                </Col>
+                <Col xs={12} md={6}>
+                  <strong>Entreprise</strong>
+                  <div>{selectedLog.entreprise?.nom || '—'}</div>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col xs={12}>
+                  <strong>Entité</strong>
+                  <div>{selectedLog.entity || '—'}</div>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col xs={12} md={6}>
+                  <strong>Adresse IP</strong>
+                  <div><code>{selectedLog.ip_address || '—'}</code></div>
+                </Col>
+                <Col xs={12} md={6}>
+                  <strong>User Agent</strong>
+                  <div className="text-break">
+                    <small className="text-muted">{selectedLog.user_agent || '—'}</small>
+                  </div>
+                </Col>
+              </Row>
+              {selectedLog.metadata && (
+                <div>
+                  <strong>Métadonnées</strong>
+                  <pre className="bg-light border rounded p-3 mt-1 small scroll-modal-content">
+                    {JSON.stringify(selectedLog.metadata, null, 2)}
+                  </pre>
                 </div>
-              </Col>
-            </Row>
-            {selectedLog.metadata && (
-              <div>
-                <strong>Métadonnées</strong>
-                <pre
-                  className="bg-light border rounded p-3 mt-1 small scroll-modal-content"
-                >
-                  {JSON.stringify(selectedLog.metadata, null, 2)}
-                </pre>
-              </div>
-            )}
-          </Modal.Body>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setSelectedLog(null)}>Fermer</Button>
+            </Modal.Footer>
+          </>
         )}
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setSelectedLog(null)}>Fermer</Button>
-        </Modal.Footer>
       </Modal>
+
     </Container>
   );
 };

@@ -1,0 +1,62 @@
+/* ────────────── Settings SuperAdmin ────────────── */
+.settings-page {
+  overflow-x: hidden;
+}
+
+/* Section setting */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--dk-border-soft);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-item__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--dk-text);
+}
+
+.setting-item__desc {
+  font-size: 0.8rem;
+  color: var(--dk-text-muted);
+  margin-top: 2px;
+}
+
+.setting-item__control {
+  flex-shrink: 0;
+}
+
+/* Table paramètres */
+.settings-table-wrap {
+  overflow-x: auto;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .setting-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .setting-item__control {
+    width: 100%;
+  }
+
+  .setting-item__control .btn,
+  .setting-item__control .form-control {
+    width: 100%;
+  }
+}
