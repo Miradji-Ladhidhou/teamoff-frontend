@@ -1,8 +1,6 @@
 import './jours-bloques.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
-  Badge,
   Button,
   Card,
   Col,
@@ -374,12 +372,11 @@ const JoursBloquesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Paramètres jours bloqués et soldes</h1>
-          <p className="text-muted mb-0">Paramétrage de décompte.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Paramètres jours bloqués et soldes</span>
+        <div className="d-flex gap-2">
+          <Button type="button" variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
         </div>
-        <Button type="button" variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
       </div>
 
       {confirmationMessage && (
@@ -512,7 +509,7 @@ const JoursBloquesPage = () => {
               <small className="text-muted d-block mt-2">Vous pouvez ajouter une date unique ou une plage complète.</small>
               <div className="d-flex flex-wrap gap-2 mt-3">
                 {(blockedDays.specific_dates || []).map((date) => (
-                  <Badge key={date} bg="secondary" className="d-flex align-items-center gap-2">
+                  <span key={date} className="badge info d-inline-flex align-items-center gap-2">
                     {date}
                     <button
                       type="button"
@@ -520,14 +517,14 @@ const JoursBloquesPage = () => {
                       onClick={() => removeSpecificDate(date)}
                       aria-label={`Supprimer ${date}`}
                     />
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </Form.Group>
 
             <Form.Group className="mb-4">
               <Form.Label>Acquisition mensuelle automatique par type</Form.Label>
-              <div className="d-md-none mobile-card-list">
+              <div className="d-lg-none mobile-card-list">
                 {congeTypes.map((type) => (
                   <div key={`accrual-mobile-${type.id}`} className="mobile-card-list__item">
                     <div className="fw-semibold mb-2">{type.libelle}</div>
@@ -545,7 +542,7 @@ const JoursBloquesPage = () => {
                   </div>
                 ))}
               </div>
-              <div className="settings-table-wrap d-none d-md-block">
+              <div className="settings-table-wrap d-none d-lg-block">
                 <Table responsive size="sm" className="settings-table">
                   <thead>
                     <tr>
@@ -637,7 +634,7 @@ const JoursBloquesPage = () => {
                   Report annuel activé (max {reportMaxJours} j) — colonne <strong>N-1 reporté</strong> = jours portés de {selectedYear - 1}.
                 </div>
               )}
-              <div className="d-md-none mobile-card-list">
+              <div className="d-lg-none mobile-card-list">
                 {counters.map((counter) => {
                   const joursReportes = toNumber(counter.jours_reportes, 0);
                   const joursAcquisAnnee = toNumber(counter.jours_acquis_annee ?? (toNumber(counter.jours_acquis, 0) - joursReportes), 0);
@@ -655,7 +652,7 @@ const JoursBloquesPage = () => {
                   );
                 })}
               </div>
-              <Table responsive hover className="settings-table d-none d-md-table">
+              <Table responsive hover className="settings-table d-none d-lg-table">
                 <thead>
                   <tr>
                     <th>Type</th>

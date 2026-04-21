@@ -20,6 +20,15 @@
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius);
   padding: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+}
+
+.companies-mobile-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .companies-mobile-card__status-dot {
@@ -32,6 +41,18 @@
 .companies-mobile-card__status-dot--active   { background: var(--dk-success); }
 .companies-mobile-card__status-dot--inactive { background: var(--dk-text-muted); }
 .companies-mobile-card__status-dot--trial    { background: var(--dk-warning); }
+
+.companies-mobile-card__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dk-text);
+}
+
+.companies-mobile-card__meta {
+  font-size: 0.775rem;
+  color: var(--dk-text-soft);
+  margin-top: 2px;
+}
 
 .companies-mobile-card__actions {
   display: flex;

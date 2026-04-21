@@ -1,3 +1,11 @@
+/* ────────────── Hero section ────────────── */
+.conge-detail-hero {
+  text-align: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--dk-border);
+  margin-bottom: 1rem;
+}
+
 /* ────────────── Header responsive ────────────── */
 .conge-details-header {
   display: flex;
@@ -17,9 +25,12 @@
 /* ────────────── Blocs commentaires ────────────── */
 .comment-block {
   background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
   border-left: 3px solid var(--dk-accent);
   border-radius: 0 var(--card-radius) var(--card-radius) 0;
   padding: 0.75rem 1rem;
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color var(--transition-fast);
 }
 
 .comment-block--danger {
@@ -30,17 +41,18 @@
 /* ────────────── Calcul details box ────────────── */
 .calcul-details-box {
   background: var(--dk-elevated);
-  border: 1px solid var(--dk-border-soft);
+  border: 1px solid var(--dk-border);
   border-radius: var(--card-radius);
   padding: 0.65rem 0.75rem;
   font-size: 0.82rem;
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .calcul-details-box > div {
   display: flex;
   justify-content: space-between;
   padding: 3px 0;
-  border-bottom: 1px solid var(--dk-border-soft);
+  border-bottom: 1px solid var(--dk-border);
 }
 
 .calcul-details-box > div:last-child {
@@ -51,9 +63,10 @@
 /* ────────────── Dates non prises ────────────── */
 .dates-non-prises {
   background: var(--dk-elevated);
-  border: 1px solid var(--dk-border-soft);
+  border: 1px solid var(--dk-border);
   border-radius: var(--card-radius);
   padding: 0.5rem 0.65rem;
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .dates-non-prises > div {
@@ -61,7 +74,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 3px 0;
-  border-bottom: 1px solid var(--dk-border-soft);
+  border-bottom: 1px solid var(--dk-border);
   font-size: 0.82rem;
 }
 

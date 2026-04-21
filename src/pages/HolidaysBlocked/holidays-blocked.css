@@ -2,6 +2,22 @@
 .jours-tab-nav .btn-group {
   border-radius: var(--btn-radius);
   overflow: hidden;
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-border);
+}
+
+.jours-tab-nav .btn-group .btn {
+  color: var(--dk-text-soft);
+  background: transparent;
+  border-color: transparent;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.jours-tab-nav .btn-group .btn.active,
+.jours-tab-nav .btn-group .btn:focus {
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
 }
 
 /* Réinitialiser le page-header des pages enfants */
@@ -17,5 +33,6 @@
 
   .jours-tab-nav .btn-group .btn {
     flex: 1;
+    font-size: 0.8125rem;
   }
 }

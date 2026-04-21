@@ -12,14 +12,22 @@
   font-weight: 600;
   padding: 0.18em 0.5em;
   border-radius: 999px;
-  background: var(--dk-warning-bg);
+  background: rgba(240, 168, 85, 0.12);
   color: var(--dk-warning);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(240, 168, 85, 0.22);
 }
 
 /* Table */
 .jours-bloques-table-wrap {
   overflow-x: auto;
+}
+
+.jours-bloques-table-wrap .table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.jours-bloques-table-wrap .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Mobile */
@@ -36,6 +44,27 @@
   border-left: 3px solid var(--dk-warning);
   border-radius: var(--card-radius);
   padding: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+}
+
+.jours-bloques-mobile-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.jours-bloques-mobile-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dk-text);
+}
+
+.jours-bloques-mobile-card__meta {
+  font-size: 0.775rem;
+  color: var(--dk-text-soft);
+  margin-top: 2px;
 }
 
 .jours-bloques-mobile-card__actions {

@@ -10,17 +10,29 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--dk-border-soft);
+  border-bottom: 1px solid var(--dk-border);
+  transition: background var(--transition-fast);
 }
 
 .policy-rule-row:last-child {
   border-bottom: none;
 }
 
+.policy-rule-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .policy-rule-row__label {
   font-size: 0.875rem;
   color: var(--dk-text);
   flex: 1;
+  line-height: 1.4;
+}
+
+.policy-rule-row__desc {
+  font-size: 0.775rem;
+  color: var(--dk-text-muted);
+  margin-top: 1px;
 }
 
 .policy-rule-row__control {
@@ -35,16 +47,28 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 0;
-  border-bottom: 1px solid var(--dk-border-soft);
+  border-bottom: 1px solid var(--dk-border);
+  transition: background var(--transition-fast);
 }
 
 .service-item:last-child {
   border-bottom: none;
 }
 
+.service-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .service-item__name {
   font-weight: 600;
   font-size: 0.9rem;
+  color: var(--dk-text);
+}
+
+.service-item__meta {
+  font-size: 0.775rem;
+  color: var(--dk-text-soft);
+  margin-top: 1px;
 }
 
 .service-item__actions {
@@ -53,9 +77,48 @@
   flex-shrink: 0;
 }
 
+/* Service status badge */
+.service-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.18em 0.55em;
+  border-radius: 999px;
+}
+
+.service-status--active {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--dk-success);
+  border: 1px solid rgba(52, 211, 153, 0.22);
+}
+
+.service-status--inactive {
+  background: rgba(90, 90, 110, 0.15);
+  color: var(--dk-text-muted);
+  border: 1px solid rgba(90, 90, 110, 0.22);
+}
+
 /* Table wrap */
 .policy-table-wrap {
   overflow-x: auto;
+}
+
+.policy-table-wrap .table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.policy-table-wrap .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Section card */
+.policy-section-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 0.75rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* ────────────── Responsive ────────────── */

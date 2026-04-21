@@ -26,38 +26,38 @@
   --z-overlay: 10000;
   --z-modal:   10001;
 
-  /* SUCCESS — texte #15803d sur fond #f0fdf4 : ratio 5.7:1 ✓ */
-  --clr-success:        #bbf7d0;
-  --clr-success-bg:     rgba(34, 197, 94, 0.14);
-  --clr-success-border: #22c55e;
-  --clr-success-icon:   #22c55e;
+  /* SUCCESS — emerald dark theme */
+  --clr-success:        #a7f3d0;
+  --clr-success-bg:     rgba(52, 211, 153, 0.14);
+  --clr-success-border: var(--dk-success);
+  --clr-success-icon:   var(--dk-success);
 
-  /* ERROR — texte #b91c1c sur fond #fff1f2 : ratio 5.5:1 ✓ */
-  --clr-error:          #fecaca;
-  --clr-error-bg:       rgba(239, 68, 68, 0.14);
-  --clr-error-border:   #ef4444;
-  --clr-error-icon:     #ef4444;
+  /* ERROR — soft red dark theme */
+  --clr-error:          #fca5a5;
+  --clr-error-bg:       rgba(248, 113, 113, 0.14);
+  --clr-error-border:   var(--dk-error);
+  --clr-error-icon:     var(--dk-error);
 
-  /* WARNING — texte #92400e sur fond #fffbeb : ratio 6.1:1 ✓ */
-  --clr-warning:        #fde68a;
-  --clr-warning-bg:     rgba(245, 158, 11, 0.14);
-  --clr-warning-border: #f59e0b;
-  --clr-warning-icon:   #f59e0b;
+  /* WARNING — amber dark theme */
+  --clr-warning:        #fcd34d;
+  --clr-warning-bg:     rgba(240, 168, 85, 0.14);
+  --clr-warning-border: var(--dk-warning);
+  --clr-warning-icon:   var(--dk-warning);
 
-  /* INFO — texte #1e40af sur fond #eff6ff : ratio 7.0:1 ✓ */
-  --clr-info:           #bfdbfe;
-  --clr-info-bg:        rgba(59, 130, 246, 0.14);
-  --clr-info-border:    #3b82f6;
-  --clr-info-icon:      #3b82f6;
+  /* INFO — soft blue dark theme */
+  --clr-info:           #93c5fd;
+  --clr-info-bg:        rgba(91, 141, 238, 0.14);
+  --clr-info-border:    var(--dk-accent);
+  --clr-info-icon:      var(--dk-accent);
 
   /* DANGER (modal) */
   --clr-danger:        var(--dk-error);
-  --clr-danger-dark:   #dc2626;
-  --clr-danger-darker: #b91c1c;
+  --clr-danger-dark:   #e05555;
+  --clr-danger-darker: #c93333;
 
   /* PRIMARY */
   --clr-primary:        var(--dk-accent);
-  --clr-primary-dark:   #2f73b7;
+  --clr-primary-dark:   var(--dk-accent-dark);
   --clr-primary-darker: #245f9d;
 
   /* NEUTRES */

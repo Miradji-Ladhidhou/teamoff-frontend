@@ -9,6 +9,7 @@ import './styles/Cards.css'
 import './styles/Buttons.css'
 import './styles/Forms.css'
 import './styles/modals.css'
+import './styles/components.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

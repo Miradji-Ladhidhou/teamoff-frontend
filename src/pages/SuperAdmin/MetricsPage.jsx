@@ -1,10 +1,9 @@
 import './metrics.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, ProgressBar } from 'react-bootstrap';
 import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { metricsService } from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 
 const normalizeMetrics = (raw = {}) => {
@@ -133,13 +132,9 @@ const MetricsPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <div className="d-flex align-items-center gap-3 mb-1">
-            <FaChartLine className="text-primary" size={28} />
-            <h1 className="h3 mb-0">Métriques Système</h1>
-          </div>
-          <p className="text-muted mb-0">Surveillance des performances et utilisation</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Métriques Système</span>
+        <div className="d-flex gap-2">
         </div>
       </div>
 
@@ -194,9 +189,9 @@ const MetricsPage = () => {
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <span>Taux d'erreur global</span>
-                    <Badge bg={metrics.errorRate > 0.05 ? 'danger' : metrics.errorRate > 0.01 ? 'warning' : 'success'}>
+                    <span className={`badge ${metrics.errorRate > 0.05 ? 'refused' : metrics.errorRate > 0.01 ? 'pending' : 'approved'}`}>
                       {(metrics.errorRate * 100).toFixed(2)}%
-                    </Badge>
+                    </span>
                   </div>
                   <ProgressBar
                     variant={metrics.errorRate > 0.05 ? 'danger' : metrics.errorRate > 0.01 ? 'warning' : 'success'}
@@ -233,7 +228,7 @@ const MetricsPage = () => {
               <Card.Body>
                 {metrics.enterpriseUsage && metrics.enterpriseUsage.length > 0 ? (
                   <>
-                    <div className="d-md-none mobile-card-list">
+                    <div className="d-lg-none mobile-card-list">
                       {metrics.enterpriseUsage.map((usage, index) => (
                         <div key={index} className="mobile-card-list__item">
                           <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -241,14 +236,14 @@ const MetricsPage = () => {
                               <div className="fw-semibold">{usage.entreprise_nom || 'Entreprise non renseignee'}</div>
                               <small className="text-muted">{usage.count} requêtes</small>
                             </div>
-                            <Badge bg="info">
+                            <span className="badge info">
                               {metrics.requests > 0 ? ((usage.count / metrics.requests) * 100).toFixed(1) : '0.0'}%
-                            </Badge>
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div className="table-responsive d-none d-md-block">
+                    <div className="table-responsive d-none d-lg-block">
                       <table className="table table-sm">
                         <thead>
                           <tr>
@@ -263,9 +258,9 @@ const MetricsPage = () => {
                               <td>{usage.entreprise_nom || 'Entreprise non renseignee'}</td>
                               <td>{usage.count}</td>
                               <td>
-                                <Badge bg="info">
+                                <span className="badge info">
                                   {metrics.requests > 0 ? ((usage.count / metrics.requests) * 100).toFixed(1) : '0.0'}%
-                                </Badge>
+                                </span>
                               </td>
                             </tr>
                           ))}
@@ -357,18 +352,6 @@ const MetricsPage = () => {
           </Col>
         </Row>
       )}
-
-      <InfoCardInfo title="Comment interpréter les métriques">
-        <ul className="mb-0">
-          <li>Uptime et erreurs indiquent la stabilité</li>
-          <li>Temps de réponse et requêtes/minute indiquent la charge</li>
-          <li>Usage par entreprise aide à anticiper la capacité</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Seuils d'alerte suggérés">
-        Surveillez de près un taux d'erreur au-dessus de 1% et des pics prolongés de latence.
-      </TipCard>
 
     </Container>
   );

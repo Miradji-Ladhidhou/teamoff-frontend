@@ -1,12 +1,20 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
+
+const getInitials = (u) =>
+  `${(u?.prenom || '').charAt(0)}${(u?.nom || '').charAt(0)}`.toUpperCase() || '?';
+
+const roleToAvatarColor = (role) => {
+  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue' };
+  return map[role] || 'blue';
+};
 
 const DEFAULT_FORM = {
   prenom: '',
@@ -254,37 +262,15 @@ const UsersManagement = () => {
   });
 
   const getRoleBadge = (role) => {
-    const variants = {
-      super_admin: 'dark',
-      admin_entreprise: 'danger',
-      manager: 'warning',
-      employe: 'info'
-    };
-
-    const labels = {
-      super_admin: 'Super Admin',
-      admin_entreprise: 'Admin entreprise',
-      manager: 'Manager',
-      employe: 'Employe'
-    };
-
-    return <Badge bg={variants[role] || 'secondary'}>{labels[role] || role}</Badge>;
+    const classes = { super_admin: 'refused', admin_entreprise: 'info', manager: 'pending', employe: 'approved' };
+    const labels = { super_admin: 'Super Admin', admin_entreprise: 'Admin', manager: 'Manager', employe: 'Employé' };
+    return <span className={`badge ${classes[role] || 'info'}`}>{labels[role] || role}</span>;
   };
 
   const getStatusBadge = (status) => {
-    const variants = {
-      actif: 'success',
-      inactif: 'secondary',
-      en_attente: 'warning'
-    };
-
-    const labels = {
-      actif: 'Actif',
-      inactif: 'Inactif',
-      en_attente: 'En attente'
-    };
-
-    return <Badge bg={variants[status] || 'secondary'}>{labels[status] || status}</Badge>;
+    const classes = { actif: 'approved', inactif: 'info', en_attente: 'pending' };
+    const labels = { actif: 'ACTIF', inactif: 'INACTIF', en_attente: 'EN ATTENTE' };
+    return <span className={`badge ${classes[status] || 'info'}`}>{labels[status] || status.toUpperCase()}</span>;
   };
 
   const openDetailsModal = (targetUser) => {
@@ -320,14 +306,9 @@ const UsersManagement = () => {
   return (
     <Container fluid="sm" className="users-management-page">
       {/* En-tête responsive */}
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">Gestion des Utilisateurs</h1>
-          <p className="text-muted small mb-0">
-            {isSuperAdmin ? 'Administrer les utilisateurs de la plateforme' : 'Administrer les utilisateurs de votre entreprise'}
-          </p>
-        </div>
-        <div className="page-header-actions">
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Gestion des Utilisateurs</span>
+        <div className="d-flex gap-2">
           <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
             Info
           </Button>
@@ -394,9 +375,9 @@ const UsersManagement = () => {
               </Form.Select>
             </Col>
             <Col xs={12} md={2} className="text-md-end users-management-filters__count">
-              <Badge bg="info" className="users-management-filters__badge">
+              <span className="badge info">
                 {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
-              </Badge>
+              </span>
             </Col>
           </Row>
         </Card.Body>
@@ -417,13 +398,20 @@ const UsersManagement = () => {
           ) : (
             <>
               {/* Vue carte — mobile uniquement */}
-              <div className="d-md-none mobile-card-list px-3 users-management-mobile-list">
+              <div className="d-lg-none mobile-card-list px-3 users-management-mobile-list">
                 {filteredUsers.map((targetUser) => (
                   <div key={targetUser.id} className="mobile-card-list__item users-management-mobile-list__item">
-                    <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
-                      <div className="min-w-0">
-                        <div className="fw-semibold small">{targetUser.prenom} {targetUser.nom}</div>
-                        <div className="text-muted text-xs">{targetUser.role || 'Role inconnu'}</div>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <div className={`avatar avatar-sm ${roleToAvatarColor(targetUser.role)}`}>
+                        {getInitials(targetUser)}
+                      </div>
+                      <div className="min-w-0 flex-grow-1">
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
+                          {targetUser.prenom} {targetUser.nom}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
+                          {targetUser.role || 'Rôle inconnu'}
+                        </div>
                       </div>
                       {getStatusBadge(targetUser.statut)}
                     </div>
@@ -462,7 +450,7 @@ const UsersManagement = () => {
               </div>
 
               {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-md-block users-management-table-wrap">
+              <div className="d-none d-lg-block users-management-table-wrap">
                 <Table hover responsive>
                   <thead>
                     <tr>

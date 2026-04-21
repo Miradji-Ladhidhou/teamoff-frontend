@@ -4,51 +4,61 @@
  * Toutes les valeurs de couleur/fond/bordure de l'app
  * dérivent de ces variables.
  */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 :root {
+  /* ── Typographie ─────────────────────────────── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+
+  /* ── Transitions ─────────────────────────────── */
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.35s ease;
+
   /* ── Fonds ───────────────────────────────────── */
-  --dk-bg:         #212529;   /* fond de page global           */
-  --dk-surface:    #1a1a1a;   /* surface principale (topbar…)  */
-  --dk-card:       #1e1e1e;   /* cards / panels                */
-  --dk-elevated:   #272727;   /* inputs, hover, surélévé       */
-  --dk-hover:      #2e2e2e;   /* hover sur élément interactif  */
-  --dk-sidebar-bg-default: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
-  --dk-nav-green:  #14532d;   /* vert commun topbar + footer   */
+  --dk-bg:         #131318;   /* fond de page global — dark blue-black     */
+  --dk-surface:    #1c1c24;   /* surface principale (topbar, sidebar…)     */
+  --dk-card:       #22222c;   /* cards / panels                            */
+  --dk-elevated:   #2a2a36;   /* inputs, éléments surélevés                */
+  --dk-hover:      #323242;   /* hover sur élément interactif              */
+  --dk-sidebar-bg-default: linear-gradient(180deg, #0d0d12 0%, #131318 100%);
+  --dk-nav-green:  #14532d;
   --dk-nav-green-border: #1f6a3f;
 
   /* ── Bordures ────────────────────────────────── */
-  --dk-border:     #333333;
-  --dk-border-soft:#272727;
+  --dk-border:      rgba(255,255,255,0.08);  /* bordure principale — subtile et élégante */
+  --dk-border-soft: rgba(255,255,255,0.05);  /* bordure douce — très discrète            */
 
   /* ── Texte ───────────────────────────────────── */
-  --dk-text:       #f0f0f0;   /* texte principal               */
-  --dk-text-soft:  #a0aec0;   /* texte secondaire              */
-  --dk-text-muted: #6b7280;   /* texte discret / placeholder   */
+  --dk-text:       #f1f1f3;   /* texte principal          */
+  --dk-text-soft:  #9b9bab;   /* texte secondaire         */
+  --dk-text-muted: #5a5a6e;   /* texte discret/placeholder */
 
   /* ── Accent principal (bleu brand) ──────────── */
-  --dk-accent:        #3d87d1;
-  --dk-accent-dark:   #2c6aab;
-  --dk-accent-soft:   rgba(61, 135, 209, 0.14);
-  --dk-accent-border: rgba(61, 135, 209, 0.35);
+  --dk-accent:        #5b8dee;
+  --dk-accent-dark:   #3a6fd8;
+  --dk-accent-soft:   rgba(91, 141, 238, 0.14);
+  --dk-accent-border: rgba(91, 141, 238, 0.35);
 
-  /* ── Accents rôle (conservés du Layout) ─────── */
-  --role-employe:        #3b82f6;
-  --role-employe-soft:   rgba(59, 130, 246, 0.14);
-  --role-manager:        #f59e0b;
-  --role-manager-soft:   rgba(245, 158, 11, 0.14);
-  --role-admin:          #10b981;
-  --role-admin-soft:     rgba(16, 185, 129, 0.14);
-  --role-superadmin:     #8b5cf6;
-  --role-superadmin-soft:rgba(139, 92, 246, 0.14);
+  /* ── Accents rôle ────────────────────────────── */
+  --role-employe:        #5b8dee;
+  --role-employe-soft:   rgba(91, 141, 238, 0.14);
+  --role-manager:        #f0a855;
+  --role-manager-soft:   rgba(240, 168, 85, 0.14);
+  --role-admin:          #34d399;
+  --role-admin-soft:     rgba(52, 211, 153, 0.14);
+  --role-superadmin:     #a78bfa;
+  --role-superadmin-soft:rgba(167, 139, 250, 0.14);
 
   /* ── Sémantique ──────────────────────────────── */
-  --dk-success:     #22c55e;
-  --dk-success-bg:  rgba(34, 197, 94, 0.12);
-  --dk-error:       #ef4444;
-  --dk-error-bg:    rgba(239, 68, 68, 0.12);
-  --dk-warning:     #f59e0b;
-  --dk-warning-bg:  rgba(245, 158, 11, 0.12);
-  --dk-info:        #3b82f6;
-  --dk-info-bg:     rgba(59, 130, 246, 0.12);
+  --dk-success:     #34d399;
+  --dk-success-bg:  rgba(52, 211, 153, 0.12);
+  --dk-error:       #f87171;
+  --dk-error-bg:    rgba(248, 113, 113, 0.12);
+  --dk-warning:     #f0a855;
+  --dk-warning-bg:  rgba(240, 168, 85, 0.12);
+  --dk-info:        #5b8dee;
+  --dk-info-bg:     rgba(91, 141, 238, 0.12);
 
   /* ── Radius ──────────────────────────────────── */
   --card-radius:    12px;
@@ -56,8 +66,31 @@
   --input-radius:   8px;
   --btn-radius:     8px;
 
-  /* ── Ombres dark ─────────────────────────────── */
-  --dk-shadow-sm:  0 1px 4px rgba(0,0,0,0.4);
-  --dk-shadow-md:  0 4px 16px rgba(0,0,0,0.5);
-  --dk-shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  /* ── Ombres dark (double couche) ─────────────── */
+  --dk-shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.25);
+  --dk-shadow-md:  0 4px 14px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+  --dk-shadow-lg:  0 10px 32px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.35);
+
+  /* ── Glassmorphism ───────────────────────────── */
+  --dk-glass-border: rgba(255,255,255,0.06);
+  --dk-glass-bg:     rgba(255,255,255,0.03);
+
+  /* ── Scrollbar ───────────────────────────────── */
+  --dk-scrollbar-thumb: #3a3a4a;
+  --dk-scrollbar-track: transparent;
+
+  /* ── Shorthand aliases (used by new shell/nav/topbar CSS) ── */
+  --bg:            var(--dk-bg);
+  --surface:       var(--dk-surface);
+  --card:          var(--dk-card);
+  --elevated:      var(--dk-elevated);
+  --border:        var(--dk-border);
+  --text:          var(--dk-text);
+  --text-soft:     var(--dk-text-soft);
+  --text-muted:    var(--dk-text-muted);
+  --accent-blue:   var(--dk-accent);
+  --accent-amber:  var(--role-manager);
+  --accent-green:  var(--dk-success);
+  --accent-purple: var(--role-superadmin);
+  --accent-red:    var(--dk-error);
 }

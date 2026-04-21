@@ -1,9 +1,8 @@
 import './services.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form } from 'react-bootstrap';
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import * as api from '../../services/api';
-import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -152,20 +151,15 @@ const ServicesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Services</h1>
-          <p className="text-muted mb-0">Gérez les services par entreprise et configurez leurs politiques de congé.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Services</span>
+        <div className="d-flex gap-2">
+          <Button onClick={openCreateModal} disabled={!selectedCompanyId}>
+            <FaPlus className="me-2" />
+            Nouveau service
+          </Button>
         </div>
-        <Button onClick={openCreateModal} disabled={!selectedCompanyId}>
-          <FaPlus className="me-2" />
-          Nouveau service
-        </Button>
       </div>
-
-      <InfoCardInfo title="Gestion des services par entreprise">
-        <p className="mb-0">Sélectionnez une entreprise pour consulter et gérer ses services. Un employé doit être rattaché à un service existant.</p>
-      </InfoCardInfo>
 
       <Card className="mb-4">
         <Card.Body>
@@ -203,7 +197,7 @@ const ServicesPage = () => {
               </div>
             ) : (
               <>
-                <div className="d-md-none mobile-card-list">
+                <div className="d-lg-none mobile-card-list">
                   {services.map((service) => (
                     <div key={service.name} className="mobile-card-list__item">
                       <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -211,13 +205,13 @@ const ServicesPage = () => {
                           <div className="fw-semibold">{service.name}</div>
                           <small className="text-muted">Workflow: {service.policy?.approval_workflow || 'manager_admin'}</small>
                         </div>
-                        <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                        <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
                           {service.employeesCount || 0}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="d-flex flex-wrap gap-2 mb-3">
-                        <Badge bg="light" text="dark">Préavis: {service.policy?.minimum_notice_days || 0} j</Badge>
-                        <Badge bg="light" text="dark">Max absences: {service.policy?.max_employees_on_leave || 0}</Badge>
+                        <span className="badge info">Préavis: {service.policy?.minimum_notice_days || 0} j</span>
+                        <span className="badge info">Max absences: {service.policy?.max_employees_on_leave || 0}</span>
                       </div>
                       <div className="d-flex gap-2">
                         <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openEditModal(service)}>
@@ -231,7 +225,7 @@ const ServicesPage = () => {
                   ))}
                 </div>
 
-                <div className="d-none d-md-block">
+                <div className="d-none d-lg-block">
                   <Table responsive hover>
                     <thead>
                       <tr>
@@ -248,9 +242,9 @@ const ServicesPage = () => {
                         <tr key={service.name}>
                           <td><strong>{service.name}</strong></td>
                           <td>
-                            <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                            <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
                               {service.employeesCount || 0}
-                            </Badge>
+                            </span>
                           </td>
                           <td>{service.policy?.approval_workflow || 'manager_admin'}</td>
                           <td>{service.policy?.minimum_notice_days || 0} j</td>

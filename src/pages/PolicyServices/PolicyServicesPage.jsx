@@ -27,16 +27,11 @@ const PolicyServicesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">Configuration des congés</h1>
-          <p className="text-muted mb-0">
-            Définissez les règles de gestion des congés : types, annulation, organisation par service et fuseau horaire.
-          </p>
-        </div>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Configuration des congés</span>
       </div>
       <style>{`
-        .policy-services-merged.policy-tab .page-header:first-of-type,
+        .policy-services-merged.policy-tab .section-title-bar:first-of-type,
         .policy-services-merged .alert[role="note"] {
           display: none;
         }

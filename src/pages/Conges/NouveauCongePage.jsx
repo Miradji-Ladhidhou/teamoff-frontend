@@ -1,6 +1,6 @@
 import './nouveau-conge.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -400,15 +400,14 @@ const NouveauCongePage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="d-flex align-items-center mb-4">
-        <Button as={Link} to={returnPath} variant="outline-secondary" className="me-3">
-          <FaArrowLeft />
-        </Button>
-        <div>
-          <h1 className="h3 mb-1">{isEditMode ? 'Modifier la demande' : 'Nouvelle demande'}</h1>
-          <p className="text-muted">{isEditMode ? 'Modification' : 'Création'}</p>
+      <div className="page-title-bar">
+        <div className="d-flex align-items-center gap-3">
+          <Button as={Link} to={returnPath} variant="outline-secondary" size="sm">
+            <FaArrowLeft />
+          </Button>
+          <span className="section-title-bar__text">{isEditMode ? 'Modifier la demande' : 'Nouvelle demande'}</span>
         </div>
-        <Button variant="outline-secondary" className="ms-auto" onClick={() => setShowInfoModal(true)}>Info</Button>
+        <Button variant="outline-secondary" size="sm" onClick={() => setShowInfoModal(true)}>Info</Button>
       </div>
 
       <Row>
@@ -605,7 +604,7 @@ const NouveauCongePage = () => {
                 {soldes.map((solde, index) => (
                   <div key={index} className="d-flex justify-content-between align-items-center mb-2">
                     <span className="small">{solde.conge_type}</span>
-                    <Badge bg="info">{solde.solde_disponible} jours</Badge>
+                    <span className="badge info">{solde.solde_disponible} jours</span>
                   </div>
                 ))}
               </Card.Body>

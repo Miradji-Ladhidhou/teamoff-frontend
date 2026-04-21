@@ -1,23 +1,13 @@
 import './legal.css';
 import React from 'react';
 import { Container, Card, Row, Col } from 'react-bootstrap';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
 const LegalPage = () => {
   return (
     <Container>
-      <div className="mb-4">
-        <h1 className="h3 mb-1">Informations légales</h1>
-        <p className="text-muted mb-0">Références légales applicables à l'éditeur, l'hébergeur et à l'utilisation de la plateforme.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Informations légales</span>
       </div>
-
-      <InfoCardInfo title="Version de production">
-        <p className="mb-0">Les informations affichées ci-dessous doivent refléter exactement les données juridiques publiées par votre organisation.</p>
-      </InfoCardInfo>
-
-      <TipCard title="Minimum recommandé">
-        Renseignez l'éditeur, l'adresse du siège, le contact juridique, l'hébergeur, la politique de confidentialité et les modalités d'exercice des droits.
-      </TipCard>
 
       <Row>
         <Col lg={6} className="mb-4">

@@ -1,12 +1,22 @@
 import './my-profile.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
+
+const getRoleLabel = (role) => {
+  const map = { super_admin: 'Super administrateur', admin_entreprise: 'Admin entreprise', manager: 'Manager', employe: 'Employé' };
+  return map[role] || role;
+};
+
+const roleToAvatarColor = (role) => {
+  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue' };
+  return map[role] || 'blue';
+};
 
 const MyProfilePage = () => {
   const { user } = useAuth();
@@ -15,24 +25,10 @@ const MyProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState('');
   const alert = useAlert();
-  
-  const [profileData, setProfileData] = useState({
-    prenom: '',
-    nom: '',
-    email: ''
-  });
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false
-  });
+  const [profileData, setProfileData] = useState({ prenom: '', nom: '', email: '' });
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   const isPasswordConfirmationFilled = passwordData.confirmPassword.trim().length > 0;
   const doPasswordsMatch = passwordData.newPassword === passwordData.confirmPassword;
@@ -43,12 +39,8 @@ const MyProfilePage = () => {
     && doPasswordsMatch;
 
   useEffect(() => {
-    if (user && user.id) {
-      setProfileData({
-        prenom: user.prenom || '',
-        nom: user.nom || '',
-        email: user.email || ''
-      });
+    if (user?.id) {
+      setProfileData({ prenom: user.prenom || '', nom: user.nom || '', email: user.email || '' });
     }
   }, [user]);
 
@@ -73,11 +65,7 @@ const MyProfilePage = () => {
     await profileAction.run(async () => {
       setSuccess('');
       try {
-        await authService.updateProfile({
-          nom: profileData.nom,
-          prenom: profileData.prenom,
-          email: profileData.email
-        });
+        await authService.updateProfile({ nom: profileData.nom, prenom: profileData.prenom, email: profileData.email });
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
           const updatedUser = JSON.parse(savedUser);
@@ -110,10 +98,7 @@ const MyProfilePage = () => {
 
     await passwordAction.run(async () => {
       try {
-        await authService.changePassword({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        });
+        await authService.changePassword({ currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword });
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setSuccess('Mot de passe modifié avec succès.');
       } catch (err) {
@@ -123,63 +108,87 @@ const MyProfilePage = () => {
     });
   };
 
-  const loading = profileAction.isRunning || passwordAction.isRunning;
   const profileLoading = profileAction.isRunning;
   const passwordLoading = passwordAction.isRunning;
 
+  const initials = `${(user?.prenom || '').charAt(0)}${(user?.nom || '').charAt(0)}`.toUpperCase() || '?';
+  const avatarColor = roleToAvatarColor(user?.role);
+
   return (
-    <Container className="py-3 py-lg-5 profile-page">
-      <Row className="mb-4">
-        <Col md={8}>
-          <div className="d-flex align-items-center gap-3">
-            <div className="bg-primary bg-opacity-10 p-3 rounded-circle">
-              <FaUser className="text-primary" size={32} />
-            </div>
-            <div>
-              <h1 className="mb-0">Mes Informations</h1>
-              <p className="text-muted mb-0">Gérez votre profil et vos paramètres de sécurité</p>
-            </div>
-          </div>
-        </Col>
-      </Row>
+    <Container className="py-3 profile-page">
+      {/* Hero header centré */}
+      <div style={{ background: 'var(--card, var(--dk-card))', borderRadius: 16, margin: '0 0 16px', padding: '24px 16px 20px', textAlign: 'center', border: '1px solid var(--border, var(--dk-border))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+        <div
+          className={`avatar avatar-lg ${avatarColor}`}
+          style={{ width: 64, height: 64, fontSize: 22, margin: '0 auto 10px' }}
+        >
+          {initials}
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text, var(--dk-text))', letterSpacing: '-0.02em' }}>
+          {user?.prenom} {user?.nom}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted, var(--dk-text-muted))', marginTop: 4 }}>
+          {getRoleLabel(user?.role)}
+        </div>
+      </div>
 
       <Row>
-        <Col md={3} className="mb-4">
+        {/* Sidebar */}
+        <Col md={3} className="mb-4 profile-sidebar-col">
           <Card className="mb-3">
-            <Card.Body>
-              <Badge bg="primary" className="mb-3">Navigation</Badge>
-              <div className="d-flex flex-column gap-2">
-                <Button variant={activeTab === 'profile' ? 'primary' : 'light'} className="text-start" onClick={() => setActiveTab('profile')}>
-                  <FaUser className="me-2" /> Informations Générales
-                </Button>
-                <Button variant={activeTab === 'password' ? 'primary' : 'light'} className="text-start" onClick={() => setActiveTab('password')}>
-                  <FaLock className="me-2" /> Sécurité
-                </Button>
+            <Card.Body className="p-2">
+              <div className="d-flex flex-column gap-1">
+                <button
+                  className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === 'profile' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                  onClick={() => setActiveTab('profile')}
+                >
+                  <FaUser size={12} /> Informations
+                </button>
+                <button
+                  className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === 'password' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                  onClick={() => setActiveTab('password')}
+                >
+                  <FaLock size={12} /> Sécurité
+                </button>
               </div>
             </Card.Body>
           </Card>
 
-          <Card>
-            <Card.Body>
-              <Badge bg="info" className="mb-3">Infos</Badge>
-              {user ? (
-                <>
-                  <small className="text-muted d-block mb-2"><strong>Nom:</strong> {user.nom} {user.prenom}</small>
-                  <small className="text-muted d-block mb-2"><strong>Email:</strong> {user.email}</small>
-                  <small className="text-muted d-block mb-2"><strong>Rôle:</strong> {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}</small>
-                </>
-              ) : (
-                <small className="text-muted">Chargement...</small>
-              )}
-            </Card.Body>
-          </Card>
+          {/* Compte info — info-rows */}
+          {user && (
+            <Card>
+              <Card.Body className="p-0">
+                <div className="info-rows">
+                  <div className="info-row">
+                    <span className="info-label">Nom complet</span>
+                    <span className="info-value">{user.prenom} {user.nom}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Email</span>
+                    <span className="info-value" style={{ fontSize: 9, wordBreak: 'break-all' }}>{user.email}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Rôle</span>
+                    <span className="badge info">{user.role}</span>
+                  </div>
+                  {user.entreprise_nom && (
+                    <div className="info-row">
+                      <span className="info-label">Entreprise</span>
+                      <span className="info-value">{user.entreprise_nom}</span>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          )}
         </Col>
 
+        {/* Contenu principal */}
         <Col md={9}>
           {activeTab === 'profile' && (
             <Card>
-              <Card.Header className="bg-light">
-                <Card.Title className="mb-0"><FaUser className="me-2" /> Informations Générales</Card.Title>
+              <Card.Header>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaUser className="me-2" />Informations générales</span>
               </Card.Header>
               <Card.Body>
                 <Form onSubmit={handleProfileSubmit}>
@@ -195,13 +204,7 @@ const MyProfilePage = () => {
                     <Form.Label>Email</Form.Label>
                     <Form.Control type="email" name="email" value={profileData.email} onChange={handleProfileChange} placeholder="Votre email" disabled={profileLoading} />
                   </Form.Group>
-                  <AsyncButton
-                    variant="primary"
-                    type="submit"
-                    className="w-100"
-                    action={profileAction}
-                    loadingText="Sauvegarde..."
-                  >
+                  <AsyncButton variant="primary" type="submit" className="w-100" action={profileAction} loadingText="Sauvegarde...">
                     <FaSave className="me-2" /> Enregistrer
                   </AsyncButton>
                 </Form>
@@ -211,8 +214,8 @@ const MyProfilePage = () => {
 
           {activeTab === 'password' && (
             <Card>
-              <Card.Header className="bg-light">
-                <Card.Title className="mb-0"><FaLock className="me-2" /> Changer le Mot de Passe</Card.Title>
+              <Card.Header>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaLock className="me-2" />Changer le mot de passe</span>
               </Card.Header>
               <Card.Body>
                 <Form onSubmit={handlePasswordSubmit}>
@@ -237,20 +240,25 @@ const MyProfilePage = () => {
                   <Form.Group className="mb-4">
                     <Form.Label>Confirmer le mot de passe</Form.Label>
                     <div className="input-group">
-                      <Form.Control type={showPasswords.confirm ? 'text' : 'password'} name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmer" disabled={passwordLoading} isInvalid={isPasswordConfirmationFilled && !doPasswordsMatch} isValid={isPasswordConfirmationFilled && doPasswordsMatch} />
+                      <Form.Control
+                        type={showPasswords.confirm ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Confirmer"
+                        disabled={passwordLoading}
+                        isInvalid={isPasswordConfirmationFilled && !doPasswordsMatch}
+                        isValid={isPasswordConfirmationFilled && doPasswordsMatch}
+                      />
                       <Button variant="outline-secondary" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} disabled={passwordLoading}>
                         {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
                       </Button>
                     </div>
                     {isPasswordConfirmationFilled && !doPasswordsMatch && (
-                      <Form.Text className="text-danger fw-semibold">
-                        Les nouveaux mots de passe ne correspondent pas.
-                      </Form.Text>
+                      <Form.Text className="text-danger fw-semibold">Les nouveaux mots de passe ne correspondent pas.</Form.Text>
                     )}
                     {isPasswordConfirmationFilled && doPasswordsMatch && (
-                      <Form.Text className="text-success fw-semibold">
-                        Les nouveaux mots de passe correspondent.
-                      </Form.Text>
+                      <Form.Text className="text-success fw-semibold">Les nouveaux mots de passe correspondent.</Form.Text>
                     )}
                   </Form.Group>
                   <AsyncButton

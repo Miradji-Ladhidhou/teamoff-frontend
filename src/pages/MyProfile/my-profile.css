@@ -4,13 +4,21 @@
   height: 56px;
   min-width: 56px;
   border-radius: 50%;
-  background: var(--dk-accent-soft);
-  border: 2px solid var(--dk-accent-border);
+  background: var(--dk-elevated);
+  /* Gradient border using accent color */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 2px var(--dk-accent), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   color: var(--role-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: box-shadow var(--transition-base);
+}
+
+.profile-avatar-wrap:hover {
+  box-shadow: 0 0 0 2px #5b8dee, 0 0 12px rgba(91, 141, 238, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ────────────── Sidebar navigation ────────────── */
@@ -20,6 +28,7 @@
   color: var(--dk-text-soft) !important;
   text-align: left !important;
   justify-content: flex-start !important;
+  transition: background var(--transition-fast), color var(--transition-fast) !important;
 }
 
 .profile-page .btn-light:hover {

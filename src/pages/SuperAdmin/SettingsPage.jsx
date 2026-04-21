@@ -1,9 +1,8 @@
 import './settings.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Tab, Tabs, Table, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Tab, Tabs, Table, Modal } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
 import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } from 'react-icons/fa';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { settingsService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
@@ -326,45 +325,11 @@ const SystemSettings = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Paramètres Système</h1>
-          <p className="text-muted">Configuration globale de l'application</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Paramètres Système</span>
+        <div className="d-flex gap-2">
         </div>
       </div>
-
-      <InfoCardInfo title="Avant de modifier un paramètre sensible">
-        <ul className="mb-0">
-          <li>Documentez le changement et son objectif</li>
-          <li>Appliquez d'abord en environnement de test</li>
-          <li>Validez l'impact sur les utilisateurs et les notifications</li>
-          <li>Utilisez l'historique pour tracer chaque action sensible.</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Plan de rollback">
-        Conservez une sauvegarde des valeurs précédentes pour revenir rapidement en arrière si besoin.
-      </TipCard>
-
-      <Card className="mb-4 border-0 bg-light">
-        <Card.Body>
-          <div className="fw-semibold mb-2">Par quoi commencer</div>
-          <ol className="mb-0 ps-3">
-            <li>Commencez par l'onglet Général pour les réglages globaux de l'application.</li>
-            <li>Validez ensuite Sécurité et Email, puis testez l'envoi SMTP.</li>
-            <li>Terminez par les onglets Informations système et Historique.</li>
-          </ol>
-        </Card.Body>
-      </Card>
-
-      <InfoCardInfo title="Exemples concrets de réglages">
-        <ul className="mb-0">
-          <li>Sécurité standard: session 60 min, 5 tentatives, mot de passe min 8 avec caractères spéciaux.</li>
-          <li>Email Gmail: SMTP hôte smtp.gmail.com, port 587, expéditeur noreply@votredomaine.com.</li>
-          <li>Sauvegardes: fréquence quotidienne + rétention 30 jours pour un bon compromis sécurité/coût.</li>
-          <li>Maintenance: activez le mode maintenance avant une migration de base.</li>
-        </ul>
-      </InfoCardInfo>
 
       <Tabs
         activeKey={activeTab}
@@ -676,7 +641,7 @@ const SystemSettings = () => {
             </Card.Header>
             <Card.Body>
               <div className="settings-table-wrap">
-                <div className="settings-table-hint d-md-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
+                <div className="settings-table-hint d-lg-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
                 <Table bordered responsive className="settings-table">
                 <tbody>
                   <tr>
@@ -706,9 +671,9 @@ const SystemSettings = () => {
                   <tr>
                     <td><strong>État base de données</strong></td>
                     <td>
-                      <Badge bg={systemInfo.dbStatus === 'connected' ? 'success' : 'danger'}>
+                      <span className={`badge ${systemInfo.dbStatus === 'connected' ? 'approved' : 'refused'}`}>
                         {systemInfo.dbStatus || 'unknown'}
-                      </Badge>
+                      </span>
                     </td>
                   </tr>
                   <tr>
@@ -818,7 +783,7 @@ const SystemSettings = () => {
                 </small>
               </div>
               <div className="settings-table-wrap">
-                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir l'historique complet.</div>
+                <div className="settings-table-hint d-lg-none">Glissez horizontalement pour voir l'historique complet.</div>
                 <Table bordered responsive className="settings-table">
                 <thead>
                   <tr>

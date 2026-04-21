@@ -16,12 +16,19 @@
 	border: 1px solid var(--dk-border);
 	border-radius: var(--card-radius);
 	background: var(--dk-elevated);
-	transition: border-color 0.15s ease, background 0.15s ease;
+	box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+	transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.exports-options-list .form-check:hover {
+	border-color: rgba(91, 141, 238, 0.35);
+	background: var(--dk-hover);
 }
 
 .exports-options-list .form-check:has(.form-check-input:checked) {
 	border-color: var(--dk-accent-border);
 	background: var(--dk-accent-soft);
+	box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .exports-options-list .form-check-input {

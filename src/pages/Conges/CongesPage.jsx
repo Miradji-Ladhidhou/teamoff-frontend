@@ -1,13 +1,34 @@
 import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
+
+const getCongeAccent = (statut) => {
+  switch (statut) {
+    case 'en_attente_manager': return { accent: 'pending', label: 'EN ATTENTE' };
+    case 'valide_manager':     return { accent: 'info',    label: 'VALIDÉ MANAGER' };
+    case 'valide_final':       return { accent: 'success', label: 'VALIDÉ' };
+    case 'refuse_manager':
+    case 'refuse_final':       return { accent: 'danger',  label: 'REFUSÉ' };
+    default:                   return { accent: 'pending', label: statut };
+  }
+};
+
+const accentToBarColor = (accent) => {
+  const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
+  return map[accent] || 'blue';
+};
+
+const accentToBadgeClass = (accent) => {
+  const map = { pending: 'pending', info: 'info', success: 'approved', danger: 'refused' };
+  return map[accent] || 'pending';
+};
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
@@ -59,17 +80,12 @@ const CongesPage = () => {
         params.conge_type_id = filters.conge_type_id;
       }
 
-      // Filtrage selon le rôle
       if (user?.role === 'employe') {
-        // Employé : seulement ses propres congés
         params.utilisateur_id = user.id;
       } else if (user?.role === 'manager') {
-        // Manager : congés de son équipe (tous sauf lui-même)
         params.equipe_manager = user.id;
       }
-      // Admin et super_admin voient tout
 
-      // Nettoyer les paramètres vides
       Object.keys(params).forEach(key => {
         if (!params[key]) delete params[key];
       });
@@ -121,7 +137,6 @@ const CongesPage = () => {
     return 'Entreprise inconnue';
   };
 
-  // Filtrage des congés côté client pour la recherche rapide
   const filteredConges = useMemo(() => {
     return conges.filter((conge) => {
       const query = (filters.search || '').toLowerCase();
@@ -165,7 +180,6 @@ const CongesPage = () => {
     return sorted;
   }, [filteredConges, filters.sortBy, filters.sortOrder]);
 
-  // Pagination des données filtrées
   const paginatedConges = useMemo(() => {
     const startIndex = (currentPage - 1) * filters.limit;
     const endIndex = startIndex + filters.limit;
@@ -182,7 +196,7 @@ const CongesPage = () => {
     setFilters(prev => ({
       ...prev,
       [field]: value,
-      page: 1 // Reset to first page when filtering
+      page: 1
     }));
   };
 
@@ -318,7 +332,7 @@ const CongesPage = () => {
           commentaire: validateComment.trim(),
         });
         closeValidateModal();
-        loadConges(); // Recharger la liste
+        loadConges();
       } catch (err) {
         console.error('Erreur lors de la validation:', err);
         alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
@@ -338,7 +352,7 @@ const CongesPage = () => {
       try {
         await congesService.reject(selectedCongeToReject, { commentaire: rejectComment.trim() });
         closeRejectModal();
-        loadConges(); // Recharger la liste
+        loadConges();
       } catch (err) {
         console.error('Erreur lors du rejet:', err);
         alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
@@ -347,27 +361,8 @@ const CongesPage = () => {
   };
 
   const getStatusBadge = (status) => {
-    const variants = {
-      en_attente_manager: 'warning',
-      valide_manager: 'info',
-      refuse_manager: 'danger',
-      valide_final: 'success',
-      refuse_final: 'danger'
-    };
-
-    const labels = {
-      en_attente_manager: 'En attente validation',
-      valide_manager: 'Validé manager',
-      refuse_manager: 'Refusé manager',
-      valide_final: 'Validé final',
-      refuse_final: 'Refusé final'
-    };
-
-    return (
-      <Badge bg={variants[status] || 'secondary'}>
-        {labels[status] || status}
-      </Badge>
-    );
+    const { accent, label } = getCongeAccent(status);
+    return <span className={`badge ${accentToBadgeClass(accent)}`}>{label}</span>;
   };
 
   const handlePageChange = (page) => {
@@ -388,50 +383,56 @@ const CongesPage = () => {
     return parsedDate.toLocaleDateString('fr-FR');
   };
 
+  const statusChips = [
+    { value: '', label: 'Tous' },
+    { value: 'en_attente_manager', label: 'En attente' },
+    { value: 'valide_manager', label: 'Validé manager' },
+    { value: 'valide_final', label: 'Validé' },
+    { value: 'refuse_manager', label: 'Refusé manager' },
+    { value: 'refuse_final', label: 'Refusé final' },
+  ];
+
   return (
     <Container fluid="sm" className="conges-page">
-      {/* En-tête responsive */}
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">
-            {isAdmin() ? 'Congés' : 'Mes congés'}
-          </h1>
-          <p className="text-muted small mb-0">
-            {user?.role === 'super_admin'
-              ? 'Vue globale'
-              : isAdmin()
-                ? 'Vue entreprise'
-                : 'Mes demandes'}
-          </p>
-        </div>
-        <div className="page-header-actions">
-          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
-            Info
+      {/* En-tête */}
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">{isAdmin() ? 'Congés' : 'Mes congés'}</span>
+        {canCreateLeave && (
+          <Button as={Link} to="/conges/nouveau" variant="primary" size="sm" className="d-flex align-items-center">
+            <FaPlus className="me-2" />
+            Nouveau
           </Button>
-          {canCreateLeave && (
-            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center justify-content-center">
-              <FaPlus className="me-2" />
-              Nouveau
-            </Button>
-          )}
-        </div>
+        )}
       </div>
 
-      <Card className="mb-4 conges-filters-card">
-        <Card.Header>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="d-flex align-items-center conges-filters-toggle"
-          >
-            <FaFilter className="me-2" />
-            Filtres
-          </Button>
-        </Card.Header>
+      {/* Filter chips + advanced filters toggle */}
+      <div className="d-flex align-items-center gap-2 mb-3">
+        <div className="chips-row flex-grow-1 pb-0 mb-0">
+          {statusChips.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              className={`chip${filters.statut === chip.value ? ' active' : ''}`}
+              onClick={() => handleFilterChange('statut', chip.value)}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="outline-secondary"
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+          className="d-flex align-items-center flex-shrink-0"
+        >
+          <FaFilter className="me-2" />
+          Filtres avancés
+        </Button>
+      </div>
 
-        {showFilters && (
-          <Card.Body className="conges-filters-body">
+      {showFilters && (
+        <Card className="mb-3">
+          <Card.Body>
             <Row className="g-3">
               <Col md={3}>
                 <Form.Group className="mb-3">
@@ -533,8 +534,8 @@ const CongesPage = () => {
               </Col>
             </Row>
           </Card.Body>
-        )}
-      </Card>
+        </Card>
+      )}
 
       <Card>
         <Card.Body className="p-0">
@@ -563,45 +564,54 @@ const CongesPage = () => {
           ) : (
             <>
               {/* Vue carte — mobile uniquement */}
-              <div className="d-md-none mobile-card-list conges-mobile-list">
-                {paginatedConges.map((conge) => (
-                  <div key={conge.id} className="mobile-card-list__item conges-mobile-list__item">
-                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div className="min-w-0">
-                        <div className="fw-semibold small text-truncate">{getCongeTypeLabel(conge)}</div>
-                        {isAdmin() && <div className="text-muted text-xs">{getEmployeLabel(conge)}</div>}
-                        {user?.role === 'super_admin' && (
-                          <div className="text-muted text-2xs">{getEntrepriseLabel(conge)}</div>
-                        )}
+              <div className="d-lg-none">
+                {paginatedConges.map((conge) => {
+                  const { accent, label } = getCongeAccent(conge.statut);
+                  return (
+                    <Link key={conge.id} to={`/conges/${conge.id}`} style={{ textDecoration: 'none' }}>
+                      <div className="card-accented conges-mobile-item">
+                        <div className={`card-accent-bar ${accentToBarColor(accent)}`} />
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                            <span className={`badge ${accentToBadgeClass(accent)}`}>{label}</span>
+                            <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                              {canValidateConge(conge) && (
+                                <Button variant="outline-success" size="sm"
+                                  onClick={(e) => { e.preventDefault(); openValidateModal(conge.id); }}>✓</Button>
+                              )}
+                              {canRejectConge(conge) && (
+                                <Button variant="outline-danger" size="sm"
+                                  onClick={(e) => { e.preventDefault(); openRejectModal(conge.id); }}>✗</Button>
+                              )}
+                              <FaChevronRight size={10} style={{ color: 'var(--text-muted, var(--dk-text-muted))', marginLeft: 2 }} />
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text, var(--dk-text))', marginBottom: 2 }}>
+                            {getCongeTypeLabel(conge)}
+                          </div>
+                          {isAdmin() && (
+                            <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
+                              {getEmployeLabel(conge)}
+                            </div>
+                          )}
+                          {user?.role === 'super_admin' && (
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
+                              {getEntrepriseLabel(conge)}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
+                            {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                            {(conge.jours_pris ?? conge.jours_calcules) != null && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)}j`}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-shrink-0">{getStatusBadge(conge.statut)}</div>
-                    </div>
-                    <div className="text-muted mb-2 small">
-                      📅 {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
-                      {(conge.jours_pris ?? conge.jours_calcules) && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)} j`}
-                    </div>
-                    <div className="d-flex gap-2 conges-mobile-list__actions">
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="flex-grow-1 justify-content-center"
-                        onClick={() => openDetailsModal(conge)}
-                      >
-                        Détail
-                      </Button>
-                      {canValidateConge(conge) && (
-                        <Button variant="outline-success" size="sm" onClick={() => openValidateModal(conge.id)}>✓</Button>
-                      )}
-                      {canRejectConge(conge) && (
-                        <Button variant="outline-danger" size="sm" onClick={() => openRejectModal(conge.id)}>✗</Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
 
               {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-md-block table-responsive conges-table-wrapper">
+              <div className="d-none d-lg-block table-responsive conges-table-wrapper">
                 <Table hover className="mb-0">
                   <thead className="table-light">
                     <tr>
@@ -663,7 +673,7 @@ const CongesPage = () => {
                     ))}
                   </tbody>
                 </Table>
-              </div>{/* fin .d-none.d-md-block */}
+              </div>
 
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center p-3 border-top conges-pagination-wrap">
@@ -713,22 +723,22 @@ const CongesPage = () => {
           <Modal.Title>Confirmer la validation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        {selectedCongeToValidate && validationOverlapByCongeId[selectedCongeToValidate] && (
-          <Alert
-            variant={validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'warning' : 'success'}
-            className={`mb-3 overlap-alert ${validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
-          >
-            <strong>
-              {validationOverlapByCongeId[selectedCongeToValidate].has_overlap
-                ? 'Alerte chevauchement détectée.'
-                : 'Pas de chevauchement détecté.'}
-            </strong>
-            <div className="small mt-1">{validationOverlapByCongeId[selectedCongeToValidate].message}</div>
-          </Alert>
-        )}
-        {validationOverlapLoading && (
-          <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
-        )}
+          {selectedCongeToValidate && validationOverlapByCongeId[selectedCongeToValidate] && (
+            <Alert
+              variant={validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'warning' : 'success'}
+              className={`mb-3 overlap-alert ${validationOverlapByCongeId[selectedCongeToValidate].has_overlap ? 'overlap-alert-warning' : 'overlap-alert-ok'}`}
+            >
+              <strong>
+                {validationOverlapByCongeId[selectedCongeToValidate].has_overlap
+                  ? 'Alerte chevauchement détectée.'
+                  : 'Pas de chevauchement détecté.'}
+              </strong>
+              <div className="small mt-1">{validationOverlapByCongeId[selectedCongeToValidate].message}</div>
+            </Alert>
+          )}
+          {validationOverlapLoading && (
+            <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+          )}
           <p className="mb-3">Confirmez-vous la validation de cette demande de congé ?</p>
           <Form.Group>
             <Form.Label>Commentaire de validation</Form.Label>

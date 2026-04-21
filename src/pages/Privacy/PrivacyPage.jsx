@@ -1,23 +1,13 @@
 import './privacy.css';
 import React from 'react';
 import { Container, Card } from 'react-bootstrap';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 
 const PrivacyPage = () => {
   return (
     <Container>
-      <div className="mb-4">
-        <h1 className="h3 mb-1">Confidentialité</h1>
-        <p className="text-muted mb-0">Principes de protection des données et bonnes pratiques de traitement.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Confidentialité</span>
       </div>
-
-      <InfoCardInfo title="Données concernées">
-        <p className="mb-0">La plateforme manipule des données d'identité, d'organisation, de présence, de congés et d'historique d'actions.</p>
-      </InfoCardInfo>
-
-      <TipCard title="À faire avant publication">
-        Vérifiez la base légale, la durée de conservation, les sous-traitants et la procédure d'exercice des droits RGPD.
-      </TipCard>
 
       <Card>
         <Card.Header><h5 className="mb-0">Principes</h5></Card.Header>

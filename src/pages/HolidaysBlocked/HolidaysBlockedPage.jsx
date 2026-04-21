@@ -27,10 +27,9 @@ const HolidaysBlockedPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">Jours spéciaux</h1>
-          <p className="text-muted mb-0">Fériés et bloqués au même endroit.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Jours spéciaux</span>
+        <div className="d-flex gap-2">
         </div>
       </div>
 
@@ -54,7 +53,7 @@ const HolidaysBlockedPage = () => {
       </Card>
 
       <style>{`
-        .days-merged .page-header:first-of-type,
+        .days-merged .section-title-bar:first-of-type,
         .days-merged .alert[role="note"] {
           display: none;
         }

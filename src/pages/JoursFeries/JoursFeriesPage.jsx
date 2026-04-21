@@ -1,6 +1,6 @@
 import './jours-feries.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Badge, Alert, Spinner, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Table, Spinner, Form, Modal } from 'react-bootstrap';
 import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../../services/api';
@@ -357,13 +357,10 @@ const JoursFeriesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">Jours fériés</h1>
-          <p className="text-muted small mb-0">Paramétrage annuel.</p>
-        </div>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Jours fériés</span>
         {canManage && (
-          <div className="page-header-actions">
+          <div className="d-flex gap-2">
             <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
               Info
             </Button>
@@ -550,7 +547,7 @@ const JoursFeriesPage = () => {
             </div>
           ) : (
             <>
-              <div className="d-md-none mobile-card-list px-3 py-2">
+              <div className="d-lg-none mobile-card-list px-3 py-2">
                 {joursFeries.map((jourFerie) => (
                   <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -596,7 +593,7 @@ const JoursFeriesPage = () => {
                 ))}
               </div>
 
-              <div className="table-responsive d-none d-md-block">
+              <div className="table-responsive d-none d-lg-block">
                 <Table hover className="mb-0">
                 <thead className="table-light">
                   <tr>
@@ -750,15 +747,15 @@ const JoursFeriesPage = () => {
               <div><strong>Libelle:</strong> {selectedJourFerieDetails.libelle}</div>
               <div>
                 <strong>Type:</strong>{' '}
-                <Badge bg={selectedJourFerieDetails.est_travail ? 'success' : 'secondary'}>
+                <span className={`badge ${selectedJourFerieDetails.est_travail ? 'approved' : 'info'}`}>
                   {selectedJourFerieDetails.est_travail ? 'Travaille' : 'Ferie'}
-                </Badge>
+                </span>
               </div>
               <div>
                 <strong>Recurrence:</strong>{' '}
-                <Badge bg={selectedJourFerieDetails.recurrent ? 'info' : 'secondary'}>
+                <span className={`badge ${selectedJourFerieDetails.recurrent ? 'info' : 'pending'}`}>
                   {selectedJourFerieDetails.recurrent ? 'Recurrent' : 'Ponctuel'}
-                </Badge>
+                </span>
               </div>
             </div>
           )}

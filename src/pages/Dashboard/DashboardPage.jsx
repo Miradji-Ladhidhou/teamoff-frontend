@@ -1,12 +1,21 @@
 import './dashboard.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaCalendarCheck, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaEye, FaExclamationCircle } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
-import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
+
+const accentToBarColor = (accent) => {
+  const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
+  return map[accent] || 'blue';
+};
+
+const accentToBadgeClass = (accent) => {
+  const map = { pending: 'pending', info: 'info', success: 'approved', danger: 'refused' };
+  return map[accent] || 'pending';
+};
 
 const DashboardPage = () => {
   const { user, isAdmin } = useAuth();
@@ -35,13 +44,11 @@ const DashboardPage = () => {
       try {
         setLoading(true);
 
-        // Paramètres pour les congés selon le rôle
         let congesParams = {};
         if (user?.role === 'employe') {
           congesParams.utilisateur_id = user.id;
         }
 
-        // Charger les congés et notifications en parallèle
         const [congesResponse, notificationsResponse] = await Promise.all([
           congesService.getAll(congesParams),
           notificationsService.getAll({ limit: 5 })
@@ -50,7 +57,6 @@ const DashboardPage = () => {
         const conges = Array.isArray(congesResponse.data) ? congesResponse.data : [];
         const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
 
-        // Calcul des statistiques selon le rôle
         let statsData = {
           totalConges: conges.length,
           enAttente: conges.filter(c => c.statut === 'en_attente_manager').length,
@@ -58,7 +64,6 @@ const DashboardPage = () => {
           refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length
         };
 
-        // Pour les managers et admins, compter les congés à valider
         if (user?.role === 'manager' || user?.role === 'admin_entreprise') {
           const allCongesResponse = await congesService.getAll();
           const allConges = Array.isArray(allCongesResponse.data) ? allCongesResponse.data : [];
@@ -69,7 +74,6 @@ const DashboardPage = () => {
         setRecentConges(conges.slice(0, 5));
         setNotifications(notifs);
 
-        // Charger les soldes pour les employés et managers
         if (['employe', 'manager'].includes(user?.role) && user.id) {
           try {
             const [soldesResponse, congeTypesResponse] = await Promise.all([
@@ -180,19 +184,6 @@ const DashboardPage = () => {
     };
   }, [recentConges, user?.role]);
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      'en_attente_manager': { variant: 'warning', label: 'En attente manager' },
-      'valide_manager': { variant: 'info', label: 'Validé manager' },
-      'valide_final': { variant: 'success', label: 'Validé' },
-      'refuse_manager': { variant: 'danger', label: 'Refusé manager' },
-      'refuse_final': { variant: 'danger', label: 'Refusé' }
-    };
-
-    const statusInfo = statusMap[status] || { variant: 'secondary', label: status };
-    return <Badge bg={statusInfo.variant}>{statusInfo.label}</Badge>;
-  };
-
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR');
 
   const getSoldeTypeLabel = (solde) => {
@@ -208,20 +199,15 @@ const DashboardPage = () => {
     return Number.isFinite(value) ? value : 0;
   };
 
-  const getRoleLabel = (role) => {
-    const map = {
-      super_admin: 'Super administrateur',
-      admin_entreprise: 'Admin entreprise',
-      manager: 'Manager',
-      employe: 'Employé'
-    };
-    return map[role] || 'Rôle inconnu';
-  };
-
-  const getEntrepriseLabel = () => {
-    if (user?.role === 'super_admin') return 'Multi-entreprises';
-    if (user?.entreprise_nom) return user.entreprise_nom;
-    return 'Entreprise non renseignée';
+  const getCongeAccent = (statut) => {
+    switch (statut) {
+      case 'en_attente_manager': return { accent: 'pending', label: 'EN ATTENTE' };
+      case 'valide_manager':     return { accent: 'info',    label: 'VALIDÉ MANAGER' };
+      case 'valide_final':       return { accent: 'success', label: 'VALIDÉ' };
+      case 'refuse_manager':
+      case 'refuse_final':       return { accent: 'danger',  label: 'REFUSÉ' };
+      default:                   return { accent: 'pending', label: statut };
+    }
   };
 
   if (loading) {
@@ -237,77 +223,59 @@ const DashboardPage = () => {
 
   return (
     <Container fluid="sm">
-      {/* En-tête responsive */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <h1 className="h4 mb-1 ui-page-title">Tableau de bord</h1>
-          <p className="mb-0"><span className="ui-user-name fw-semibold">{user?.prenom || 'Utilisateur'} {user?.nom || ''}</span></p>
-          <p className="ui-text-soft small mb-0">{getRoleLabel(user?.role)} — {getEntrepriseLabel()}</p>
+      {/* Hero greeting */}
+      <div className="dashboard-hero">
+        <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} 👋</div>
+        <div className="dashboard-hero__date">
+          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
-        {['employe', 'manager'].includes(user?.role) && (
-          <div className="page-header-actions">
-            <Button as={Link} to="/conges/nouveau" variant="primary" className="d-flex align-items-center">
-              <FaPlus className="me-2" /> Nouveau congé
-            </Button>
+      </div>
+
+      {/* Notification banner */}
+      {notifications.filter(n => !n.lu).length > 0 && (
+        <div className="alert-banner alert-banner--info mb-3" role="status">
+          <span className="alert-text">
+            Vous avez {notifications.filter(n => !n.lu).length} notification(s) non lue(s)
+          </span>
+          <Button as={Link} to="/notifications" variant="outline-info" size="sm">Voir</Button>
+        </div>
+      )}
+
+      {/* Stat cards — 2-col mobile, 4-col desktop */}
+      <div className="stats-grid">
+        {[
+          { label: 'Total congés', value: stats.totalConges, color: 'blue' },
+          { label: 'En attente',   value: stats.enAttente,   color: 'amber' },
+          { label: 'Validés',      value: stats.valides,     color: 'green' },
+          { label: 'Refusés',      value: stats.refuses,     color: 'red' },
+        ].map((stat, idx) => (
+          <div key={idx} className={`stat-card ${stat.color}`}>
+            <div className="stat-label">{stat.label}</div>
+            <div className={`stat-value ${stat.color}`}>{stat.value}</div>
+          </div>
+        ))}
+        {stats.aValider !== undefined && (
+          <div className="stat-card red pulse-urgent">
+            <div className="stat-label">À valider</div>
+            <div className="stat-value red">{stats.aValider}</div>
+            {stats.aValider > 0 && (
+              <Button as={Link} to="/conges" variant="outline-danger" size="sm" className="mt-2">
+                Traiter →
+              </Button>
+            )}
           </div>
         )}
       </div>
 
-      
-
-      <InfoCardInfo title="Repères rapides">
-        <p className="mb-0">Indicateurs en haut, historique en bas.</p>
-      </InfoCardInfo>
-
-      {notifications.filter(n => !n.lu).length > 0 && (
-        <div className="alert alert-info mb-4" role="status">
-          <div className="d-flex justify-content-between align-items-center">
-            <span>Vous avez {notifications.filter(n => !n.lu).length} notification(s) non lue(s)</span>
-            <Button as={Link} to="/notifications" variant="outline-info" size="sm">Voir</Button>
-          </div>
-        </div>
-      )}
-
-      <Row className="mb-4">
-        {[
-          { icon: <FaCalendarCheck size={24} className="text-white mb-2" />, label: 'Total congés', value: stats.totalConges, variant: 'total' },
-          { icon: <FaClock size={24} className="text-white mb-2" />, label: 'En attente', value: stats.enAttente, variant: 'pending' },
-          { icon: <FaCheckCircle size={24} className="text-white mb-2" />, label: 'Validés', value: stats.valides, variant: 'validated' },
-          { icon: <FaTimesCircle size={24} className="text-white mb-2" />, label: 'Refusés', value: stats.refuses, variant: 'refused' },
-        ].map((stat, idx) => (
-          <Col xs={12} sm={6} lg={3} className="mb-3" key={idx}>
-            <Card className={`dashboard-stat-card dashboard-stat-card--${stat.variant} h-100`}>
-              <Card.Body className="text-center py-3">
-                {stat.icon}
-                <h4 className="h5 mb-1 text-white">{stat.value}</h4>
-                <p className="text-white mb-0 small">{stat.label}</p>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-        {stats.aValider !== undefined && (
-          <Col xs={12} sm={6} lg={3} className="mb-3">
-            <Card className="dashboard-stat-card dashboard-stat-card--urgent h-100">
-              <Card.Body className="text-center py-3">
-                <FaExclamationCircle size={24} className="text-white mb-2" />
-                <h4 className="h5 mb-1 text-white">{stats.aValider}</h4>
-                <p className="text-white mb-0 small">À valider</p>
-                {stats.aValider > 0 && (
-                  <Button as={Link} to="/conges" variant="outline-light" size="sm" className="mt-2 px-3">
-                    Traiter →
-                  </Button>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        )}
-      </Row>
-
       <Row>
+        {/* Soldes section */}
         {soldes && !isAdmin() && (
           <Col lg={4} className="mb-4">
+            <div className="section-header">
+              <span className="section-title">Mes soldes de congés</span>
+              <span className="section-action">{currentYear}</span>
+            </div>
             <Card>
-              <Card.Header><h5 className="mb-0">Mes soldes de congés</h5></Card.Header>
               <Card.Body>
                 {soldes.length === 0 ? (
                   <p className="ui-text-soft mb-0">Aucun solde disponible</p>
@@ -336,62 +304,74 @@ const DashboardPage = () => {
           </Col>
         )}
 
+        {/* Recent congés */}
         <Col lg={soldes && !isAdmin() ? 8 : 12}>
-          <Card>
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Congés récents</h5>
-              <Button as={Link} to="/conges" variant="outline-primary" size="sm">Voir tout</Button>
-            </Card.Header>
-            <Card.Body>
-              {recentConges.length === 0 ? (
-                <div className="text-center py-4">
-                  <FaCalendarCheck size={48} className="ui-icon-soft mb-3" />
-                  <p className="ui-text-soft">Aucun congé trouvé</p>
-                  {user?.role === 'employe' && (
-                    <Button as={Link} to="/conges/nouveau" variant="primary">Créer votre premier congé</Button>
-                  )}
-                </div>
-              ) : (
-                <div className="list-group list-group-flush">
-                  {recentConges.map((conge) => (
-                    <div key={conge.id} className="list-group-item px-0 py-2">
-                      <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                        <div className="flex-grow-1 min-w-0">
-                          <div className="fw-semibold text-truncate small">
-                            {isAdmin() ? `${conge.utilisateur?.prenom} ${conge.utilisateur?.nom}` : (conge.conge_type?.libelle || 'Type inconnu')}
-                          </div>
-                          <div className="ui-text-soft text-xs mt-1">
-                            {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
-                          </div>
-                          {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
-                            <div className="overlap-dash-annotation overlap">
-                              Chevauchement
-                            </div>
-                          )}
-                          {recentOverlapByCongeId[conge.id]?.has_overlap === false && (
-                            <div className="overlap-dash-annotation no-overlap">
-                              Aucun chevauchement
-                            </div>
-                          )}
-                          
-                          <div className="text-xxs">
-                            {conge.jours_calcules && <span className="badge bg-info me-1">{conge.jours_calcules} j</span>}
-                            {!isAdmin() && conge.conge_type && <span className="badge bg-light text-dark">{conge.conge_type.libelle}</span>}
-                          </div>
+          <div className="section-header mb-2">
+            <span className="section-title">Congés récents</span>
+            <Button as={Link} to="/conges" variant="link" size="sm" className="section-action p-0">
+              Voir tout
+            </Button>
+          </div>
+          {recentConges.length === 0 ? (
+            <Card>
+              <Card.Body className="text-center py-5">
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>📅</div>
+                <p style={{ color: 'var(--text-soft, var(--dk-text-soft))', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                  Aucun congé trouvé
+                </p>
+                {user?.role === 'employe' && (
+                  <Button as={Link} to="/conges/nouveau" variant="primary" size="sm">
+                    <FaPlus className="me-1" /> Créer votre premier congé
+                  </Button>
+                )}
+              </Card.Body>
+            </Card>
+          ) : (
+            <div className="d-flex flex-column gap-2">
+              {recentConges.map((conge) => {
+                const { accent, label: accentLabel } = getCongeAccent(conge.statut);
+                return (
+                  <Link key={conge.id} to={`/conges/${conge.id}`} style={{ textDecoration: 'none' }}>
+                    <div className="card-accented">
+                      <div className={`card-accent-bar ${accentToBarColor(accent)}`} />
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                          <span className={`badge ${accentToBadgeClass(accent)}`}>{accentLabel}</span>
+                          <span style={{ color: 'var(--text-muted, var(--dk-text-muted))', fontSize: '0.85rem' }}>›</span>
                         </div>
-                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
-                          {getStatusBadge(conge.statut)}
-                          <Button as={Link} to={`/conges/${conge.id}`} variant="outline-secondary" size="sm"><FaEye /></Button>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
+                          {isAdmin()
+                            ? `${conge.utilisateur?.prenom || ''} ${conge.utilisateur?.nom || ''}`
+                            : (conge.conge_type?.libelle || 'Type inconnu')}
                         </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
+                          {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
+                          {conge.jours_calcules && <span className="ms-1">· {conge.jours_calcules}j</span>}
+                        </div>
+                        {recentOverlapByCongeId[conge.id]?.has_overlap === true && (
+                          <div className="overlap-dash-annotation overlap mt-1">Chevauchement</div>
+                        )}
+                        {recentOverlapByCongeId[conge.id]?.has_overlap === false && (
+                          <div className="overlap-dash-annotation no-overlap mt-1">Aucun chevauchement</div>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </Col>
       </Row>
+
+      {/* Mobile-only "Nouveau congé" button */}
+      {['employe', 'manager'].includes(user?.role) && (
+        <div className="d-lg-none mt-4">
+          <Button as={Link} to="/conges/nouveau" variant="primary" className="w-100 d-flex align-items-center justify-content-center">
+            <FaPlus className="me-2" /> Nouveau congé
+          </Button>
+        </div>
+      )}
     </Container>
   );
 };

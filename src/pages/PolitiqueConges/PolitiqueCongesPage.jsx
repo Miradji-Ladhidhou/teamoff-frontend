@@ -1,6 +1,6 @@
 import './politique-conges.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Card, Row, Col, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../../services/api';
 import leavePoliciesAPI from '../../services/leavePoliciesAPI';
@@ -460,11 +460,8 @@ const PolitiqueCongesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="mb-4 d-flex justify-content-between align-items-start align-items-sm-center flex-column flex-sm-row gap-2">
-        <div>
-          <h1 className="h3 mb-1">Politique de congé</h1>
-          <p className="text-muted mb-0">Paramétrage entreprise.</p>
-        </div>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Politique de congé</span>
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
         </div>
@@ -491,7 +488,7 @@ const PolitiqueCongesPage = () => {
             <div className="p-4 text-center text-muted">Aucun type de congé configuré.</div>
           ) : (
             <>
-              <div className="d-md-none mobile-card-list px-3 py-2">
+              <div className="d-lg-none mobile-card-list px-3 py-2">
                 {congeTypes.map((type) => (
                   <div key={`mobile-type-${type.id}`} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -499,12 +496,12 @@ const PolitiqueCongesPage = () => {
                         <div className="fw-semibold">{type.libelle}</div>
                         <div className="small text-muted">Quota annuel: {type.quota_annuel}</div>
                       </div>
-                      <Badge bg="secondary">{type.code}</Badge>
+                      <span className="badge info">{type.code}</span>
                     </div>
                     <div className="mb-3">
-                      <Badge bg={type.demi_journee_autorisee ? 'success' : 'secondary'}>
+                      <span className={`badge ${type.demi_journee_autorisee ? 'approved' : 'info'}`}>
                         {type.demi_journee_autorisee ? 'Demi-journée autorisée' : 'Demi-journée non autorisée'}
-                      </Badge>
+                      </span>
                     </div>
                     <div className="d-flex gap-2">
                       <Button type="button" size="sm" variant="outline-primary" className="flex-fill" onClick={() => openEditTypeModal(type)}>
@@ -518,7 +515,7 @@ const PolitiqueCongesPage = () => {
                 ))}
               </div>
 
-              <div className="settings-table-wrap d-none d-md-block">
+              <div className="settings-table-wrap d-none d-lg-block">
                 <Table responsive hover className="mb-0 settings-table">
                   <thead>
                     <tr>
@@ -532,7 +529,7 @@ const PolitiqueCongesPage = () => {
                   <tbody>
                     {congeTypes.map((type) => (
                       <tr key={type.id}>
-                        <td><Badge bg="secondary">{type.code}</Badge></td>
+                        <td><span className="badge info">{type.code}</span></td>
                         <td>{type.libelle}</td>
                         <td>{type.quota_annuel}</td>
                         <td>{type.demi_journee_autorisee ? 'Oui' : 'Non'}</td>
@@ -678,9 +675,9 @@ const PolitiqueCongesPage = () => {
                   <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <strong>{serviceName}</strong>
-                      <Badge bg="secondary">Politique isolée</Badge>
-                      <Badge bg="light" text="dark">{servicePolicy.approval_workflow === 'admin_only' ? 'Admin uniquement' : servicePolicy.approval_workflow === 'manager_only' ? 'Manager uniquement' : 'Manager puis Admin'}</Badge>
-                      <Badge bg="light" text="dark">Préavis: {servicePolicy.minimum_notice_days ?? 0}j</Badge>
+                      <span className="badge info">Politique isolée</span>
+                      <span className="badge info">{servicePolicy.approval_workflow === 'admin_only' ? 'Admin uniquement' : servicePolicy.approval_workflow === 'manager_only' ? 'Manager uniquement' : 'Manager puis Admin'}</span>
+                      <span className="badge info">Préavis: {servicePolicy.minimum_notice_days ?? 0}j</span>
                     </div>
                     <div className="d-flex align-items-center gap-2 w-100 w-sm-auto">
                       <Button type="button" size="sm" variant="outline-secondary" onClick={() => toggleServiceExpanded(serviceName)}>
@@ -766,7 +763,7 @@ const PolitiqueCongesPage = () => {
                 <Card className="mb-3">
                   <Card.Body className="p-0">
                     <div className="settings-table-wrap">
-                      <div className="settings-table-hint d-md-none">Glissez horizontalement pour éditer les colonnes.</div>
+                      <div className="settings-table-hint d-lg-none">Glissez horizontalement pour éditer les colonnes.</div>
                       <Table responsive hover className="mb-0 align-middle settings-table">
                       <thead>
                         <tr>

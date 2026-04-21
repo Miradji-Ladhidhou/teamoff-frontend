@@ -1,0 +1,16 @@
+.maintenance-page {
+  min-height: 100vh;
+  background-color: var(--dk-bg);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(91,141,238,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(167,139,250,0.05) 0%, transparent 55%);
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 2rem;
+}
+.maintenance-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius-lg);
+  padding: 2.5rem 2rem; max-width: 480px; width: 100%;
+  box-shadow: var(--dk-shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+}

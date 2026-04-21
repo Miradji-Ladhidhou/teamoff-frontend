@@ -66,8 +66,8 @@
 /* ---------------- GRID ---------------- */
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(140px, 1fr)); /* 🔥 FIX PRINCIPAL */
-  min-width: 980px; /* 🔥 empêche l’écrasement */
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  min-width: 980px;
   gap: 1px;
   background-color: var(--dk-border);
   border: 1px solid var(--dk-border);
@@ -91,8 +91,8 @@
   min-height: 130px;
   padding: 8px;
   position: relative;
-  transition: all 0.15s ease;
-  overflow: hidden; /* 🔥 empêche débordement */
+  transition: background-color var(--transition-fast);
+  overflow: hidden;
 }
 
 /* hover */
@@ -115,7 +115,7 @@
 }
 
 .calendar-day-weekend {
-  background-color: #181818;
+  background-color: var(--dk-bg);
 }
 
 .calendar-day-ferie {
@@ -191,8 +191,6 @@
   line-height: 1.2;
   color: white;
   overflow: hidden;
-
-  /* 🔥 FIX TEXT OVERFLOW */
   white-space: normal;
   word-break: break-word;
   min-width: 0;
@@ -202,6 +200,7 @@
 .calendar-event-more {
   padding: 3px 6px;
   background-color: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
   border-radius: 6px;
   font-size: 10px;
   color: var(--dk-text-soft);
@@ -312,7 +311,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: #f59e0b;
+    background: var(--dk-warning);
     font-size: 0;
     color: transparent;
     overflow: hidden;
@@ -329,7 +328,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: #ea580c;
+    background: var(--dk-error);
     font-size: 0;
     color: transparent;
     overflow: hidden;

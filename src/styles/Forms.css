@@ -5,9 +5,11 @@
   border: 1px solid var(--dk-border) !important;
   color: var(--dk-text) !important;
   border-radius: var(--input-radius) !important;
-  padding: 0.65rem 1rem !important;
+  padding: 0.6rem 0.9rem !important;
   min-height: 40px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .form-control::placeholder,
@@ -34,9 +36,10 @@
 
 .form-label {
   color: var(--dk-text-soft);
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.35rem;
 }
 
 .form-check-input {

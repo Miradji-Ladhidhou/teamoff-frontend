@@ -1,6 +1,6 @@
 import './services.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Button, Badge, Modal, Form, Alert, Row, Col } from 'react-bootstrap';
+import { Container, Card, Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService } from '../../services/api';
@@ -144,11 +144,8 @@ const ServicesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Services</h1>
-          <p className="text-muted mb-0">Gestion des services.</p>
-        </div>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Services</span>
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
           <Button onClick={openCreateModal}>
@@ -160,7 +157,7 @@ const ServicesPage = () => {
 
       <Card>
         <Card.Body>
-          <div className="d-md-none mobile-card-list">
+          <div className="d-lg-none mobile-card-list">
             {services.map((service) => (
               <div key={service.name} className="mobile-card-list__item">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -168,13 +165,13 @@ const ServicesPage = () => {
                     <div className="fw-semibold">{service.name}</div>
                     <small className="text-muted">Workflow: {service.policy?.approval_workflow || 'manager_admin'}</small>
                   </div>
-                  <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                  <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
                     {service.employeesCount || 0}
-                  </Badge>
+                  </span>
                 </div>
                 <div className="d-flex flex-wrap gap-2 mb-3">
-                  <Badge bg="light" text="dark">Préavis: {service.policy?.minimum_notice_days || 0} j</Badge>
-                  <Badge bg="light" text="dark">Max absences: {service.policy?.max_employees_on_leave || 0}</Badge>
+                  <span className="badge info">Préavis : {service.policy?.minimum_notice_days || 0} j</span>
+                  <span className="badge info">Max absences : {service.policy?.max_employees_on_leave || 0}</span>
                 </div>
                 <div className="d-flex gap-2">
                   <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openEditModal(service)}>
@@ -188,7 +185,7 @@ const ServicesPage = () => {
             ))}
           </div>
 
-          <div className="d-none d-md-block">
+          <div className="d-none d-lg-block">
             <Table responsive hover>
               <thead>
                 <tr>
@@ -207,9 +204,9 @@ const ServicesPage = () => {
                       <strong>{service.name}</strong>
                     </td>
                     <td>
-                      <Badge bg={service.employeesCount > 0 ? 'info' : 'secondary'}>
+                      <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
                         {service.employeesCount || 0}
-                      </Badge>
+                      </span>
                     </td>
                     <td>{service.policy?.approval_workflow || 'manager_admin'}</td>
                     <td>{service.policy?.minimum_notice_days || 0} j</td>

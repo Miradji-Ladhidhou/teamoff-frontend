@@ -1,11 +1,10 @@
 import './conge-details.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
-import { InfoCardInfo } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import useLeavePolicy from '../../hooks/useLeavePolicy';
@@ -15,6 +14,11 @@ import AsyncButton from '../../components/AsyncButton';
 const DEFAULT_SELF_CANCELLATION_POLICY = {
   allow_employee_cancel_own_pending: true,
   allow_manager_cancel_own_pending: true,
+};
+
+const accentToBadgeClass = (accent) => {
+  const map = { pending: 'pending', info: 'info', success: 'approved', danger: 'refused' };
+  return map[accent] || 'pending';
 };
 
 const CongeDetailsPage = () => {
@@ -86,39 +90,19 @@ const CongeDetailsPage = () => {
 
     const runPolicyValidation = async () => {
       if (!conge || conge.statut !== 'valide_final') {
-        setPolicyValidation({
-          loading: false,
-          canModify: true,
-          canCancel: true,
-          reason: null,
-          code: null,
-        });
+        setPolicyValidation({ loading: false, canModify: true, canCancel: true, reason: null, code: null });
         return;
       }
 
       if (user?.role !== 'admin_entreprise' && user?.role !== 'super_admin') {
-        setPolicyValidation({
-          loading: false,
-          canModify: false,
-          canCancel: false,
-          reason: null,
-          code: null,
-        });
+        setPolicyValidation({ loading: false, canModify: false, canCancel: false, reason: null, code: null });
         return;
       }
 
       setPolicyValidation((prev) => ({ ...prev, loading: true }));
       const [modifyResult, cancelResult] = await Promise.all([
-        validateModification({
-          congeId: conge.id,
-          congeStatus: conge.statut,
-          congeStartDate: conge.date_debut,
-        }),
-        validateCancellation({
-          congeId: conge.id,
-          congeStatus: conge.statut,
-          congeStartDate: conge.date_debut,
-        }),
+        validateModification({ congeId: conge.id, congeStatus: conge.statut, congeStartDate: conge.date_debut }),
+        validateCancellation({ congeId: conge.id, congeStatus: conge.statut, congeStartDate: conge.date_debut }),
       ]);
 
       if (cancelled) return;
@@ -134,9 +118,7 @@ const CongeDetailsPage = () => {
 
     runPolicyValidation();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [conge, user?.role, validateCancellation, validateModification]);
 
   useEffect(() => {
@@ -161,17 +143,13 @@ const CongeDetailsPage = () => {
               : true,
         });
       } catch (_err) {
-        if (!cancelled) {
-          setSelfCancellationPolicy(DEFAULT_SELF_CANCELLATION_POLICY);
-        }
+        if (!cancelled) setSelfCancellationPolicy(DEFAULT_SELF_CANCELLATION_POLICY);
       }
     };
 
     loadSelfCancellationPolicy();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [conge?.entreprise_id]);
 
   const loadCongeDetails = async () => {
@@ -192,12 +170,7 @@ const CongeDetailsPage = () => {
       try {
         const isFinalValidated = user?.role === 'admin_entreprise' && conge?.statut === 'valide_final';
         await congesService.delete(id, isFinalValidated ? { commentaire: cancelComment.trim() } : {});
-        navigate('/conges', {
-          state: {
-            message: 'Demande de congé supprimée avec succès',
-            type: 'success'
-          }
-        });
+        navigate('/conges', { state: { message: 'Demande de congé supprimée avec succès', type: 'success' } });
       } catch (err) {
         console.error('Erreur lors de la suppression:', err);
         alert.error(err.response?.data?.message || 'Erreur lors de la suppression de la demande');
@@ -216,7 +189,7 @@ const CongeDetailsPage = () => {
         } else if (newStatus === 'refuse') {
           await congesService.reject(id, { commentaire: comment });
         }
-        await loadCongeDetails(); // Recharger les données
+        await loadCongeDetails();
         setShowCommentModal(false);
         setCommentaire('');
         setValidationComment('');
@@ -231,23 +204,44 @@ const CongeDetailsPage = () => {
 
   const actionLoading = action.isRunning;
 
-  const getStatusBadge = (statut) => {
-    const statusConfig = {
-      en_attente_manager: { variant: 'warning', text: 'En attente manager', icon: FaClock },
-      valide_manager: { variant: 'info', text: 'Validé manager', icon: FaCheck },
-      valide_final: { variant: 'success', text: 'Validé final', icon: FaCheck },
-      refuse_manager: { variant: 'danger', text: 'Refusé manager', icon: FaTimes },
-      refuse_final: { variant: 'danger', text: 'Refusé final', icon: FaTimes }
+  const getStatusAccent = (statut) => {
+    const map = {
+      en_attente_manager: 'pending',
+      valide_manager: 'info',
+      valide_final: 'success',
+      refuse_manager: 'danger',
+      refuse_final: 'danger',
     };
+    return map[statut] || 'pending';
+  };
 
-    const config = statusConfig[statut] || statusConfig.en_attente_manager;
-    const Icon = config.icon;
+  const getStatusText = (statut) => {
+    const map = {
+      en_attente_manager: 'En attente manager',
+      valide_manager: 'Validé manager',
+      valide_final: 'Validé final',
+      refuse_manager: 'Refusé manager',
+      refuse_final: 'Refusé final',
+    };
+    return map[statut] || statut;
+  };
 
+  const getStatusBadge = (statut) => {
+    const accent = getStatusAccent(statut);
+    const text = getStatusText(statut);
+    const IconMap = {
+      en_attente_manager: FaClock,
+      valide_manager: FaCheck,
+      valide_final: FaCheck,
+      refuse_manager: FaTimes,
+      refuse_final: FaTimes,
+    };
+    const Icon = IconMap[statut] || FaClock;
     return (
-      <Badge bg={config.variant} className="d-flex align-items-center gap-1">
-        <Icon size={10} />
-        {config.text}
-      </Badge>
+      <span className={`badge ${accentToBadgeClass(accent)}`} style={{ padding: '5px 14px', fontSize: '10px' }}>
+        <Icon size={10} className="me-1" />
+        {text}
+      </span>
     );
   };
 
@@ -271,28 +265,19 @@ const CongeDetailsPage = () => {
 
   const canEdit = () => {
     if (!conge) return false;
-
     if ((user?.role === 'admin_entreprise' || user?.role === 'super_admin') && conge.statut === 'valide_final') {
       return policyValidation.canModify;
     }
-
     return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
   const canDelete = () => {
     if (!conge) return false;
-
     const isOwnLeave = conge.utilisateur_id === user?.id;
 
     if (isOwnLeave && conge.statut === 'en_attente_manager') {
-      if (user?.role === 'employe') {
-        return selfCancellationPolicy.allow_employee_cancel_own_pending;
-      }
-
-      if (user?.role === 'manager') {
-        return selfCancellationPolicy.allow_manager_cancel_own_pending;
-      }
-
+      if (user?.role === 'employe') return selfCancellationPolicy.allow_employee_cancel_own_pending;
+      if (user?.role === 'manager') return selfCancellationPolicy.allow_manager_cancel_own_pending;
       return true;
     }
 
@@ -316,12 +301,7 @@ const CongeDetailsPage = () => {
     if (!dateString) return '-';
     const parsedDate = new Date(dateString);
     if (Number.isNaN(parsedDate.getTime())) return '-';
-    return parsedDate.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return parsedDate.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const formatDateShort = (dateString) => {
@@ -358,13 +338,9 @@ const CongeDetailsPage = () => {
   if (!conge) {
     return (
       <Container fluid="sm">
-        <div className="alert alert-warning text-center" role="status">
-          Congé non trouvé
-        </div>
+        <div className="alert alert-warning text-center" role="status">Congé non trouvé</div>
         <div className="text-center mt-3">
-          <Button as={Link} to="/conges" variant="outline-primary">
-            Retour à la liste
-          </Button>
+          <Button as={Link} to="/conges" variant="outline-primary">Retour à la liste</Button>
         </div>
       </Container>
     );
@@ -372,234 +348,209 @@ const CongeDetailsPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="d-flex align-items-center justify-content-between mb-4">
-        <div className="d-flex align-items-center">
-          <Button as={Link} to="/conges" variant="outline-secondary" className="me-3">
-            <FaArrowLeft />
-          </Button>
-          <div>
-            <h1 className="h3 mb-1">Détails de la demande</h1>
-            {isSuperAdmin && <p className="text-muted mb-0">Demande #{conge.id}</p>}
-          </div>
-        </div>
-        <div className="d-flex gap-2">
-          {conge.statut === 'valide_final' && !policyValidation.loading && (
-            <LeaveActionRestriction
-              isValidated
-              canModify={policyValidation.canModify}
-              canCancel={policyValidation.canCancel}
-              reason={policyValidation.reason}
-              code={policyValidation.code}
-            />
-          )}
-          {canEdit() && (
-            <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
-              <FaEdit className="me-1" />
-              Modifier
-            </Button>
-          )}
-          {canDelete() && (
-            <Button
-              variant="outline-danger"
-              size="sm"
-              onClick={() => {
-                setCancelComment('');
-                setShowDeleteModal(true);
-              }}
-            >
-              {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? (
-                <><FaTimes className="me-1" />Annuler le congé</>
-              ) : (
-                <><FaTrash className="me-1" />Supprimer</>
-              )}
-            </Button>
-          )}
-        </div>
+      {/* Bouton retour */}
+      <div style={{ padding: '10px 4px 6px' }}>
+        <Link to="/conges" style={{ fontSize: '12px', color: 'var(--accent-blue, var(--dk-accent))', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <FaArrowLeft size={10} /> Retour
+        </Link>
       </div>
 
-      <InfoCardInfo title="Comprendre le cycle de validation">
-        <p className="mb-1">
-          Suivez ici l'état de votre demande et son historique. Chaque changement de statut
-          peut être accompagné d'un commentaire de validation.
-        </p>
-        <p className="mb-0">
-          Tant que la demande est en attente, vous pouvez encore la modifier ou la supprimer.
-        </p>
-      </InfoCardInfo>
+      {/* Header centré : badge statut + titre type */}
+      <div className="conge-detail-hero">
+        {getStatusBadge(conge.statut)}
+        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text, var(--dk-text))', marginTop: 8, letterSpacing: '-0.02em' }}>
+          {getCongeTypeLabel()}
+        </div>
+        {isSuperAdmin && (
+          <div style={{ fontSize: '11px', color: 'var(--text-muted, var(--dk-text-muted))', marginTop: 4 }}>
+            Demande #{conge.id}
+          </div>
+        )}
+      </div>
+
+      {/* Actions header (modifier / annuler) */}
+      <div className="d-flex justify-content-end gap-2 mb-3">
+        {conge.statut === 'valide_final' && !policyValidation.loading && (
+          <LeaveActionRestriction
+            isValidated
+            canModify={policyValidation.canModify}
+            canCancel={policyValidation.canCancel}
+            reason={policyValidation.reason}
+            code={policyValidation.code}
+          />
+        )}
+        {canEdit() && (
+          <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
+            <FaEdit className="me-1" /> Modifier
+          </Button>
+        )}
+      </div>
 
       <Row>
         <Col lg={8}>
-          {/* Informations principales */}
-          <Card className="mb-4">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Informations de la demande</h5>
-              {getStatusBadge(conge.statut)}
-            </Card.Header>
+          {/* Card dates */}
+          <Card className="mb-3">
             <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Type de congé</strong>
-                    <div>{getCongeTypeLabel()}</div>
-                    {conge?.conge_type_id && (
-                      <Button
-                        as={Link}
-                        to={`/conges?conge_type_id=${encodeURIComponent(conge.conge_type_id)}`}
-                        variant="link"
-                        className="p-0 mt-1"
-                      >
-                        <FaList className="me-1" />
-                        Voir les congés du même type
-                      </Button>
-                    )}
+              <div className="d-flex align-items-center gap-3">
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(91,141,238,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FaCalendarAlt size={14} style={{ color: 'var(--accent-blue, var(--dk-accent))' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
+                    {formatDateShort(conge.date_debut)} → {formatDateShort(conge.date_fin)}
+                    {conge.debut_demi_journee && <span style={{ fontWeight: 400, marginLeft: 4 }}>({conge.debut_demi_journee === 'matin' ? 'Matin' : 'Après-midi'})</span>}
                   </div>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Demandeur</strong>
-                    <div className="d-flex align-items-center">
-                      <FaUser className="me-2 text-muted" />
-                      {getEmployeLabel()}
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Entreprise</strong>
-                    {getEntrepriseLabel()}
-                  </div>
-                  {Array.isArray(conge?.calcul_details?.dates_non_prises) && conge.calcul_details.dates_non_prises.length > 0 && (
-                    <div className="mb-3">
-                      <strong className="text-muted d-block">Dates non prises dans le calcul</strong>
-                      <div className="small bg-light rounded p-2">
-                        {conge.calcul_details.dates_non_prises.map((item, index) => (
-                          <div key={`${item.date}-${index}`} className="d-flex justify-content-between gap-2 border-bottom py-1">
-                            <span>
-                              <strong>{formatDateShort(item.date)}</strong> - {item.cause}
-                            </span>
-                            <span className="text-muted">{formatDays(item.quantite)} j</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </Col>
-                <Col md={6}>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Date de début</strong>
-                    <div className="d-flex align-items-center">
-                      <FaCalendarAlt className="me-2 text-muted" />
-                      {formatDate(conge.date_debut)}
-                    </div>
-                    {conge.debut_demi_journee && (
-                      <small className="text-muted ms-3">
-                        ({conge.debut_demi_journee === 'matin' ? 'Matin' : 'Après-midi'})
-                      </small>
-                    )}
-                  </div>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Date de fin</strong>
-                    <div className="d-flex align-items-center">
-                      <FaCalendarAlt className="me-2 text-muted" />
-                      {formatDate(conge.date_fin)}
-                    </div>
-                    {conge.fin_demi_journee && (
-                      <small className="text-muted ms-3">
-                        ({conge.fin_demi_journee === 'matin' ? 'Matin' : 'Après-midi'})
-                      </small>
-                    )}
-                  </div>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Nombre de jours</strong>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
                     {conge.jours_pris ?? conge.nombre_jours ?? conge.jours_calcules ?? '-'} jour(s)
                   </div>
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">
-                      Solde restant {getCongeTypeLabel()} {conge.date_debut ? new Date(conge.date_debut).getFullYear() : ''}
-                    </strong>
-                    <span className={(conge.jours_restants ?? 0) < 0 ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>
-                      {conge.jours_restants ?? '-'} jour(s)
-                    </span>
-                    {typeof conge.jours_restants === 'number' && (
-                      <div className="text-muted small mt-1">
-                        Cumul de tous les {getCongeTypeLabel()} approuvés sur l'année (ce congé : {conge.jours_pris ?? conge.nombre_jours ?? '-'} j).
-                      </div>
-                    )}
-                  </div>
-                  {conge.calcul_details && (
-                    <div className="mb-3">
-                      <strong className="text-muted d-block">Détail du calcul</strong>
-                      <div className="small bg-light rounded p-2">
-                        <div>Jours sur la période : {formatDays(conge.calcul_details.jours_dans_periode)}</div>
-                        <div>Jours bloqués : {formatDays(conge.calcul_details.jours_bloques)}</div>
-                        <div>Jours fériés exclus : {formatDays(conge.calcul_details.jours_feries_exclus)}</div>
-                        <div>Demi-journées déduites : {formatDays(conge.calcul_details.jours_demi_journees_deduites)}</div>
-                        <div>Jours déduits du calcul : {formatDays(conge.calcul_details.jours_deduits_calcul)}</div>
-                        <div>Jours pris calculés : {formatDays(conge.calcul_details.jours_pris_calcules)}</div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mb-3">
-                    <strong className="text-muted d-block">Date demande</strong>
-                    {formatDate(conge.date_demande || conge.created_at || conge.createdAt)}
-                  </div>
-                </Col>
-              </Row>
-
-              {conge.commentaire_employe && (
-                <div className="mt-3">
-                  <strong className="text-muted d-block">Commentaire du demandeur</strong>
-                  <div className="bg-light p-3 rounded">
-                    <FaComment className="me-2 text-muted" />
-                    {conge.commentaire_employe}
-                  </div>
                 </div>
-              )}
-
-              {getRefusalComment() && (
-                <div className="mt-3">
-                  <strong className="text-danger d-block">Commentaire du refus</strong>
-                  <div className="bg-danger-subtle p-3 rounded border border-danger-subtle">
-                    <FaComment className="me-2 text-danger" />
-                    {getRefusalComment()}
-                  </div>
-                </div>
-              )}
+              </div>
             </Card.Body>
           </Card>
 
-          {/* Historique des statuts */}
-          {conge.historique && conge.historique.length > 0 && (
-            <Card className="mb-4">
+          {/* Info rows principales */}
+          <div className="info-rows mb-3">
+            <div className="info-row">
+              <span className="info-label">Demandeur</span>
+              <span className="info-value">{getEmployeLabel()}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Entreprise</span>
+              <span className="info-value">{getEntrepriseLabel()}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Date de début</span>
+              <span className="info-value">{formatDate(conge.date_debut)}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Date de fin</span>
+              <span className="info-value">{formatDate(conge.date_fin)}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Durée</span>
+              <span className="info-value">{formatDays(conge.jours_pris ?? conge.nombre_jours ?? conge.jours_calcules)} jour(s)</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">
+                Solde restant {conge.date_debut ? new Date(conge.date_debut).getFullYear() : ''}
+              </span>
+              <span className={`info-value ${(conge.jours_restants ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
+                {conge.jours_restants ?? '-'} jour(s)
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Date demande</span>
+              <span className="info-value">{formatDateShort(conge.date_demande || conge.created_at || conge.createdAt)}</span>
+            </div>
+            {conge?.conge_type_id && (
+              <div className="info-row">
+                <span className="info-label">Filtrer ce type</span>
+                <Button
+                  as={Link}
+                  to={`/conges?conge_type_id=${encodeURIComponent(conge.conge_type_id)}`}
+                  variant="link"
+                  className="p-0 info-value"
+                  style={{ fontSize: '10px' }}
+                >
+                  <FaList className="me-1" /> Voir tous les {getCongeTypeLabel()}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Commentaire employé */}
+          {conge.commentaire_employe && (
+            <div className="comment-block mb-3">
+              <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))', marginBottom: 4 }}>Commentaire du demandeur</div>
+              <div style={{ fontSize: '12px', color: 'var(--text, var(--dk-text))' }}>
+                <FaComment size={10} className="me-2" style={{ opacity: 0.5 }} />
+                {conge.commentaire_employe}
+              </div>
+            </div>
+          )}
+
+          {/* Commentaire de refus */}
+          {getRefusalComment() && (
+            <div className="comment-block comment-block--danger mb-3">
+              <div style={{ fontSize: '10px', color: 'var(--accent-red, var(--dk-error))', marginBottom: 4 }}>Commentaire du refus</div>
+              <div style={{ fontSize: '12px' }}>
+                <FaComment size={10} className="me-2" />
+                {getRefusalComment()}
+              </div>
+            </div>
+          )}
+
+          {/* Détail du calcul */}
+          {conge.calcul_details && (
+            <Card className="mb-3">
+              <Card.Body className="p-0">
+                <div className="calcul-details-box">
+                  <div><span>Jours sur la période</span><span>{formatDays(conge.calcul_details.jours_dans_periode)}</span></div>
+                  <div><span>Jours bloqués</span><span>{formatDays(conge.calcul_details.jours_bloques)}</span></div>
+                  <div><span>Jours fériés exclus</span><span>{formatDays(conge.calcul_details.jours_feries_exclus)}</span></div>
+                  <div><span>Demi-journées déduites</span><span>{formatDays(conge.calcul_details.jours_demi_journees_deduites)}</span></div>
+                  <div><span>Jours déduits du calcul</span><span>{formatDays(conge.calcul_details.jours_deduits_calcul)}</span></div>
+                  <div><span>Jours pris calculés</span><span>{formatDays(conge.calcul_details.jours_pris_calcules)}</span></div>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Dates non prises */}
+          {Array.isArray(conge?.calcul_details?.dates_non_prises) && conge.calcul_details.dates_non_prises.length > 0 && (
+            <Card className="mb-3">
               <Card.Header>
-                <h5 className="mb-0">Historique des modifications</h5>
+                <h6 className="mb-0" style={{ fontSize: '12px' }}>Dates non prises dans le calcul</h6>
               </Card.Header>
-              <Card.Body>
-                <div className="timeline">
-                  {conge.historique.map((item, index) => (
-                    <div key={index} className="timeline-item mb-3">
-                      <div className="timeline-marker bg-primary"></div>
-                      <div className="timeline-content">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <strong>{getStatusBadge(item.statut)}</strong>
-                            <div className="text-muted small">
-                              Par {item.modifie_par_nom} le {formatDateShort(item.date_modification)}
-                            </div>
-                          </div>
-                        </div>
-                        {item.commentaire && (
-                          <div className="mt-2 p-2 bg-light rounded small">
-                            {item.commentaire}
-                          </div>
-                        )}
-                      </div>
+              <Card.Body className="p-0">
+                <div className="dates-non-prises">
+                  {conge.calcul_details.dates_non_prises.map((item, index) => (
+                    <div key={`${item.date}-${index}`}>
+                      <span><strong>{formatDateShort(item.date)}</strong> — {item.cause}</span>
+                      <span style={{ color: 'var(--text-muted, var(--dk-text-muted))' }}>{formatDays(item.quantite)} j</span>
                     </div>
                   ))}
                 </div>
               </Card.Body>
             </Card>
           )}
+
+          {/* Historique des statuts — timeline Phase 2 */}
+          {conge.historique && conge.historique.length > 0 && (
+            <div className="mb-4">
+              <div className="section-header mb-2">
+                <span className="section-title">Historique</span>
+              </div>
+              <div className="timeline-history">
+                {conge.historique.map((item, index) => {
+                  const accent = getStatusAccent(item.statut);
+                  const isDone = accent !== 'pending';
+                  return (
+                    <div key={index} className="history-item">
+                      <div className={`history-dot ${isDone ? 'done' : 'pending'}`} />
+                      <div>
+                        <div className="history-title">
+                          <span className={`badge ${accentToBadgeClass(accent)}`}>{getStatusText(item.statut)}</span>
+                        </div>
+                        <div className="history-date">
+                          Par {item.modifie_par_nom} · {formatDateShort(item.date_modification)}
+                        </div>
+                        {item.commentaire && (
+                          <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))', marginTop: 4, padding: '4px 8px', background: 'var(--surface, var(--dk-elevated))', borderRadius: 6 }}>
+                            {item.commentaire}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </Col>
 
         <Col lg={4}>
-          {/* Actions disponibles */}
+          {/* Actions disponibles (approbation) */}
           {canApprove() && (
             <Card className="mb-4">
               <Card.Header>
@@ -622,7 +573,6 @@ const CongeDetailsPage = () => {
                 {validationOverlapLoading && (
                   <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
                 )}
-
                 <Form.Group className="mb-3">
                   <Form.Label>Commentaire de validation</Form.Label>
                   <Form.Control
@@ -637,26 +587,21 @@ const CongeDetailsPage = () => {
                     Le manager doit saisir un commentaire quand la demande est en chevauchement.
                   </Form.Text>
                 </Form.Group>
-                <div className="d-grid gap-2">
-                  <AsyncButton
-                    variant="success"
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn-approve"
                     onClick={() => setShowValidateModal(true)}
-                    action={action}
-                    loadingText="Traitement..."
+                    disabled={actionLoading}
                   >
-                    {!actionLoading && (
-                      <FaCheck className="me-2" />
-                    )}
-                    Approuver
-                  </AsyncButton>
-                  <Button
-                    variant="danger"
+                    <FaCheck size={10} /> Approuver
+                  </button>
+                  <button
+                    className="btn-refuse"
                     onClick={() => setShowCommentModal(true)}
                     disabled={actionLoading}
                   >
-                    <FaTimes className="me-2" />
-                    Refuser
-                  </Button>
+                    <FaTimes size={10} /> Refuser
+                  </button>
                 </div>
               </Card.Body>
             </Card>
@@ -667,45 +612,61 @@ const CongeDetailsPage = () => {
             <Card.Header>
               <h6 className="mb-0">Informations système</h6>
             </Card.Header>
-            <Card.Body className="small">
-              <div className="mb-2">
-                <strong>Créé le:</strong><br />
-                {formatDateShort(conge.created_at)}
+            <Card.Body className="p-0">
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Créé le</span>
+                  <span className="info-value">{formatDateShort(conge.created_at)}</span>
+                </div>
+                {conge.updated_at !== conge.created_at && (
+                  <div className="info-row">
+                    <span className="info-label">Modifié le</span>
+                    <span className="info-value">{formatDateShort(conge.updated_at)}</span>
+                  </div>
+                )}
+                {isSuperAdmin && (
+                  <div className="info-row">
+                    <span className="info-label">ID demande</span>
+                    <span className="info-value">#{conge.id}</span>
+                  </div>
+                )}
               </div>
-              {conge.updated_at !== conge.created_at && (
-                <div className="mb-2">
-                  <strong>Dernière modification:</strong><br />
-                  {formatDateShort(conge.updated_at)}
-                </div>
-              )}
-              {isSuperAdmin && (
-                <div>
-                  <strong>ID de la demande:</strong><br />
-                  #{conge.id}
-                </div>
-              )}
             </Card.Body>
           </Card>
 
           {/* Rappels */}
-          <Card>
+          <Card className="mb-4">
             <Card.Header>
               <h6 className="mb-0">Rappels</h6>
             </Card.Header>
             <Card.Body className="small">
               <ul className="mb-0">
-                <li>Les congés approuvés sont automatiquement déduits du solde</li>
-                <li>Un email de notification est envoyé au demandeur</li>
+                <li>Les congés approuvés sont déduits du solde</li>
+                <li>Un email est envoyé au demandeur</li>
                 <li>Les refus doivent être justifiés</li>
-                <li>Les demandes en attente peuvent être modifiées par le demandeur</li>
-                <li>Les congés validés suivent la politique d'entreprise (modification/annulation).</li>
+                <li>Les demandes en attente peuvent être modifiées</li>
+                <li>Les congés validés suivent la politique d'entreprise</li>
               </ul>
             </Card.Body>
           </Card>
+
+          {/* Bouton annuler/supprimer en bas */}
+          {canDelete() && (
+            <button
+              className="btn-ghost-danger"
+              onClick={() => { setCancelComment(''); setShowDeleteModal(true); }}
+            >
+              {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? (
+                <><FaTimes size={11} className="me-2" />Annuler le congé</>
+              ) : (
+                <><FaTrash size={11} className="me-2" />Supprimer la demande</>
+              )}
+            </button>
+          )}
         </Col>
       </Row>
 
-      {/* Modal de suppression */}
+      {/* Modal suppression */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} backdrop="static" keyboard={!actionLoading} centered>
         <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>
@@ -716,7 +677,7 @@ const CongeDetailsPage = () => {
         </Modal.Header>
         <Modal.Body>
           {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final'
-            ? 'Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l\'employé sera recalculé automatiquement et il sera notifié.'
+            ? "Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l'employé sera recalculé automatiquement et il sera notifié."
             : 'Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action est irréversible.'}
 
           {user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' && (
@@ -737,10 +698,7 @@ const CongeDetailsPage = () => {
         <Modal.Footer>
           <Button
             variant="secondary"
-            onClick={() => {
-              setShowDeleteModal(false);
-              setCancelComment('');
-            }}
+            onClick={() => { setShowDeleteModal(false); setCancelComment(''); }}
             disabled={actionLoading}
           >
             Fermer
@@ -748,10 +706,7 @@ const CongeDetailsPage = () => {
           <AsyncButton
             variant="danger"
             onClick={handleDelete}
-            disabled={
-              actionLoading
-              || (user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' && !cancelComment.trim())
-            }
+            disabled={actionLoading || (user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' && !cancelComment.trim())}
             action={action}
             loadingText={user?.role === 'admin_entreprise' && conge?.statut === 'valide_final' ? 'Annulation...' : 'Suppression...'}
           >
@@ -760,7 +715,7 @@ const CongeDetailsPage = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal pour commentaire de refus */}
+      {/* Modal commentaire refus */}
       <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)} backdrop="static" keyboard={!actionLoading} centered>
         <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>Refuser la demande</Modal.Title>
@@ -780,9 +735,7 @@ const CongeDetailsPage = () => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCommentModal(false)} disabled={actionLoading}>
-            Annuler
-          </Button>
+          <Button variant="secondary" onClick={() => setShowCommentModal(false)} disabled={actionLoading}>Annuler</Button>
           <AsyncButton
             variant="danger"
             onClick={() => handleStatusChange('refuse', commentaire)}
@@ -795,7 +748,7 @@ const CongeDetailsPage = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal de confirmation validation */}
+      {/* Modal confirmation validation */}
       <Modal show={showValidateModal} onHide={() => setShowValidateModal(false)} backdrop="static" keyboard={!actionLoading} centered>
         <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>Confirmer la validation</Modal.Title>
@@ -817,7 +770,6 @@ const CongeDetailsPage = () => {
           {validationOverlapLoading && (
             <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
           )}
-
           <Form.Group>
             <Form.Label>Commentaire de validation</Form.Label>
             <Form.Control
@@ -834,9 +786,7 @@ const CongeDetailsPage = () => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowValidateModal(false)} disabled={actionLoading}>
-            Annuler
-          </Button>
+          <Button variant="secondary" onClick={() => setShowValidateModal(false)} disabled={actionLoading}>Annuler</Button>
           <AsyncButton
             variant="success"
             onClick={async () => {

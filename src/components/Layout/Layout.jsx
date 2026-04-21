@@ -163,36 +163,52 @@ const Layout = () => {
     </>
   );
 
+  const initials = [user?.prenom?.[0], user?.nom?.[0]].filter(Boolean).join('').toUpperCase() || '?';
+
   return (
-    <div className={`role-shell role-${user?.role || 'employe'}`}>
-      <aside className="role-sidebar d-none d-md-flex flex-column p-3">
+    <div className={`app-shell role-shell role-${user?.role || 'employe'}`}>
+      {/* Desktop sidebar (≥992px) */}
+      <aside className="sidebar role-sidebar flex-column p-3">
         {renderSidebarContent(false)}
       </aside>
 
-      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} className="d-md-none">
+      {/* Mobile offcanvas */}
+      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Navigation</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
 
-      <div className="flex-grow-1 d-flex flex-column">
-        <Navbar className="role-topbar px-3">
-          <Button variant="outline-secondary" className="d-md-none me-2" onClick={() => setShowSidebar(true)}>
-            <FaBars />
-          </Button>
+      <div className="main-area">
+        {/* Mobile topbar */}
+        <div className="topbar d-lg-none">
+          <span className="topbar-logo">Team<span>Off</span></span>
+          <div className="d-flex align-items-center gap-2">
+            <button className="topbar-icon-btn" onClick={() => navigate('/notifications')} aria-label="Notifications">
+              <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />
+            </button>
+            <button className="topbar-avatar" onClick={() => setShowSidebar(true)} aria-label="Menu">
+              {initials}
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop topbar */}
+        <Navbar className="role-topbar desktop-topbar d-none d-lg-flex px-3">
           <Navbar.Brand className="mb-0">{activeTitle}</Navbar.Brand>
           <span className="role-topbar-note ms-auto">{topbarNote}</span>
         </Navbar>
 
-        <main className="role-content flex-grow-1">
+        <main className="page-content role-content">
           <Outlet />
         </main>
 
         <AppFooter />
       </div>
 
-      <nav className="mobile-bottom-nav d-md-none" role="navigation" aria-label="Navigation mobile">
+      {/* Mobile bottom nav */}
+      <nav className="bottom-nav" role="navigation" aria-label="Navigation mobile">
         {bottomItems.map((item) => {
           const isMore = item.path === '__more__';
           const Icon = iconMap[item.icon] || FaThLarge;
@@ -201,12 +217,12 @@ const Layout = () => {
           return (
             <button
               key={item.path}
-              className={`mobile-bottom-nav__item${active ? ' active' : ''}`}
+              className={`nav-item${active ? ' active' : ''}`}
               onClick={() => (isMore ? setShowSidebar(true) : navigate(item.path))}
               aria-label={item.label}
             >
-              <span className="mobile-bottom-nav__icon"><Icon size={18} /></span>
-              <span className="mobile-bottom-nav__label">{item.label}</span>
+              <span className="nav-icon"><Icon size={18} /></span>
+              <span className="nav-label">{item.label}</span>
             </button>
           );
         })}

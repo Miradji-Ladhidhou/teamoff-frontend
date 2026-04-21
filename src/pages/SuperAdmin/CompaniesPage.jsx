@@ -1,9 +1,8 @@
 import './companies.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -397,11 +396,8 @@ const CompaniesManagement = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Gestion des Entreprises</h1>
-          <p className="text-muted">Administrer toutes les entreprises de la plateforme</p>
-        </div>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Gestion des Entreprises</span>
         <div className="d-flex gap-2">
           <AsyncButton
             variant="outline-secondary"
@@ -426,19 +422,6 @@ const CompaniesManagement = () => {
         </div>
       </div>
 
-      <InfoCardInfo title="Gérer les entreprises efficacement">
-        <p className="mb-2">Chaque entreprise possède sa politique de congés et ses paramètres.</p>
-        <ul className="mb-0">
-          <li>Créez l'entreprise avec un statut adapté</li>
-          <li>Renseignez les champs métier (congés, RTT, timezone, notifications)</li>
-          <li>Ajustez les paramètres avant d'ajouter les utilisateurs</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Bonne pratique">
-        Utilisez le mode JSON avancé uniquement pour des besoins spécifiques.
-      </TipCard>
-
       <Card className="mb-4">
         <Card.Body>
           <Row>
@@ -456,9 +439,9 @@ const CompaniesManagement = () => {
               </InputGroup>
             </Col>
             <Col md={6} className="text-end">
-              <Badge bg="info" className="me-2">
+              <span className="badge info me-2">
                 {filteredCompanies.length} entreprise{filteredCompanies.length > 1 ? 's' : ''}
-              </Badge>
+              </span>
             </Col>
           </Row>
         </Card.Body>
@@ -485,9 +468,9 @@ const CompaniesManagement = () => {
                     </div>
                   </td>
                   <td>
-                    <Badge bg={company.statut === 'active' ? 'success' : company.statut === 'suspendue' ? 'warning' : 'secondary'}>
-                      {company.statut || 'inactive'}
-                    </Badge>
+                    <span className={`badge ${company.statut === 'active' ? 'approved' : company.statut === 'suspendue' ? 'pending' : 'info'}`}>
+                      {(company.statut || 'inactive').toUpperCase()}
+                    </span>
                   </td>
                   <td>
                     <small className="text-muted">{Object.keys(company.politique_conges || {}).length} cle(s)</small>

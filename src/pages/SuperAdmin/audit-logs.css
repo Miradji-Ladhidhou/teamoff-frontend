@@ -1,6 +1,6 @@
 /* ============================================================
-   audit-logs.css — Mobile-first v2
-   Règle : aucune couleur Bootstrap modifiée (variant= intacts)
+   audit-logs.css — SuperAdmin Audit Logs
+   Design system: CSS vars from theme.css
    ============================================================ */
 
 /* ---------- Page header ---------- */
@@ -10,6 +10,10 @@
   gap: 0.625rem;
   margin-bottom: 1rem;
   padding-top: 0.25rem;
+}
+
+.page-header h1 {
+  color: var(--dk-text);
 }
 
 .page-header-actions {
@@ -30,12 +34,13 @@
 .audit-filter-label {
   font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--bs-secondary-color, #6c757d);
+  color: var(--dk-text-muted);
   margin-bottom: 0.25rem;
   display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Sur mobile : les champs date passent côte à côte (géré par xs=6 Bootstrap) */
 @media (max-width: 575.98px) {
   .card .card-body .form-control,
   .card .card-body .form-select {
@@ -58,11 +63,10 @@
   }
 }
 
-/* Séparateur visuel entre filtres et compteur sur mobile */
 @media (max-width: 767.98px) {
   .audit-filters-actions {
     padding-top: 0.5rem;
-    border-top: 0.5px solid var(--bs-border-color);
+    border-top: 1px solid var(--dk-border);
     margin-top: 0.25rem;
   }
 }
@@ -75,10 +79,29 @@
 }
 
 .audit-log-mobile-card {
-  border: 0.5px solid var(--bs-border-color);
-  border-radius: 0.625rem;
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 0.75rem);
   padding: 0.875rem 1rem;
-  background: var(--bs-body-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow var(--transition-base);
+  /* Left border colored by action type via modifier classes */
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: var(--dk-border);
+}
+
+/* Action type left border colors */
+.audit-log-mobile-card--create  { border-left-color: var(--dk-success); }
+.audit-log-mobile-card--delete  { border-left-color: var(--dk-error); }
+.audit-log-mobile-card--update  { border-left-color: var(--dk-accent); }
+.audit-log-mobile-card--login   { border-left-color: var(--dk-text-soft); }
+.audit-log-mobile-card--warning { border-left-color: var(--dk-warning); }
+
+.audit-log-mobile-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 /* Nom utilisateur */
@@ -86,12 +109,13 @@
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;
+  color: var(--dk-text);
 }
 
 /* Email */
 .audit-log-mobile-card .audit-user-email {
   font-size: 0.6875rem;
-  color: var(--bs-secondary-color, #6c757d);
+  color: var(--dk-text-soft);
   margin-top: 1px;
   display: block;
 }
@@ -107,12 +131,12 @@
 
 .audit-log-meta .audit-date {
   font-size: 0.6875rem;
-  color: var(--bs-secondary-color, #6c757d);
+  color: var(--dk-text-muted);
 }
 
 .audit-log-meta .audit-entity {
   font-size: 0.6875rem;
-  color: var(--bs-secondary-color, #6c757d);
+  color: var(--dk-text-muted);
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -121,15 +145,56 @@
 /* IP */
 .audit-log-ip {
   font-size: 0.6875rem;
-  font-family: var(--bs-font-monospace);
-  color: var(--bs-tertiary-color, #adb5bd);
+  font-family: var(--bs-font-monospace, monospace);
+  color: var(--dk-text-muted);
   margin-bottom: 0.625rem;
+}
+
+/* Action badge */
+.audit-action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.18em 0.55em;
+  border-radius: 999px;
+}
+
+.audit-action-badge--create {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--dk-success);
+  border: 1px solid rgba(52, 211, 153, 0.22);
+}
+
+.audit-action-badge--delete {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--dk-error);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.audit-action-badge--update {
+  background: rgba(91, 141, 238, 0.12);
+  color: var(--dk-accent);
+  border: 1px solid rgba(91, 141, 238, 0.22);
+}
+
+.audit-action-badge--login {
+  background: rgba(155, 155, 171, 0.1);
+  color: var(--dk-text-soft);
+  border: 1px solid rgba(155, 155, 171, 0.18);
+}
+
+.audit-action-badge--warning {
+  background: rgba(240, 168, 85, 0.12);
+  color: var(--dk-warning);
+  border: 1px solid rgba(240, 168, 85, 0.22);
 }
 
 /* Séparateur avant bouton détail */
 .audit-log-divider {
-  height: 0.5px;
-  background: var(--bs-border-color);
+  height: 1px;
+  background: var(--dk-border);
   margin: 0.625rem 0;
 }
 
@@ -150,12 +215,29 @@
 .table th,
 .table td {
   vertical-align: middle;
+  color: var(--dk-text-soft);
 }
 
-/* Colonne date : les deux lignes bien alignées */
+.table th {
+  color: var(--dk-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Colonne date */
 .audit-date-line {
   white-space: nowrap;
   font-size: 0.8125rem;
+  color: var(--dk-text-soft);
 }
 
 /* ---------- Badges ---------- */
@@ -174,10 +256,12 @@
   font-size: 1rem;
   margin-top: 0.75rem;
   margin-bottom: 0.25rem;
+  color: var(--dk-text);
 }
 
 .audit-empty p {
   font-size: 0.875rem;
+  color: var(--dk-text-muted);
 }
 
 /* ---------- Pagination ---------- */
@@ -192,18 +276,22 @@
 
 .audit-pagination .text-muted {
   font-size: 0.8125rem;
+  color: var(--dk-text-muted) !important;
 }
 
 /* ---------- Modale ---------- */
-/* Hauteur max + scroll sur les métadonnées JSON */
 .scroll-modal-content {
   max-height: 200px;
   overflow-y: auto;
   font-size: 0.75rem;
   -webkit-overflow-scrolling: touch;
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-border);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  color: var(--dk-text-soft);
 }
 
-/* Sur mobile : espacement entre chaque champ de la modale */
 @media (max-width: 575.98px) {
   .modal-body .row > [class*="col-"] {
     margin-bottom: 0.75rem;
@@ -218,4 +306,5 @@
 .text-center.py-5 p {
   font-size: 0.875rem;
   margin-top: 0.5rem;
+  color: var(--dk-text-muted);
 }

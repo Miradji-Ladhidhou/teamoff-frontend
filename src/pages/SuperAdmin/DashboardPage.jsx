@@ -1,11 +1,10 @@
 import './dashboard.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaUsers, FaBuilding, FaCalendarCheck, FaChartLine, FaCog, FaShieldAlt } from 'react-icons/fa';
+import { FaChartLine, FaCog } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import * as api from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 
 const normalizeStatus = (ok) => (ok ? 'healthy' : 'unhealthy');
@@ -118,21 +117,13 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
-    <Card className="h-100">
-      <Card.Body>
-        <div className="d-flex align-items-center">
-          <div className={`p-3 rounded-circle bg-${color} bg-opacity-10 me-3`}>
-            <Icon size={24} className={`text-${color}`} />
-          </div>
-          <div>
-            <h3 className="mb-0">{value}</h3>
-            <p className="text-muted mb-0">{title}</p>
-            {subtitle && <small className="text-muted">{subtitle}</small>}
-          </div>
-        </div>
-      </Card.Body>
-    </Card>
+  const colorMap = { primary: 'blue', success: 'green', warning: 'amber', info: 'blue' };
+  const StatCard = ({ title, value, color, subtitle }) => (
+    <div className={`stat-card ${colorMap[color] || 'blue'}`}>
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">{title}</div>
+      {subtitle && <div className="stat-sub">{subtitle}</div>}
+    </div>
   );
 
   if (loading) {
@@ -150,12 +141,9 @@ const SuperAdminDashboard = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">Dashboard SuperAdmin</h1>
-          <p className="text-muted small mb-0">Vue d'ensemble de votre plateforme TeamOff</p>
-        </div>
-        <div className="page-header-actions">
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Dashboard SuperAdmin</span>
+        <div className="d-flex gap-2">
           <Button as={Link} to="/superadmin/settings" variant="outline-primary" size="sm">
             <FaCog className="me-1" />
             <span className="d-none d-sm-inline">Paramètres</span>
@@ -167,59 +155,13 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
-      
-
-      <InfoCardInfo title="Lecture rapide du dashboard super admin">
-        <ul className="mb-0">
-          <li>La première ligne donne la santé globale de la plateforme</li>
-          <li>L'activité récente met en évidence les événements à surveiller</li>
-          <li>Les actions rapides envoient vers les réglages critiques</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Rituel recommandé">
-        Commencez la journée par les métriques et les activités récentes, puis vérifiez les alertes système.
-      </TipCard>
-
       {/* Statistiques principales */}
-      <Row className="mb-4 g-3">
-        <Col xs={6} md={3}>
-          <StatCard
-            title="Utilisateurs"
-            value={stats.totalUsers}
-            icon={FaUsers}
-            color="primary"
-            subtitle="Tous rôles"
-          />
-        </Col>
-        <Col xs={6} md={3}>
-          <StatCard
-            title="Entreprises"
-            value={stats.totalCompanies}
-            icon={FaBuilding}
-            color="success"
-            subtitle="Actives"
-          />
-        </Col>
-        <Col xs={6} md={3}>
-          <StatCard
-            title="Congés"
-            value={stats.totalLeaves}
-            icon={FaCalendarCheck}
-            color="warning"
-            subtitle={`${stats.pendingLeaves} en attente`}
-          />
-        </Col>
-        <Col xs={6} md={3}>
-          <StatCard
-            title="Disponibilité"
-            value={systemHealth.uptime}
-            icon={FaShieldAlt}
-            color="info"
-            subtitle="Uptime"
-          />
-        </Col>
-      </Row>
+      <div className="stats-grid mb-4">
+        <StatCard title="Utilisateurs" value={stats.totalUsers} color="primary" subtitle="Tous rôles" />
+        <StatCard title="Entreprises" value={stats.totalCompanies} color="success" subtitle="Actives" />
+        <StatCard title="Congés" value={stats.totalLeaves} color="warning" subtitle={`${stats.pendingLeaves} en attente`} />
+        <StatCard title="Disponibilité" value={systemHealth.uptime} color="info" subtitle="Uptime" />
+      </div>
 
       <Row>
         {/* Activité récente */}
@@ -244,14 +186,14 @@ const SuperAdminDashboard = () => {
                     {recentActivity.map((activity, index) => (
                       <tr key={index}>
                         <td>
-                          <Badge bg="secondary">{activity.type || 'Info'}</Badge>
+                          <span className="badge info">{activity.type || 'Info'}</span>
                         </td>
                         <td>{activity.message || 'Activité système'}</td>
                         <td>{new Date(activity.createdAt || Date.now()).toLocaleDateString('fr-FR')}</td>
                         <td>
-                          <Badge bg={activity.read ? 'success' : 'warning'}>
+                          <span className={`badge ${activity.read ? 'approved' : 'pending'}`}>
                             {activity.read ? 'Lu' : 'Non lu'}
-                          </Badge>
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -277,21 +219,21 @@ const SuperAdminDashboard = () => {
               <div className="mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span>Base de données</span>
-                  <Badge bg={systemHealth.database === 'healthy' ? 'success' : 'danger'}>
+                  <span className={`badge ${systemHealth.database === 'healthy' ? 'approved' : 'refused'}`}>
                     {systemHealth.database === 'healthy' ? '✓' : '✗'} {systemHealth.database}
-                  </Badge>
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span>API REST</span>
-                  <Badge bg={systemHealth.api === 'healthy' ? 'success' : 'danger'}>
+                  <span className={`badge ${systemHealth.api === 'healthy' ? 'approved' : 'refused'}`}>
                     {systemHealth.api === 'healthy' ? '✓' : '✗'} {systemHealth.api}
-                  </Badge>
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span>WebSocket</span>
-                  <Badge bg={systemHealth.websocket === 'healthy' ? 'success' : 'danger'}>
+                  <span className={`badge ${systemHealth.websocket === 'healthy' ? 'approved' : 'refused'}`}>
                     {systemHealth.websocket === 'healthy' ? '✓' : '✗'} {systemHealth.websocket}
-                  </Badge>
+                  </span>
                 </div>
               </div>
 

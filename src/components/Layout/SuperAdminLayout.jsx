@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
+import { Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
-  FaBars, FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers,
+  FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers,
   FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes,
   FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt
 } from 'react-icons/fa';
@@ -49,6 +49,8 @@ const SuperAdminLayout = () => {
   const secondaryItems = menuItems.filter(i => i.section === 'secondary');
   const bottomNavItems = [...primaryItems.slice(0, 4), { path: '__more__', label: 'Plus', icon: 'more', section: 'bottom' }];
 
+  const initials = [user?.prenom?.[0], user?.nom?.[0]].filter(Boolean).join('').toUpperCase() || '?';
+
   useEffect(() => {
     const fetchUnread = async () => {
       try {
@@ -70,78 +72,115 @@ const SuperAdminLayout = () => {
 
   const handleLogout = () => { logout(); navigate('/login'); };
   const isActive = path => location.pathname === path || location.pathname.startsWith(`${path}/`);
-  const topbarNote = menuItems.find(item => isActive(item.path));
-  const topbarNoteText = topbarNote
-    ? (superadminTopbarNotes[topbarNote.path] || `Section ${topbarNote.label}`)
+  const activeItem = menuItems.find(item => isActive(item.path));
+  const topbarNoteText = activeItem
+    ? (superadminTopbarNotes[activeItem.path] || `Section ${activeItem.label}`)
     : 'Vue globale securisee';
 
-  const renderMenuItem = (item, closeSidebar = false) => {
-    const Icon = iconMap[item.icon] || FaShieldAlt;
-    const badge = item.badgeKey === 'notifications' ? unreadNotifications : null;
+  const renderSidebarContent = (closeSidebar = false) => (
+    <>
+      <div className="mb-3">
+        <div className="fw-bold" style={{ color: 'var(--dk-text)' }}>{user?.prenom} {user?.nom}</div>
+        <small style={{ color: 'var(--dk-text-muted)' }}>SuperAdmin</small>
+        <div className="mt-2">
+          <span className="status-badge status-badge--info" style={{ fontSize: '0.7rem' }}>SuperAdmin</span>
+        </div>
+      </div>
 
-    return (
-      <Nav.Link
-        key={item.path}
-        onClick={() => { navigate(item.path); closeSidebar && setShowSidebar(false); }}
-        className={`mb-2 d-flex align-items-center cursor-pointer px-2 py-2 rounded ${isActive(item.path) ? 'bg-primary text-white' : ''} ${closeSidebar ? '' : 'text-white'}`}
-      >
-        <Icon className="me-3" size={18} />
-        <span>{item.label}</span>
-        {badge > 0 && <Badge bg="danger" className="ms-auto" pill>{badge}</Badge>}
-      </Nav.Link>
-    );
-  };
+      <div className="sidebar-section-label">Essentiel</div>
+      <Nav className="flex-column mb-2">
+        {primaryItems.map(item => {
+          const Icon = iconMap[item.icon] || FaShieldAlt;
+          const badge = item.badgeKey === 'notifications' ? unreadNotifications : null;
+          return (
+            <Nav.Link
+              key={item.path}
+              onClick={() => { navigate(item.path); closeSidebar && setShowSidebar(false); }}
+              className={`sidebar-link role-nav-link d-flex align-items-center gap-2 mb-1${isActive(item.path) ? ' active' : ''}`}
+            >
+              <Icon size={14} />
+              <span>{item.label}</span>
+              {badge > 0 && <Badge bg="danger" className="ms-auto" pill>{badge > 9 ? '9+' : badge}</Badge>}
+            </Nav.Link>
+          );
+        })}
+      </Nav>
 
-  const renderSidebar = (closeSidebar = false) => (
-    <Nav className="flex-column">
-      {primaryItems.map(i => renderMenuItem(i, closeSidebar))}
-      <div className={`text-uppercase small mt-3 mb-2 ${closeSidebar ? 'ui-text-soft' : 'ui-text-on-dark-soft'}`}>Outils</div>
-      {secondaryItems.map(i => renderMenuItem(i, closeSidebar))}
-    </Nav>
+      <div className="sidebar-section-label">Outils</div>
+      <Nav className="flex-column mb-3">
+        {secondaryItems.map(item => {
+          const Icon = iconMap[item.icon] || FaShieldAlt;
+          return (
+            <Nav.Link
+              key={item.path}
+              onClick={() => { navigate(item.path); closeSidebar && setShowSidebar(false); }}
+              className={`sidebar-link role-nav-link d-flex align-items-center gap-2 mb-1${isActive(item.path) ? ' active' : ''}`}
+            >
+              <Icon size={14} />
+              <span>{item.label}</span>
+            </Nav.Link>
+          );
+        })}
+      </Nav>
+
+      <Button variant="outline-danger" size="sm" className="w-100" onClick={handleLogout}>
+        <FaSignOutAlt className="me-2" />Déconnexion
+      </Button>
+    </>
   );
 
   return (
-    <div className="d-flex">
-      {/* Sidebar Desktop */}
-      <div className="d-none d-md-block bg-dark text-white sidebar-nav p-3">
-        <div className="d-flex align-items-center mb-4"><FaShieldAlt size={24} className="text-warning me-2" /><h5 className="mb-0 text-warning">SuperAdmin</h5></div>
-        <div className="mb-4"><small className="ui-text-on-dark-soft">Connecté en tant que</small><div className="fw-bold">{user?.prenom} {user?.nom}</div><Badge bg="warning" className="mt-1">SuperAdmin</Badge></div>
-        {renderSidebar()}
-        <hr className="my-4" />
-        <Button variant="outline-light" size="sm" className="w-100" onClick={handleLogout}><FaSignOutAlt className="me-2" />Déconnexion</Button>
-      </div>
+    <div className="app-shell role-shell role-super_admin">
+      {/* Desktop sidebar */}
+      <aside className="sidebar role-sidebar flex-column p-3">
+        <div className="sidebar-logo mb-2">
+          <FaShieldAlt style={{ color: 'var(--accent-purple, #a78bfa)', marginRight: 8 }} size={16} />
+          Team<span>Off</span>
+        </div>
+        {renderSidebarContent(false)}
+      </aside>
 
-      {/* Sidebar Mobile */}
-      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} className="d-md-none">
+      {/* Mobile offcanvas */}
+      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title><FaShieldAlt size={20} className="text-warning me-2" />SuperAdmin</Offcanvas.Title>
+          <Offcanvas.Title>
+            <FaShieldAlt size={18} style={{ color: '#a78bfa', marginRight: 8 }} />SuperAdmin
+          </Offcanvas.Title>
         </Offcanvas.Header>
-        <Offcanvas.Body>
-          <div className="mb-4"><small className="ui-text-soft">Connecté en tant que</small><div className="fw-bold">{user?.prenom} {user?.nom}</div><Badge bg="warning" className="mt-1">SuperAdmin</Badge></div>
-          {renderSidebar(true)}
-          <hr className="my-4" />
-          <Button variant="outline-danger" size="sm" className="w-100" onClick={handleLogout}><FaSignOutAlt className="me-2" />Déconnexion</Button>
-        </Offcanvas.Body>
+        <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
 
-      {/* Contenu principal */}
-      <div className="flex-grow-1">
-        <Navbar bg="light" expand="md" className="border-bottom px-3 superadmin-topbar">
-          <Button variant="outline-secondary" size="sm" className="d-md-none me-2" onClick={() => setShowSidebar(true)}><FaBars /></Button>
-          <Navbar.Brand className="d-none d-md-block"><FaShieldAlt className="text-warning me-2" />Panel SuperAdmin</Navbar.Brand>
-          <Navbar.Collapse className="justify-content-end">
-            <div className="d-flex align-items-center superadmin-topbar__meta">
-              <small className="superadmin-topbar-note">{topbarNoteText}</small>
-            </div>
-          </Navbar.Collapse>
-        </Navbar>
+      <div className="main-area">
+        {/* Mobile topbar */}
+        <div className="topbar d-lg-none">
+          <span className="topbar-logo">Team<span>Off</span></span>
+          <div className="d-flex align-items-center gap-2">
+            <button className="topbar-icon-btn" onClick={() => navigate('/superadmin/notifications')} aria-label="Notifications" style={{ position: 'relative' }}>
+              <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />
+              {unreadNotifications > 0 && <span className="nav-badge" />}
+            </button>
+            <button className="topbar-avatar" onClick={() => setShowSidebar(true)} aria-label="Menu">
+              {initials}
+            </button>
+          </div>
+        </div>
 
-        <div className="superadmin-content p-4"><Outlet /></div>
+        {/* Desktop topbar */}
+        <div className="role-topbar desktop-topbar d-none d-lg-flex align-items-center px-3" style={{ gap: '0.5rem' }}>
+          <FaShieldAlt size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
+          <span style={{ fontWeight: 700, color: 'var(--dk-text)', fontSize: '0.95rem' }}>Panel SuperAdmin</span>
+          <span className="role-topbar-note ms-auto">{topbarNoteText}</span>
+        </div>
+
+        <main className="page-content role-content superadmin-content">
+          <Outlet />
+        </main>
+
         <AppFooter isSuperAdmin />
       </div>
 
-      {/* Bottom nav mobile */}
-      <nav className="mobile-bottom-nav d-md-none" role="navigation" aria-label="Navigation SuperAdmin">
+      {/* Mobile bottom nav */}
+      <nav className="bottom-nav" role="navigation" aria-label="Navigation SuperAdmin">
         {bottomNavItems.map(item => {
           const Icon = iconMap[item.icon] || FaShieldAlt;
           const isMore = item.path === '__more__';
@@ -149,13 +188,16 @@ const SuperAdminLayout = () => {
           const badge = item.badgeKey === 'notifications' ? unreadNotifications : 0;
 
           return (
-            <button key={item.path} className={`mobile-bottom-nav__item${active ? ' active' : ''}`}
-              onClick={() => isMore ? setShowSidebar(true) : navigate(item.path)} aria-label={item.label}>
-              <span className="mobile-bottom-nav__icon">
-                <Icon size={20} />
-                {badge > 0 && <span className="mobile-bottom-nav__badge">{badge > 9 ? '9+' : badge}</span>}
+            <button key={item.path}
+              className={`nav-item${active ? ' active' : ''}`}
+              onClick={() => isMore ? setShowSidebar(true) : navigate(item.path)}
+              aria-label={item.label}
+            >
+              <span className="nav-icon" style={{ position: 'relative' }}>
+                <Icon size={18} />
+                {badge > 0 && <span className="nav-badge" />}
               </span>
-              <span className="mobile-bottom-nav__label">{item.label}</span>
+              <span className="nav-label">{item.label}</span>
             </button>
           );
         })}

@@ -2,7 +2,6 @@ import './help.css';
 
 import React from 'react';
 import { Accordion, Container, Card, Button } from 'react-bootstrap';
-import AccordionInfo from '../../components/AccordionInfo';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -84,25 +83,14 @@ const HelpPage = () => {
 
   return (
     <Container>
-      {user && (
-        <div className="mb-3 d-flex justify-content-end">
-          <Button variant="outline-primary" size="sm" onClick={() => navigate(role === 'super_admin' ? '/superadmin/dashboard' : '/dashboard')}>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Centre d'aide</span>
+        {user && (
+          <Button variant="outline-secondary" size="sm" onClick={() => navigate(role === 'super_admin' ? '/superadmin/dashboard' : '/dashboard')}>
             Retour au dashboard
           </Button>
-        </div>
-      )}
-      <div className="mb-4">
-        <h1 className="h3 mb-1">Centre d'aide</h1>
-        <p className="text-muted mb-0">Retrouvez ici les réponses et astuces adaptées à votre profil TeamOff.</p>
+        )}
       </div>
-
-      <AccordionInfo type="info" title="Astuces pour votre profil">
-        <ul className="mb-0">
-          {(tips[role] || tips['employe']).map((tip, idx) => (
-            <li key={idx}>{tip}</li>
-          ))}
-        </ul>
-      </AccordionInfo>
 
       <Card className="mb-4">
         <Card.Body>
@@ -118,9 +106,11 @@ const HelpPage = () => {
       </Card>
 
       {user && (
-        <AccordionInfo type="tip" title="Besoin d'aide supplémentaire ?">
-          Consultez le <a href="/USER_GUIDE.md" target="_blank" rel="noopener noreferrer">guide utilisateur complet</a> ou contactez le support TeamOff à <a href="mailto:saas.teamoff@gmail.com">saas.teamoff@gmail.com</a>.
-        </AccordionInfo>
+        <div className="alert-banner alert-banner--info">
+          <span className="alert-banner__text">
+            Consultez le <a href="/USER_GUIDE.md" target="_blank" rel="noopener noreferrer">guide utilisateur complet</a> ou contactez le support TeamOff à <a href="mailto:saas.teamoff@gmail.com">saas.teamoff@gmail.com</a>.
+          </span>
+        </div>
       )}
     </Container>
   );

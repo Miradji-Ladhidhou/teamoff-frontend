@@ -6,9 +6,8 @@ import { Link } from 'react-router-dom';
 const ContactPage = () => {
   return (
     <Container>
-      <div className="mb-4">
-        <h1 className="h3 mb-1">Contact</h1>
-        <p className="text-muted mb-0">Canaux de support et d'assistance définis par votre organisation.</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Contact</span>
       </div>
       <Row>
         <Col md={4} className="mb-4">

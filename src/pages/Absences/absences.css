@@ -27,6 +27,8 @@
   padding: 0.65rem 0.85rem;
   font-size: 0.84rem;
   color: var(--dk-text);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color var(--transition-base);
 }
 
 /* ────────────── Responsive ────────────── */

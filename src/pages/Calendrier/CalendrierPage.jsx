@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form, Alert, Spinner, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Spinner, Modal } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { calendrierService, entreprisesService, api } from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import './calendar.css';
 
@@ -232,15 +231,15 @@ const CalendrierPage = () => {
     return blockedSpecificDates.includes(normalized);
   };
 
-  const getStatusColor = (statut) => {
-    const colors = {
-      en_attente_manager: 'warning',
+  const getStatusBadgeClass = (statut) => {
+    const classes = {
+      en_attente_manager: 'pending',
       valide_manager: 'info',
-      valide_final: 'success',
-      refuse_manager: 'danger',
-      refuse_final: 'danger'
+      valide_final: 'approved',
+      refuse_manager: 'refused',
+      refuse_final: 'refused',
     };
-    return colors[statut] || 'secondary';
+    return classes[statut] || 'info';
   };
 
   const formatMonthYear = (date) => {
@@ -332,11 +331,10 @@ const CalendrierPage = () => {
 
   return (
     <Container fluid="sm" className="calendar-page">
-      <div className="page-header calendar-page__header">
-        <h1 className="h4 mb-1">Calendrier</h1>
-        <p className="text-muted small mb-0">
-          Vue équipe.
-        </p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Calendrier</span>
+        <div className="d-flex gap-2">
+        </div>
       </div>
 
       {selectionStart && (
@@ -581,7 +579,7 @@ const CalendrierPage = () => {
                   <div><strong>Employé:</strong> {`${selectedEventDetails.utilisateur?.prenom || selectedEventDetails.utilisateur_prenom || ''} ${selectedEventDetails.utilisateur?.nom || ''}`.trim() || 'Non défini'}</div>
                   <div><strong>Catégorie:</strong> {getCongeTypeLabel(selectedEventDetails)}</div>
                   <div><strong>Période:</strong> {formatDateLabel(selectedEventDetails.date_debut)} au {formatDateLabel(selectedEventDetails.date_fin)}</div>
-                  <div><strong>Statut:</strong> <Badge bg={getStatusColor(selectedEventDetails.statut)}>{selectedEventDetails.statut || 'Inconnu'}</Badge></div>
+                  <div><strong>Statut:</strong> <span className={`badge ${getStatusBadgeClass(selectedEventDetails.statut)}`}>{(selectedEventDetails.statut || 'Inconnu').toUpperCase()}</span></div>
                   {selectedEventDetails.commentaire_employe && (
                     <div><strong>Commentaire:</strong> {selectedEventDetails.commentaire_employe}</div>
                   )}

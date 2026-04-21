@@ -34,7 +34,7 @@
   background: var(--dk-elevated);
   color: var(--dk-text);
   font-size: 0.9rem;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .absence-form-input:focus,
@@ -68,7 +68,7 @@
   border: none;
   box-shadow: var(--dk-shadow-sm);
   cursor: pointer;
-  transition: filter 0.2s ease;
+  transition: filter var(--transition-base);
 }
 
 .absence-form-submit:hover {

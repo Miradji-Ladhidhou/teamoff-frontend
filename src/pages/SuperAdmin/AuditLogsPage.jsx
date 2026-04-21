@@ -1,7 +1,7 @@
 import './audit-logs.css';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Container, Row, Col, Card, Table, Button, Badge, Form,
+  Container, Row, Col, Card, Table, Button, Form,
   InputGroup, Modal, Spinner
 } from 'react-bootstrap';
 import {
@@ -9,23 +9,22 @@ import {
   FaCalendarCheck, FaTimes
 } from 'react-icons/fa';
 import { auditService, exportsService } from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 
 // ---------- Helpers purs (hors composant — stables entre renders) ----------
 
-const ACTION_VARIANTS = {
-  CREATE: 'success',
+const ACTION_BADGE_CLASS = {
+  CREATE: 'approved',
   UPDATE: 'info',
-  DELETE: 'danger',
-  LOGIN: 'primary',
-  LOGOUT: 'secondary',
-  VALIDATE: 'success',
-  REJECT: 'warning',
+  DELETE: 'refused',
+  LOGIN: 'info',
+  LOGOUT: 'info',
+  VALIDATE: 'approved',
+  REJECT: 'pending',
 };
 
 const getActionBadge = (action) => (
-  <Badge bg={ACTION_VARIANTS[action] || 'secondary'}>{action}</Badge>
+  <span className={`badge ${ACTION_BADGE_CLASS[action] || 'info'}`}>{action}</span>
 );
 
 const getEntityIcon = (entity) => {
@@ -158,30 +157,15 @@ const AuditLogs = () => {
     <Container fluid="sm">
 
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="h3 mb-1">Logs d'Audit</h1>
-          <p className="text-muted">Historique des actions système et utilisateur</p>
-        </div>
-        <div className="page-header-actions">
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Logs d'Audit</span>
+        <div className="d-flex gap-2">
           <Button variant="outline-success" onClick={exportLogs}>
             <FaDownload className="me-2" />
             Exporter CSV
           </Button>
         </div>
       </div>
-
-      <InfoCardInfo title="Utiliser les logs d'audit">
-        <ul className="mb-0">
-          <li>Filtrez par action pour retrouver un événement précis</li>
-          <li>Croisez utilisateur, entreprise et IP pour enquêter</li>
-          <li>Exportez en CSV pour archiver ou partager l'analyse</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Réflexe sécurité">
-        Concentrez-vous sur les actions sensibles (DELETE, LOGIN, UPDATE) et vérifiez les adresses IP inhabituelles.
-      </TipCard>
 
       {/* Filtres */}
       <Card className="mb-4">
@@ -229,9 +213,9 @@ const AuditLogs = () => {
 
             {/* Compteur + reset — séparé visuellement sur mobile via CSS */}
             <Col xs={12} md={3} className="audit-filters-actions">
-              <Badge bg="secondary" className="py-2 px-3">
+              <span className="badge info">
                 {total} résultat{total > 1 ? 's' : ''}
-              </Badge>
+              </span>
               <Button variant="outline-secondary" size="sm" onClick={handleReset}>
                 <FaTimes className="me-1" />Réinitialiser
               </Button>
@@ -254,7 +238,7 @@ const AuditLogs = () => {
               {logs.length > 0 && (
                 <>
                   {/* ── MOBILE : cards empilées (< md) ── */}
-                  <div className="d-md-none mobile-card-list">
+                  <div className="d-lg-none mobile-card-list">
                     {logs.map((log) => (
                       <div key={log.id} className="audit-log-mobile-card">
 
@@ -299,7 +283,7 @@ const AuditLogs = () => {
                   </div>
 
                   {/* ── DESKTOP : table classique (≥ md) ── */}
-                  <div className="d-none d-md-block">
+                  <div className="d-none d-lg-block">
                     <Table hover responsive>
                       <thead>
                         <tr>

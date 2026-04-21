@@ -1,16 +1,18 @@
 /* ────────────── Cards ────────────── */
 .card {
-  background-color: var(--dk-card) !important;
-  border: 1px solid var(--dk-border) !important;
-  border-radius: var(--card-radius) !important;
-  box-shadow: var(--dk-shadow-sm);
+  background-color: var(--card, var(--dk-card)) !important;
+  border: 1px solid var(--border, var(--dk-border)) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
   color: var(--dk-text) !important;
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .card-header {
   background-color: var(--dk-elevated) !important;
   border-bottom: 1px solid var(--dk-border) !important;
   color: var(--dk-text) !important;
+  font-weight: 600;
 }
 
 .card-body {
@@ -18,21 +20,43 @@
 }
 
 .card:hover {
-  box-shadow: var(--dk-shadow-md);
+  box-shadow: var(--dk-shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-2px);
 }
 
 /* ────────────── Glass cards ────────────── */
-.glass-card, .glass-card-light {
-  background-color: var(--dk-card);
+.glass-card {
+  background: rgba(34, 34, 44, 0.72);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
   border: 1px solid var(--dk-border);
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   padding: 1rem;
   margin-bottom: 1rem;
   color: var(--dk-text);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.glass-card:hover {
+  box-shadow: var(--dk-shadow-md), inset 0 1px 0 rgba(255,255,255,0.08);
+  transform: translateY(-2px);
 }
 
 .glass-card-light {
   background-color: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--dk-text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.glass-card-light:hover {
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-1px);
 }
 
 /* ────────────── Mobile card list ────────────── */
@@ -48,26 +72,71 @@
   padding: 0.75rem;
   background-color: var(--dk-elevated);
   border: 1px solid var(--dk-border);
+  border-left: 3px solid transparent;
   border-radius: var(--card-radius);
   color: var(--dk-text);
   text-align: left;
-  transition: background 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.mobile-card-list__item:hover {
+  background-color: var(--dk-hover);
+  border-left-color: var(--dk-accent);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateX(2px);
 }
 
 .mobile-card-list__item:active {
   background-color: var(--dk-hover);
+  transform: translateX(1px);
+}
+
+/* ────────────── Status-colored left border variants ────────────── */
+.mobile-card-list__item--pending {
+  border-left-color: var(--dk-warning);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), -2px 0 8px rgba(240,168,85,0.1);
+}
+
+.mobile-card-list__item--pending:hover {
+  border-left-color: var(--dk-warning);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06), -2px 0 10px rgba(240,168,85,0.18);
+}
+
+.mobile-card-list__item--success {
+  border-left-color: var(--dk-success);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), -2px 0 8px rgba(52,211,153,0.1);
+}
+
+.mobile-card-list__item--success:hover {
+  border-left-color: var(--dk-success);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06), -2px 0 10px rgba(52,211,153,0.18);
+}
+
+.mobile-card-list__item--danger {
+  border-left-color: var(--dk-error);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), -2px 0 8px rgba(248,113,113,0.1);
+}
+
+.mobile-card-list__item--danger:hover {
+  border-left-color: var(--dk-error);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06), -2px 0 10px rgba(248,113,113,0.18);
+}
+
+.mobile-card-list__item--info {
+  border-left-color: var(--dk-accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), -2px 0 8px rgba(91,141,238,0.1);
+}
+
+.mobile-card-list__item--info:hover {
+  border-left-color: var(--dk-accent);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06), -2px 0 10px rgba(91,141,238,0.18);
 }
 
 /* ────────────── Responsive ────────────── */
 @media (min-width: 768px) {
-  .glass-card, .glass-card-light { padding: 1.5rem; }
-}
-
-@media (max-width: 575.98px) {
-  .card, .mobile-card-list__item {
-    padding: 0.75rem;
-    margin: 0.75rem auto;
-  }
+  .glass-card,
+  .glass-card-light { padding: 1.5rem; }
 }
 
 @media (max-width: 767.98px) {
@@ -76,15 +145,113 @@
   }
 
   .card-header,
-  .card-body,
+  .card-body {
+    padding: 0.75rem !important;
+  }
+
   .mobile-card-list__item,
   .glass-card,
   .glass-card-light {
-    padding: 0.65rem !important;
-  }
-
-  .mobile-card-list__item {
-    max-width: min(100%, 560px);
-    margin: 0.45rem auto;
+    padding: 0.75rem !important;
   }
 }
+
+/* ────────────── Card accented (left accent bar) ────────────── */
+.card-accented {
+  display: flex;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--border, var(--dk-border));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  background: transparent;
+}
+
+.card-accent-bar {
+  width: 3px;
+  flex-shrink: 0;
+}
+.card-accent-bar.blue   { background: var(--accent-blue,   var(--dk-accent)); }
+.card-accent-bar.amber  { background: var(--accent-amber,  var(--role-manager)); }
+.card-accent-bar.green  { background: var(--accent-green,  var(--dk-success)); }
+.card-accent-bar.purple { background: var(--accent-purple, var(--role-superadmin)); }
+.card-accent-bar.red    { background: var(--accent-red,    var(--dk-error)); }
+
+.card-accented .card-body {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--card, var(--dk-card));
+  color: var(--dk-text) !important;
+}
+
+/* ────────────── Stat card (top accent bar) ────────────── */
+.stat-card {
+  background: var(--card, var(--dk-card));
+  border-radius: 14px;
+  border: 1px solid var(--border, var(--dk-border));
+  padding: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.stat-card:hover {
+  box-shadow: var(--dk-shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-2px);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 14px 14px 0 0;
+}
+
+.stat-card.blue::before   { background: var(--accent-blue,   var(--dk-accent)); }
+.stat-card.amber::before  { background: var(--accent-amber,  var(--role-manager)); }
+.stat-card.green::before  { background: var(--accent-green,  var(--dk-success)); }
+.stat-card.purple::before { background: var(--accent-purple, var(--role-superadmin)); }
+.stat-card.red::before    { background: var(--accent-red,    var(--dk-error)); }
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted, var(--dk-text-muted));
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text, var(--dk-text));
+}
+.stat-value.blue   { color: var(--accent-blue,   var(--dk-accent)); }
+.stat-value.amber  { color: var(--accent-amber,  var(--role-manager)); }
+.stat-value.green  { color: var(--accent-green,  var(--dk-success)); }
+.stat-value.purple { color: var(--accent-purple, var(--role-superadmin)); }
+.stat-value.red    { color: var(--accent-red,    var(--dk-error)); }
+
+.progress-track {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent-blue, var(--dk-accent));
+}
+.progress-fill.amber  { background: var(--accent-amber,  var(--role-manager)); }
+.progress-fill.green  { background: var(--accent-green,  var(--dk-success)); }
+.progress-fill.purple { background: var(--accent-purple, var(--role-superadmin)); }
+.progress-fill.red    { background: var(--accent-red,    var(--dk-error)); }

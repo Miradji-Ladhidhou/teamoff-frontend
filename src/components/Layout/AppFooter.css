@@ -1,6 +1,6 @@
 .app-footer {
     background: var(--role-sidebar-bg, var(--dk-sidebar-bg-default)) !important;
-    border-top: 1px solid var(--dk-border);
+    border-top: 1px solid color-mix(in srgb, var(--role-accent) 20%, var(--dk-border));
     color: var(--dk-text-soft);
 }
 
@@ -47,6 +47,6 @@
 
 .app-footer .footer-accordion__link:hover,
 .app-footer .text-light-50:hover {
-    color: var(--dk-accent);
+    color: var(--role-accent);
     text-decoration: underline;
 }

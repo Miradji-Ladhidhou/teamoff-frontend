@@ -1,0 +1,199 @@
+/* ────────────── Users page (non-admin) ────────────── */
+.users-page {
+  overflow-x: hidden;
+}
+
+/* User list */
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* User row */
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 0.75rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background var(--transition-fast), box-shadow var(--transition-base), transform var(--transition-fast);
+}
+
+.user-row:hover {
+  background: var(--dk-elevated);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Avatar circle */
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dk-accent);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
+}
+
+.user-avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+
+/* User info */
+.user-row__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-row__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-row__email {
+  font-size: 0.75rem;
+  color: var(--dk-text-soft);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-row__role {
+  font-size: 0.68rem;
+  color: var(--dk-text-muted);
+  margin-top: 2px;
+}
+
+/* User row actions */
+.user-row__actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Role badge */
+.user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.18em 0.55em;
+  border-radius: 999px;
+  background: rgba(91, 141, 238, 0.12);
+  color: var(--dk-accent);
+  border: 1px solid rgba(91, 141, 238, 0.22);
+}
+
+.user-role-badge--admin {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--dk-error);
+  border-color: rgba(248, 113, 113, 0.22);
+}
+
+.user-role-badge--manager {
+  background: rgba(240, 168, 85, 0.1);
+  color: var(--dk-warning);
+  border-color: rgba(240, 168, 85, 0.22);
+}
+
+.user-role-badge--member {
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--dk-success);
+  border-color: rgba(52, 211, 153, 0.22);
+}
+
+/* Status badge */
+.user-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.18em 0.55em;
+  border-radius: 999px;
+}
+
+.user-status-badge--active {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--dk-success);
+  border: 1px solid rgba(52, 211, 153, 0.22);
+}
+
+.user-status-badge--inactive {
+  background: rgba(90, 90, 110, 0.15);
+  color: var(--dk-text-muted);
+  border: 1px solid rgba(90, 90, 110, 0.22);
+}
+
+.user-status-badge__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Table wrap */
+.users-table-wrap {
+  overflow-x: auto;
+}
+
+.users-table-wrap .table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.users-table-wrap .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Filters */
+.users-filters {
+  min-width: 0;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .user-row {
+    padding: 0.65rem;
+  }
+
+  .user-row__actions {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

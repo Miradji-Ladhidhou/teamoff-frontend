@@ -1,0 +1,12 @@
+.help-page { overflow-x: hidden; }
+.help-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius-lg);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.help-card:hover {
+  box-shadow: var(--dk-shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}

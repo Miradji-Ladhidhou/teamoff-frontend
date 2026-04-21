@@ -16,14 +16,9 @@ const AbsencesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-header">
-        <div>
-          <h1 className="h4 mb-1">
-            Gestion des absences
-          </h1>
-          <p className="text-muted small mb-0">
-            Déclarez vos absences (maladie ou exceptionnelle) et consultez le planning de l'équipe.
-          </p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Gestion des absences</span>
+        <div className="d-flex gap-2">
         </div>
       </div>
 

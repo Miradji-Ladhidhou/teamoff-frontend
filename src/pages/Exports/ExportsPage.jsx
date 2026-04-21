@@ -1,6 +1,6 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Table, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
@@ -362,14 +362,13 @@ const ExportsPage = () => {
 
   return (
     <Container fluid="sm" className="exports-page">
-      <div className="page-header exports-page__header">
-        <div>
-          <h1 className="h3 mb-1">Exports de données</h1>
-          <p className="text-muted">Exportez vos données au format CSV</p>
+      <div className="page-title-bar">
+        <span className="section-title-bar__text">Exports de données</span>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
+            Info
+          </Button>
         </div>
-        <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
-          Info
-        </Button>
       </div>
 
       <Row className="g-4 exports-page__content">
@@ -631,7 +630,7 @@ const ExportsPage = () => {
                   </div>
                   {previewData.rows?.length ? (
                     <>
-                      <div className="d-md-none mobile-card-list export-preview-mobile-list">
+                      <div className="d-lg-none mobile-card-list export-preview-mobile-list">
                         {previewData.rows.map((row, index) => (
                           <Card key={`preview-mobile-row-${index}`} className="mb-2">
                             <Card.Body className="py-2 px-3 export-preview-mobile-card__body">
@@ -656,7 +655,7 @@ const ExportsPage = () => {
                         ))}
                       </div>
 
-                      <div className="table-responsive d-none d-md-block scroll-table-preview export-preview-table-wrap">
+                      <div className="table-responsive d-none d-lg-block scroll-table-preview export-preview-table-wrap">
                         <Table striped bordered hover size="sm" className="mb-0">
                           <thead>
                             <tr>
