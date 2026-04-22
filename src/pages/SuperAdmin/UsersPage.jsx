@@ -1,6 +1,6 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, Pagination } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
@@ -45,6 +45,11 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  // Réinitialise la page quand les filtres changent
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, companyFilter, roleFilter]);
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [servicesByCompany, setServicesByCompany] = useState({});
   const [activeUserActionId, setActiveUserActionId] = useState(null);
@@ -55,6 +60,16 @@ const UsersManagement = () => {
   useEffect(() => {
     loadData();
   }, [isSuperAdmin, user?.entreprise_id]);
+
+  const loadUsers = async () => {
+    try {
+      const res = await api.usersService.getAll();
+      setUsers(Array.isArray(res.data) ? res.data : []);
+    } catch (loadError) {
+      console.error('Erreur chargement utilisateurs:', loadError);
+      alert.error('Erreur lors du chargement des utilisateurs');
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -160,7 +175,7 @@ const UsersManagement = () => {
         setShowModal(false);
         setEditingUser(null);
         resetForm();
-        loadData();
+        loadUsers();
       } catch (submitError) {
         console.error('Erreur sauvegarde utilisateur:', submitError);
         alert.error(submitError.response?.data?.message || 'Erreur lors de la sauvegarde');
@@ -198,7 +213,7 @@ const UsersManagement = () => {
           try {
             await api.usersService.delete(userId);
             alert.success('Utilisateur supprimé avec succès');
-            loadData();
+            loadUsers();
           } catch (deleteError) {
             console.error('Erreur suppression utilisateur:', deleteError);
             alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
@@ -218,7 +233,7 @@ const UsersManagement = () => {
       try {
         await api.usersService.update(targetUser.id, { statut: nextStatus });
         alert.success(`Utilisateur ${nextStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`);
-        loadData();
+        loadUsers();
       } catch (statusError) {
         console.error('Erreur changement statut:', statusError);
         alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
@@ -251,15 +266,40 @@ const UsersManagement = () => {
   };
 
   const exportLoading = exportAction.isRunning;
+  const importAction = useAsyncAction();
 
-  const filteredUsers = users.filter((targetUser) => {
+  const handleImportCsv = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    await importAction.run(async () => {
+      try {
+        const res = await api.usersService.importCSV(file);
+        const { message, created, skipped } = res.data;
+        alert.success(`${message}${skipped?.length > 0 ? ` — ${skipped.map((s) => `${s.email}: ${s.reason}`).join(', ')}` : ''}`);
+        loadUsers();
+      } catch (importError) {
+        const serverErrors = importError.response?.data?.errors;
+        if (serverErrors?.length) {
+          alert.error(`Erreurs CSV : ${serverErrors.map((e) => `Ligne ${e.line}: ${e.errors.join(', ')}`).join(' | ')}`);
+        } else {
+          alert.error(importError.response?.data?.message || 'Erreur lors de l\'import CSV');
+        }
+      }
+    });
+  };
+
+  const filteredUsers = useMemo(() => users.filter((targetUser) => {
     const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''}`.toLowerCase();
     const matchesSearch = !searchTerm || searchableText.includes(searchTerm.toLowerCase());
     const matchesCompany = !companyFilter || targetUser.entreprise_id === companyFilter;
     const matchesRole = !roleFilter || targetUser.role === roleFilter;
-
     return matchesSearch && matchesCompany && matchesRole;
-  });
+  }), [users, searchTerm, companyFilter, roleFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedUsers = filteredUsers.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   const getRoleBadge = (role) => {
     const classes = { super_admin: 'refused', admin_entreprise: 'info', manager: 'pending', employe: 'approved' };
@@ -321,6 +361,11 @@ const UsersManagement = () => {
             <FaDownload className="me-2" />
             CSV
           </AsyncButton>
+          <label className="btn btn-outline-secondary mb-0" style={{ cursor: importAction.isRunning ? 'wait' : 'pointer' }} title="Importer des utilisateurs via CSV">
+            <FaDownload className="me-2" style={{ transform: 'rotate(180deg)' }} />
+            Import CSV
+            <input type="file" accept=".csv,text/csv" className="d-none" onChange={handleImportCsv} disabled={importAction.isRunning} />
+          </label>
           <Button
             variant="primary"
             onClick={() => {
@@ -399,7 +444,7 @@ const UsersManagement = () => {
             <>
               {/* Vue carte — mobile uniquement */}
               <div className="d-lg-none mobile-card-list px-3 users-management-mobile-list">
-                {filteredUsers.map((targetUser) => (
+                {pagedUsers.map((targetUser) => (
                   <div key={targetUser.id} className="mobile-card-list__item users-management-mobile-list__item">
                     <div className="d-flex align-items-center gap-2 mb-2">
                       <div className={`avatar avatar-sm ${roleToAvatarColor(targetUser.role)}`}>
@@ -449,6 +494,18 @@ const UsersManagement = () => {
                 ))}
               </div>
 
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center pt-3 d-lg-none">
+                  <Pagination size="sm">
+                    <Pagination.Prev disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <Pagination.Item key={i + 1} active={i + 1 === safePage} onClick={() => setCurrentPage(i + 1)}>{i + 1}</Pagination.Item>
+                    ))}
+                    <Pagination.Next disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} />
+                  </Pagination>
+                </div>
+              )}
+
               {/* Vue tableau — desktop uniquement */}
               <div className="d-none d-lg-block users-management-table-wrap">
                 <Table hover responsive>
@@ -461,7 +518,7 @@ const UsersManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((targetUser) => (
+                    {pagedUsers.map((targetUser) => (
                       <tr key={targetUser.id}>
                         <td>
                           <div>
@@ -509,6 +566,21 @@ const UsersManagement = () => {
                   </tbody>
                 </Table>
               </div>
+
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-between align-items-center px-3 pt-3 d-none d-lg-flex">
+                  <small className="text-muted">
+                    {(safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredUsers.length)} sur {filteredUsers.length}
+                  </small>
+                  <Pagination size="sm" className="mb-0">
+                    <Pagination.Prev disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <Pagination.Item key={i + 1} active={i + 1 === safePage} onClick={() => setCurrentPage(i + 1)}>{i + 1}</Pagination.Item>
+                    ))}
+                    <Pagination.Next disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} />
+                  </Pagination>
+                </div>
+              )}
             </>
           )}
         </Card.Body>

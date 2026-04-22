@@ -111,24 +111,25 @@ const CalendrierPage = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      const [congesResponse, absencesResponse, feriesResponse, policyResponse] = await Promise.all([
+      const [congesResponse, absencesResponse, feriesResponse, blockedDaysResponse] = await Promise.all([
         calendrierService.getCongesByMonth(year, month, filters),
-        api.get('/absences'),
+        api.get('/absences', { params: { year, month } }),
         calendrierService.getJoursFeriesByMonth(year, month),
-        entrepriseId ? entreprisesService.getPolitique(entrepriseId).catch(() => null) : Promise.resolve(null),
+        entrepriseId ? entreprisesService.getBlockedDays(entrepriseId).catch(() => null) : Promise.resolve(null),
       ]);
 
       setConges(congesResponse.data);
       setAbsences(absencesResponse.data || []);
       setJoursFeries(feriesResponse.data);
 
-      const policy = policyResponse?.data?.politique_conges || {};
-      const specificDates = Array.isArray(policy?.blocked_days?.specific_dates)
-        ? [...new Set(policy.blocked_days.specific_dates.map((item) => String(item).slice(0, 10)).filter(Boolean))].sort()
+      const blocked = blockedDaysResponse?.data?.blocked_days || {};
+      const specificDates = Array.isArray(blocked?.specific_dates)
+        ? [...new Set(blocked.specific_dates.map((item) => String(item).slice(0, 10)).filter(Boolean))].sort()
         : [];
       setBlockedSpecificDates(specificDates);
 
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Erreur lors du chargement du calendrier:', err);
       alert.error('Erreur lors du chargement du calendrier');
     } finally {

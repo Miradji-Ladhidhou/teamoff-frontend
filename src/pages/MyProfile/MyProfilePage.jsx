@@ -19,7 +19,7 @@ const roleToAvatarColor = (role) => {
 };
 
 const MyProfilePage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const profileAction = useAsyncAction();
   const passwordAction = useAsyncAction();
   const [activeTab, setActiveTab] = useState('profile');
@@ -66,14 +66,7 @@ const MyProfilePage = () => {
       setSuccess('');
       try {
         await authService.updateProfile({ nom: profileData.nom, prenom: profileData.prenom, email: profileData.email });
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          const updatedUser = JSON.parse(savedUser);
-          updatedUser.nom = profileData.nom;
-          updatedUser.prenom = profileData.prenom;
-          updatedUser.email = profileData.email;
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
+        updateUser({ nom: profileData.nom, prenom: profileData.prenom, email: profileData.email });
         setSuccess('Profil mis à jour avec succès.');
       } catch (err) {
         console.error('Erreur lors de la mise à jour du profil:', err);

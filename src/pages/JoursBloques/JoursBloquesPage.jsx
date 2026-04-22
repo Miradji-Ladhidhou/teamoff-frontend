@@ -178,21 +178,25 @@ const JoursBloquesPage = () => {
 
   useEffect(() => {
     if (!selectedUserId) return;
+    let cancelled = false;
 
     const loadCounters = async () => {
       try {
         setLoadingCounters(true);
         const response = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
-        setCounters(Array.isArray(response.data?.items) ? response.data.items : []);
+        if (!cancelled) setCounters(Array.isArray(response.data?.items) ? response.data.items : []);
       } catch (errLoadCounters) {
-        console.error('Erreur chargement compteurs:', errLoadCounters);
-        alert.error(errLoadCounters.response?.data?.message || 'Impossible de charger les compteurs utilisateur.');
+        if (!cancelled) {
+          console.error('Erreur chargement compteurs:', errLoadCounters);
+          alert.error(errLoadCounters.response?.data?.message || 'Impossible de charger les compteurs utilisateur.');
+        }
       } finally {
-        setLoadingCounters(false);
+        if (!cancelled) setLoadingCounters(false);
       }
     };
 
     loadCounters();
+    return () => { cancelled = true; };
   }, [selectedUserId, selectedYear]);
 
   useEffect(() => {

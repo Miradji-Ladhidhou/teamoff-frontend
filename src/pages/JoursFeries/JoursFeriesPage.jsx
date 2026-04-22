@@ -52,9 +52,22 @@ const JoursFeriesPage = () => {
   }, []);
 
   useEffect(() => {
-    if (user?.role === 'super_admin' && selectedEntrepriseId) {
-      loadJoursFeries({ entreprise_id: selectedEntrepriseId });
-    }
+    if (user?.role !== 'super_admin' || !selectedEntrepriseId) return;
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      try {
+        const response = await joursFeriesService.getAll({ entreprise_id: selectedEntrepriseId });
+        if (!cancelled) setJoursFeries(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        console.error('Erreur chargement jours fériés:', err);
+        if (!cancelled) alert.error('Erreur lors du chargement des jours fériés');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
   }, [selectedEntrepriseId, user?.role]);
 
   useEffect(() => {

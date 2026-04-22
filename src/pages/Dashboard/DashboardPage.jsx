@@ -25,7 +25,8 @@ const DashboardPage = () => {
     totalConges: 0,
     enAttente: 0,
     valides: 0,
-    refuses: 0
+    refuses: 0,
+    aValider: 0
   });
   const [recentConges, setRecentConges] = useState([]);
   const [soldes, setSoldes] = useState(null);
@@ -64,7 +65,7 @@ const DashboardPage = () => {
           refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length
         };
 
-        if (user?.role === 'manager' || user?.role === 'admin_entreprise') {
+        if (user?.role === 'manager' || user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
           const allCongesResponse = await congesService.getAll();
           const allConges = Array.isArray(allCongesResponse.data) ? allCongesResponse.data : [];
           statsData.aValider = allConges.filter(c => c.statut === 'en_attente_manager').length;

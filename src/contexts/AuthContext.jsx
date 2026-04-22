@@ -8,6 +8,7 @@ const defaultAuthContext = {
   login: async () => ({ success: false, error: 'AuthProvider indisponible' }),
   register: async () => ({ success: false, error: 'AuthProvider indisponible' }),
   logout: () => {},
+  updateUser: () => {},
   hasRole: () => false,
   isAdmin: () => false,
   isSuperAdmin: () => false,
@@ -15,12 +16,16 @@ const defaultAuthContext = {
   isEmploye: () => false,
   canValidateConges: () => false,
   canManageUsers: () => false,
+  canManageEntreprises: () => false,
 };
 
 const AuthContext = createContext(defaultAuthContext);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  if (context === defaultAuthContext && process.env.NODE_ENV !== 'production') {
+    console.warn('useAuth() called outside of AuthProvider — all permission checks will return false.');
+  }
   return context;
 };
 
@@ -39,6 +44,18 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         setIsAuthenticated(true);
+        // Resync silencieux du profil complet
+        authService.getProfile()
+          .then((res) => {
+            const fresh = res.data;
+            if (fresh?.id) {
+              setUser(fresh);
+              localStorage.setItem('user', JSON.stringify(fresh));
+            }
+          })
+          .catch(() => {
+            // token expiré — l'intercepteur axios redirige déjà vers /login
+          });
       } catch (error) {
         console.error('Erreur lors du parsing des données utilisateur:', error);
         localStorage.removeItem('token');
@@ -91,6 +108,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+  };
+
+  const updateUser = (partialUser) => {
+    setUser((prev) => {
+      const next = { ...prev, ...partialUser };
+      localStorage.setItem('user', JSON.stringify(next));
+      return next;
+    });
   };
 
   // Vérifier les permissions - utilisation directe des rôles backend
@@ -146,6 +171,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     hasRole,
     isAdmin,
     isSuperAdmin,

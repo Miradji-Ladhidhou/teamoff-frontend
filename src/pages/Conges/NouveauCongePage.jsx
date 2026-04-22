@@ -1,5 +1,5 @@
 import './nouveau-conge.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
@@ -8,6 +8,7 @@ import { congesService, congeTypesService, quotasService } from '../../services/
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import useLeavePolicy from '../../hooks/useLeavePolicy';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
@@ -16,9 +17,9 @@ const NouveauCongePage = () => {
   const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const canCreateLeave = ['employe', 'manager', 'super_admin'].includes(user?.role);
   const canAccessPage = isEditMode
-    ? ['employe', 'manager', 'admin_entreprise'].includes(user?.role)
+    ? ['employe', 'manager', 'admin_entreprise', 'super_admin'].includes(user?.role)
     : canCreateLeave;
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
 
@@ -40,6 +41,9 @@ const NouveauCongePage = () => {
   const [joursCalcules, setJoursCalcules] = useState(0);
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
+  const [formDirty, setFormDirty] = useState(false);
+  const submittedRef = useRef(false);
+  useUnsavedChanges(formDirty && !submittedRef.current);
   const [showOverlapModal, setShowOverlapModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const { validateModification } = useLeavePolicy();
@@ -63,20 +67,21 @@ const NouveauCongePage = () => {
   }, [id, user?.id, user?.role]);
 
   useEffect(() => {
-    // Calculer les jours automatiquement quand les dates changent
     if (formData.date_debut && formData.date_fin && formData.conge_type_id) {
       calculateJours();
+    } else if (!formData.conge_type_id) {
+      setJoursCalcules(0);
     }
-  }, [formData.date_debut, formData.date_fin, formData.debut_demi_journee, formData.fin_demi_journee]);
+  }, [formData.date_debut, formData.date_fin, formData.debut_demi_journee, formData.fin_demi_journee, formData.conge_type_id]);
 
   const loadInitialData = async () => {
+    if (!canAccessPage) {
+      navigate(returnPath, { replace: true });
+      return;
+    }
+
     try {
       setLoadingData(true);
-
-      if (!canAccessPage) {
-        alert.error('Vous n\'êtes pas autorisé à accéder à cette page');
-        return;
-      }
 
       if (isEditMode) {
         const [typesResponse, congeResponse] = await Promise.all([
@@ -151,6 +156,7 @@ const NouveauCongePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormDirty(true);
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -201,10 +207,10 @@ const NouveauCongePage = () => {
     }
 
     const selectedType = congeTypes.find(type => type.id === formData.conge_type_id);
+    const demiJourneeBloquee = selectedType && selectedType.demi_journee_autorisee === false;
     if (
-      selectedType
-      && selectedType.demi_journee_autorisee === false
-      && (formData.debut_demi_journee === 'apres_midi' || formData.fin_demi_journee === 'matin')
+      demiJourneeBloquee
+      && (formData.debut_demi_journee || formData.fin_demi_journee)
     ) {
       errors.conge_type_id = 'Ce type de congé n\'autorise pas les demi-journées';
     }
@@ -278,6 +284,7 @@ const NouveauCongePage = () => {
           autoCloseMs: 0,
         });
       }
+      submittedRef.current = true;
       navigate(returnPath);
     } catch (err) {
       console.error('Erreur lors de la création du congé:', err);
@@ -290,7 +297,7 @@ const NouveauCongePage = () => {
     e.preventDefault();
 
     if (!isEditMode && !canCreateLeave) {
-      alert.error('Seuls les employés et managers peuvent poser un congé');
+      alert.error('Vous n\'êtes pas autorisé à créer une demande de congé.');
       return;
     }
 
@@ -356,6 +363,7 @@ const NouveauCongePage = () => {
           });
         }
 
+        submittedRef.current = true;
         navigate(returnPath);
       } catch (err) {
         console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
@@ -392,7 +400,7 @@ const NouveauCongePage = () => {
   if (!canAccessPage) {
     return (
       <Container fluid="sm">
-        <div className="alert alert-warning">Seuls les employés et managers peuvent poser un congé.</div>
+        <div className="alert alert-warning">Vous n'êtes pas autorisé à accéder à cette page.</div>
         <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
       </Container>
     );
@@ -437,6 +445,31 @@ const NouveauCongePage = () => {
                   <Form.Control.Feedback type="invalid">
                     {validationErrors.conge_type_id}
                   </Form.Control.Feedback>
+                  {formData.conge_type_id && (() => {
+                    const solde = getSoldeForType(formData.conge_type_id);
+                    if (!solde) return null;
+                    const disponible = Number(solde.solde_disponible ?? 0);
+                    const apres = disponible - joursCalcules;
+                    const enDanger = joursCalcules > 0 && apres < 0;
+                    const avertissement = joursCalcules > 0 && apres >= 0 && apres < 2;
+                    return (
+                      <div className={`mt-2 p-2 rounded small d-flex gap-3 align-items-center ${enDanger ? 'alert alert-danger py-2' : avertissement ? 'alert alert-warning py-2' : 'alert alert-info py-2'}`}>
+                        <span><strong>Solde actuel :</strong> {disponible.toFixed(1)} j</span>
+                        {joursCalcules > 0 && (
+                          <>
+                            <span className="text-muted">→</span>
+                            <span>
+                              <strong>Après demande :</strong>{' '}
+                              <strong className={enDanger ? 'text-danger' : avertissement ? 'text-warning' : 'text-success'}>
+                                {apres.toFixed(1)} j
+                              </strong>
+                            </span>
+                          </>
+                        )}
+                        {enDanger && <span className="ms-auto">⚠ Solde insuffisant</span>}
+                      </div>
+                    );
+                  })()}
                 </Form.Group>
 
                 {/* Période */}
@@ -580,7 +613,8 @@ const NouveauCongePage = () => {
 
               {joursCalcules > 0 && (
                 <div className="mb-3">
-                  <strong>Jours calculés:</strong> {joursCalcules} jour(s)
+                  <strong>Jours calculés:</strong> ~{joursCalcules} jour(s)
+                  <div className="small text-muted mt-1">Estimation (jours fériés et jours bloqués déduits par le serveur)</div>
                 </div>
               )}
 

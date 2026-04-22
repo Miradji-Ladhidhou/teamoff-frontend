@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge, Form } from 'react-bootstrap';
 import {
@@ -20,6 +20,7 @@ import {
 
 import { useAuth } from '../../contexts/AuthContext';
 import { getNavigationForRole } from '../../utils/navigation';
+import { useNotificationStream } from '../../hooks/useNotificationStream';
 import AppFooter from './AppFooter';
 import './Layout.css';
 
@@ -66,6 +67,20 @@ const Layout = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [search, setSearch] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const handleNewNotification = useCallback(() => {
+    setUnreadCount((c) => c + 1);
+  }, []);
+
+  useNotificationStream(handleNewNotification);
+
+  // Reset unread count when user visits notifications page
+  useEffect(() => {
+    if (location.pathname === '/notifications') {
+      setUnreadCount(0);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -185,8 +200,13 @@ const Layout = () => {
         <div className="topbar d-lg-none">
           <span className="topbar-logo">Team<span>Off</span></span>
           <div className="d-flex align-items-center gap-2">
-            <button className="topbar-icon-btn" onClick={() => navigate('/notifications')} aria-label="Notifications">
+            <button className="topbar-icon-btn position-relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
               <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />
+              {unreadCount > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
             <button className="topbar-avatar" onClick={() => setShowSidebar(true)} aria-label="Menu">
               {initials}

@@ -1,5 +1,5 @@
 import './conges.css';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Container, Row, Col, Card, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
@@ -14,7 +14,7 @@ const getCongeAccent = (statut) => {
     case 'en_attente_manager': return { accent: 'pending', label: 'EN ATTENTE' };
     case 'valide_manager':     return { accent: 'info',    label: 'VALIDÉ MANAGER' };
     case 'valide_final':       return { accent: 'success', label: 'VALIDÉ' };
-    case 'refuse_manager':
+    case 'refuse_manager':     return { accent: 'danger',  label: 'REFUSÉ MANAGER' };
     case 'refuse_final':       return { accent: 'danger',  label: 'REFUSÉ' };
     default:                   return { accent: 'pending', label: statut };
   }
@@ -57,6 +57,8 @@ const CongesPage = () => {
   const [selectedCongeToValidate, setSelectedCongeToValidate] = useState(null);
   const [validateComment, setValidateComment] = useState('');
   const [validationOverlapByCongeId, setValidationOverlapByCongeId] = useState({});
+  const validationOverlapCacheRef = useRef({});
+  validationOverlapCacheRef.current = validationOverlapByCongeId;
   const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
@@ -91,8 +93,10 @@ const CongesPage = () => {
       });
 
       const response = await congesService.getAll(params);
-      setConges(response.data);
-      setServerTotalPages(Math.ceil((response.total || response.data.length) / filters.limit));
+      const items = Array.isArray(response.data) ? response.data : [];
+      setConges(items);
+      const total = Number.isFinite(response.total) ? response.total : items.length;
+      setServerTotalPages(Math.max(Math.ceil(total / filters.limit), 1));
     } catch (err) {
       console.error('Erreur lors du chargement des congés:', err);
       alert.error('Erreur lors du chargement des congés');
@@ -204,7 +208,9 @@ const CongesPage = () => {
     setSelectedCongeToValidate(congeId);
     setValidateComment('');
     setShowValidateModal(true);
-    fetchValidationOverlap(congeId);
+    if (!validationOverlapByCongeId[congeId]) {
+      fetchValidationOverlap(congeId);
+    }
   };
 
   const closeValidateModal = () => {
@@ -240,7 +246,9 @@ const CongesPage = () => {
     let cancelled = false;
 
     const loadValidationOverlapsForPage = async () => {
-      const targetConges = paginatedConges.filter((conge) => canValidateConge(conge));
+      const targetConges = paginatedConges.filter(
+        (conge) => canValidateConge(conge) && !validationOverlapCacheRef.current[conge.id]
+      );
       if (!targetConges.length) return;
 
       const results = await Promise.all(
@@ -303,7 +311,7 @@ const CongesPage = () => {
       return conge.statut === 'en_attente_manager';
     }
 
-    if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+    if (isAdmin()) {
       if (workflow === 'manager' || workflow === 'manager_only') return false;
       if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
       return conge.statut === 'valide_manager';
@@ -317,7 +325,7 @@ const CongesPage = () => {
       return conge.statut === 'en_attente_manager';
     }
 
-    if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+    if (isAdmin()) {
       return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
     }
 
@@ -335,6 +343,7 @@ const CongesPage = () => {
         loadConges();
       } catch (err) {
         console.error('Erreur lors de la validation:', err);
+        setValidateComment('');
         alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
       }
     });
@@ -420,13 +429,27 @@ const CongesPage = () => {
           ))}
         </div>
         <Button
-          variant="outline-secondary"
+          variant={showFilters ? 'secondary' : 'outline-secondary'}
           size="sm"
-          onClick={() => setShowFilters(!showFilters)}
+          onClick={() => {
+            if (showFilters) {
+              setFilters(prev => ({
+                ...prev,
+                search: '',
+                joursRestantsMin: '',
+                joursRestantsMax: '',
+                dateDemandeDebut: '',
+                dateDemandeFin: '',
+                page: 1,
+              }));
+              setCurrentPage(1);
+            }
+            setShowFilters(s => !s);
+          }}
           className="d-flex align-items-center flex-shrink-0"
         >
           <FaFilter className="me-2" />
-          Filtres avancés
+          {showFilters ? 'Fermer filtres' : 'Filtres avancés'}
         </Button>
       </div>
 
@@ -603,6 +626,11 @@ const CongesPage = () => {
                             {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                             {(conge.jours_pris ?? conge.jours_calcules) != null && ` · ${formatDays(conge.jours_pris ?? conge.jours_calcules)}j`}
                           </div>
+                          {conge.statut?.startsWith('refuse') && (conge.commentaire_manager || conge.commentaire_admin) && (
+                            <div style={{ fontSize: '10px', color: 'var(--bs-danger, #dc3545)', marginTop: 2 }}>
+                              {(conge.commentaire_admin || conge.commentaire_manager)?.slice(0, 80)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Link>
@@ -632,7 +660,15 @@ const CongesPage = () => {
                         <td>
                           {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
                         </td>
-                        <td>{getStatusBadge(conge.statut)}</td>
+                        <td>
+                          {getStatusBadge(conge.statut)}
+                          {conge.statut?.startsWith('refuse') && (conge.commentaire_manager || conge.commentaire_admin) && (
+                            <div className="small text-muted mt-1" title={conge.commentaire_admin || conge.commentaire_manager}>
+                              {(conge.commentaire_admin || conge.commentaire_manager)?.slice(0, 60)}
+                              {(conge.commentaire_admin || conge.commentaire_manager)?.length > 60 ? '…' : ''}
+                            </div>
+                          )}
+                        </td>
                         <td>
                           <div className="d-flex gap-1 conges-table-actions">
                             <Button

@@ -107,7 +107,10 @@ const PolitiqueCongesPage = () => {
 
   useEffect(() => {
     const loadPolicy = async () => {
-      if (!entrepriseId) return;
+      if (!entrepriseId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [policyResponse, usersResponse, typesResponse, parametresResponse, leavePolicyResponse] = await Promise.all([
@@ -454,6 +457,16 @@ const PolitiqueCongesPage = () => {
     return (
       <Container fluid="sm" className="page-loading">
         <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
+
+  if (!entrepriseId) {
+    return (
+      <Container fluid="sm">
+        <div className="alert alert-warning text-center mt-4">
+          Aucune entreprise associée à votre compte. Accédez à la politique de congés depuis la gestion des entreprises.
+        </div>
       </Container>
     );
   }

@@ -12,7 +12,7 @@ const AbsencesPage = () => {
   const { user } = useAuth();
 
   const canEdit = user && ['manager', 'admin_entreprise', 'super_admin'].includes(user.role);
-  const canDeclareAbsence = user && (user.role === 'employe' || user.role === 'manager');
+  const canDeclareAbsence = user && ['employe', 'manager', 'admin_entreprise'].includes(user.role);
 
   return (
     <Container fluid="sm">

@@ -93,20 +93,53 @@ api.interceptors.request.use(
 );
 
 // Intercepteur pour gérer les erreurs d'authentification et de maintenance
+let isRefreshing = false;
+let refreshQueue = [];
+
+function processRefreshQueue(error, token = null) {
+  refreshQueue.forEach((cb) => (error ? cb.reject(error) : cb.resolve(token)));
+  refreshQueue = [];
+}
+
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     const requestUrl = error.config?.url || '';
     const isLoginRequest = requestUrl.includes('/auth/login');
+    const isRefreshRequest = requestUrl.includes('/auth/refresh');
 
-    if (error.response?.status === 401 && !isLoginRequest) {
-      // Token expiré ou invalide
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      return Promise.reject(error);
+    if (error.response?.status === 401 && !isLoginRequest && !isRefreshRequest) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        }).then((token) => {
+          error.config.headers.Authorization = `Bearer ${token}`;
+          return api(error.config);
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        const res = await api.post('/auth/refresh', {}, { withCredentials: true });
+        const newToken = res.data?.token;
+        if (newToken) {
+          localStorage.setItem('token', newToken);
+          api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+          processRefreshQueue(null, newToken);
+          error.config.headers.Authorization = `Bearer ${newToken}`;
+          return api(error.config);
+        }
+      } catch {
+        processRefreshQueue(new Error('Session expirée'));
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
     const isMaintenance = error.response?.status === 503
@@ -151,6 +184,7 @@ export const congesService = {
   validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),
   reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
   getById: (id) => api.get(`/conges/${id}`),
+  getHistory: (id) => api.get(`/conges/${id}/history`),
 };
 
 export const usersService = {
@@ -160,6 +194,11 @@ export const usersService = {
   updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
   delete: (id) => api.delete(`/users/${id}`),
   getById: (id) => api.get(`/users/${id}`),
+  importCSV: (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post('/users/import/csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
 };
 
 export const entreprisesService = {
@@ -168,6 +207,8 @@ export const entreprisesService = {
   update: (id, data) => api.put(`/entreprises/${id}`, data),
   getById: (id) => api.get(`/entreprises/${id}`),
   getPolitique: (id) => api.get(`/entreprises/${id}/politique`),
+  getBlockedDays: (id) => api.get(`/entreprises/${id}/blocked-days`),
+  getPublicPolicy: (id) => api.get(`/entreprises/${id}/blocked-days`),
   updatePolitique: (id, politique) => api.put(`/entreprises/${id}/politique`, { politique_conges: politique }),
   getParametres: (id) => api.get(`/entreprises/${id}/parametres`),
   updateParametres: (id, data) => api.put(`/entreprises/${id}/parametres`, { parametres: data }),

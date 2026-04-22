@@ -80,7 +80,7 @@ const ServicesPage = () => {
     setSubmitting(true);
     try {
       const payload = {
-        name: formData.name,
+        name: formData.name.trim(),
         policy: {
           overlap_policy: formData.policy.overlap_policy,
           minimum_notice_days: Number(formData.policy.minimum_notice_days || 0),
