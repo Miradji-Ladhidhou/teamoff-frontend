@@ -111,9 +111,12 @@ const CalendrierPage = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
+      const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).toISOString().slice(0, 10);
+
       const [congesResponse, absencesResponse, feriesResponse, blockedDaysResponse] = await Promise.all([
         calendrierService.getCongesByMonth(year, month, filters),
-        api.get('/absences', { params: { year, month } }),
+        api.get('/absences', { params: { date_debut: firstDay, date_fin: lastDay } }),
         calendrierService.getJoursFeriesByMonth(year, month),
         entrepriseId ? entreprisesService.getBlockedDays(entrepriseId).catch(() => null) : Promise.resolve(null),
       ]);

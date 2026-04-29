@@ -13,6 +13,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^1.3.0",
     "bootstrap": "^5.2.3",
     "date-fns": "^4.1.0",

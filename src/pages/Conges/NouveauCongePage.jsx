@@ -123,7 +123,12 @@ const NouveauCongePage = () => {
       }
 
     } catch (err) {
-      console.error('Erreur lors du chargement des données:', err);
+      const status = err.response?.status;
+      if (status === 403 || status === 404) {
+        navigate(returnPath, { replace: true });
+        return;
+      }
+      alert.error('Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);
     }

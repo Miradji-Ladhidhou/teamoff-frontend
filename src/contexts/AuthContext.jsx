@@ -56,8 +56,7 @@ export const AuthProvider = ({ children }) => {
           .catch(() => {
             // token expiré — l'intercepteur axios redirige déjà vers /login
           });
-      } catch (error) {
-        console.error('Erreur lors du parsing des données utilisateur:', error);
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -80,7 +79,6 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur de connexion:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur de connexion'
@@ -94,7 +92,6 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Erreur d\'inscription:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur d\'inscription'
@@ -103,11 +100,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Fonction de déconnexion
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // On nettoie quoi qu'il arrive
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const updateUser = (partialUser) => {

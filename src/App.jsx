@@ -257,12 +257,11 @@ function App() {
           }
         />
 
-        {/* Routes protégées standard */}
+        {/* Routes protégées standard — tous les utilisateurs authentifiés */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<DashboardRedirect />} />
             <Route path="/mes-conges" element={<CongesPage />} />
-            <Route path="/conges-equipe" element={<CongesPage />} />
             <Route path="/conges" element={<CongesPage />} />
             <Route path="/conges/nouveau" element={<NouveauCongePage />} />
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
@@ -272,6 +271,13 @@ function App() {
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
+          </Route>
+        </Route>
+
+        {/* Vue équipe — manager et au-dessus uniquement */}
+        <Route element={<ProtectedRoute roles={['manager', 'admin_entreprise', 'super_admin']} />}>
+          <Route element={<Layout />}>
+            <Route path="/conges-equipe" element={<CongesPage />} />
           </Route>
         </Route>
 

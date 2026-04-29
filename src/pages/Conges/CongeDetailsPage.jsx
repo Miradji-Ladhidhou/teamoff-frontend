@@ -162,7 +162,12 @@ const CongeDetailsPage = () => {
       const response = await congesService.getById(id);
       setConge(response.data);
     } catch (err) {
-      console.error('Erreur lors du chargement du congé:', err);
+      const status = err.response?.status;
+      if (status === 403 || status === 404) {
+        const backRoute = isSuperAdmin ? '/superadmin/leaves' : '/mes-conges';
+        navigate(backRoute, { replace: true });
+        return;
+      }
       alert.error('Erreur lors du chargement des détails du congé');
     } finally {
       setLoading(false);

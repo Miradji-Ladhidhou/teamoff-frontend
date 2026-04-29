@@ -98,8 +98,7 @@ const CongesPage = () => {
       const total = Number.isFinite(response.total) ? response.total : items.length;
       setServerTotalPages(Math.max(Math.ceil(total / filters.limit), 1));
     } catch (err) {
-      console.error('Erreur lors du chargement des congés:', err);
-      alert.error('Erreur lors du chargement des congés');
+      alert.error(err.response?.data?.message || 'Erreur lors du chargement des congés');
     } finally {
       setLoading(false);
     }
@@ -342,7 +341,6 @@ const CongesPage = () => {
         closeValidateModal();
         loadConges();
       } catch (err) {
-        console.error('Erreur lors de la validation:', err);
         setValidateComment('');
         alert.error(err.response?.data?.message || 'Erreur lors de la validation du congé');
       }
@@ -363,7 +361,6 @@ const CongesPage = () => {
         closeRejectModal();
         loadConges();
       } catch (err) {
-        console.error('Erreur lors du rejet:', err);
         alert.error(err.response?.data?.message || 'Erreur lors du rejet du congé');
       }
     });
@@ -773,7 +770,10 @@ const CongesPage = () => {
             </Alert>
           )}
           {validationOverlapLoading && (
-            <div className="small text-muted mb-3">Vérification du chevauchement en cours...</div>
+            <div className="d-flex align-items-center gap-2 small text-muted mb-3">
+              <Spinner animation="border" size="sm" />
+              Vérification du chevauchement en cours…
+            </div>
           )}
           <p className="mb-3">Confirmez-vous la validation de cette demande de congé ?</p>
           <Form.Group>
@@ -800,6 +800,7 @@ const CongesPage = () => {
             onClick={handleValidateConge}
             action={validateAction}
             loadingText="Validation..."
+            disabled={validationOverlapLoading || validateAction.isRunning}
           >
             Valider
           </AsyncButton>

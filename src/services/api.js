@@ -350,7 +350,8 @@ export const settingsService = {
 
 export const absencesService = {
   getAll: (params = {}) => api.get('/absences', { params }),
-  // Vous pouvez ajouter d'autres méthodes ici si besoin (create, update, etc.)
+  create: (formData) => api.post('/absences', formData),
+  update: (id, data) => api.patch(`/absences/${id}`, data),
 };
 
 // Exporter l'instance axios personnalisée pour les imports nommés

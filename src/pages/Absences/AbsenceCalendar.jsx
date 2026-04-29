@@ -79,7 +79,10 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
       setLoading(true);
       setError('');
       try {
-        const res = await api.get('/absences');
+        const year = new Date().getFullYear();
+        const res = await api.get('/absences', {
+          params: { date_debut: `${year}-01-01`, date_fin: `${year}-12-31` },
+        });
         setAbsences(res.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Erreur lors du chargement des absences');
@@ -132,7 +135,10 @@ const AbsenceCalendar = ({ canEdit, refresh }) => {
       setEditComment('');
       // Refresh absences
       setLoading(true);
-      const res = await api.get('/absences');
+      const year = new Date().getFullYear();
+      const res = await api.get('/absences', {
+        params: { date_debut: `${year}-01-01`, date_fin: `${year}-12-31` },
+      });
       setAbsences(res.data);
     } catch (err) {
       alert.error(err.response?.data?.message || 'Erreur lors de la modification');

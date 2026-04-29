@@ -1,9 +1,10 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://teamoff-backend-acqc.onrender.com/api';
 
 export function useNotificationStream(onNotification) {
-  const esRef = useRef(null);
+  const abortRef = useRef(null);
   const onNotificationRef = useRef(onNotification);
   onNotificationRef.current = onNotification;
 
@@ -11,34 +12,30 @@ export function useNotificationStream(onNotification) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    if (esRef.current) {
-      esRef.current.close();
-    }
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
 
-    const url = `${API_BASE}/notifications/stream?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
-
-    es.addEventListener('notification', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        onNotificationRef.current?.(data);
-      } catch { /* ignore malformed */ }
-    });
-
-    es.onerror = () => {
-      es.close();
-      // Reconnect after 10s on error
-      setTimeout(connect, 10000);
-    };
-
-    esRef.current = es;
+    fetchEventSource(`${API_BASE}/notifications/stream`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: abortRef.current.signal,
+      onmessage(ev) {
+        if (ev.event !== 'notification') return;
+        try {
+          const data = JSON.parse(ev.data);
+          onNotificationRef.current?.(data);
+        } catch { /* ignore malformed */ }
+      },
+      onerror() {
+        // fetchEventSource reconnecte automatiquement — on laisse faire
+      },
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
     connect();
     return () => {
-      esRef.current?.close();
-      esRef.current = null;
+      abortRef.current?.abort();
+      abortRef.current = null;
     };
   }, [connect]);
 }

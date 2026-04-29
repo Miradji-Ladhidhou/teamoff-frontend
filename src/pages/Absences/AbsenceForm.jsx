@@ -19,12 +19,27 @@ const AbsenceForm = ({ onSuccess }) => {
     setJustificatif(null);
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB — correspond à la limite multer backend
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) { setJustificatif(null); return; }
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Le fichier dépasse la taille maximale autorisée (5 Mo).');
+      e.target.value = '';
+      setJustificatif(null);
+      return;
+    }
+    setError('');
+    setJustificatif(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!typeAbsence || !dateDebut || !dateFin) {
-      setError('Tous les champs obligatoires doivent être remplis.');
+    if (!typeAbsence || !dateDebut || !dateFin || !commentaire.trim()) {
+      setError('Tous les champs obligatoires doivent être remplis, y compris le commentaire.');
       return;
     }
 
@@ -48,11 +63,9 @@ const AbsenceForm = ({ onSuccess }) => {
       formData.append('commentaire', commentaire);
       if (justificatif) formData.append('justificatif', justificatif);
 
-      const res = await api.post('/absences', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // Pas de Content-Type explicite — axios détecte FormData et pose le boundary correct
+      await api.post('/absences', formData);
 
-      // Reset formulaire
       setTypeAbsence('');
       setDateDebut('');
       setDateFin('');
@@ -63,7 +76,6 @@ const AbsenceForm = ({ onSuccess }) => {
       if (onSuccess) onSuccess();
 
     } catch (err) {
-      console.error(err);
       const msg = err.response?.data?.message || 'Erreur lors de la déclaration';
       setError(msg);
       alert.error(msg);
@@ -114,23 +126,27 @@ const AbsenceForm = ({ onSuccess }) => {
 
       {typeAbsence === 'maladie' && (
         <div className="absence-form-field">
-          <label className="absence-form-label">Justificatif (PDF/image) *</label>
+          <label className="absence-form-label">Justificatif (PDF, JPG ou PNG, 5 Mo max) *</label>
           <input
             className="absence-form-input"
             type="file"
-            accept="application/pdf,image/*"
-            onChange={(e) => setJustificatif(e.target.files[0])}
+            accept="application/pdf,image/jpeg,image/png"
+            onChange={handleFileChange}
             required
           />
+          <small className="absence-form-hint">
+            Le document sera transmis en pièce jointe au manager et à l'administrateur.
+          </small>
         </div>
       )}
 
       <div className="absence-form-field">
-        <label className="absence-form-label">Commentaire</label>
+        <label className="absence-form-label">Commentaire *</label>
         <textarea
           className="absence-form-textarea"
           value={commentaire}
           onChange={(e) => setCommentaire(e.target.value)}
+          required
         />
       </div>
 

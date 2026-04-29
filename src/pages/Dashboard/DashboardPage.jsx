@@ -30,6 +30,7 @@ const DashboardPage = () => {
   });
   const [recentConges, setRecentConges] = useState([]);
   const [soldes, setSoldes] = useState(null);
+  const [soldesLoadError, setSoldesLoadError] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [recentOverlapByCongeId, setRecentOverlapByCongeId] = useState({});
   const [loading, setLoading] = useState(true);
@@ -117,15 +118,14 @@ const DashboardPage = () => {
               });
 
             setSoldes(mergedSoldes);
-          } catch (soldesError) {
-            console.warn('Erreur chargement soldes:', soldesError);
+          } catch {
             setSoldes([]);
+            setSoldesLoadError(true);
           }
         }
 
       } catch (err) {
-        console.error('Erreur dashboard:', err);
-        alert.error('Impossible de charger les données du tableau de bord.');
+        alert.error(err.response?.data?.message || 'Impossible de charger les données du tableau de bord.');
       } finally {
         setLoading(false);
       }
@@ -278,7 +278,9 @@ const DashboardPage = () => {
             </div>
             <Card>
               <Card.Body>
-                {soldes.length === 0 ? (
+                {soldesLoadError ? (
+                  <p className="ui-text-soft mb-0 text-danger">Impossible de charger les soldes.</p>
+                ) : soldes.length === 0 ? (
                   <p className="ui-text-soft mb-0">Aucun solde disponible</p>
                 ) : (
                   soldes.map((solde, idx) => {
