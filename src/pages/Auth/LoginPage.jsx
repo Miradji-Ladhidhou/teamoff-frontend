@@ -55,7 +55,7 @@ const LoginPage = () => {
         <Row className="align-items-center justify-content-between g-4">
 
           {/* Hero + Features */}
-          <Col lg={7} className="mb-4 mb-lg-0">
+          <Col xs={12} lg={7} className="mb-4 mb-lg-0">
             <h1 className="text-white fw-bold mb-3">TeamOff</h1>
             <p className="text-light lead mb-4">Gérez vos congés, quotas et équipes depuis une interface claire et moderne.</p>
 
@@ -65,21 +65,21 @@ const LoginPage = () => {
             </div>
 
             <Row className="g-3 mt-2">
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Card className="feature-card dark-card">
                   <FaCalendarCheck size={28} className="mb-2 text-info" />
                   <h5 className="text-white">Calendrier</h5>
                   <p className="text-light small">Suivi équipe et jours bloqués.</p>
                 </Card>
               </Col>
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Card className="feature-card dark-card">
                   <FaUsersCog size={28} className="mb-2 text-info" />
                   <h5 className="text-white">Workflow</h5>
                   <p className="text-light small">Validations par service et quotas.</p>
                 </Card>
               </Col>
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Card className="feature-card dark-card">
                   <FaShieldAlt size={28} className="mb-2 text-info" />
                   <h5 className="text-white">Sécurité</h5>
@@ -90,7 +90,7 @@ const LoginPage = () => {
           </Col>
 
           {/* Formulaire Login */}
-          <Col lg={5} xl={4}>
+          <Col xs={12} lg={5} xl={4}>
             <Card className="shadow-lg border-0 dark-card">
               <Card.Body className="p-4">
                 <h3 className="text-white mb-4 text-center">Connexion</h3>

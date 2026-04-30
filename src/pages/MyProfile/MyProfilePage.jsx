@@ -127,7 +127,7 @@ const MyProfilePage = () => {
 
       <Row>
         {/* Sidebar */}
-        <Col md={3} className="mb-4 profile-sidebar-col">
+        <Col xs={12} md={3} className="mb-4 profile-sidebar-col">
           <Card className="mb-3">
             <Card.Body className="p-2">
               <div className="d-flex flex-column gap-1">
@@ -177,7 +177,7 @@ const MyProfilePage = () => {
         </Col>
 
         {/* Contenu principal */}
-        <Col md={9}>
+        <Col xs={12} md={9}>
           {activeTab === 'profile' && (
             <Card>
               <Card.Header>

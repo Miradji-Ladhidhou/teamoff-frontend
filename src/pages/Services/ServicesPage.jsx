@@ -173,7 +173,7 @@ const ServicesPage = () => {
                   <span className="badge info">Préavis : {service.policy?.minimum_notice_days || 0} j</span>
                   <span className="badge info">Max absences : {service.policy?.max_employees_on_leave || 0}</span>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-wrap gap-2">
                   <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openEditModal(service)}>
                     <FaEdit className="me-1" /> Modifier
                   </Button>

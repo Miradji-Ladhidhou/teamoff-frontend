@@ -225,7 +225,7 @@ const NotificationsPage = () => {
       </div>
 
       <Card>
-        <Card.Header className="d-flex justify-content-end align-items-center gap-2">
+        <Card.Header className="d-flex flex-wrap justify-content-end align-items-center gap-2">
           <small className="text-muted">Par page</small>
           <Form.Select
             size="sm"

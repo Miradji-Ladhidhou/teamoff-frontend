@@ -104,7 +104,7 @@ const ResetPasswordPage = () => {
     >
       <Container className="py-4 py-lg-5">
         <Row className="align-items-center justify-content-between g-4 g-xl-5 py-lg-4">
-          <Col lg={7}>
+          <Col xs={12} lg={7}>
             <Badge bg="dark" className="rounded-pill px-3 py-2 mb-3">
               Réinitialisez votre accès
             </Badge>
@@ -140,7 +140,7 @@ const ResetPasswordPage = () => {
             </div>
           </Col>
 
-          <Col lg={5}>
+          <Col xs={12} lg={5}>
             <Card
               className="shadow-sm auth-step-card"
             >

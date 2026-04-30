@@ -5,7 +5,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
   return (
     <div id="section-regles-generales">
       <Row>
-        <Col md={6}>
+        <Col xs={12} md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Politique de chevauchement</Form.Label>
             <Form.Select
@@ -18,7 +18,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={6}>
+        <Col xs={12} md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Workflow d'approbation</Form.Label>
             <Form.Select
@@ -34,7 +34,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
       </Row>
 
       <Row>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Preavis minimum (jours)</Form.Label>
             <Form.Control
@@ -45,7 +45,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Max jours consecutifs</Form.Label>
             <Form.Control
@@ -56,7 +56,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Max absences simultanees (global)</Form.Label>
             <Form.Control
@@ -76,7 +76,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
       </Row>
 
       <Row>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Conges payes annuels</Form.Label>
             <Form.Control
@@ -87,7 +87,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>RTT annuels</Form.Label>
             <Form.Control
@@ -98,7 +98,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col xs={12} md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Report max (jours)</Form.Label>
             <Form.Control

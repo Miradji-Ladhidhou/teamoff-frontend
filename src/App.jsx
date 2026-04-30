@@ -96,6 +96,12 @@ const DashboardRedirect = () => {
 
 import { useLocation } from 'react-router-dom';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  React.useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
+
 const PublicPageLayout = ({ children }) => {
   const location = useLocation();
   // On masque l'en-tête public sur la page /help
@@ -146,6 +152,7 @@ function App() {
       <AlertProvider>
         {/* Global Alert System Components */}
         <GlobalModalProvider />
+        <ScrollToTop />
 
         <Routes>
 

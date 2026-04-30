@@ -384,7 +384,7 @@ const CongeDetailsPage = () => {
       </div>
 
       {/* Actions header (modifier / annuler) */}
-      <div className="d-flex justify-content-end gap-2 mb-3">
+      <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
         {conge.statut === 'valide_final' && !policyValidation.loading && (
           <LeaveActionRestriction
             isValidated

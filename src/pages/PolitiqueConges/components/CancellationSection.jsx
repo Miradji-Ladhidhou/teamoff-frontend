@@ -12,7 +12,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           </div>
 
           <Row className="g-3">
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Autoriser le salarie a annuler sa demande en attente"
@@ -20,7 +20,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
                 onChange={(e) => setField('allow_employee_cancel_own_pending', e.target.checked)}
               />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Autoriser le manager a annuler sa demande en attente"
@@ -38,7 +38,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           <div className="small text-muted mb-3">Definissez ce que les utilisateurs peuvent encore faire une fois un conge valide.</div>
 
           <Row className="g-3 mb-2">
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Autoriser la modification d'un conge valide"
@@ -46,7 +46,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
                 onChange={(e) => setLeavePolicy((prev) => ({ ...prev, allow_modify_validated: e.target.checked }))}
               />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Autoriser l'annulation d'un conge valide"
@@ -57,7 +57,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           </Row>
 
           <Row className="g-3 mb-2">
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Group>
                 <Form.Label>Preavis minimum (jours)</Form.Label>
                 <Form.Control
@@ -68,7 +68,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
                 />
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Group>
                 <Form.Label>Retroactivite max (jours)</Form.Label>
                 <Form.Control
@@ -82,7 +82,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           </Row>
 
           <Row className="g-3">
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Validation manager requise"
@@ -90,7 +90,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
                 onChange={(e) => setLeavePolicy((prev) => ({ ...prev, require_manager_approval: e.target.checked }))}
               />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Form.Check
                 type="switch"
                 label="Validation admin requise"

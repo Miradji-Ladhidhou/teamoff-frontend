@@ -1,7 +1,7 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, Pagination } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
@@ -348,22 +348,25 @@ const UsersManagement = () => {
       {/* En-tête responsive */}
       <div className="page-title-bar">
         <span className="section-title-bar__text">Gestion des Utilisateurs</span>
-        <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>
-            Info
+        <div className="d-flex flex-wrap gap-2">
+          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)} title="Informations">
+            <span className="d-none d-sm-inline">Info</span>
+            <span className="d-sm-none"><FaInfoCircle /></span>
           </Button>
           <AsyncButton
             variant="outline-secondary"
             onClick={handleExportCsv}
             action={exportAction}
-            loadingText="Export..."
+            loadingText=""
+            title="Exporter CSV"
           >
-            <FaDownload className="me-2" />
-            CSV
+            <FaDownload className="d-none d-sm-inline me-2" />
+            <span className="d-none d-sm-inline">CSV</span>
+            <FaDownload className="d-sm-none" />
           </AsyncButton>
           <label className="btn btn-outline-secondary mb-0" style={{ cursor: importAction.isRunning ? 'wait' : 'pointer' }} title="Importer des utilisateurs via CSV">
             <FaDownload className="me-2" style={{ transform: 'rotate(180deg)' }} />
-            Import CSV
+            <span className="d-none d-sm-inline">Import CSV</span>
             <input type="file" accept=".csv,text/csv" className="d-none" onChange={handleImportCsv} disabled={importAction.isRunning} />
           </label>
           <Button
@@ -460,7 +463,7 @@ const UsersManagement = () => {
                       </div>
                       {getStatusBadge(targetUser.statut)}
                     </div>
-                    <div className="d-flex gap-1 users-management-mobile-list__actions">
+                    <div className="d-flex flex-wrap gap-1 users-management-mobile-list__actions">
                       <Button variant="outline-secondary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openDetailsModal(targetUser)}>
                         Detail
                       </Button>

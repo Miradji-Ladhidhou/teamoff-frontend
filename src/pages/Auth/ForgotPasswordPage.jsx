@@ -45,7 +45,7 @@ const ForgotPasswordPage = () => {
       <Container>
         <Row className="align-items-center justify-content-between g-4">
           {/* Description / illustration */}
-          <Col lg={7} className="mb-4 mb-lg-0 text-white">
+          <Col xs={12} lg={7} className="mb-4 mb-lg-0 text-white">
             <h1 className="fw-bold mb-3">Mot de passe oublié</h1>
             <p className="lead mb-4 text-light">
               Entrez votre adresse email pour recevoir un lien de réinitialisation.
@@ -57,7 +57,7 @@ const ForgotPasswordPage = () => {
           </Col>
 
           {/* Formulaire */}
-          <Col lg={5}>
+          <Col xs={12} lg={5}>
             <Card className="shadow-lg dark-card">
               <Card.Body className="p-4">
                 {!submitted ? (

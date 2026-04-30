@@ -101,7 +101,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--role-accent) 60%, var(--dk-text-muted));
+  color: rgba(255,255,255,0.4);
   padding: 12px 12px 6px;
 }
 
@@ -115,7 +115,7 @@
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-muted, rgba(255,255,255,0.65)) !important;
+  color: rgba(255,255,255,0.6) !important;
   position: relative;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -171,8 +171,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid color-mix(in srgb, var(--role-accent) 12%, var(--dk-border));
-  background: linear-gradient(to right, color-mix(in srgb, var(--role-accent) 8%, transparent), transparent), var(--dk-bg);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--dk-bg);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -185,7 +185,7 @@
   font-size: 16px !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em;
-  color: var(--text, var(--dk-text)) !important;
+  color: #f1f1f3 !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -197,11 +197,11 @@
 
 .topbar-icon-btn,
 .topbar-icon-btn-mobile {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  background: var(--surface, var(--dk-surface));
-  border: 1px solid var(--border, var(--dk-border));
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -236,8 +236,8 @@
 /* Desktop topbar (≥992px) */
 .role-topbar.desktop-topbar,
 .superadmin-topbar {
-  background: var(--role-sidebar-bg, var(--dk-surface)) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--role-accent) 12%, var(--dk-border)) !important;
+  background: var(--dk-surface) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   height: 56px;
@@ -249,13 +249,13 @@
 }
 
 .role-topbar.desktop-topbar .navbar-brand {
-  color: var(--role-accent) !important;
+  color: #f1f1f3 !important;
   font-weight: 700;
 }
 
 .role-topbar-note,
 .superadmin-topbar-note {
-  color: color-mix(in srgb, var(--role-accent) 40%, var(--dk-text-muted));
+  color: rgba(255,255,255,0.5);
   font-size: 0.78rem;
   font-weight: 500;
 }
@@ -285,8 +285,8 @@
   right: 0;
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: linear-gradient(to top, color-mix(in srgb, var(--role-accent) 4%, transparent), transparent), var(--dk-surface);
-  border-top: 1px solid color-mix(in srgb, var(--role-accent) 15%, var(--dk-border));
+  background: var(--dk-surface);
+  border-top: 1px solid rgba(255,255,255,0.1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -317,7 +317,7 @@
   cursor: pointer;
   background: none;
   border: none;
-  color: var(--text-muted, var(--dk-text-muted));
+  color: rgba(255,255,255,0.45);
   transition: color 0.12s, background 0.12s;
 }
 
@@ -337,9 +337,9 @@
 .nav-label,
 .mobile-bottom-nav__label {
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--text-muted, var(--dk-text-muted));
+  color: rgba(255,255,255,0.45);
   white-space: nowrap;
   line-height: 1;
 }
@@ -361,18 +361,19 @@
 .nav-item.active .nav-label,
 .nav-item.active .mobile-bottom-nav__label,
 .mobile-bottom-nav__item.active .mobile-bottom-nav__label {
-  color: var(--nav-accent, var(--role-accent));
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .nav-item.active,
 .mobile-bottom-nav__item.active {
-  color: var(--nav-accent, var(--role-accent));
+  color: #ffffff;
 }
 
 .nav-item:hover,
 .mobile-bottom-nav__item:hover {
   background: var(--elevated, var(--dk-elevated));
-  color: var(--text-soft, var(--dk-text-soft));
+  color: rgba(255,255,255,0.75);
 }
 
 .nav-icon,
@@ -402,29 +403,83 @@
 .offcanvas {
   width: 290px !important;
   background-color: var(--dk-surface) !important;
-  border-right: 1px solid var(--dk-border) !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+  color: #f1f1f3 !important;
 }
 
+/* Header offcanvas */
+.offcanvas-header {
+  background-color: var(--dk-elevated) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  color: #f1f1f3 !important;
+}
+
+.offcanvas-title {
+  color: #f1f1f3 !important;
+  font-weight: 700 !important;
+}
+
+/* Bouton close Bootstrap — rendre visible sur fond sombre */
+.offcanvas .btn-close {
+  filter: invert(1) grayscale(1) brightness(1.5) !important;
+  opacity: 0.7 !important;
+}
+
+.offcanvas .btn-close:hover {
+  opacity: 1 !important;
+}
+
+/* Nom / infos utilisateur */
+.offcanvas .fw-bold {
+  color: #f1f1f3 !important;
+}
+
+.offcanvas small,
+.offcanvas .ui-text-soft {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* Champ de recherche */
+.offcanvas .form-control {
+  background-color: var(--dk-elevated) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #f1f1f3 !important;
+}
+
+.offcanvas .form-control::placeholder {
+  color: rgba(255,255,255,0.35) !important;
+}
+
+.offcanvas .form-control:focus {
+  background-color: var(--dk-elevated) !important;
+  border-color: rgba(255,255,255,0.25) !important;
+  color: #f1f1f3 !important;
+  box-shadow: none !important;
+}
+
+/* Liens de navigation */
 .offcanvas .role-nav-link,
 .offcanvas .sidebar-link {
-  color: var(--dk-text-soft) !important;
+  color: rgba(255,255,255,0.65) !important;
 }
 
 .offcanvas .role-nav-link:hover,
 .offcanvas .sidebar-link:hover {
-  color: var(--dk-text) !important;
-  background: var(--dk-elevated);
+  color: #f1f1f3 !important;
+  background: rgba(255,255,255,0.06);
 }
 
 .offcanvas .role-nav-link.active,
 .offcanvas .sidebar-link.active {
-  background: var(--role-accent-soft) !important;
-  color: var(--role-accent) !important;
+  background: rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
 }
 
+/* Labels de section */
 .offcanvas .role-section-title,
 .offcanvas .sidebar-section-label {
-  color: color-mix(in srgb, var(--role-accent) 60%, var(--dk-text-muted));
+  color: rgba(255,255,255,0.4) !important;
 }
 
 @media (max-width: 991.98px) {

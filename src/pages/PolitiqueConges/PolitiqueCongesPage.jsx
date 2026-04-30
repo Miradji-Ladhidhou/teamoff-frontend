@@ -609,7 +609,7 @@ const PolitiqueCongesPage = () => {
             <Form.Group className="mb-4">
               <Form.Label>Politiques par service</Form.Label>
               <Row className="g-2 mb-3">
-                <Col md={8}>
+                <Col xs={12} md={8}>
                   <Form.Control
                     type="text"
                     value={newServiceName}
@@ -617,7 +617,7 @@ const PolitiqueCongesPage = () => {
                     placeholder="Ajouter un service (ex: Support, RH, Commercial)"
                   />
                 </Col>
-                <Col md={4}>
+                <Col xs={12} md={4}>
                   <Button type="button" variant="outline-primary" className="w-100" onClick={addServicePolicy}>
                     Ajouter le service
                   </Button>
@@ -704,7 +704,7 @@ const PolitiqueCongesPage = () => {
                   {expandedServices[serviceName] && (
                   <Card.Body>
                     <Row>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>Chevauchement</Form.Label>
                           <Form.Select
@@ -717,7 +717,7 @@ const PolitiqueCongesPage = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>Workflow</Form.Label>
                           <Form.Select
@@ -733,7 +733,7 @@ const PolitiqueCongesPage = () => {
                     </Row>
 
                     <Row>
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label>Préavis min</Form.Label>
                           <Form.Control
@@ -744,7 +744,7 @@ const PolitiqueCongesPage = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label>Max consécutif</Form.Label>
                           <Form.Control
@@ -755,7 +755,7 @@ const PolitiqueCongesPage = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label>Max absences simultanées</Form.Label>
                           <Form.Control
@@ -931,7 +931,7 @@ const PolitiqueCongesPage = () => {
         <Form onSubmit={handleSaveCongeType}>
           <Modal.Body>
             <Row>
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label>Code</Form.Label>
                   <Form.Control
@@ -943,7 +943,7 @@ const PolitiqueCongesPage = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={8}>
+              <Col xs={12} md={8}>
                 <Form.Group className="mb-3">
                   <Form.Label>Libellé</Form.Label>
                   <Form.Control

@@ -721,7 +721,7 @@ const JoursBloquesPage = () => {
               )}
             </Form.Group>
             <Row>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Jours acquis</Form.Label>
                   <Form.Control
@@ -732,7 +732,7 @@ const JoursBloquesPage = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Jours pris</Form.Label>
                   <Form.Control
@@ -745,7 +745,7 @@ const JoursBloquesPage = () => {
               </Col>
             </Row>
             <Row>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Jours reportés</Form.Label>
                   <Form.Control
@@ -756,7 +756,7 @@ const JoursBloquesPage = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Jours réservés</Form.Label>
                   <Form.Control

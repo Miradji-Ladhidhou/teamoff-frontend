@@ -10,7 +10,7 @@ const ContactPage = () => {
         <span className="section-title-bar__text">Contact</span>
       </div>
       <Row>
-        <Col md={4} className="mb-4">
+        <Col xs={12} md={4} className="mb-4">
           <Card className="h-100">
             <Card.Body>
               <FaEnvelope className="text-primary mb-3" size={24} />
@@ -21,7 +21,7 @@ const ContactPage = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4} className="mb-4">
+        <Col xs={12} md={4} className="mb-4">
           <Card className="h-100">
             <Card.Body>
               <FaHeadset className="text-success mb-3" size={24} />
@@ -32,7 +32,7 @@ const ContactPage = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4} className="mb-4">
+        <Col xs={12} md={4} className="mb-4">
           <Card className="h-100">
             <Card.Body>
               <FaLifeRing className="text-warning mb-3" size={24} />

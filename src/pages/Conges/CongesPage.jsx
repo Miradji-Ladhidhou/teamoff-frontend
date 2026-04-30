@@ -412,7 +412,7 @@ const CongesPage = () => {
       </div>
 
       {/* Filter chips + advanced filters toggle */}
-      <div className="d-flex align-items-center gap-2 mb-3">
+      <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
         <div className="chips-row flex-grow-1 pb-0 mb-0">
           {statusChips.map((chip) => (
             <button
