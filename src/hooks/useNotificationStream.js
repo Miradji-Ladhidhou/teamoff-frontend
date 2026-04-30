@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://teamoff-backend-acqc.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5500/api';
 
 export function useNotificationStream(onNotification) {
   const abortRef = useRef(null);

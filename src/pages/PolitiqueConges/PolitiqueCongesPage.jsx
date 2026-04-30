@@ -501,7 +501,7 @@ const PolitiqueCongesPage = () => {
             <div className="p-4 text-center text-muted">Aucun type de congé configuré.</div>
           ) : (
             <>
-              <div className="d-lg-none mobile-card-list px-3 py-2">
+              <div className="d-md-none mobile-card-list px-3 py-2">
                 {congeTypes.map((type) => (
                   <div key={`mobile-type-${type.id}`} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -528,7 +528,7 @@ const PolitiqueCongesPage = () => {
                 ))}
               </div>
 
-              <div className="settings-table-wrap d-none d-lg-block">
+              <div className="settings-table-wrap d-none d-md-block">
                 <Table responsive hover className="mb-0 settings-table">
                   <thead>
                     <tr>
@@ -776,7 +776,7 @@ const PolitiqueCongesPage = () => {
                 <Card className="mb-3">
                   <Card.Body className="p-0">
                     <div className="settings-table-wrap">
-                      <div className="settings-table-hint d-lg-none">Glissez horizontalement pour éditer les colonnes.</div>
+                      <div className="settings-table-hint d-md-none">Glissez horizontalement pour éditer les colonnes.</div>
                       <Table responsive hover className="mb-0 align-middle settings-table">
                       <thead>
                         <tr>

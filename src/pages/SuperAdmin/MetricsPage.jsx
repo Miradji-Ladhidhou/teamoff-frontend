@@ -228,7 +228,7 @@ const MetricsPage = () => {
               <Card.Body>
                 {metrics.enterpriseUsage && metrics.enterpriseUsage.length > 0 ? (
                   <>
-                    <div className="d-lg-none mobile-card-list">
+                    <div className="d-md-none mobile-card-list">
                       {metrics.enterpriseUsage.map((usage, index) => (
                         <div key={index} className="mobile-card-list__item">
                           <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -243,7 +243,7 @@ const MetricsPage = () => {
                         </div>
                       ))}
                     </div>
-                    <div className="table-responsive d-none d-lg-block">
+                    <div className="table-responsive d-none d-md-block">
                       <table className="table table-sm">
                         <thead>
                           <tr>

@@ -479,7 +479,7 @@ const NouveauCongePage = () => {
 
                 {/* Période */}
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de début *</Form.Label>
                       <Form.Control
@@ -495,7 +495,7 @@ const NouveauCongePage = () => {
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de fin *</Form.Label>
                       <Form.Control
@@ -515,7 +515,7 @@ const NouveauCongePage = () => {
 
                 {/* Demi-journées */}
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Début de journée</Form.Label>
                       <Form.Select
@@ -530,7 +530,7 @@ const NouveauCongePage = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Fin de journée</Form.Label>
                       <Form.Select

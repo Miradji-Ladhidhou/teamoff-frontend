@@ -13,7 +13,23 @@
 
 .absence-form-field {
   flex: 1 1 180px;
-  min-width: 120px;
+  min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+  .absence-form-fields {
+    flex-direction: column;
+  }
+
+  .absence-form-field {
+    flex: none;
+    width: 100%;
+  }
+
+  .absence-form-submit {
+    align-self: stretch;
+    width: 100%;
+  }
 }
 
 .absence-form-label {

@@ -560,7 +560,7 @@ const JoursFeriesPage = () => {
             </div>
           ) : (
             <>
-              <div className="d-lg-none mobile-card-list px-3 py-2">
+              <div className="d-md-none mobile-card-list px-3 py-2">
                 {joursFeries.map((jourFerie) => (
                   <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -606,7 +606,7 @@ const JoursFeriesPage = () => {
                 ))}
               </div>
 
-              <div className="table-responsive d-none d-lg-block">
+              <div className="table-responsive d-none d-md-block">
                 <Table hover className="mb-0">
                 <thead className="table-light">
                   <tr>
@@ -670,7 +670,7 @@ const JoursFeriesPage = () => {
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Row>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Date *</Form.Label>
                   <Form.Control
@@ -682,7 +682,7 @@ const JoursFeriesPage = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col xs={12} md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Type</Form.Label>
                   <Form.Check

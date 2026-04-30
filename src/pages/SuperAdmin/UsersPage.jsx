@@ -443,7 +443,7 @@ const UsersManagement = () => {
           ) : (
             <>
               {/* Vue carte — mobile uniquement */}
-              <div className="d-lg-none mobile-card-list px-3 users-management-mobile-list">
+              <div className="d-md-none mobile-card-list px-3 users-management-mobile-list">
                 {pagedUsers.map((targetUser) => (
                   <div key={targetUser.id} className="mobile-card-list__item users-management-mobile-list__item">
                     <div className="d-flex align-items-center gap-2 mb-2">
@@ -495,7 +495,7 @@ const UsersManagement = () => {
               </div>
 
               {totalPages > 1 && (
-                <div className="d-flex justify-content-center pt-3 d-lg-none">
+                <div className="d-flex justify-content-center pt-3 d-md-none">
                   <Pagination size="sm">
                     <Pagination.Prev disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
                     {Array.from({ length: totalPages }, (_, i) => (
@@ -507,7 +507,7 @@ const UsersManagement = () => {
               )}
 
               {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-lg-block users-management-table-wrap">
+              <div className="d-none d-md-block users-management-table-wrap">
                 <Table hover responsive>
                   <thead>
                     <tr>

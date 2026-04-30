@@ -238,7 +238,7 @@ const AuditLogs = () => {
               {logs.length > 0 && (
                 <>
                   {/* ── MOBILE : cards empilées (< md) ── */}
-                  <div className="d-lg-none mobile-card-list">
+                  <div className="d-md-none mobile-card-list">
                     {logs.map((log) => (
                       <div key={log.id} className="audit-log-mobile-card">
 
@@ -283,7 +283,7 @@ const AuditLogs = () => {
                   </div>
 
                   {/* ── DESKTOP : table classique (≥ md) ── */}
-                  <div className="d-none d-lg-block">
+                  <div className="d-none d-md-block">
                     <Table hover responsive>
                       <thead>
                         <tr>

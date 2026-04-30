@@ -157,7 +157,7 @@ const ServicesPage = () => {
 
       <Card>
         <Card.Body>
-          <div className="d-lg-none mobile-card-list">
+          <div className="d-md-none mobile-card-list">
             {services.map((service) => (
               <div key={service.name} className="mobile-card-list__item">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -185,7 +185,7 @@ const ServicesPage = () => {
             ))}
           </div>
 
-          <div className="d-none d-lg-block">
+          <div className="d-none d-md-block">
             <Table responsive hover>
               <thead>
                 <tr>

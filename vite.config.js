@@ -35,12 +35,16 @@ function legacyResetPasswordRedirect() {
 export default defineConfig({
   plugins: [react(), legacyResetPasswordRedirect()],
   server: {
-    port: 3001,
+    port: parseInt(process.env.VITE_DEV_PORT || '3001'),
     proxy: {
       '/api': {
-        target: 'http://localhost:5500',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:5500',
         changeOrigin: true
       }
     }
-  }
+  },
+  build: {
+    sourcemap: false,
+    minify: 'terser',
+  },
 })

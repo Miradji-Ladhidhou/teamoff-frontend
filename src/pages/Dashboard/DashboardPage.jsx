@@ -369,7 +369,7 @@ const DashboardPage = () => {
 
       {/* Mobile-only "Nouveau congé" button */}
       {['employe', 'manager'].includes(user?.role) && (
-        <div className="d-lg-none mt-4">
+        <div className="d-md-none mt-4">
           <Button as={Link} to="/conges/nouveau" variant="primary" className="w-100 d-flex align-items-center justify-content-center">
             <FaPlus className="me-2" /> Nouveau congé
           </Button>

@@ -59,8 +59,14 @@
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 12px;
   margin: 0 0 16px;
+}
+
+@media (max-width: 375px) {
+  .stats-grid {
+    gap: 8px;
+  }
 }
 
 /* Urgent pulse animation */

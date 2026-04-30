@@ -583,8 +583,8 @@ const CongesPage = () => {
             </div>
           ) : (
             <>
-              {/* Vue carte — mobile uniquement */}
-              <div className="d-lg-none">
+              {/* Vue carte — mobile/tablette portrait */}
+              <div className="d-md-none">
                 {paginatedConges.map((conge) => {
                   const { accent, label } = getCongeAccent(conge.statut);
                   return (
@@ -635,8 +635,8 @@ const CongesPage = () => {
                 })}
               </div>
 
-              {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-lg-block table-responsive conges-table-wrapper">
+              {/* Vue tableau — tablette paysage et desktop */}
+              <div className="d-none d-md-block table-responsive conges-table-wrapper">
                 <Table hover className="mb-0">
                   <thead className="table-light">
                     <tr>

@@ -528,7 +528,7 @@ const JoursBloquesPage = () => {
 
             <Form.Group className="mb-4">
               <Form.Label>Acquisition mensuelle automatique par type</Form.Label>
-              <div className="d-lg-none mobile-card-list">
+              <div className="d-md-none mobile-card-list">
                 {congeTypes.map((type) => (
                   <div key={`accrual-mobile-${type.id}`} className="mobile-card-list__item">
                     <div className="fw-semibold mb-2">{type.libelle}</div>
@@ -546,7 +546,7 @@ const JoursBloquesPage = () => {
                   </div>
                 ))}
               </div>
-              <div className="settings-table-wrap d-none d-lg-block">
+              <div className="settings-table-wrap d-none d-md-block">
                 <Table responsive size="sm" className="settings-table">
                   <thead>
                     <tr>
@@ -638,7 +638,7 @@ const JoursBloquesPage = () => {
                   Report annuel activé (max {reportMaxJours} j) — colonne <strong>N-1 reporté</strong> = jours portés de {selectedYear - 1}.
                 </div>
               )}
-              <div className="d-lg-none mobile-card-list">
+              <div className="d-md-none mobile-card-list">
                 {counters.map((counter) => {
                   const joursReportes = toNumber(counter.jours_reportes, 0);
                   const joursAcquisAnnee = toNumber(counter.jours_acquis_annee ?? (toNumber(counter.jours_acquis, 0) - joursReportes), 0);
@@ -656,7 +656,7 @@ const JoursBloquesPage = () => {
                   );
                 })}
               </div>
-              <Table responsive hover className="settings-table d-none d-lg-table">
+              <Table responsive hover className="settings-table d-none d-md-table">
                 <thead>
                   <tr>
                     <th>Type</th>

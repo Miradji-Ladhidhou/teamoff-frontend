@@ -372,7 +372,7 @@ const ExportsPage = () => {
       </div>
 
       <Row className="g-4 exports-page__content">
-        <Col lg={8}>
+        <Col xs={12} lg={8}>
           <Card className="exports-page__card">
             <Card.Header>
               <h5 className="mb-0">Paramètres d'export</h5>
@@ -442,7 +442,7 @@ const ExportsPage = () => {
 
                 {/* Période */}
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de début</Form.Label>
                       <Form.Control
@@ -453,7 +453,7 @@ const ExportsPage = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de fin</Form.Label>
                       <Form.Control
@@ -506,7 +506,7 @@ const ExportsPage = () => {
                     )}
 
                     <Row>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>Service</Form.Label>
                           <Form.Select
@@ -521,7 +521,7 @@ const ExportsPage = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>Salarié</Form.Label>
                           <Form.Select
@@ -543,7 +543,7 @@ const ExportsPage = () => {
                     </Row>
 
                     <Row>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>Trier par</Form.Label>
                           <Form.Select name="sortBy" value={exportParams.sortBy} onChange={handleParamChange}>
@@ -555,7 +555,7 @@ const ExportsPage = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Group className="mb-4">
                           <Form.Label>Ordre</Form.Label>
                           <Form.Select name="sortOrder" value={exportParams.sortOrder} onChange={handleParamChange}>
@@ -630,7 +630,7 @@ const ExportsPage = () => {
                   </div>
                   {previewData.rows?.length ? (
                     <>
-                      <div className="d-lg-none mobile-card-list export-preview-mobile-list">
+                      <div className="d-md-none mobile-card-list export-preview-mobile-list">
                         {previewData.rows.map((row, index) => (
                           <Card key={`preview-mobile-row-${index}`} className="mb-2">
                             <Card.Body className="py-2 px-3 export-preview-mobile-card__body">
@@ -655,7 +655,7 @@ const ExportsPage = () => {
                         ))}
                       </div>
 
-                      <div className="table-responsive d-none d-lg-block scroll-table-preview export-preview-table-wrap">
+                      <div className="table-responsive d-none d-md-block scroll-table-preview export-preview-table-wrap">
                         <Table striped bordered hover size="sm" className="mb-0">
                           <thead>
                             <tr>
@@ -695,7 +695,7 @@ const ExportsPage = () => {
           </Card>
         </Col>
 
-        <Col lg={4} className="exports-page__aside">
+        <Col xs={12} lg={4} className="exports-page__aside">
         </Col>
       </Row>
 

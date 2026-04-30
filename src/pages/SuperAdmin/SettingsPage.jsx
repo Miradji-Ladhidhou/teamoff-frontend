@@ -641,7 +641,7 @@ const SystemSettings = () => {
             </Card.Header>
             <Card.Body>
               <div className="settings-table-wrap">
-                <div className="settings-table-hint d-lg-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
+                <div className="settings-table-hint d-md-none">Glissez horizontalement si le tableau dépasse l'écran.</div>
                 <Table bordered responsive className="settings-table">
                 <tbody>
                   <tr>
@@ -783,7 +783,7 @@ const SystemSettings = () => {
                 </small>
               </div>
               <div className="settings-table-wrap">
-                <div className="settings-table-hint d-lg-none">Glissez horizontalement pour voir l'historique complet.</div>
+                <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir l'historique complet.</div>
                 <Table bordered responsive className="settings-table">
                 <thead>
                   <tr>

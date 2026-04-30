@@ -61,9 +61,9 @@
 
 .profile-info-list strong {
   color: var(--dk-text-muted);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 /* ────────────── Indicateur match password ────────────── */
