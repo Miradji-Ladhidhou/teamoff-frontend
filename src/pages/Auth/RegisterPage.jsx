@@ -71,11 +71,13 @@ const RegisterPage = () => {
       try {
         const result = await register(formData);
         if (result.success) {
-          alert.success('Inscription réussie ! Email envoyé.');
+          alert.success('Inscription réussie ! Vérifiez votre email.');
           navigate('/login');
-        } else alert.error(result.error);
+        } else {
+          setValidationErrors({ _server: result.error });
+        }
       } catch (err) {
-        alert.error(err.message || 'Erreur inattendue');
+        setValidationErrors({ _server: err.message || 'Erreur inattendue' });
       }
     });
   };
@@ -225,6 +227,12 @@ const RegisterPage = () => {
                         </Button>
                         <Form.Control.Feedback type="invalid">{validationErrors.admin_confirm_password}</Form.Control.Feedback>
                       </Form.Group>
+
+                      {validationErrors._server && (
+                        <div className="alert alert-danger py-2 px-3 mb-3" style={{ fontSize: '0.85rem' }}>
+                          {validationErrors._server}
+                        </div>
+                      )}
 
                       <div className="d-flex gap-2 mb-3">
                         <Button variant="outline-secondary" className="flex-fill" onClick={handlePrev} disabled={loading}>Précédent</Button>
