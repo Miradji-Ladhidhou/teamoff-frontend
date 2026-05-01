@@ -52,6 +52,8 @@ const RegisterPage = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.admin_email)) errors.admin_email = 'Email invalide';
     if (!formData.admin_password) errors.admin_password = 'Mot de passe requis';
     else if (formData.admin_password.length < 8) errors.admin_password = 'Min 8 caractères';
+    else if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.admin_password)) errors.admin_password = 'Doit contenir au moins un caractère spécial (!@#$%...)';
+
     if (formData.admin_password !== formData.admin_confirm_password)
       errors.admin_confirm_password = 'Les mots de passe ne correspondent pas';
     setValidationErrors(errors);
@@ -200,6 +202,11 @@ const RegisterPage = () => {
                           {showPassword ? <FaEyeSlash /> : <FaEye />}
                         </Button>
                         <Form.Control.Feedback type="invalid">{validationErrors.admin_password}</Form.Control.Feedback>
+                        {!validationErrors.admin_password && (
+                          <Form.Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>
+                            Min. 8 caractères avec au moins un caractère spécial (!@#$%...)
+                          </Form.Text>
+                        )}
                       </Form.Group>
 
                       <Form.Group className="mb-3 position-relative">
