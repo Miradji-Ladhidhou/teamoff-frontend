@@ -746,18 +746,20 @@ const UsersManagement = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>{editingUser ? 'Nouveau mot de passe' : 'Mot de passe'}</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={formData.password}
-                    onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-                    placeholder={editingUser ? 'Laisser vide pour conserver le mot de passe actuel' : 'Un mot de passe temporaire sera genere si vous laissez vide'}
-                    disabled={submitAction.isRunning}
-                  />
-                </Form.Group>
-              </Col>
+              {editingUser && (
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Nouveau mot de passe</Form.Label>
+                    <Form.Control
+                      type="password"
+                      value={formData.password}
+                      onChange={(event) => setFormData({ ...formData, password: event.target.value })}
+                      placeholder="Laisser vide pour conserver le mot de passe actuel"
+                      disabled={submitAction.isRunning}
+                    />
+                  </Form.Group>
+                </Col>
+              )}
             </Row>
             {editingUser && ['manager', 'admin_entreprise'].includes(formData.role) && (
               <Form.Group className="mb-3">
