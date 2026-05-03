@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
@@ -18,6 +18,8 @@ const LoginPage = () => {
   const alert = useAlert();
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = location.state?.successMessage || null;
 
   const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -94,6 +96,9 @@ const LoginPage = () => {
             <Card className="shadow-lg border-0 dark-card">
               <Card.Body className="p-4">
                 <h3 className="text-white mb-4 text-center">Connexion</h3>
+                {successMessage && (
+                  <Alert variant="success" className="py-2 small">{successMessage}</Alert>
+                )}
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label className="text-light">Email</Form.Label>

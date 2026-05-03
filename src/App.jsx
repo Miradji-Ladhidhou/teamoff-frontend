@@ -18,6 +18,7 @@ const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage'));
+const SetPasswordPage = lazy(() => import('./pages/Auth/SetPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const CongesPage = lazy(() => import('./pages/Conges/CongesPage'));
 const CongeDetailsPage = lazy(() => import('./pages/Conges/CongeDetailsPage'));
@@ -208,6 +209,15 @@ function App() {
             <AuthRedirect>
               <ResetPasswordPage />
             </AuthRedirect>
+          }
+        />
+
+        <Route
+          path="/set-password"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <SetPasswordPage />
+            </Suspense>
           }
         />
 
