@@ -1,7 +1,7 @@
 import './my-profile.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
-import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Container, Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
+import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -22,6 +22,7 @@ const MyProfilePage = () => {
   const { user, updateUser } = useAuth();
   const profileAction = useAsyncAction();
   const passwordAction = useAsyncAction();
+  const twoFAAction = useAsyncAction();
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState('');
   const alert = useAlert();
@@ -29,6 +30,12 @@ const MyProfilePage = () => {
   const [profileData, setProfileData] = useState({ prenom: '', nom: '', email: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+
+  // 2FA state
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFASetup, setTwoFASetup] = useState(null); // { qrCode, secret }
+  const [twoFACode, setTwoFACode] = useState('');
+  const [disablePassword, setDisablePassword] = useState('');
 
   const isPasswordConfirmationFilled = passwordData.confirmPassword.trim().length > 0;
   const doPasswordsMatch = passwordData.newPassword === passwordData.confirmPassword;
@@ -143,6 +150,14 @@ const MyProfilePage = () => {
                 >
                   <FaLock size={12} /> Sécurité
                 </button>
+                {user?.role === 'admin_entreprise' && (
+                  <button
+                    className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === '2fa' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                    onClick={() => setActiveTab('2fa')}
+                  >
+                    <FaShieldAlt size={12} /> Double authentification
+                  </button>
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -201,6 +216,124 @@ const MyProfilePage = () => {
                     <FaSave className="me-2" /> Enregistrer
                   </AsyncButton>
                 </Form>
+              </Card.Body>
+            </Card>
+          )}
+
+          {activeTab === '2fa' && user?.role === 'admin_entreprise' && (
+            <Card>
+              <Card.Header className="d-flex align-items-center justify-content-between">
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaShieldAlt className="me-2" />Double authentification (2FA)</span>
+                {twoFAEnabled
+                  ? <Badge bg="success">Activé</Badge>
+                  : <Badge bg="secondary">Désactivé</Badge>}
+              </Card.Header>
+              <Card.Body>
+                {!twoFAEnabled && !twoFASetup && (
+                  <div>
+                    <p className="text-muted small mb-3">
+                      Renforcez la sécurité de votre compte en activant l'authentification à deux facteurs via une application comme Google Authenticator ou Authy.
+                    </p>
+                    <AsyncButton
+                      variant="outline-primary"
+                      action={twoFAAction}
+                      loadingText="Chargement..."
+                      onClick={async () => {
+                        await twoFAAction.run(async () => {
+                          try {
+                            const res = await authService.setup2FA();
+                            setTwoFASetup(res.data);
+                          } catch (err) {
+                            alert.error(err.response?.data?.message || 'Erreur lors de la configuration du 2FA');
+                          }
+                        });
+                      }}
+                    >
+                      Configurer le 2FA
+                    </AsyncButton>
+                  </div>
+                )}
+                {!twoFAEnabled && twoFASetup && (
+                  <div>
+                    <p className="text-muted small mb-2">Scannez ce QR code avec votre application d'authentification :</p>
+                    <div className="text-center mb-3">
+                      <img src={twoFASetup.qrCode} alt="QR Code 2FA" style={{ maxWidth: 200, border: '1px solid var(--border)', borderRadius: 8 }} />
+                    </div>
+                    <p className="text-muted small mb-1">Ou entrez manuellement la clé secrète :</p>
+                    <code className="d-block text-center mb-3" style={{ wordBreak: 'break-all', fontSize: '0.8rem' }}>{twoFASetup.secret}</code>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Code de vérification</Form.Label>
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="000000"
+                        value={twoFACode}
+                        onChange={(e) => setTwoFACode(e.target.value)}
+                        style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.2rem' }}
+                      />
+                    </Form.Group>
+                    <div className="d-flex gap-2">
+                      <AsyncButton
+                        variant="success"
+                        action={twoFAAction}
+                        loadingText="Activation..."
+                        onClick={async () => {
+                          await twoFAAction.run(async () => {
+                            try {
+                              await authService.enable2FA({ code: twoFACode });
+                              setTwoFAEnabled(true);
+                              setTwoFASetup(null);
+                              setTwoFACode('');
+                              alert.success && alert.success('2FA activé avec succès');
+                              setSuccess('2FA activé avec succès.');
+                            } catch (err) {
+                              alert.error(err.response?.data?.message || 'Code invalide');
+                            }
+                          });
+                        }}
+                      >
+                        Activer le 2FA
+                      </AsyncButton>
+                      <Button variant="outline-secondary" size="sm" onClick={() => { setTwoFASetup(null); setTwoFACode(''); }}>
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {twoFAEnabled && (
+                  <div>
+                    <p className="text-muted small mb-3">Le 2FA est actuellement actif sur votre compte. Pour le désactiver, entrez votre mot de passe.</p>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Mot de passe actuel</Form.Label>
+                      <Form.Control
+                        type="password"
+                        placeholder="Confirmer avec votre mot de passe"
+                        value={disablePassword}
+                        onChange={(e) => setDisablePassword(e.target.value)}
+                      />
+                    </Form.Group>
+                    <AsyncButton
+                      variant="danger"
+                      action={twoFAAction}
+                      loadingText="Désactivation..."
+                      onClick={async () => {
+                        await twoFAAction.run(async () => {
+                          try {
+                            await authService.disable2FA({ password: disablePassword });
+                            setTwoFAEnabled(false);
+                            setDisablePassword('');
+                            setSuccess('2FA désactivé.');
+                          } catch (err) {
+                            alert.error(err.response?.data?.message || 'Erreur lors de la désactivation');
+                          }
+                        });
+                      }}
+                    >
+                      Désactiver le 2FA
+                    </AsyncButton>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           )}

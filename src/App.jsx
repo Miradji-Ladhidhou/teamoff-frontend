@@ -136,17 +136,6 @@ const PublicPageLayout = ({ children }) => {
   );
 };
 
-const HomeRedirect = () => {
-  const { isAuthenticated, loading, user } = useAuth();
-
-  if (loading) return <LoadingSpinner />;
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <Navigate to={getDefaultRoute(user?.role)} replace />;
-};
 
 function App() {
   return (

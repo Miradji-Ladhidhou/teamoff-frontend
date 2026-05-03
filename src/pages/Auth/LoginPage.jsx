@@ -8,12 +8,14 @@ import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 import AppFooter from '../../components/Layout/AppFooter';
+import { authService } from '../../services/api';
 
 import './login.css';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [twoFAState, setTwoFAState] = useState({ required: false, pendingToken: '', code: '' });
   const submitAction = useAsyncAction();
   const alert = useAlert();
   const { login, isAuthenticated, user } = useAuth();
@@ -28,6 +30,10 @@ const LoginPage = () => {
     await submitAction.run(async () => {
       try {
         const result = await login(formData);
+        if (result.requires2fa === true) {
+          setTwoFAState({ required: true, pendingToken: result.pending_token, code: '' });
+          return;
+        }
         if (result.success) {
           const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
           navigate(getDefaultRoute(savedUser?.role));
@@ -39,6 +45,22 @@ const LoginPage = () => {
       } catch {
         alert.showErrorModal('Une erreur inattendue s\'est produite', {
           title: 'Erreur de connexion', confirmLabel: 'Fermer', autoCloseMs: 0
+        });
+      }
+    });
+  };
+
+  const handle2FASubmit = async () => {
+    await submitAction.run(async () => {
+      try {
+        const res = await authService.verify2FA({ pending_token: twoFAState.pendingToken, code: twoFAState.code });
+        const { token, utilisateur: userData } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        window.location.href = getDefaultRoute(userData.role);
+      } catch (err) {
+        alert.showErrorModal(err.response?.data?.message || 'Code invalide ou expiré', {
+          title: 'Vérification 2FA échouée', confirmLabel: 'Réessayer', autoCloseMs: 0
         });
       }
     });
@@ -99,65 +121,91 @@ const LoginPage = () => {
                 {successMessage && (
                   <Alert variant="success" className="py-2 small">{successMessage}</Alert>
                 )}
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="text-light">Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="email@entreprise.com"
-                      required
-                      disabled={loading}
-                      className="dark-input"
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-4">
-                    <Form.Label className="text-light">Mot de passe</Form.Label>
-                    <div className="position-relative">
+                {twoFAState.required ? (
+                  <div>
+                    <p className="text-light small mb-3">Entrez le code de votre application d'authentification.</p>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-light">Code 2FA</Form.Label>
                       <Form.Control
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Mot de passe"
-                        required
-                        disabled={loading}
-                        className="dark-input pe-5"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="000000"
+                        value={twoFAState.code}
+                        onChange={(e) => setTwoFAState(s => ({ ...s, code: e.target.value }))}
+                        style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.4rem' }}
                       />
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={loading}
-                        className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2"
+                    </Form.Group>
+                    <AsyncButton variant="primary" className="w-100" onClick={handle2FASubmit} action={submitAction} loadingText="Vérification...">
+                      Vérifier
+                    </AsyncButton>
+                    <Button variant="link" className="text-muted w-100 mt-2" size="sm" onClick={() => setTwoFAState({ required: false, pendingToken: '', code: '' })}>
+                      Retour
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Form onSubmit={handleSubmit}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="text-light">Email</Form.Label>
+                        <Form.Control
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="email@entreprise.com"
+                          required
+                          disabled={loading}
+                          className="dark-input"
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-4">
+                        <Form.Label className="text-light">Mot de passe</Form.Label>
+                        <div className="position-relative">
+                          <Form.Control
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder="Mot de passe"
+                            required
+                            disabled={loading}
+                            className="dark-input pe-5"
+                          />
+                          <Button
+                            type="button"
+                            variant="link"
+                            onClick={() => setShowPassword(!showPassword)}
+                            disabled={loading}
+                            className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2"
+                          >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                          </Button>
+                        </div>
+                      </Form.Group>
+
+                      <AsyncButton
+                        type="submit"
+                        variant="dark"
+                        className="w-100 mb-3 d-flex align-items-center justify-content-center"
+                        action={submitAction}
+                        loadingText="Connexion..."
                       >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </Button>
+                        {!loading && <><FaSignInAlt className="me-2" />Se connecter</>}
+                      </AsyncButton>
+                    </Form>
+
+                    <div className="text-center mt-2">
+                      <Link to="/forgot-password" className="text-secondary small text-decoration-none">Mot de passe oublié ?</Link>
                     </div>
-                  </Form.Group>
 
-                  <AsyncButton
-                    type="submit"
-                    variant="dark"
-                    className="w-100 mb-3 d-flex align-items-center justify-content-center"
-                    action={submitAction}
-                    loadingText="Connexion..."
-                  >
-                    {!loading && <><FaSignInAlt className="me-2" />Se connecter</>}
-                  </AsyncButton>
-                </Form>
-
-                <div className="text-center mt-2">
-                  <Link to="/forgot-password" className="text-secondary small text-decoration-none">Mot de passe oublié ?</Link>
-                </div>
-
-                <div className="text-center mt-3">
-                  <p className="text-light mb-1">Première connexion ?</p>
-                  <Link to="/register" className="text-info fw-semibold text-decoration-none">Créer un compte</Link>
-                </div>
+                    <div className="text-center mt-3">
+                      <p className="text-light mb-1">Première connexion ?</p>
+                      <Link to="/register" className="text-info fw-semibold text-decoration-none">Créer un compte</Link>
+                    </div>
+                  </>
+                )}
               </Card.Body>
             </Card>
           </Col>

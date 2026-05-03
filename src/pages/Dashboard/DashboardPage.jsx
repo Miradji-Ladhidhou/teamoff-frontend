@@ -6,6 +6,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
+import OnboardingWizard from '../../components/OnboardingWizard/OnboardingWizard';
 
 const accentToBarColor = (accent) => {
   const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
@@ -34,7 +35,21 @@ const DashboardPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [recentOverlapByCongeId, setRecentOverlapByCongeId] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const alert = useAlert();
+
+  useEffect(() => {
+    if (user?.role === 'admin_entreprise' && user?.id && !localStorage.getItem(`onboarding_${user.id}_done`)) {
+      setShowOnboarding(true);
+    }
+  }, [user?.id, user?.role]);
+
+  const handleDismissOnboarding = () => {
+    if (user?.id) {
+      localStorage.setItem(`onboarding_${user.id}_done`, '1');
+    }
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -224,6 +239,9 @@ const DashboardPage = () => {
 
   return (
     <Container fluid="sm">
+      {showOnboarding && (
+        <OnboardingWizard userId={user.id} onDismiss={handleDismissOnboarding} />
+      )}
       {/* Hero greeting */}
       <div className="dashboard-hero">
         <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} 👋</div>

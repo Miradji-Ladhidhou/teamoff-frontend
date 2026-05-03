@@ -25,7 +25,6 @@ const DEFAULT_FORM = {
   service: '',
   entreprise_id: '',
   statut: 'actif',
-  password: '',
   delegue_id: ''
 };
 
@@ -830,6 +829,20 @@ const UsersManagement = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
+          {selectedUserDetails?.statut === 'en_attente' && (
+            <AsyncButton
+              variant="outline-info"
+              size="sm"
+              onClick={() => {
+                handleResendInvitation(selectedUserDetails);
+                closeDetailsModal();
+              }}
+              isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+              loadingText="Envoi..."
+            >
+              <FaEnvelope className="me-1" /> Renvoyer l'invitation
+            </AsyncButton>
+          )}
           <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
         </Modal.Footer>
       </Modal>

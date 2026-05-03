@@ -68,7 +68,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      const { token, utilisateur: userData } = response.data;
+      const data = response.data;
+      if (data.requires2fa) {
+        return { success: false, requires2fa: true, pending_token: data.pending_token };
+      }
+      const { token, utilisateur: userData } = data;
 
       // Backend retourne utilisateur (pas user)
       localStorage.setItem('token', token);
