@@ -1,7 +1,7 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, Pagination } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
@@ -25,7 +25,8 @@ const DEFAULT_FORM = {
   service: '',
   entreprise_id: '',
   statut: 'actif',
-  password: ''
+  password: '',
+  delegue_id: ''
 };
 
 const UsersManagement = () => {
@@ -56,6 +57,8 @@ const UsersManagement = () => {
   const submitAction = useAsyncAction();
   const exportAction = useAsyncAction();
   const mutateUserAction = useAsyncAction();
+  const [resendAction] = useState(() => ({}));
+  const resendInvitationAction = useAsyncAction();
 
   useEffect(() => {
     loadData();
@@ -166,6 +169,11 @@ const UsersManagement = () => {
 
         if (editingUser) {
           await api.usersService.update(editingUser.id, payload);
+          if (editingUser && 'delegue_id' in formData) {
+            try {
+              await api.usersService.setDelegate(editingUser.id, formData.delegue_id || null);
+            } catch {}
+          }
           alert.success('Utilisateur mis à jour avec succès');
         } else {
           await api.usersService.create(payload);
@@ -194,7 +202,8 @@ const UsersManagement = () => {
       service: targetUser.service || '',
       entreprise_id: targetUser.entreprise_id || '',
       statut: targetUser.statut || 'actif',
-      password: ''
+      password: '',
+      delegue_id: targetUser.delegue_id || ''
     });
     setShowModal(true);
   };
@@ -237,6 +246,20 @@ const UsersManagement = () => {
       } catch (statusError) {
         console.error('Erreur changement statut:', statusError);
         alert.error(statusError.response?.data?.message || 'Erreur lors du changement de statut');
+      } finally {
+        setActiveUserActionId(null);
+      }
+    });
+  };
+
+  const handleResendInvitation = async (targetUser) => {
+    await mutateUserAction.run(async () => {
+      setActiveUserActionId(targetUser.id);
+      try {
+        await api.usersService.resendInvitation(targetUser.id);
+        alert.success('Invitation renvoyée avec succès');
+      } catch (err) {
+        alert.error(err.response?.data?.message || 'Erreur lors du renvoi de l\'invitation');
       } finally {
         setActiveUserActionId(null);
       }
@@ -481,6 +504,18 @@ const UsersManagement = () => {
                       >
                         {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
                       </AsyncButton>
+                      {targetUser.statut === 'en_attente' && (
+                        <AsyncButton
+                          variant="outline-info"
+                          size="sm"
+                          onClick={() => handleResendInvitation(targetUser)}
+                          title="Renvoyer l'invitation"
+                          isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                          loadingText=""
+                        >
+                          <FaEnvelope />
+                        </AsyncButton>
+                      )}
                       <AsyncButton
                         variant="outline-danger"
                         size="sm"
@@ -550,6 +585,18 @@ const UsersManagement = () => {
                             >
                               {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
                             </AsyncButton>
+                            {targetUser.statut === 'en_attente' && (
+                              <AsyncButton
+                                variant="outline-info"
+                                size="sm"
+                                onClick={() => handleResendInvitation(targetUser)}
+                                title="Renvoyer l'invitation"
+                                isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                                loadingText=""
+                              >
+                                <FaEnvelope />
+                              </AsyncButton>
+                            )}
                             <AsyncButton
                               variant="outline-danger"
                               size="sm"
@@ -712,6 +759,25 @@ const UsersManagement = () => {
                 </Form.Group>
               </Col>
             </Row>
+            {editingUser && ['manager', 'admin_entreprise'].includes(formData.role) && (
+              <Form.Group className="mb-3">
+                <Form.Label>Délégué (en cas d'absence)</Form.Label>
+                <Form.Select
+                  value={formData.delegue_id || ''}
+                  onChange={(e) => setFormData({ ...formData, delegue_id: e.target.value || null })}
+                  disabled={submitAction.isRunning}
+                >
+                  <option value="">Aucune délégation</option>
+                  {users
+                    .filter(u => u.entreprise_id === (isSuperAdmin ? formData.entreprise_id : user?.entreprise_id) && u.id !== editingUser?.id && u.statut === 'actif')
+                    .map(u => (
+                      <option key={u.id} value={u.id}>{u.prenom} {u.nom} ({u.role})</option>
+                    ))
+                  }
+                </Form.Select>
+                <Form.Text className="text-muted">Ce délégué pourra valider les congés de votre équipe en votre absence.</Form.Text>
+              </Form.Group>
+            )}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitAction.isRunning}>Annuler</Button>

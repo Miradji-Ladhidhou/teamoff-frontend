@@ -200,6 +200,8 @@ export const usersService = {
     form.append('file', file);
     return api.post('/users/import/csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
+  resendInvitation: (id) => api.post(`/users/${id}/resend-invitation`),
+  setDelegate: (id, delegue_id) => api.put(`/users/${id}/delegate`, { delegue_id }),
 };
 
 export const entreprisesService = {
