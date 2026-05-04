@@ -93,9 +93,9 @@ const CongesPage = () => {
       });
 
       const response = await congesService.getAll(params);
-      const items = Array.isArray(response.data) ? response.data : [];
+      const items = Array.isArray(response.data?.items) ? response.data.items : (Array.isArray(response.data) ? response.data : []);
       setConges(items);
-      const total = Number.isFinite(response.total) ? response.total : items.length;
+      const total = response.data?.total ?? items.length;
       setServerTotalPages(Math.max(Math.ceil(total / filters.limit), 1));
     } catch (err) {
       alert.error(err.response?.data?.message || 'Erreur lors du chargement des congés');

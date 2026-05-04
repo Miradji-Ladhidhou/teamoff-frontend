@@ -1,8 +1,3 @@
-// Export Statistiques CSV
-export const exportStatistiquesCSV = (params = {}) => api.get('/exports/statistiques/csv', {
-  params,
-  responseType: 'blob'
-});
 import axios from 'axios';
 import {
   isNotificationDisabledForCurrentRoute,

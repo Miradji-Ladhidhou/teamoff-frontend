@@ -58,16 +58,15 @@ const SuperAdminDashboard = () => {
       const entreprises = companiesResult.status === 'fulfilled' && Array.isArray(companiesResult.value.data)
         ? companiesResult.value.data
         : [];
-      const conges = leavesResult.status === 'fulfilled' && Array.isArray(leavesResult.value.data)
-        ? leavesResult.value.data
-        : [];
+      const leavesData = leavesResult.status === 'fulfilled' ? leavesResult.value.data : null;
+      const conges = Array.isArray(leavesData?.items) ? leavesData.items : (Array.isArray(leavesData) ? leavesData : []);
       const pendingLeaves = conges.filter((conge) => String(conge?.statut || '').startsWith('en_attente')).length;
       const activeCompanies = entreprises.filter((entreprise) => entreprise?.statut === 'active').length;
 
       setStats({
         totalUsers: users.length,
         totalCompanies: activeCompanies,
-        totalLeaves: conges.length,
+        totalLeaves: leavesData?.total ?? conges.length,
         pendingLeaves
       });
 

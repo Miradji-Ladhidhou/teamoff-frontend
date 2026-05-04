@@ -71,20 +71,20 @@ const DashboardPage = () => {
           notificationsService.getAll({ limit: 5 })
         ]);
 
-        const conges = Array.isArray(congesResponse.data) ? congesResponse.data : [];
+        const conges = Array.isArray(congesResponse.data?.items) ? congesResponse.data.items : (Array.isArray(congesResponse.data) ? congesResponse.data : []);
         const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
 
         let statsData = {
-          totalConges: conges.length,
+          totalConges: congesResponse.data?.total ?? conges.length,
           enAttente: conges.filter(c => c.statut === 'en_attente_manager').length,
           valides: conges.filter(c => c.statut === 'valide_final' || c.statut === 'valide_manager').length,
           refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length
         };
 
         if (user?.role === 'manager' || user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
-          const allCongesResponse = await congesService.getAll();
-          const allConges = Array.isArray(allCongesResponse.data) ? allCongesResponse.data : [];
-          statsData.aValider = allConges.filter(c => c.statut === 'en_attente_manager').length;
+          const allCongesResponse = await congesService.getAll({ statut: 'en_attente_manager', limit: 500 });
+          const allConges = Array.isArray(allCongesResponse.data?.items) ? allCongesResponse.data.items : (Array.isArray(allCongesResponse.data) ? allCongesResponse.data : []);
+          statsData.aValider = allConges.length;
         }
 
         setStats(statsData);

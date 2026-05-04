@@ -39,14 +39,9 @@ export const TipCard = ({ title, children }) => (
   </InfoCard>
 );
 
-export const SuccessCardInfo = ({ title, children }) => (
+export const SuccessCard = ({ title, children }) => (
   <InfoCard variant="success" icon={FaCheckCircle} title={title}>
     {children}
   </InfoCard>
 );
 
-export const InfoCardInfo = ({ title, children }) => (
-  <InfoCard variant="info" icon={FaInfoCircle} title={title}>
-    {children}
-  </InfoCard>
-);
