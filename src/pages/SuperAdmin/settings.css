@@ -1,0 +1,87 @@
+/* ────────────── Settings SuperAdmin ────────────── */
+.settings-page {
+  overflow-x: hidden;
+}
+
+/* Section setting */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--dk-border);
+  transition: background var(--transition-fast);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-item__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--dk-text);
+}
+
+.setting-item__desc {
+  font-size: 0.8rem;
+  color: var(--dk-text-muted);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.setting-item__control {
+  flex-shrink: 0;
+}
+
+/* Settings section card */
+.settings-section-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 0.75rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Table paramètres */
+.settings-table-wrap {
+  overflow-x: auto;
+}
+
+/* Danger zone */
+.settings-danger-zone {
+  background: rgba(248, 113, 113, 0.05);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: var(--card-radius, 0.75rem);
+  padding: 1rem;
+}
+
+.settings-danger-zone__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--dk-error);
+  margin-bottom: 0.5rem;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .setting-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .setting-item__control {
+    width: 100%;
+  }
+
+  .setting-item__control .btn,
+  .setting-item__control .form-control {
+    width: 100%;
+  }
+}

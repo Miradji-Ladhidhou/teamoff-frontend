@@ -1,0 +1,9 @@
+.privacy-page { overflow-x: hidden; max-width: 800px; margin: 0 auto; }
+.privacy-page h2 {
+  font-size: 1rem; font-weight: 700; color: var(--dk-text);
+  margin-top: 2rem; margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--dk-border);
+}
+.privacy-page p, .privacy-page li {
+  font-size: 0.875rem; color: var(--dk-text-soft); line-height: 1.7;
+}

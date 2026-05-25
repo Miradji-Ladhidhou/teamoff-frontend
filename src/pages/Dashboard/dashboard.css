@@ -1,0 +1,151 @@
+/* ────────────── Base Layout ────────────── */
+.container-fluid {
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* ────────────── Hero Greeting Card ────────────── */
+.dashboard-hero {
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e3a6e 0%, #2d5bb9 50%, #3d72e0 100%);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(91, 141, 238, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin: 0 0 12px;
+}
+
+.dashboard-hero::before {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.dashboard-hero::after {
+  content: '';
+  position: absolute;
+  right: 30px;
+  bottom: -35px;
+  width: 90px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
+}
+
+.dashboard-hero__greeting {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-hero__date {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+
+/* ────────────── Stats grid (2-col mobile, 4-col desktop) ────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+@media (max-width: 375px) {
+  .stats-grid {
+    gap: 8px;
+  }
+}
+
+/* Urgent pulse animation */
+.pulse-urgent {
+  animation: pulse-urgent 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-urgent {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ────────────── Overlap annotations ────────────── */
+.overlap-dash-annotation {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.overlap {
+  background: var(--dk-error-bg);
+  color: var(--dk-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.no-overlap {
+  background: var(--dk-success-bg);
+  color: var(--dk-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* ────────────── Soldes progress bar ────────────── */
+.solde-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 0.65rem;
+}
+
+.solde-row:last-child {
+  margin-bottom: 0;
+}
+
+.solde-row__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.solde-row__bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--dk-border);
+  overflow: hidden;
+}
+
+.solde-row__bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--role-accent);
+  transition: width 0.4s ease;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (min-width: 576px) {
+  .container-fluid { padding: 20px; }
+}
+
+@media (min-width: 992px) {
+  .container-fluid { padding: 24px 32px; }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

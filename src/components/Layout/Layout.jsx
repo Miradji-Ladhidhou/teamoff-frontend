@@ -1,304 +1,248 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
-import { useAuth } from '../../contexts/AuthContext';
+import { Navbar, Nav, Offcanvas, Button, Badge, Form } from 'react-bootstrap';
 import {
   FaBars,
   FaSignOutAlt,
-  FaShieldAlt,
   FaHome,
-  FaBuilding,
   FaUsers,
-  FaCalendarCheck,
-  FaChartLine,
-  FaDownload,
-  FaCalendarTimes,
-  FaBell,
-  FaHistory,
-  FaCog,
   FaCalendarAlt,
-  FaUser,
-  FaEllipsisH
+  FaCalendarCheck,
+  FaDownload,
+  FaBell,
+  FaBuilding,
+  FaCog,
+  FaInfoCircle,
+  FaEllipsisH,
+  FaThLarge,
+  FaCalendarTimes,
 } from 'react-icons/fa';
-import { notificationsService } from '../../services/api';
-import { getDefaultRoute, getNavigationForRole } from '../../utils/navigation';
+
+import { useAuth } from '../../contexts/AuthContext';
+import { getNavigationForRole } from '../../utils/navigation';
+import { useNotificationStream } from '../../hooks/useNotificationStream';
 import AppFooter from './AppFooter';
 import './Layout.css';
 
-const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
+const iconMap = {
+  home: FaHome,
+  users: FaUsers,
+  leave: FaCalendarCheck,
+  calendar: FaCalendarAlt,
+  download: FaDownload,
+  bell: FaBell,
+  business: FaBuilding,
+  settings: FaCog,
+  info: FaInfoCircle,
+  holiday: FaCalendarTimes,
+  more: FaEllipsisH,
+};
 
+const roleLabel = {
+  employe: 'Employé',
+  manager: 'Manager',
+  admin_entreprise: 'Admin entreprise',
+};
+
+const topbarNotes = {
+  '/dashboard': 'Consultez votre vue d ensemble',
+  '/mes-conges': 'Suivez vos demandes de conges',
+  '/conges-equipe': 'Validez les conges de votre equipe',
+  '/conges': 'Gerez les conges de l entreprise',
+  '/users': 'Administrez les comptes utilisateurs',
+  '/absences': 'Suivez les absences en cours',
+  '/calendrier': 'Visualisez le planning global',
+  '/politique-conges': 'Parametrez regles et services',
+  '/jours-feries': 'Configurez les jours speciaux',
+  '/exports': 'Exportez vos donnees rapidement',
+  '/notifications': 'Consultez les alertes importantes',
+  '/help': 'Accedez a l aide contextuelle',
+};
 
 const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  // Scroll en haut à chaque changement de page
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [search, setSearch] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const handleNewNotification = useCallback(() => {
+    setUnreadCount((c) => c + 1);
+  }, []);
+
+  useNotificationStream(handleNewNotification);
+
+  // Reset unread count when user visits notifications page
+  useEffect(() => {
+    if (location.pathname === '/notifications') {
+      setUnreadCount(0);
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  useEffect(() => {
-    const loadUnreadCount = async () => {
-      try {
-        const response = await notificationsService.getAll({ non_lu: 'true', page: 1, limit: 1 });
-        const total = Number(response.data?.pagination?.total);
-        setUnreadNotifications(Number.isFinite(total) ? total : 0);
-      } catch (error) {
-        console.error('Erreur chargement notifications:', error);
-      }
-    };
+  const navItems = useMemo(() => getNavigationForRole(user?.role) || [], [user?.role]);
 
-    const handleNotificationsUpdated = (event) => {
-      const unreadCount = Number(event?.detail?.unreadCount);
-      if (Number.isFinite(unreadCount)) {
-        setUnreadNotifications(Math.max(0, unreadCount));
-        return;
-      }
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return navItems;
+    return navItems.filter((item) => item.label.toLowerCase().includes(q));
+  }, [navItems, search]);
 
-      loadUnreadCount();
-    };
+  const primaryItems = filteredItems.filter((item) => item.section === 'primary');
+  const secondaryItems = filteredItems.filter((item) => item.section === 'secondary');
+  const bottomItems = [...navItems.filter((item) => item.section === 'primary').slice(0, 3), { path: '__more__', label: 'Plus', icon: 'more' }];
 
-    if (user) {
-      loadUnreadCount();
-    }
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+  const activeTitle = useMemo(() => {
+    const match = navItems.find((item) => isActive(item.path));
+    return match?.label || 'TeamOff';
+  }, [navItems, location.pathname]);
 
-    return () => {
-      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
-    };
-  }, [user]);
+  const topbarNote = useMemo(() => {
+    const activeItem = navItems.find((item) => isActive(item.path));
+    if (!activeItem) return 'Navigation simple';
+    return topbarNotes[activeItem.path] || `Section ${activeItem.label}`;
+  }, [navItems, location.pathname]);
 
-  const navigationItems = getNavigationForRole(user?.role);
-  const primaryItems = navigationItems.filter((item) => item.section === 'primary');
-  const secondaryItems = navigationItems.filter((item) => item.section === 'secondary');
-  const iconComponentMap = {
-    shield: FaShieldAlt,
-    home: FaHome,
-    leave: FaCalendarCheck,
-    calendar: FaCalendarAlt,
-    users: FaUsers,
-    download: FaDownload,
-    business: FaBuilding,
-    holiday: FaCalendarTimes,
-    bell: FaBell,
-    chart: FaChartLine,
-    audit: FaHistory,
-    settings: FaCog,
-    user: FaUser,
-    more: FaEllipsisH
-  };
-
-  // Bottom nav : 4 premiers items primaires + "Plus" si items secondaires
-  const bottomNavItems = [
-    ...primaryItems.slice(0, 4),
-    ...(secondaryItems.length > 0 || primaryItems.length > 4
-      ? [{ path: '__more__', label: 'Plus', icon: 'more', section: 'bottom' }]
-      : [])
-  ];
-
-  const roleMeta = {
-    admin_entreprise: { label: 'Administrateur entreprise', className: 'role-admin_entreprise' },
-    manager: { label: 'Manager', className: 'role-manager' },
-    employe: { label: 'Employe', className: 'role-employe' },
-    super_admin: { label: 'SuperAdmin', className: 'role-super_admin' }
-  };
-
-  const currentRoleMeta = roleMeta[user?.role] || { label: 'Utilisateur', className: 'role-employe' };
-
-  const entrepriseLabel = user?.entreprise_nom
-    ? user.entreprise_nom
-    : 'Entreprise non renseignee';
-
-  const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const goTo = (path, closeSidebar = false) => {
+    navigate(path);
+    if (closeSidebar) setShowSidebar(false);
   };
 
   const renderNavItem = (item, closeSidebar = false) => {
-    const Icon = iconComponentMap[item.icon] || FaHome;
-    const badgeValue = item.badgeKey === 'notifications' ? unreadNotifications : 0;
-
+    const Icon = iconMap[item.icon] || FaThLarge;
     return (
       <Nav.Link
         key={item.path}
-        onClick={() => {
-          navigate(item.path);
-          if (closeSidebar) {
-            setShowSidebar(false);
-          }
-        }}
-        className={`role-nav-link mb-2 d-flex align-items-center cursor-pointer ${isActive(item.path) ? 'active' : ''}`}
+        onClick={() => goTo(item.path, closeSidebar)}
+        className={`role-nav-link d-flex align-items-center gap-2 mb-1 ${isActive(item.path) ? 'active' : ''}`}
       >
-        <Icon className="me-3" size={17} />
+        <Icon size={14} />
         <span>{item.label}</span>
-        {badgeValue > 0 && (
-          <Badge bg="danger" className="ms-2" pill>
-            {badgeValue}
-          </Badge>
-        )}
       </Nav.Link>
     );
   };
 
-  return (
-    <div className={`role-shell ${currentRoleMeta.className}`}>
-      {/* Sidebar desktop */}
-      <div className="d-none d-md-block role-sidebar">
-        <div className="p-3">          <div className="d-flex align-items-center mb-4">
-            <FaShieldAlt size={24} className="me-2 role-brand-icon" />
-            <h5 className="mb-0 role-brand-title">TeamOff</h5>
-          </div>
-
-          <div className="mb-4 role-user-box">
-            <small className="role-user-label">Connecte en tant que</small>
-            <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-            <small className="d-block role-user-label">{entrepriseLabel}</small>
-            <Badge className="mt-1 role-badge">{currentRoleMeta.label}</Badge>
-          </div>
-
-          <Nav className="flex-column">
-            {primaryItems.map((item) => renderNavItem(item))}
-            {secondaryItems.length > 0 && <div className="role-section-title mt-3 mb-2">Outils</div>}
-            {secondaryItems.map((item) => renderNavItem(item))}
-          </Nav>
-
-          <hr className="my-4 role-divider" />
-
-          <Button 
-            variant="outline-light" 
-            size="sm" 
-            onClick={() => navigate('/my-profile')}
-            className="w-100 mb-2"
-          >
-            <FaUser className="me-2" />
-            Mes informations
-          </Button>
-
-          <Button variant="outline-light" size="sm" onClick={handleLogout} className="w-100">
-            <FaSignOutAlt className="me-2" />
-            Deconnexion
-          </Button>
+  const renderSidebarContent = (isMobile = false) => (
+    <>
+      <div className="mb-3">
+        <div className="fw-bold">{user?.prenom} {user?.nom}</div>
+        <small className="ui-text-soft">{user?.entreprise_nom}</small>
+        <div className="mt-2">
+          <Badge className="role-badge">{roleLabel[user?.role] || 'Compte'}</Badge>
         </div>
       </div>
 
-      {/* Sidebar mobile */}
-      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} className="d-md-none">
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>
-            <FaShieldAlt size={20} className="me-2 role-brand-icon" />
-            TeamOff
-          </Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <div className="mb-4">
-            <small className="ui-text-soft">Connecte en tant que</small>
-            <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-            <small className="d-block ui-text-soft">{entrepriseLabel}</small>
-            <Badge className="mt-1 role-badge">{currentRoleMeta.label}</Badge>
-          </div>
+      <Form.Control
+        type="search"
+        className="mb-3"
+        placeholder="Rechercher une page..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-          <Nav className="flex-column">
-            {primaryItems.map((item) => renderNavItem(item, true))}
-            {secondaryItems.length > 0 && <div className="role-section-title mt-3 mb-2">Outils</div>}
-            {secondaryItems.map((item) => renderNavItem(item, true))}
+      <div className={`role-section-title mb-2 ${isMobile ? 'ui-text-soft' : ''}`}>Essentiel</div>
+      <Nav className="flex-column mb-2">
+        {primaryItems.map((item) => renderNavItem(item, isMobile))}
+      </Nav>
+
+      <div className="d-grid mb-2">
+        <Button
+          variant={showAdvanced ? 'secondary' : 'outline-secondary'}
+          size="sm"
+          onClick={() => setShowAdvanced((prev) => !prev)}
+        >
+          {showAdvanced ? 'Masquer options avancées' : 'Afficher options avancées'}
+        </Button>
+      </div>
+
+      {(showAdvanced || search.trim()) && (
+        <>
+          <div className={`role-section-title mb-2 mt-2 ${isMobile ? 'ui-text-soft' : ''}`}>Options</div>
+          <Nav className="flex-column mb-3">
+            {secondaryItems.map((item) => renderNavItem(item, isMobile))}
           </Nav>
+        </>
+      )}
 
-          <hr className="my-4" />
-          <Button 
-            variant="outline-info" 
-            size="sm" 
-            onClick={() => navigate('/my-profile')}
-            className="w-100 mb-2"
-          >
-            <FaUser className="me-2" />
-            Mes informations
-          </Button>
+      <Button variant="outline-danger" size="sm" className="w-100" onClick={logout}>
+        <FaSignOutAlt className="me-2" />Déconnexion
+      </Button>
+    </>
+  );
 
-          <Button variant="outline-danger" size="sm" onClick={handleLogout} className="w-100">
-            <FaSignOutAlt className="me-2" />
-            Deconnexion
-          </Button>
-        </Offcanvas.Body>
+  const initials = [user?.prenom?.[0], user?.nom?.[0]].filter(Boolean).join('').toUpperCase() || '?';
+
+  return (
+    <div className={`app-shell role-shell role-${user?.role || 'employe'}`}>
+      {/* Desktop sidebar (≥992px) */}
+      <aside className="sidebar role-sidebar flex-column p-3">
+        {renderSidebarContent(false)}
+      </aside>
+
+      {/* Mobile offcanvas */}
+      <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>Navigation</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
 
-      {/* Contenu */}
-      <div className="flex-grow-1">
-        <Navbar bg="light" expand="md" className="border-bottom px-3 role-topbar">
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            className="d-md-none me-2"
-            onClick={() => setShowSidebar(true)}
-            aria-label="Menu"
-          >
-            <FaBars />
-          </Button>
+      <div className="main-area">
+        {/* Mobile topbar */}
+        <div className="topbar d-lg-none">
+          <span className="topbar-logo">Team<span>Off</span></span>
+          <div className="d-flex align-items-center gap-2">
+            <button className="topbar-icon-btn position-relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
+              <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />
+              {unreadCount > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button className="topbar-avatar" onClick={() => setShowSidebar(true)} aria-label="Menu">
+              {initials}
+            </button>
+          </div>
+        </div>
 
-          <Navbar.Brand
-            className="role-topbar-brand cursor-pointer"
-            onClick={() => navigate(getDefaultRoute(user?.role))}
-          >
-            <FaShieldAlt className="me-2 role-brand-icon d-none d-md-inline" />
-            <span className="d-none d-md-inline">Espace {currentRoleMeta.label}</span>
-            <span className="d-md-none fw-bold fs-6">TeamOff</span>
-          </Navbar.Brand>
-
-          <Navbar.Collapse className="justify-content-end">
-            <div className="d-flex align-items-center">
-              <small className="ui-text-soft d-none d-sm-inline">
-                {new Date().toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </small>
-            </div>
-          </Navbar.Collapse>
+        {/* Desktop topbar */}
+        <Navbar className="role-topbar desktop-topbar d-none d-lg-flex px-3">
+          <Navbar.Brand className="mb-0">{activeTitle}</Navbar.Brand>
+          <span className="role-topbar-note ms-auto">{topbarNote}</span>
         </Navbar>
 
-        <main className="role-content">
+        <main className="page-content role-content">
           <Outlet />
         </main>
+
         <AppFooter />
       </div>
 
-      {/* Bottom Navigation Mobile */}
-      <nav className="mobile-bottom-nav d-md-none" role="navigation" aria-label="Navigation principale">
-        {bottomNavItems.map((item) => {
-          const Icon = iconComponentMap[item.icon] || FaHome;
+      {/* Mobile bottom nav */}
+      <nav className="bottom-nav" role="navigation" aria-label="Navigation mobile">
+        {bottomItems.map((item) => {
           const isMore = item.path === '__more__';
+          const Icon = iconMap[item.icon] || FaThLarge;
           const active = !isMore && isActive(item.path);
-          const badgeValue = item.badgeKey === 'notifications' ? unreadNotifications : 0;
 
           return (
             <button
               key={item.path}
-              className={`mobile-bottom-nav__item${active ? ' active' : ''}`}
-              onClick={() => {
-                if (isMore) {
-                  setShowSidebar(true);
-                } else {
-                  navigate(item.path);
-                }
-              }}
+              className={`nav-item${active ? ' active' : ''}`}
+              onClick={() => (isMore ? setShowSidebar(true) : navigate(item.path))}
               aria-label={item.label}
             >
-              <span className="mobile-bottom-nav__icon">
-                <Icon size={20} />
-                {badgeValue > 0 && (
-                  <span className="mobile-bottom-nav__badge">{badgeValue > 9 ? '9+' : badgeValue}</span>
-                )}
-              </span>
-              <span className="mobile-bottom-nav__label">{item.label}</span>
+              <span className="nav-icon"><Icon size={18} /></span>
+              <span className="nav-label">{item.label}</span>
             </button>
           );
         })}

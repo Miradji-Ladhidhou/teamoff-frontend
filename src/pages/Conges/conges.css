@@ -1,0 +1,37 @@
+.conges-page {
+	overflow-x: hidden;
+}
+
+.conges-filters-card,
+.conges-page .card {
+	min-width: 0;
+}
+
+.conges-mobile-item {
+	margin-bottom: 0.5rem;
+}
+
+.conges-table-wrapper {
+	overflow-x: auto;
+}
+
+.conges-table-actions {
+	flex-wrap: wrap;
+}
+
+.conges-pagination-wrap {
+	overflow-x: auto;
+}
+
+.conges-pagination {
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.25rem;
+	margin-bottom: 0;
+}
+
+@media (max-width: 767.98px) {
+	.conges-pagination {
+		min-width: max-content;
+	}
+}

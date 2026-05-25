@@ -51,7 +51,6 @@ const ConfirmationModal = () => {
       className="modal-overlay"
       onClick={handleOverlayClick}
       role="presentation"
-      aria-hidden="true"
     >
       <div
         className={modalClasses}

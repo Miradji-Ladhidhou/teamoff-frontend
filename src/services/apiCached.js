@@ -117,8 +117,8 @@ export const joursFeriesService = {
 
 export const notificationsService = {
   getAll: (params = {}) => cachedRequest('get', '/notifications', { params }),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`),
-  markAllAsRead: () => api.put('/notifications/read-all'),
+  markAsRead: (id) => api.put(`/notifications/${id}/lue`),
+  markAllAsRead: () => api.put('/notifications/lire-tout'),
 };
 
 export const congeTypesService = {

@@ -64,4 +64,4 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 // Mock pour les variables d'environnement
-process.env.VITE_API_URL = 'http://localhost:3000/api';
+process.env.VITE_API_URL = 'http://localhost:5500/api';

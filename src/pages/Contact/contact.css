@@ -1,0 +1,14 @@
+.contact-page { overflow-x: hidden; }
+.contact-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius-lg);
+  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.contact-icon-wrap {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: var(--dk-accent-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--dk-accent); flex-shrink: 0;
+}

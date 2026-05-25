@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import './nouveau-conge.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
-import { InfoCardInfo, TipCard } from '../../components/InfoCard';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import useLeavePolicy from '../../hooks/useLeavePolicy';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import AsyncButton from '../../components/AsyncButton';
 
 const NouveauCongePage = () => {
@@ -15,9 +17,9 @@ const NouveauCongePage = () => {
   const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const canCreateLeave = ['employe', 'manager', 'super_admin'].includes(user?.role);
   const canAccessPage = isEditMode
-    ? ['employe', 'manager', 'admin_entreprise'].includes(user?.role)
+    ? ['employe', 'manager', 'admin_entreprise', 'super_admin'].includes(user?.role)
     : canCreateLeave;
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
 
@@ -39,7 +41,12 @@ const NouveauCongePage = () => {
   const [joursCalcules, setJoursCalcules] = useState(0);
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
+  const [formDirty, setFormDirty] = useState(false);
+  const submittedRef = useRef(false);
+  useUnsavedChanges(formDirty && !submittedRef.current);
   const [showOverlapModal, setShowOverlapModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const { validateModification } = useLeavePolicy();
   useEffect(() => {
     if (isEditMode) return;
     const params = new URLSearchParams(location.search);
@@ -60,20 +67,21 @@ const NouveauCongePage = () => {
   }, [id, user?.id, user?.role]);
 
   useEffect(() => {
-    // Calculer les jours automatiquement quand les dates changent
     if (formData.date_debut && formData.date_fin && formData.conge_type_id) {
       calculateJours();
+    } else if (!formData.conge_type_id) {
+      setJoursCalcules(0);
     }
-  }, [formData.date_debut, formData.date_fin, formData.debut_demi_journee, formData.fin_demi_journee]);
+  }, [formData.date_debut, formData.date_fin, formData.debut_demi_journee, formData.fin_demi_journee, formData.conge_type_id]);
 
   const loadInitialData = async () => {
+    if (!canAccessPage) {
+      navigate(returnPath, { replace: true });
+      return;
+    }
+
     try {
       setLoadingData(true);
-
-      if (!canAccessPage) {
-        alert.error('Vous n\'êtes pas autorisé à accéder à cette page');
-        return;
-      }
 
       if (isEditMode) {
         const [typesResponse, congeResponse] = await Promise.all([
@@ -115,7 +123,12 @@ const NouveauCongePage = () => {
       }
 
     } catch (err) {
-      console.error('Erreur lors du chargement des données:', err);
+      const status = err.response?.status;
+      if (status === 403 || status === 404) {
+        navigate(returnPath, { replace: true });
+        return;
+      }
+      alert.error('Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);
     }
@@ -148,6 +161,7 @@ const NouveauCongePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormDirty(true);
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -198,10 +212,10 @@ const NouveauCongePage = () => {
     }
 
     const selectedType = congeTypes.find(type => type.id === formData.conge_type_id);
+    const demiJourneeBloquee = selectedType && selectedType.demi_journee_autorisee === false;
     if (
-      selectedType
-      && selectedType.demi_journee_autorisee === false
-      && (formData.debut_demi_journee === 'apres_midi' || formData.fin_demi_journee === 'matin')
+      demiJourneeBloquee
+      && (formData.debut_demi_journee || formData.fin_demi_journee)
     ) {
       errors.conge_type_id = 'Ce type de congé n\'autorise pas les demi-journées';
     }
@@ -275,6 +289,7 @@ const NouveauCongePage = () => {
           autoCloseMs: 0,
         });
       }
+      submittedRef.current = true;
       navigate(returnPath);
     } catch (err) {
       console.error('Erreur lors de la création du congé:', err);
@@ -287,7 +302,7 @@ const NouveauCongePage = () => {
     e.preventDefault();
 
     if (!isEditMode && !canCreateLeave) {
-      alert.error('Seuls les employés et managers peuvent poser un congé');
+      alert.error('Vous n\'êtes pas autorisé à créer une demande de congé.');
       return;
     }
 
@@ -299,6 +314,17 @@ const NouveauCongePage = () => {
         let precheckWarningMessage = null;
 
         if (isEditMode) {
+          const policyValidation = await validateModification({
+            congeId: id,
+            congeStatus: initialCongeStatut,
+            congeStartDate: formData.date_debut,
+          });
+
+          if (!policyValidation?.allowed) {
+            alert.error(policyValidation?.reason || 'Modification non autorisée par la politique de congés.');
+            return;
+          }
+
           response = await congesService.update(id, formData);
         } else {
           const overlapCheck = await congesService.checkOverlap(formData);
@@ -342,6 +368,7 @@ const NouveauCongePage = () => {
           });
         }
 
+        submittedRef.current = true;
         navigate(returnPath);
       } catch (err) {
         console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);
@@ -378,7 +405,7 @@ const NouveauCongePage = () => {
   if (!canAccessPage) {
     return (
       <Container fluid="sm">
-        <div className="alert alert-warning">Seuls les employés et managers peuvent poser un congé.</div>
+        <div className="alert alert-warning">Vous n'êtes pas autorisé à accéder à cette page.</div>
         <Button as={Link} to={returnPath} variant="outline-secondary">Retour</Button>
       </Container>
     );
@@ -386,27 +413,15 @@ const NouveauCongePage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="d-flex align-items-center mb-4">
-        <Button as={Link} to={returnPath} variant="outline-secondary" className="me-3">
-          <FaArrowLeft />
-        </Button>
-        <div>
-          <h1 className="h3 mb-1">{isEditMode ? 'Modifier la demande de congé' : 'Nouvelle demande de congé'}</h1>
-          <p className="text-muted">{isEditMode ? 'Mettez à jour les informations de votre demande' : 'Remplissez le formulaire ci-dessous'}</p>
+      <div className="page-title-bar">
+        <div className="d-flex align-items-center gap-3">
+          <Button as={Link} to={returnPath} variant="outline-secondary" size="sm">
+            <FaArrowLeft />
+          </Button>
+          <span className="section-title-bar__text">{isEditMode ? 'Modifier la demande' : 'Nouvelle demande'}</span>
         </div>
+        <Button variant="outline-secondary" size="sm" onClick={() => setShowInfoModal(true)}>Info</Button>
       </div>
-
-      <InfoCardInfo title={isEditMode ? 'Conseils pour modifier votre demande' : 'Avant de soumettre votre demande'}>
-        <ul className="mb-0">
-          <li>Choisissez un type de congé compatible avec votre solde</li>
-          <li>Vérifiez les dates et les demi-journées pour un calcul exact</li>
-          <li>Ajoutez un commentaire clair pour faciliter la validation</li>
-        </ul>
-      </InfoCardInfo>
-
-      <TipCard title="Exemple de commentaire utile">
-        Absence familiale du 12 au 14 avril, relais opérationnel préparé avec l'équipe support.
-      </TipCard>
 
       <Row>
         <Col lg={8}>
@@ -435,11 +450,36 @@ const NouveauCongePage = () => {
                   <Form.Control.Feedback type="invalid">
                     {validationErrors.conge_type_id}
                   </Form.Control.Feedback>
+                  {formData.conge_type_id && (() => {
+                    const solde = getSoldeForType(formData.conge_type_id);
+                    if (!solde) return null;
+                    const disponible = Number(solde.solde_disponible ?? 0);
+                    const apres = disponible - joursCalcules;
+                    const enDanger = joursCalcules > 0 && apres < 0;
+                    const avertissement = joursCalcules > 0 && apres >= 0 && apres < 2;
+                    return (
+                      <div className={`mt-2 p-2 rounded small d-flex gap-3 align-items-center ${enDanger ? 'alert alert-danger py-2' : avertissement ? 'alert alert-warning py-2' : 'alert alert-info py-2'}`}>
+                        <span><strong>Solde actuel :</strong> {disponible.toFixed(1)} j</span>
+                        {joursCalcules > 0 && (
+                          <>
+                            <span className="text-muted">→</span>
+                            <span>
+                              <strong>Après demande :</strong>{' '}
+                              <strong className={enDanger ? 'text-danger' : avertissement ? 'text-warning' : 'text-success'}>
+                                {apres.toFixed(1)} j
+                              </strong>
+                            </span>
+                          </>
+                        )}
+                        {enDanger && <span className="ms-auto">⚠ Solde insuffisant</span>}
+                      </div>
+                    );
+                  })()}
                 </Form.Group>
 
                 {/* Période */}
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de début *</Form.Label>
                       <Form.Control
@@ -455,7 +495,7 @@ const NouveauCongePage = () => {
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Date de fin *</Form.Label>
                       <Form.Control
@@ -475,7 +515,7 @@ const NouveauCongePage = () => {
 
                 {/* Demi-journées */}
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Début de journée</Form.Label>
                       <Form.Select
@@ -490,7 +530,7 @@ const NouveauCongePage = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Fin de journée</Form.Label>
                       <Form.Select
@@ -526,12 +566,9 @@ const NouveauCongePage = () => {
                     name="commentaire_employe"
                     value={formData.commentaire_employe}
                     onChange={handleChange}
-                    placeholder="Ajoutez un commentaire pour justifier votre demande..."
+                    placeholder="Commentaire"
                     maxLength={1000}
                   />
-                  <Form.Text className="text-muted">
-                    {formData.commentaire_employe.length}/1000 caractères
-                  </Form.Text>
                 </Form.Group>
 
                 <div className="d-flex gap-2">
@@ -581,7 +618,8 @@ const NouveauCongePage = () => {
 
               {joursCalcules > 0 && (
                 <div className="mb-3">
-                  <strong>Jours calculés:</strong> {joursCalcules} jour(s)
+                  <strong>Jours calculés:</strong> ~{joursCalcules} jour(s)
+                  <div className="small text-muted mt-1">Estimation (jours fériés et jours bloqués déduits par le serveur)</div>
                 </div>
               )}
 
@@ -595,24 +633,6 @@ const NouveauCongePage = () => {
             </Card.Body>
           </Card>
 
-          {/* Informations importantes */}
-          <Card>
-            <Card.Header>
-              <h6 className="mb-0 d-flex align-items-center">
-                <FaInfoCircle className="me-2" />
-                Informations importantes
-              </h6>
-            </Card.Header>
-            <Card.Body className="small">
-              <ul className="mb-0">
-                <li>La demande sera soumise à validation</li>
-                <li>Vous recevrez une notification par email</li>
-                <li>Le délai de traitement est généralement de 48h</li>
-                <li>Vous pouvez annuler votre demande tant qu'elle n'est pas validée</li>
-              </ul>
-            </Card.Body>
-          </Card>
-
           {/* Soldes disponibles */}
           {soldes.length > 0 && (
             <Card className="mt-4">
@@ -623,7 +643,7 @@ const NouveauCongePage = () => {
                 {soldes.map((solde, index) => (
                   <div key={index} className="d-flex justify-content-between align-items-center mb-2">
                     <span className="small">{solde.conge_type}</span>
-                    <Badge bg="info">{solde.solde_disponible} jours</Badge>
+                    <span className="badge info">{solde.solde_disponible} jours</span>
                   </div>
                 ))}
               </Card.Body>
@@ -631,6 +651,22 @@ const NouveauCongePage = () => {
           )}
         </Col>
       </Row>
+
+      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Info demande</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul className="mb-0">
+            <li>Renseignez type, dates, puis envoyez.</li>
+            <li>Le solde est affiché à droite.</li>
+            <li>Vous pouvez modifier tant que la demande n'est pas validée.</li>
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
+        </Modal.Footer>
+      </Modal>
 
     </Container>
   );

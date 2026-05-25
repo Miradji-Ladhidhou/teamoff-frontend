@@ -8,6 +8,7 @@ const defaultAuthContext = {
   login: async () => ({ success: false, error: 'AuthProvider indisponible' }),
   register: async () => ({ success: false, error: 'AuthProvider indisponible' }),
   logout: () => {},
+  updateUser: () => {},
   hasRole: () => false,
   isAdmin: () => false,
   isSuperAdmin: () => false,
@@ -15,12 +16,16 @@ const defaultAuthContext = {
   isEmploye: () => false,
   canValidateConges: () => false,
   canManageUsers: () => false,
+  canManageEntreprises: () => false,
 };
 
 const AuthContext = createContext(defaultAuthContext);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  if (context === defaultAuthContext && process.env.NODE_ENV !== 'production') {
+    console.warn('useAuth() called outside of AuthProvider — all permission checks will return false.');
+  }
   return context;
 };
 
@@ -39,8 +44,19 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Erreur lors du parsing des données utilisateur:', error);
+        // Resync silencieux du profil complet
+        authService.getProfile()
+          .then((res) => {
+            const fresh = res.data;
+            if (fresh?.id) {
+              setUser(fresh);
+              localStorage.setItem('user', JSON.stringify(fresh));
+            }
+          })
+          .catch(() => {
+            // token expiré — l'intercepteur axios redirige déjà vers /login
+          });
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -52,7 +68,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      const { token, utilisateur: userData } = response.data;
+      const data = response.data;
+      if (data.requires2fa) {
+        return { success: false, requires2fa: true, pending_token: data.pending_token };
+      }
+      const { token, utilisateur: userData } = data;
 
       // Backend retourne utilisateur (pas user)
       localStorage.setItem('token', token);
@@ -63,7 +83,6 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur de connexion:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur de connexion'
@@ -77,7 +96,6 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Erreur d\'inscription:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Erreur d\'inscription'
@@ -86,11 +104,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Fonction de déconnexion
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // On nettoie quoi qu'il arrive
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const updateUser = (partialUser) => {
+    setUser((prev) => {
+      const next = { ...prev, ...partialUser };
+      localStorage.setItem('user', JSON.stringify(next));
+      return next;
+    });
   };
 
   // Vérifier les permissions - utilisation directe des rôles backend
@@ -146,6 +178,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     hasRole,
     isAdmin,
     isSuperAdmin,

@@ -1,0 +1,99 @@
+/* ────────────── Avatar / icône profil ────────────── */
+.profile-avatar-wrap {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 50%;
+  background: var(--dk-elevated);
+  /* Gradient border using accent color */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 2px var(--dk-accent), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: var(--role-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: box-shadow var(--transition-base);
+}
+
+.profile-avatar-wrap:hover {
+  box-shadow: 0 0 0 2px #5b8dee, 0 0 12px rgba(91, 141, 238, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ────────────── Sidebar navigation ────────────── */
+.profile-page .btn-light {
+  background: var(--dk-elevated) !important;
+  border-color: var(--dk-border) !important;
+  color: var(--dk-text-soft) !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  transition: background var(--transition-fast), color var(--transition-fast) !important;
+}
+
+.profile-page .btn-light:hover {
+  background: var(--dk-hover) !important;
+  color: var(--dk-text) !important;
+}
+
+.profile-page .btn-primary {
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+/* ────────────── Card header bg-light override ────────────── */
+.profile-page .card-header.bg-light {
+  background-color: var(--dk-elevated) !important;
+  border-bottom: 1px solid var(--dk-border) !important;
+}
+
+/* ────────────── Info sidebar card ────────────── */
+.profile-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.profile-info-list small {
+  font-size: 0.8rem;
+  color: var(--dk-text-soft);
+}
+
+.profile-info-list strong {
+  color: var(--dk-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ────────────── Indicateur match password ────────────── */
+.profile-page .form-control.is-valid {
+  border-color: var(--dk-success) !important;
+  background-image: none !important;
+}
+
+.profile-page .form-control.is-invalid {
+  border-color: var(--dk-error) !important;
+  background-image: none !important;
+}
+
+.profile-page .valid-feedback,
+.profile-page .text-success.fw-semibold {
+  color: var(--dk-success) !important;
+}
+
+.profile-page .invalid-feedback,
+.profile-page .text-danger.fw-semibold {
+  color: var(--dk-error) !important;
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 767.98px) {
+  .profile-sidebar-col {
+    margin-bottom: 0.75rem;
+  }
+
+  .profile-page .btn {
+    font-size: 0.82rem;
+  }
+}

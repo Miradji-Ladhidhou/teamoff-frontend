@@ -1,0 +1,79 @@
+/* ────────────── Services SuperAdmin ────────────── */
+.services-page {
+  overflow-x: hidden;
+}
+
+/* Service card */
+.service-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 0.75rem);
+  padding: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+}
+
+.service-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.service-card__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dk-text);
+}
+
+.service-card__meta {
+  font-size: 0.78rem;
+  color: var(--dk-text-soft);
+  margin-top: 2px;
+}
+
+.service-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.service-card__actions .btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+/* Status dot */
+.service-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.service-status-dot--active   { background: var(--dk-success); }
+.service-status-dot--inactive { background: var(--dk-text-muted); }
+.service-status-dot--warning  { background: var(--dk-warning); }
+
+/* Table wrap */
+.services-table-wrap {
+  overflow-x: auto;
+}
+
+/* Table row hover */
+.services-table-wrap .table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.services-table-wrap .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ────────────── Responsive ────────────── */
+@media (max-width: 575.98px) {
+  .service-card {
+    padding: 0.75rem;
+  }
+}
