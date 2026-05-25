@@ -10,6 +10,7 @@
     radial-gradient(ellipse 70% 50% at 15% 50%, rgba(91, 141, 238, 0.10) 0%, transparent 65%),
     radial-gradient(ellipse 50% 40% at 85% 20%, rgba(52, 211, 153, 0.06) 0%, transparent 55%);
   color: #e2e8f0;
+  overflow-x: hidden;
 }
 
 /* ══════════════════════════════════════════
@@ -328,19 +329,13 @@
   .landing-container { padding-top: 2rem; padding-bottom: 2rem; }
   .landing-features { grid-template-columns: 1fr 1fr; }
 
-  .landing-hero-row > [class*="col-"] {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  /* Centrage du texte hero sur mobile */
+  .landing-badge,
+  .landing-hero__title,
+  .landing-hero__desc { text-align: center; }
 
-  /* La carte formulaire doit prendre toute la largeur disponible */
-  .landing-form-card {
-    width: 100%;
-  }
-
-  .landing-hero__desc { max-width: 100%; }
+  .landing-hero__desc { max-width: 100%; margin-left: auto; margin-right: auto; }
+  .landing-badge { margin-left: auto; margin-right: auto; }
   .landing-stats { justify-content: center; }
   .landing-features { width: 100%; }
   .landing-feature { text-align: left; }
