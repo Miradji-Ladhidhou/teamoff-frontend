@@ -85,7 +85,8 @@ const LoginPage = () => {
 
             <div className="d-flex flex-wrap gap-2 mb-4">
               <Button as={Link} to="/register" className="btn-dark btn-lg">Créer un compte</Button>
-              <Button as={Link} to="/contact" className="btn-outline-light btn-lg">Contact</Button>
+              <Button as={Link} to="/login" className="btn-dark btn-lg">Connexion</Button>
+              <Button as={Link} to="/contact" className="btn-dark btn-lg">Contact</Button>
             </div>
 
             <Row className="g-3 mt-2">
