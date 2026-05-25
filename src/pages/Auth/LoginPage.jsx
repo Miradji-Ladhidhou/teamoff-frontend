@@ -98,8 +98,8 @@ const LoginPage = () => {
         </div>
       </nav>
 
-      <Container className="landing-container">
-        <Row className="align-items-center landing-hero-row g-5">
+      <Container className="landing-container px-3 px-md-4">
+        <Row className="align-items-center landing-hero-row g-4 g-lg-5">
 
           {/* ── FORMULAIRE (priorité mobile) ── */}
           <Col xs={12} lg={5} xl={4} className="order-1 order-lg-2">
