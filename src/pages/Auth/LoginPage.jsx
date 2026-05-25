@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt } from 'react-icons/fa';
+import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
+import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
 import { useAlert } from '../../hooks/useAlert';
@@ -11,6 +11,19 @@ import AppFooter from '../../components/Layout/AppFooter';
 import { authService } from '../../services/api';
 
 import './login.css';
+
+const FEATURES = [
+  { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et suivi en temps réel.' },
+  { icon: FaUsersCog,      label: 'Workflow d\'approbation', desc: 'Manager, RH ou validation automatique.' },
+  { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, statistiques et exports PDF/CSV.' },
+  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs complets, 2FA et permissions fines.' },
+];
+
+const STATS = [
+  { value: '100%', label: 'Cloud & mobile' },
+  { value: '2FA',  label: 'Authentification sécurisée' },
+  { value: '< 1min', label: 'Prise en main' },
+];
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -74,145 +87,159 @@ const LoginPage = () => {
   const loading = submitAction.isRunning;
 
   return (
-    <div className="min-vh-100 login-landing-bg d-flex flex-column justify-content-center">
-      <Container>
-        <Row className="align-items-center justify-content-between g-4">
+    <div className="landing-root">
 
-          {/* Hero + Features */}
-          <Col xs={12} lg={7} className="mb-4 mb-lg-0 order-2 order-lg-1">
-            <h1 className="text-white fw-bold mb-3">TeamOff</h1>
-            <p className="text-light lead mb-4">Gérez vos congés, quotas et équipes depuis une interface claire et moderne.</p>
+      {/* ── NAVBAR ── */}
+      <nav className="landing-nav">
+        <span className="landing-nav__brand">TeamOff</span>
+        <div className="landing-nav__links">
+          <Link to="/contact" className="landing-nav__link">Contact</Link>
+          <Link to="/register" className="landing-nav__cta">Créer un compte</Link>
+        </div>
+      </nav>
 
-            <div className="d-flex flex-wrap gap-2 mb-4">
-              <Button as={Link} to="/register" className="btn-dark btn-lg">Créer un compte</Button>
-              <Button as={Link} to="/login" className="btn-dark btn-lg">Connexion</Button>
-              <Button as={Link} to="/contact" className="btn-dark btn-lg">Contact</Button>
+      <Container className="landing-container">
+        <Row className="align-items-center landing-hero-row g-5">
+
+          {/* ── FORMULAIRE (priorité mobile) ── */}
+          <Col xs={12} lg={5} xl={4} className="order-1 order-lg-2">
+            <div className="landing-form-card">
+              <div className="landing-form-card__header">
+                <h2 className="landing-form-card__title">Connexion</h2>
+                <p className="landing-form-card__sub">Accédez à votre espace TeamOff</p>
+              </div>
+
+              {successMessage && (
+                <Alert variant="success" className="py-2 small mb-3">{successMessage}</Alert>
+              )}
+
+              {twoFAState.required ? (
+                <div>
+                  <p className="text-light small mb-3">Entrez le code de votre application d'authentification.</p>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="landing-label">Code 2FA</Form.Label>
+                    <Form.Control
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={twoFAState.code}
+                      onChange={(e) => setTwoFAState(s => ({ ...s, code: e.target.value }))}
+                      className="landing-input"
+                      style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.4rem' }}
+                    />
+                  </Form.Group>
+                  <AsyncButton variant="primary" className="w-100" onClick={handle2FASubmit} action={submitAction} loadingText="Vérification...">
+                    Vérifier
+                  </AsyncButton>
+                  <Button variant="link" className="text-muted w-100 mt-2" size="sm" onClick={() => setTwoFAState({ required: false, pendingToken: '', code: '' })}>
+                    Retour
+                  </Button>
+                </div>
+              ) : (
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="landing-label">Email</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="email@entreprise.com"
+                      required
+                      disabled={loading}
+                      className="landing-input"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <Form.Label className="landing-label mb-0">Mot de passe</Form.Label>
+                      <Link to="/forgot-password" className="landing-link-small">Mot de passe oublié ?</Link>
+                    </div>
+                    <div className="position-relative">
+                      <Form.Control
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        required
+                        disabled={loading}
+                        className="landing-input pe-5"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={loading}
+                        className="password-toggle"
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </Form.Group>
+
+                  <AsyncButton
+                    type="submit"
+                    className="landing-btn-primary w-100 mb-4"
+                    action={submitAction}
+                    loadingText="Connexion..."
+                  >
+                    {!loading && <><FaSignInAlt className="me-2" />Se connecter</>}
+                  </AsyncButton>
+
+                  <p className="landing-form-card__footer-text">
+                    Pas encore de compte ?{' '}
+                    <Link to="/register" className="landing-link">Créer un compte</Link>
+                  </p>
+                </Form>
+              )}
             </div>
-
-            <Row className="g-3 mt-2">
-              <Col xs={12} md={4}>
-                <Card className="feature-card dark-card">
-                  <FaCalendarCheck size={28} className="mb-2 text-info" />
-                  <h5 className="text-white">Calendrier</h5>
-                  <p className="text-light small">Suivi équipe et jours bloqués.</p>
-                </Card>
-              </Col>
-              <Col xs={12} md={4}>
-                <Card className="feature-card dark-card">
-                  <FaUsersCog size={28} className="mb-2 text-info" />
-                  <h5 className="text-white">Workflow</h5>
-                  <p className="text-light small">Validations par service et quotas.</p>
-                </Card>
-              </Col>
-              <Col xs={12} md={4}>
-                <Card className="feature-card dark-card">
-                  <FaShieldAlt size={28} className="mb-2 text-info" />
-                  <h5 className="text-white">Sécurité</h5>
-                  <p className="text-light small">Permissions et audit accessibles.</p>
-                </Card>
-              </Col>
-            </Row>
           </Col>
 
-          {/* Formulaire Login */}
-          <Col xs={12} lg={5} xl={4} className="order-1 order-lg-2">
-            <Card className="shadow-lg border-0 dark-card">
-              <Card.Body className="p-4">
-                <h3 className="text-white mb-4 text-center">Connexion</h3>
-                {successMessage && (
-                  <Alert variant="success" className="py-2 small">{successMessage}</Alert>
-                )}
-                {twoFAState.required ? (
-                  <div>
-                    <p className="text-light small mb-3">Entrez le code de votre application d'authentification.</p>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="text-light">Code 2FA</Form.Label>
-                      <Form.Control
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        placeholder="000000"
-                        value={twoFAState.code}
-                        onChange={(e) => setTwoFAState(s => ({ ...s, code: e.target.value }))}
-                        style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.4rem' }}
-                      />
-                    </Form.Group>
-                    <AsyncButton variant="primary" className="w-100" onClick={handle2FASubmit} action={submitAction} loadingText="Vérification...">
-                      Vérifier
-                    </AsyncButton>
-                    <Button variant="link" className="text-muted w-100 mt-2" size="sm" onClick={() => setTwoFAState({ required: false, pendingToken: '', code: '' })}>
-                      Retour
-                    </Button>
+          {/* ── HERO ── */}
+          <Col xs={12} lg={7} className="order-2 order-lg-1">
+            <div className="landing-badge">Gestion RH simplifiée</div>
+
+            <h1 className="landing-hero__title">
+              Gérez vos congés<br />
+              <span className="landing-hero__accent">sans friction.</span>
+            </h1>
+
+            <p className="landing-hero__desc">
+              TeamOff centralise les demandes de congés, les absences et les validations
+              pour toute votre équipe — depuis une interface claire et moderne.
+            </p>
+
+            {/* Stats */}
+            <div className="landing-stats">
+              {STATS.map((s) => (
+                <div key={s.label} className="landing-stats__item">
+                  <span className="landing-stats__value">{s.value}</span>
+                  <span className="landing-stats__label">{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Features */}
+            <div className="landing-features">
+              {FEATURES.map(({ icon: Icon, label, desc }) => (
+                <div key={label} className="landing-feature">
+                  <div className="landing-feature__icon">
+                    <Icon size={18} />
                   </div>
-                ) : (
-                  <>
-                    <Form onSubmit={handleSubmit}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="text-light">Email</Form.Label>
-                        <Form.Control
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="email@entreprise.com"
-                          required
-                          disabled={loading}
-                          className="dark-input"
-                        />
-                      </Form.Group>
-
-                      <Form.Group className="mb-4">
-                        <Form.Label className="text-light">Mot de passe</Form.Label>
-                        <div className="position-relative">
-                          <Form.Control
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Mot de passe"
-                            required
-                            disabled={loading}
-                            className="dark-input pe-5"
-                          />
-                          <Button
-                            type="button"
-                            variant="link"
-                            onClick={() => setShowPassword(!showPassword)}
-                            disabled={loading}
-                            className="position-absolute top-50 end-0 translate-middle-y text-muted border-0 bg-transparent p-2"
-                          >
-                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                          </Button>
-                        </div>
-                      </Form.Group>
-
-                      <AsyncButton
-                        type="submit"
-                        variant="dark"
-                        className="w-100 mb-3 d-flex align-items-center justify-content-center"
-                        action={submitAction}
-                        loadingText="Connexion..."
-                      >
-                        {!loading && <><FaSignInAlt className="me-2" />Se connecter</>}
-                      </AsyncButton>
-                    </Form>
-
-                    <div className="text-center mt-2">
-                      <Link to="/forgot-password" className="text-secondary small text-decoration-none">Mot de passe oublié ?</Link>
-                    </div>
-
-                    <div className="text-center mt-3">
-                      <p className="text-light mb-1">Première connexion ?</p>
-                      <Link to="/register" className="text-info fw-semibold text-decoration-none">Créer un compte</Link>
-                    </div>
-                  </>
-                )}
-              </Card.Body>
-            </Card>
+                  <div>
+                    <div className="landing-feature__label">{label}</div>
+                    <div className="landing-feature__desc">{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </Col>
 
         </Row>
       </Container>
+
       <AppFooter publicMode />
     </div>
   );
