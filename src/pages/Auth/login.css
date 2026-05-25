@@ -327,6 +327,18 @@
 @media (max-width: 991px) {
   .landing-container { padding-top: 2rem; padding-bottom: 2rem; }
   .landing-features { grid-template-columns: 1fr 1fr; }
+
+  .landing-hero-row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .landing-hero__desc { max-width: 100%; }
+  .landing-stats { justify-content: center; }
+  .landing-features { width: 100%; }
+  .landing-feature { text-align: left; }
 }
 
 @media (max-width: 575px) {
