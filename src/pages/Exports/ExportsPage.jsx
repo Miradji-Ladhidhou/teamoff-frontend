@@ -422,21 +422,6 @@ const ExportsPage = () => {
                         </div>
                       }
                     />
-                    {/*      <Form.Check
-                      type="radio"
-                      id="format-pdf"
-                      name="format"
-                      value="pdf"
-                      checked={exportParams.format === 'pdf'}
-                      onChange={handleParamChange}
-                      disabled={!allowedFormats.includes('pdf')}
-                      label={
-                        <div className="d-flex align-items-center">
-                          <FaFilePdf className="text-danger me-2" />
-                          PDF
-                        </div>
-                      }
-                    /> */}
                   </div>
                 </Form.Group>
 
@@ -695,8 +680,6 @@ const ExportsPage = () => {
           </Card>
         </Col>
 
-        <Col xs={12} lg={4} className="exports-page__aside">
-        </Col>
       </Row>
 
       <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>

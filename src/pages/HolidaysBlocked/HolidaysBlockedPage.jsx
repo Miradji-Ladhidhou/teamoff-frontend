@@ -29,8 +29,6 @@ const HolidaysBlockedPage = () => {
     <Container fluid="sm">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Jours spéciaux</span>
-        <div className="d-flex gap-2">
-        </div>
       </div>
 
       <Card className="mb-3">

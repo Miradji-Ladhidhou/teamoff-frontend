@@ -13,10 +13,10 @@ import { authService } from '../../services/api';
 import './login.css';
 
 const FEATURES = [
-  { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et suivi en temps réel.' },
-  { icon: FaUsersCog,      label: 'Workflow d\'approbation', desc: 'Manager, RH ou validation automatique.' },
+  { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et notifications instantanées.' },
+  { icon: FaUsersCog,      label: 'Workflow d\'approbation', desc: 'Validation par le manager puis l\'administrateur.' },
   { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, statistiques et exports PDF/CSV.' },
-  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs complets, 2FA et permissions fines.' },
+  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs d\'activité, 2FA et gestion des rôles.' },
 ];
 
 const STATS = [

@@ -134,8 +134,6 @@ const MetricsPage = () => {
     <Container fluid="sm">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Métriques Système</span>
-        <div className="d-flex gap-2">
-        </div>
       </div>
 
       {metrics && (
