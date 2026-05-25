@@ -15,13 +15,13 @@ import './login.css';
 const FEATURES = [
   { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et notifications instantanées.' },
   { icon: FaUsersCog,      label: 'Workflow d\'approbation', desc: 'Validation par le manager puis l\'administrateur.' },
-  { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, statistiques et exports PDF/CSV.' },
-  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs d\'activité, 2FA et gestion des rôles.' },
+  { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, statistiques et exports CSV.' },
+  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs d\'activité et gestion des rôles.' },
 ];
 
 const STATS = [
   { value: '100%', label: 'Cloud & mobile' },
-  { value: '2FA',  label: 'Authentification sécurisée' },
+  { value: '4 rôles', label: 'Gestion des accès' },
   { value: '< 1min', label: 'Prise en main' },
 ];
 
