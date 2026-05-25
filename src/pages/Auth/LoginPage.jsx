@@ -79,7 +79,7 @@ const LoginPage = () => {
         <Row className="align-items-center justify-content-between g-4">
 
           {/* Hero + Features */}
-          <Col xs={12} lg={7} className="mb-4 mb-lg-0">
+          <Col xs={12} lg={7} className="mb-4 mb-lg-0 order-2 order-lg-1">
             <h1 className="text-white fw-bold mb-3">TeamOff</h1>
             <p className="text-light lead mb-4">Gérez vos congés, quotas et équipes depuis une interface claire et moderne.</p>
 
@@ -114,7 +114,7 @@ const LoginPage = () => {
           </Col>
 
           {/* Formulaire Login */}
-          <Col xs={12} lg={5} xl={4}>
+          <Col xs={12} lg={5} xl={4} className="order-1 order-lg-2">
             <Card className="shadow-lg border-0 dark-card">
               <Card.Body className="p-4">
                 <h3 className="text-white mb-4 text-center">Connexion</h3>

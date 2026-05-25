@@ -1,7 +1,7 @@
 import './companies.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle } from 'react-icons/fa';
+import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
@@ -80,6 +80,7 @@ const CompaniesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [success, setSuccess] = useState('');
+  const [adminData, setAdminData] = useState({ prenom: '', nom: '', email: '' });
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
@@ -114,6 +115,7 @@ const CompaniesManagement = () => {
 
   const resetForm = () => {
     setFormData(DEFAULT_FORM);
+    setAdminData({ prenom: '', nom: '', email: '' });
     setShowAdvancedJson(false);
     setShowReportValidation(false);
     setAdvancedParametresJson(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
@@ -178,8 +180,22 @@ const CompaniesManagement = () => {
           await api.entreprisesService.update(editingCompany.id, payload);
           setSuccess('Entreprise mise a jour avec succes');
         } else {
-          await api.entreprisesService.create(payload);
-          setSuccess('Entreprise creee avec succes');
+          const created = await api.entreprisesService.create(payload);
+          const entrepriseId = created.data?.id;
+
+          const hasAdmin = adminData.email.trim() && adminData.prenom.trim() && adminData.nom.trim();
+          if (hasAdmin && entrepriseId) {
+            await api.usersService.create({
+              prenom: adminData.prenom.trim(),
+              nom: adminData.nom.trim(),
+              email: adminData.email.trim(),
+              role: 'admin_entreprise',
+              entreprise_id: entrepriseId,
+            });
+            setSuccess(`Entreprise créée et invitation envoyée à ${adminData.email.trim()}`);
+          } else {
+            setSuccess('Entreprise creee avec succes');
+          }
         }
 
         setShowModal(false);
@@ -852,6 +868,59 @@ const CompaniesManagement = () => {
                   />
                 </Form.Group>
               </>
+            )}
+            {!editingCompany && (
+              <Card className="mt-3 border-0 bg-light">
+                <Card.Body>
+                  <h6 className="mb-3 d-flex align-items-center gap-2">
+                    <FaUserTie className="text-primary" />
+                    Administrateur de l'entreprise <span className="text-muted fw-normal small">(optionnel)</span>
+                  </h6>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Prénom</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={adminData.prenom}
+                          onChange={(e) => setAdminData(p => ({ ...p, prenom: e.target.value }))}
+                          placeholder="Jean"
+                          disabled={submitAction.isRunning}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Nom</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={adminData.nom}
+                          onChange={(e) => setAdminData(p => ({ ...p, nom: e.target.value }))}
+                          placeholder="Dupont"
+                          disabled={submitAction.isRunning}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Email *</Form.Label>
+                        <Form.Control
+                          type="email"
+                          value={adminData.email}
+                          onChange={(e) => setAdminData(p => ({ ...p, email: e.target.value }))}
+                          placeholder="admin@entreprise.com"
+                          disabled={submitAction.isRunning}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {adminData.email.trim() && (
+                    <small className="text-muted">
+                      Un email d'invitation sera envoyé à <strong>{adminData.email.trim()}</strong> pour définir son mot de passe.
+                    </small>
+                  )}
+                </Card.Body>
+              </Card>
             )}
           </Modal.Body>
           <Modal.Footer>
