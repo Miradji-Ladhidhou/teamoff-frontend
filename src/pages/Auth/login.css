@@ -335,6 +335,11 @@
     text-align: center;
   }
 
+  /* La carte formulaire doit prendre toute la largeur disponible */
+  .landing-form-card {
+    width: 100%;
+  }
+
   .landing-hero__desc { max-width: 100%; }
   .landing-stats { justify-content: center; }
   .landing-features { width: 100%; }
