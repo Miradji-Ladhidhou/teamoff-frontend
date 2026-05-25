@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
+import { Form, Button, Alert } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRoute } from '../../utils/navigation';
@@ -98,11 +98,11 @@ const LoginPage = () => {
         </div>
       </nav>
 
-      <Container className="landing-container px-3 px-md-4">
-        <Row className="align-items-center landing-hero-row g-4 g-lg-5">
+      <div className="landing-container">
+        <div className="landing-hero-row">
 
           {/* ── FORMULAIRE (priorité mobile) ── */}
-          <Col xs={12} lg={5} xl={4} className="order-1 order-lg-2">
+          <div className="landing-col-form">
             <div className="landing-form-card">
               <div className="landing-form-card__header">
                 <h2 className="landing-form-card__title">Connexion</h2>
@@ -195,10 +195,10 @@ const LoginPage = () => {
                 </Form>
               )}
             </div>
-          </Col>
+          </div>
 
           {/* ── HERO ── */}
-          <Col xs={12} lg={7} className="order-2 order-lg-1">
+          <div className="landing-col-hero">
             <div className="landing-badge">Gestion RH simplifiée</div>
 
             <h1 className="landing-hero__title">
@@ -235,10 +235,10 @@ const LoginPage = () => {
                 </div>
               ))}
             </div>
-          </Col>
+          </div>
 
-        </Row>
-      </Container>
+        </div>
+      </div>
 
       <AppFooter publicMode />
     </div>
