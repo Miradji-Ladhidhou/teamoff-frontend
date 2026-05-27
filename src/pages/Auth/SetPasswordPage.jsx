@@ -32,7 +32,7 @@ const SetPasswordPage = () => {
     if (validationError) { setError(validationError); return; }
     setError('');
 
-    submitAction.execute(async () => {
+    submitAction.run(async () => {
       await authService.setPassword({ token, password, confirmPassword });
       navigate('/login', {
         state: { successMessage: 'Mot de passe défini avec succès. Vous pouvez vous connecter.' },
@@ -115,7 +115,8 @@ const SetPasswordPage = () => {
                     type="submit"
                     variant="primary"
                     className="w-100"
-                    loading={submitAction.loading}
+                    action={submitAction}
+                    loadingText="Activation..."
                   >
                     Activer mon compte
                   </AsyncButton>
