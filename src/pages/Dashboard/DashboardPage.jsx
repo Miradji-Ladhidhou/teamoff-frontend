@@ -2,7 +2,7 @@ import './dashboard.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -244,10 +244,18 @@ const DashboardPage = () => {
       )}
       {/* Hero greeting */}
       <div className="dashboard-hero">
-        <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} 👋</div>
-        <div className="dashboard-hero__date">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        <div>
+          <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} 👋</div>
+          <div className="dashboard-hero__date">
+            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
         </div>
+        {['employe', 'manager'].includes(user?.role) && (
+          <Button as={Link} to="/conges/nouveau" variant="primary" size="sm"
+            className="d-none d-md-flex align-items-center gap-2 dashboard-hero__cta">
+            <FaPlus size={12} /> Nouveau congé
+          </Button>
+        )}
       </div>
 
       {/* Notification banner */}
@@ -291,37 +299,33 @@ const DashboardPage = () => {
         {soldes && !isAdmin() && (
           <Col lg={4} className="mb-4">
             <div className="section-header">
-              <span className="section-title">Mes soldes de congés</span>
-              <span className="section-action">{currentYear}</span>
+              <span className="section-title">Mes soldes {currentYear}</span>
             </div>
-            <Card>
-              <Card.Body>
-                {soldesLoadError ? (
-                  <p className="ui-text-soft mb-0 text-danger">Impossible de charger les soldes.</p>
-                ) : soldes.length === 0 ? (
-                  <p className="ui-text-soft mb-0">Aucun solde disponible</p>
-                ) : (
-                  soldes.map((solde, idx) => {
-                    const restant = getSoldeJours(solde);
-                    const acquis = Number(solde?.jours_acquis ?? solde?.quota_annuel ?? 0) || 0;
-                    const pct = acquis > 0 ? Math.min(100, Math.round((restant / acquis) * 100)) : 100;
-                    return (
-                      <div key={idx} className="solde-row">
-                        <div className="solde-row__header">
-                          <span className="text-truncate me-2">{getSoldeTypeLabel(solde)}</span>
-                          <span className="fw-semibold flex-shrink-0">{restant} j</span>
+            <div className="soldes-grid">
+              {soldesLoadError ? (
+                <div className="solde-card solde-card--error">Impossible de charger les soldes.</div>
+              ) : soldes.length === 0 ? (
+                <div className="solde-card solde-card--empty">Aucun solde disponible</div>
+              ) : (
+                soldes.map((solde, idx) => {
+                  const restant = getSoldeJours(solde);
+                  const acquis = Number(solde?.jours_acquis ?? solde?.quota_annuel ?? 0) || 0;
+                  const pct = acquis > 0 ? Math.min(100, Math.round((restant / acquis) * 100)) : 100;
+                  const isLow = acquis > 0 && pct < 25;
+                  return (
+                    <div key={idx} className={`solde-card ${isLow ? 'solde-card--low' : ''}`}>
+                      <div className="solde-card__days">{restant}<span className="solde-card__unit">j</span></div>
+                      <div className="solde-card__label">{getSoldeTypeLabel(solde)}</div>
+                      {acquis > 0 && (
+                        <div className="solde-card__bar">
+                          <div className="solde-card__bar-fill" style={{ width: `${pct}%` }} />
                         </div>
-                        {acquis > 0 && (
-                          <div className="solde-row__bar">
-                            <div className="solde-row__bar-fill" style={{ width: `${pct}%` }} />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </Card.Body>
-            </Card>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </Col>
         )}
 
@@ -385,13 +389,11 @@ const DashboardPage = () => {
         </Col>
       </Row>
 
-      {/* Mobile-only "Nouveau congé" button */}
+      {/* Mobile FAB — Nouveau congé */}
       {['employe', 'manager'].includes(user?.role) && (
-        <div className="d-md-none mt-4">
-          <Button as={Link} to="/conges/nouveau" variant="primary" className="w-100 d-flex align-items-center justify-content-center">
-            <FaPlus className="me-2" /> Nouveau congé
-          </Button>
-        </div>
+        <Link to="/conges/nouveau" className="dashboard-fab d-md-none" aria-label="Nouveau congé">
+          <FaPlus size={20} />
+        </Link>
       )}
     </Container>
   );

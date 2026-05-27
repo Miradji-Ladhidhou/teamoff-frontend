@@ -1,0 +1,294 @@
+/* ══════════════════════════════════════
+   TEAMOFF — Shared Settings Design
+   Importé dans toutes les pages de paramètres
+══════════════════════════════════════ */
+
+/* ── En-tête de section ── */
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.settings-header__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dk-text);
+  margin: 0;
+}
+
+.settings-header__desc {
+  font-size: 0.78rem;
+  color: var(--dk-text-soft);
+  margin-top: 2px;
+}
+
+/* ── Section card ── */
+.settings-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius-lg, 16px);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.settings-card__head {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--dk-border-soft, rgba(255,255,255,0.05));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.settings-card__head-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dk-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-card__head-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--dk-accent-soft, rgba(91,141,238,0.12));
+  color: var(--dk-accent, #5b8dee);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.settings-card__body {
+  padding: 1.25rem;
+}
+
+/* ── Ligne paramètre (label + contrôle) ── */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--dk-border-soft, rgba(255,255,255,0.04));
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-row:first-child {
+  padding-top: 0;
+}
+
+.settings-row__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dk-text);
+  line-height: 1.3;
+}
+
+.settings-row__desc {
+  font-size: 0.75rem;
+  color: var(--dk-text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.settings-row__control {
+  flex-shrink: 0;
+  max-width: 200px;
+}
+
+/* ── Navigation par onglets ── */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+  flex-wrap: nowrap;
+}
+
+.settings-tabs::-webkit-scrollbar { display: none; }
+
+.settings-tab {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  color: var(--dk-text-soft);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-tab:hover {
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+}
+
+.settings-tab.active {
+  background: var(--dk-accent-soft, rgba(91,141,238,0.12));
+  color: var(--dk-accent, #5b8dee);
+  border-color: var(--dk-accent-border, rgba(91,141,238,0.3));
+}
+
+/* ── Grille de champs 2 colonnes ── */
+.settings-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
+}
+
+.settings-fields-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.settings-field__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dk-text-soft);
+}
+
+.settings-field__hint {
+  font-size: 0.72rem;
+  color: var(--dk-text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ── Tableau dans les settings ── */
+.settings-table-wrap {
+  overflow-x: auto;
+}
+
+.settings-table-wrap .table {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
+.settings-table-wrap .table thead th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--dk-text-muted);
+  border-bottom: 1px solid var(--dk-border);
+  background: transparent;
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+}
+
+.settings-table-wrap .table tbody td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  border-color: var(--dk-border-soft, rgba(255,255,255,0.04));
+  font-size: 0.85rem;
+}
+
+.settings-table-wrap .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Badge statut dans tables ── */
+.settings-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.settings-badge--active {
+  background: var(--dk-success-bg);
+  color: var(--dk-success);
+  border: 1px solid rgba(52,211,153,0.2);
+}
+
+.settings-badge--inactive {
+  background: var(--dk-border-soft, rgba(255,255,255,0.05));
+  color: var(--dk-text-muted);
+  border: 1px solid var(--dk-border);
+}
+
+/* ── Actions de ligne ── */
+.settings-row-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+/* ── État vide ── */
+.settings-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.settings-empty__icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+.settings-empty__text {
+  font-size: 0.875rem;
+  color: var(--dk-text-soft);
+  margin-bottom: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 575px) {
+  .settings-card__body {
+    padding: 1rem;
+  }
+
+  .settings-card__head {
+    padding: 0.875rem 1rem;
+  }
+
+  .settings-fields-grid,
+  .settings-fields-grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .settings-row__control {
+    max-width: 100%;
+    width: 100%;
+  }
+}

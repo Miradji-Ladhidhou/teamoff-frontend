@@ -1,4 +1,5 @@
 import './jours-feries.css';
+import '../../styles/settings.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Spinner, Form, Modal } from 'react-bootstrap';
 import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';

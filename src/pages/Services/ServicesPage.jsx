@@ -1,4 +1,5 @@
 import './services.css';
+import '../../styles/settings.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Card, Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { FaPlus, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa';

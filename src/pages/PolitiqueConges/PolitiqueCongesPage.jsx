@@ -1,4 +1,5 @@
 import './politique-conges.css';
+import '../../styles/settings.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Card, Row, Col, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';

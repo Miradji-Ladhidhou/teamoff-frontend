@@ -1,125 +1,130 @@
 import React from 'react';
-import { Row, Col, Form } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 
 const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
   return (
     <div id="section-regles-generales">
-      <Row>
-        <Col xs={12} md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Politique de chevauchement</Form.Label>
-            <Form.Select
-              value={policy.overlap_policy}
-              onChange={(e) => setField('overlap_policy', e.target.value)}
-            >
-              <option value="block">Bloquer</option>
-              <option value="warning">Autoriser et alerter</option>
-              <option value="allow">Autoriser</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col xs={12} md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Workflow d'approbation</Form.Label>
-            <Form.Select
-              value={policy.approval_workflow}
-              onChange={(e) => setField('approval_workflow', e.target.value)}
-            >
-              <option value="manager_admin">Manager puis Admin</option>
-              <option value="admin_only">Admin uniquement</option>
-              <option value="manager_only">Manager uniquement</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-      </Row>
 
-      <Row>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>Preavis minimum (jours)</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              value={policy.minimum_notice_days}
-              onChange={(e) => setField('minimum_notice_days', e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>Max jours consecutifs</Form.Label>
-            <Form.Control
-              type="number"
-              min="1"
-              value={policy.max_consecutive_days}
-              onChange={(e) => setField('max_consecutive_days', e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>Max absences simultanees (global)</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              value={policy.max_employees_on_leave?.global ?? ''}
-              onChange={(e) => setPolicy((prev) => ({
-                ...prev,
-                max_employees_on_leave: {
-                  ...(prev.max_employees_on_leave || {}),
-                  global: e.target.value,
-                },
-              }))}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+      {/* ── Bloc 1 : Chevauchements & Workflow ── */}
+      <div className="settings-fields-grid mb-4">
+        <div className="settings-field">
+          <label className="settings-field__label">Si deux employés sont absents en même temps</label>
+          <Form.Select
+            value={policy.overlap_policy}
+            onChange={(e) => setField('overlap_policy', e.target.value)}
+          >
+            <option value="block">Bloquer la 2ème demande</option>
+            <option value="warning">Autoriser avec alerte</option>
+            <option value="allow">Toujours autoriser</option>
+          </Form.Select>
+        </div>
 
-      <Row>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>Conges payes annuels</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              value={policy.conges_payes_annuels}
-              onChange={(e) => setField('conges_payes_annuels', e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>RTT annuels</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              value={policy.rtt_annuels}
-              onChange={(e) => setField('rtt_annuels', e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col xs={12} md={4}>
-          <Form.Group className="mb-3">
-            <Form.Label>Report max (jours)</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              value={policy.report_max_jours}
-              onChange={(e) => setField('report_max_jours', e.target.value)}
-              disabled={!policy.report_autorise}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+        <div className="settings-field">
+          <label className="settings-field__label">Qui valide les congés ?</label>
+          <Form.Select
+            value={policy.approval_workflow}
+            onChange={(e) => setField('approval_workflow', e.target.value)}
+          >
+            <option value="manager_admin">Manager, puis Admin</option>
+            <option value="admin_only">Admin uniquement</option>
+            <option value="manager_only">Manager uniquement</option>
+          </Form.Select>
+        </div>
+      </div>
 
-      <Form.Group className="mb-3">
-        <Form.Check
-          type="switch"
-          label="Autoriser le report annuel"
-          checked={Boolean(policy.report_autorise)}
-          onChange={(e) => setField('report_autorise', e.target.checked)}
-        />
-      </Form.Group>
+      {/* ── Bloc 2 : Durées & délais ── */}
+      <div className="settings-fields-grid settings-fields-grid--3 mb-4">
+        <div className="settings-field">
+          <label className="settings-field__label">Délai minimum avant départ (jours)</label>
+          <Form.Control
+            type="number"
+            min="0"
+            value={policy.minimum_notice_days}
+            onChange={(e) => setField('minimum_notice_days', e.target.value)}
+          />
+          <span className="settings-field__hint">Nombre de jours à l'avance requis pour poser un congé</span>
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-field__label">Durée maximale d'un congé (jours)</label>
+          <Form.Control
+            type="number"
+            min="1"
+            value={policy.max_consecutive_days}
+            onChange={(e) => setField('max_consecutive_days', e.target.value)}
+          />
+          <span className="settings-field__hint">Un congé ne peut pas dépasser cette durée</span>
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-field__label">Absences simultanées max (global)</label>
+          <Form.Control
+            type="number"
+            min="0"
+            value={policy.max_employees_on_leave?.global ?? ''}
+            onChange={(e) => setPolicy((prev) => ({
+              ...prev,
+              max_employees_on_leave: {
+                ...(prev.max_employees_on_leave || {}),
+                global: e.target.value,
+              },
+            }))}
+          />
+          <span className="settings-field__hint">0 = illimité</span>
+        </div>
+      </div>
+
+      {/* ── Bloc 3 : Quotas & report ── */}
+      <div className="settings-fields-grid settings-fields-grid--3 mb-4">
+        <div className="settings-field">
+          <label className="settings-field__label">Congés payés annuels (jours)</label>
+          <Form.Control
+            type="number"
+            min="0"
+            value={policy.conges_payes_annuels}
+            onChange={(e) => setField('conges_payes_annuels', e.target.value)}
+          />
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-field__label">RTT annuels (jours)</label>
+          <Form.Control
+            type="number"
+            min="0"
+            value={policy.rtt_annuels}
+            onChange={(e) => setField('rtt_annuels', e.target.value)}
+          />
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-field__label">Report annuel max (jours)</label>
+          <Form.Control
+            type="number"
+            min="0"
+            value={policy.report_max_jours}
+            onChange={(e) => setField('report_max_jours', e.target.value)}
+            disabled={!policy.report_autorise}
+          />
+          <span className="settings-field__hint">Jours reportables sur l'année suivante</span>
+        </div>
+      </div>
+
+      {/* ── Toggle report ── */}
+      <div className="settings-row" style={{ paddingTop: 0 }}>
+        <div className="settings-row__info">
+          <div className="settings-row__label">Autoriser le report annuel</div>
+          <div className="settings-row__desc">Les jours non utilisés peuvent être reportés l'année suivante</div>
+        </div>
+        <div className="settings-row__control">
+          <Form.Check
+            type="switch"
+            checked={Boolean(policy.report_autorise)}
+            onChange={(e) => setField('report_autorise', e.target.checked)}
+            label=""
+          />
+        </div>
+      </div>
+
     </div>
   );
 };

@@ -9,14 +9,20 @@ import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
-const getCongeAccent = (statut) => {
+const getCongeAccent = (statut, role) => {
+  const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(role);
   switch (statut) {
-    case 'en_attente_manager': return { accent: 'pending', label: 'EN ATTENTE' };
-    case 'valide_manager':     return { accent: 'info',    label: 'VALIDÉ MANAGER' };
-    case 'valide_final':       return { accent: 'success', label: 'VALIDÉ' };
-    case 'refuse_manager':     return { accent: 'danger',  label: 'REFUSÉ MANAGER' };
-    case 'refuse_final':       return { accent: 'danger',  label: 'REFUSÉ' };
-    default:                   return { accent: 'pending', label: statut };
+    case 'en_attente_manager':
+      return { accent: 'pending', label: 'En attente' };
+    case 'valide_manager':
+      return { accent: 'info', label: isAdminRole ? 'Validé manager' : 'En cours' };
+    case 'valide_final':
+      return { accent: 'success', label: 'Approuvé' };
+    case 'refuse_manager':
+    case 'refuse_final':
+      return { accent: 'danger', label: 'Refusé' };
+    default:
+      return { accent: 'pending', label: statut };
   }
 };
 
@@ -367,7 +373,7 @@ const CongesPage = () => {
   };
 
   const getStatusBadge = (status) => {
-    const { accent, label } = getCongeAccent(status);
+    const { accent, label } = getCongeAccent(status, user?.role);
     return <span className={`badge ${accentToBadgeClass(accent)}`}>{label}</span>;
   };
 
@@ -389,13 +395,14 @@ const CongesPage = () => {
     return parsedDate.toLocaleDateString('fr-FR');
   };
 
+  const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
   const statusChips = [
     { value: '', label: 'Tous' },
     { value: 'en_attente_manager', label: 'En attente' },
-    { value: 'valide_manager', label: 'Validé manager' },
-    { value: 'valide_final', label: 'Validé' },
-    { value: 'refuse_manager', label: 'Refusé manager' },
-    { value: 'refuse_final', label: 'Refusé final' },
+    { value: 'valide_manager', label: isAdminRole ? 'Validé manager' : 'En cours' },
+    { value: 'valide_final', label: 'Approuvé' },
+    { value: 'refuse_manager', label: isAdminRole ? 'Refusé manager' : 'Refusé' },
+    ...(isAdminRole ? [{ value: 'refuse_final', label: 'Refusé (final)' }] : []),
   ];
 
   return (
@@ -586,7 +593,7 @@ const CongesPage = () => {
               {/* Vue carte — mobile/tablette portrait */}
               <div className="d-md-none">
                 {paginatedConges.map((conge) => {
-                  const { accent, label } = getCongeAccent(conge.statut);
+                  const { accent, label } = getCongeAccent(conge.statut, user?.role);
                   return (
                     <Link key={conge.id} to={`/conges/${conge.id}`} style={{ textDecoration: 'none' }}>
                       <div className="card-accented conges-mobile-item">

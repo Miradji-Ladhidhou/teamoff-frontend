@@ -1,31 +1,34 @@
 import React from 'react';
-import { Card, Button } from 'react-bootstrap';
+
+const TABS = [
+  { id: 'general',      label: 'Règles générales',   emoji: '⚙️' },
+  { id: 'cancellation', label: 'Annulations',         emoji: '↩️' },
+  { id: 'services',     label: 'Par service',         emoji: '🏢' },
+  { id: 'timezone',     label: 'Fuseau horaire',      emoji: '🕐' },
+  { id: 'types',        label: 'Types de congés',     emoji: '📋' },
+];
 
 const SectionTabs = ({ activeSection, setActiveSection }) => {
-
   return (
-    <Card className="mb-3">
-      <Card.Body className="py-3 d-flex flex-column flex-lg-row gap-2 align-items-stretch align-items-lg-center justify-content-between">
-        <div className="d-flex flex-wrap gap-2">
-          <Button size="sm" variant={activeSection === 'general' ? 'primary' : 'outline-secondary'} onClick={() => setActiveSection('general')}>
-            General
-          </Button>
-          <Button size="sm" variant={activeSection === 'cancellation' ? 'primary' : 'outline-secondary'} onClick={() => setActiveSection('cancellation')}>
-            Annulation
-          </Button>
-          <Button size="sm" variant={activeSection === 'services' ? 'primary' : 'outline-secondary'} onClick={() => setActiveSection('services')}>
-            Services
-          </Button>
-          <Button size="sm" variant={activeSection === 'timezone' ? 'primary' : 'outline-secondary'} onClick={() => setActiveSection('timezone')}>
-            Fuseau
-          </Button>
-          <Button size="sm" variant={activeSection === 'types' ? 'primary' : 'outline-secondary'} onClick={() => setActiveSection('types')}>
-            Types
-          </Button>
-        </div>
-        <small className="text-muted">Vue filtree pour une edition plus agreable.</small>
-      </Card.Body>
-    </Card>
+    <div className="settings-card mb-3">
+      <div className="settings-card__body" style={{ paddingTop: '0.875rem', paddingBottom: '0.875rem' }}>
+        <nav className="settings-tabs" role="tablist">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={activeSection === tab.id}
+              className={`settings-tab${activeSection === tab.id ? ' active' : ''}`}
+              onClick={() => setActiveSection(tab.id)}
+            >
+              <span aria-hidden="true">{tab.emoji}</span>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
   );
 };
 
