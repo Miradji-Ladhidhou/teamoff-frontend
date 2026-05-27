@@ -12,5 +12,5 @@
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius-lg);
   padding: 2.5rem 2rem; max-width: 480px; width: 100%;
-  box-shadow: var(--dk-shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: var(--dk-shadow-lg);
 }

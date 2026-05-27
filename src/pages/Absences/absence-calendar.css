@@ -38,7 +38,7 @@
   width: 100%;
   max-width: 26rem;
   border: 1px solid var(--dk-border);
-  box-shadow: var(--dk-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-md);
 }
 .absence-calendar-modal-title {
   margin-bottom: 0.75rem;
@@ -106,7 +106,7 @@
   background: var(--dk-card);
   border-radius: 10px;
   border: 1px solid var(--dk-border);
-  box-shadow: var(--dk-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   overflow: hidden;
 }
 .absence-calendar-shell .rbc-toolbar {

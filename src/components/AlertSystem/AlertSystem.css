@@ -26,27 +26,27 @@
   --z-overlay: 10000;
   --z-modal:   10001;
 
-  /* SUCCESS — emerald dark theme */
-  --clr-success:        #a7f3d0;
-  --clr-success-bg:     rgba(52, 211, 153, 0.14);
+  /* SUCCESS — emerald light theme */
+  --clr-success:        var(--dk-success);
+  --clr-success-bg:     rgba(5, 150, 105, 0.08);
   --clr-success-border: var(--dk-success);
   --clr-success-icon:   var(--dk-success);
 
-  /* ERROR — soft red dark theme */
-  --clr-error:          #fca5a5;
-  --clr-error-bg:       rgba(248, 113, 113, 0.14);
+  /* ERROR — soft red light theme */
+  --clr-error:          var(--dk-error);
+  --clr-error-bg:       rgba(220, 38, 38, 0.08);
   --clr-error-border:   var(--dk-error);
   --clr-error-icon:     var(--dk-error);
 
-  /* WARNING — amber dark theme */
-  --clr-warning:        #fcd34d;
-  --clr-warning-bg:     rgba(240, 168, 85, 0.14);
+  /* WARNING — amber light theme */
+  --clr-warning:        var(--dk-warning);
+  --clr-warning-bg:     rgba(217, 119, 6, 0.08);
   --clr-warning-border: var(--dk-warning);
   --clr-warning-icon:   var(--dk-warning);
 
-  /* INFO — soft blue dark theme */
-  --clr-info:           #93c5fd;
-  --clr-info-bg:        rgba(91, 141, 238, 0.14);
+  /* INFO — indigo light theme */
+  --clr-info:           var(--dk-accent);
+  --clr-info-bg:        rgba(99, 102, 241, 0.08);
   --clr-info-border:    var(--dk-accent);
   --clr-info-icon:      var(--dk-accent);
 

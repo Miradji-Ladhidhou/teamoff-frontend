@@ -16,9 +16,7 @@
   background: var(--dk-card);
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius-lg);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-lg);
   padding: 2rem;
   width: 100%;
   max-width: 480px;
@@ -46,7 +44,7 @@
   font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #fff 30%, rgba(255, 255, 255, 0.7) 100%);
+  background: linear-gradient(135deg, var(--dk-accent) 0%, var(--dk-accent-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

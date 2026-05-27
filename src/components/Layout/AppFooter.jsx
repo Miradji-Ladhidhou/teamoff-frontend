@@ -62,13 +62,13 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
   }, [isSuperAdmin, publicMode]);
 
   return (
-    <footer className="app-footer bg-dark text-light py-5 mt-5">
+    <footer className="app-footer py-5 mt-5">
       <div className="container">
         <div className="row">
           {/* Section principale */}
           <div className="col-lg-6 mb-4">
-            <h2 className="h5 fw-bold text-white">TeamOff</h2>
-            <p className="text-light-50">
+            <h2 className="h5 fw-bold app-footer__brand">TeamOff</h2>
+            <p className="app-footer__tagline">
               Tous les liens et informations essentiels à portée de main.
             </p>
             <div className="d-flex flex-wrap gap-2 mt-3">
@@ -77,7 +77,7 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
                   as={Link}
                   key={item.to}
                   to={item.to}
-                  variant={item.variant}
+                  variant={item.variant === 'outline-light' ? 'outline-secondary' : item.variant}
                   size="sm"
                   className="d-flex align-items-center gap-1"
                 >
@@ -90,19 +90,19 @@ const AppFooter = ({ isSuperAdmin = false, publicMode = false }) => {
 
           {/* Accordéon footer */}
           <div className="col-lg-6">
-            <FooterAccordion darkMode />
+            <FooterAccordion darkMode={false} />
           </div>
         </div>
 
-        <hr className="border-light mt-4" />
-        
+        <hr className="app-footer__divider mt-4" />
+
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
-          <small className="text-light-50 mb-2 mb-md-0">
+          <small className="app-footer__copy mb-2 mb-md-0">
             © 2026 TeamOff - Tous droits réservés
           </small>
           <div className="d-flex gap-3">
             {legalLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="text-light-50 text-decoration-none small">
+              <Link key={link.to} to={link.to} className="app-footer__legal-link text-decoration-none small">
                 {link.label}
               </Link>
             ))}

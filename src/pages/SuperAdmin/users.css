@@ -21,15 +21,13 @@
   background: var(--dk-elevated);
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius, 0.75rem);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   transition: box-shadow var(--transition-base), transform var(--transition-fast);
 }
 
 .users-management-mobile-list__item:hover {
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 6px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--dk-shadow-md);
 }
 
 .users-management-mobile-list__actions {
@@ -48,7 +46,7 @@
   border-radius: 50%;
   background: var(--dk-surface);
   border: 1px solid var(--dk-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,7 +74,7 @@
 }
 
 .users-management-table-wrap .table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--dk-hover);
 }
 
 .users-management-table-actions {

@@ -93,7 +93,7 @@ const RegisterPage = () => {
             <Card className="shadow-lg dark-card">
               <Card.Body className="p-4">
                 <div className="text-center mb-3">
-                  <h1 className="h3 text-white mb-2">TeamOff</h1>
+                  <h1 className="h3 mb-2">TeamOff</h1>
                   <small className="text-muted">Créer un compte entreprise</small>
                   <ProgressBar now={progress} className="mt-2 mb-2 progress-xs" />
                   <small className="text-muted">Étape {step} sur 2</small>
@@ -102,7 +102,7 @@ const RegisterPage = () => {
                 <Form onSubmit={step === 2 ? handleSubmit : (e) => e.preventDefault()}>
                   {step === 1 && (
                     <>
-                      <h5 className="text-white mb-3"><FaBuilding className="me-2" />Entreprise</h5>
+                      <h5 className="mb-3"><FaBuilding className="me-2" />Entreprise</h5>
                       <Form.Group className="mb-3">
                         <Form.Control
                           type="text"
@@ -148,7 +148,7 @@ const RegisterPage = () => {
 
                   {step === 2 && (
                     <>
-                      <h5 className="text-white mb-3"><FaUser className="me-2" />Administrateur</h5>
+                      <h5 className="mb-3"><FaUser className="me-2" />Administrateur</h5>
                       <Form.Group className="mb-3">
                         <Form.Control
                           type="text"

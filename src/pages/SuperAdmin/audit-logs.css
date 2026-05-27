@@ -83,7 +83,7 @@
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius, 0.75rem);
   padding: 0.875rem 1rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   transition: box-shadow var(--transition-base);
   /* Left border colored by action type via modifier classes */
   border-left-width: 3px;
@@ -99,9 +99,7 @@
 .audit-log-mobile-card--warning { border-left-color: var(--dk-warning); }
 
 .audit-log-mobile-card:hover {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--dk-shadow-md);
 }
 
 /* Nom utilisateur */
@@ -230,7 +228,7 @@
 }
 
 .table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--dk-hover);
 }
 
 /* Colonne date */

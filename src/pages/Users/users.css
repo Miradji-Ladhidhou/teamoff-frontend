@@ -19,7 +19,7 @@
   background: var(--dk-card);
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius, 0.75rem);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   transition: background var(--transition-fast), box-shadow var(--transition-base), transform var(--transition-fast);
 }
 
@@ -27,8 +27,7 @@
   background: var(--dk-elevated);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 6px 20px rgba(0, 0, 0, 0.4);
+    var(--dk-shadow-md);
 }
 
 /* Avatar circle */
@@ -38,7 +37,7 @@
   border-radius: 50%;
   background: var(--dk-surface);
   border: 1px solid var(--dk-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--dk-shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;

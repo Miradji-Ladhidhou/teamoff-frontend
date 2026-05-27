@@ -45,15 +45,15 @@ const ForgotPasswordPage = () => {
       <Container>
         <Row className="align-items-center justify-content-between g-4">
           {/* Description / illustration */}
-          <Col xs={12} lg={7} className="mb-4 mb-lg-0 text-white">
+          <Col xs={12} lg={7} className="mb-4 mb-lg-0">
             <h1 className="fw-bold mb-3">Mot de passe oublié</h1>
-            <p className="lead mb-4 text-light">
+            <p className="lead mb-4 text-muted">
               Entrez votre adresse email pour recevoir un lien de réinitialisation.
             </p>
             <h5 className="fw-bold mb-3">Rapide</h5>
-            <p className="lead mb-4 text-light">Lien de réinitialisation envoyé instantanément.</p>
+            <p className="lead mb-4 text-muted">Lien de réinitialisation envoyé instantanément.</p>
             <h5 className="fw-bold mb-3">Sécurisé</h5>
-            <p className="lead mb-4 text-light">Seul le titulaire du compte pourra réinitialiser le mot de passe.</p>
+            <p className="lead mb-4 text-muted">Seul le titulaire du compte pourra réinitialiser le mot de passe.</p>
           </Col>
 
           {/* Formulaire */}
@@ -62,10 +62,10 @@ const ForgotPasswordPage = () => {
               <Card.Body className="p-4">
                 {!submitted ? (
                   <>
-                    <h4 className="fw-bold text-center mb-4 text-white">Réinitialiser votre mot de passe</h4>
+                    <h4 className="fw-bold text-center mb-4">Réinitialiser votre mot de passe</h4>
                     <Form onSubmit={handleSubmit}>
                       <Form.Group className="mb-4">
-                        <Form.Label className="text-light mb-2">Adresse email</Form.Label>
+                        <Form.Label className="mb-2">Adresse email</Form.Label>
                         <Form.Control
                           type="email"
                           placeholder="vous@example.com"
@@ -77,7 +77,7 @@ const ForgotPasswordPage = () => {
                       </Form.Group>
 
                       <AsyncButton
-                        variant="dark"
+                        variant="primary"
                         type="submit"
                         disabled={!email.trim()}
                         className="w-100 py-2 mb-3"
@@ -88,7 +88,7 @@ const ForgotPasswordPage = () => {
                       </AsyncButton>
                     </Form>
                     <div className="text-center mt-2">
-                      <Link to="/login" className="text-info d-inline-flex align-items-center gap-2">
+                      <Link to="/login" className="text-primary d-inline-flex align-items-center gap-2">
                         <FaArrowLeft size={14} />
                         Retour à la connexion
                       </Link>
@@ -99,12 +99,12 @@ const ForgotPasswordPage = () => {
                     <div className="mx-auto mb-4 icon-success">
                       <FaCheck size={40} className="text-success" />
                     </div>
-                    <h5 className="fw-bold mb-2 text-white">Email envoyé avec succès</h5>
-                    <p className="text-light mb-4 small">
+                    <h5 className="fw-bold mb-2">Email envoyé avec succès</h5>
+                    <p className="text-muted mb-4 small">
                       Vérifiez votre boîte de réception. Le lien expire dans 1 heure.
                     </p>
                     <Button
-                      variant="outline-light"
+                      variant="outline-secondary"
                       onClick={() => navigate('/login')}
                       className="w-100"
                     >
