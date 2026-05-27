@@ -12,7 +12,7 @@ html, body {
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--font-sans);
-  background-color: #0d0d0d;
+  background-color: var(--dk-bg);
   color: var(--dk-text);
   line-height: 1.6;
   text-align: left;
@@ -25,9 +25,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(91,141,238,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(167,139,250,0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(240,168,85,0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,58,237,0.03) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }

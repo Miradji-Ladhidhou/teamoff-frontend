@@ -1,8 +1,7 @@
 /**
- * TEAMOFF — Design tokens dark theme
- * Importé dans main.jsx avant tous les autres styles.
- * Toutes les valeurs de couleur/fond/bordure de l'app
- * dérivent de ces variables.
+ * TEAMOFF — Design tokens LIGHT THEME
+ * La landing page (landing-root) garde son propre style sombre.
+ * Toutes les pages app héritent de ces tokens.
  */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -16,49 +15,47 @@
   --transition-slow: 0.35s ease;
 
   /* ── Fonds ───────────────────────────────────── */
-  --dk-bg:         #131318;   /* fond de page global — dark blue-black     */
-  --dk-surface:    #1c1c24;   /* surface principale (topbar, sidebar…)     */
-  --dk-card:       #22222c;   /* cards / panels                            */
-  --dk-elevated:   #2a2a36;   /* inputs, éléments surélevés                */
-  --dk-hover:      #323242;   /* hover sur élément interactif              */
-  --dk-sidebar-bg-default: linear-gradient(180deg, #0d0d12 0%, #131318 100%);
-  --dk-nav-green:  #14532d;
-  --dk-nav-green-border: #1f6a3f;
+  --dk-bg:         #f0f2f5;   /* fond de page — gris très clair     */
+  --dk-surface:    #ffffff;   /* topbar, sidebar, surfaces blanches */
+  --dk-card:       #ffffff;   /* cards / panels                     */
+  --dk-elevated:   #f5f6f8;   /* inputs, éléments surélevés         */
+  --dk-hover:      #eaecef;   /* hover                              */
+  --dk-sidebar-bg-default: #ffffff;
 
   /* ── Bordures ────────────────────────────────── */
-  --dk-border:      rgba(255,255,255,0.08);  /* bordure principale — subtile et élégante */
-  --dk-border-soft: rgba(255,255,255,0.05);  /* bordure douce — très discrète            */
+  --dk-border:      rgba(0,0,0,0.09);
+  --dk-border-soft: rgba(0,0,0,0.05);
 
   /* ── Texte ───────────────────────────────────── */
-  --dk-text:       #f1f1f3;   /* texte principal          */
-  --dk-text-soft:  #9b9bab;   /* texte secondaire         */
-  --dk-text-muted: #5a5a6e;   /* texte discret/placeholder */
+  --dk-text:       #111827;   /* texte principal   */
+  --dk-text-soft:  #6b7280;   /* texte secondaire  */
+  --dk-text-muted: #9ca3af;   /* texte placeholder */
 
-  /* ── Accent principal (bleu brand) ──────────── */
-  --dk-accent:        #5b8dee;
-  --dk-accent-dark:   #3a6fd8;
-  --dk-accent-soft:   rgba(91, 141, 238, 0.14);
-  --dk-accent-border: rgba(91, 141, 238, 0.35);
+  /* ── Accent principal (indigo) ───────────────── */
+  --dk-accent:        #6366f1;
+  --dk-accent-dark:   #4f46e5;
+  --dk-accent-soft:   rgba(99, 102, 241, 0.10);
+  --dk-accent-border: rgba(99, 102, 241, 0.25);
 
-  /* ── Accents rôle ────────────────────────────── */
-  --role-employe:        #5b8dee;
-  --role-employe-soft:   rgba(91, 141, 238, 0.14);
-  --role-manager:        #f0a855;
-  --role-manager-soft:   rgba(240, 168, 85, 0.14);
-  --role-admin:          #34d399;
-  --role-admin-soft:     rgba(52, 211, 153, 0.14);
-  --role-superadmin:     #a78bfa;
-  --role-superadmin-soft:rgba(167, 139, 250, 0.14);
+  /* ── Accents rôle (plus saturés pour fond clair) ── */
+  --role-employe:        #4f74f2;
+  --role-employe-soft:   rgba(79, 116, 242, 0.10);
+  --role-manager:        #d97706;
+  --role-manager-soft:   rgba(217, 119, 6, 0.10);
+  --role-admin:          #059669;
+  --role-admin-soft:     rgba(5, 150, 105, 0.10);
+  --role-superadmin:     #7c3aed;
+  --role-superadmin-soft:rgba(124, 58, 237, 0.10);
 
   /* ── Sémantique ──────────────────────────────── */
-  --dk-success:     #34d399;
-  --dk-success-bg:  rgba(52, 211, 153, 0.12);
-  --dk-error:       #f87171;
-  --dk-error-bg:    rgba(248, 113, 113, 0.12);
-  --dk-warning:     #f0a855;
-  --dk-warning-bg:  rgba(240, 168, 85, 0.12);
-  --dk-info:        #5b8dee;
-  --dk-info-bg:     rgba(91, 141, 238, 0.12);
+  --dk-success:     #059669;
+  --dk-success-bg:  rgba(5, 150, 105, 0.10);
+  --dk-error:       #dc2626;
+  --dk-error-bg:    rgba(220, 38, 38, 0.08);
+  --dk-warning:     #d97706;
+  --dk-warning-bg:  rgba(217, 119, 6, 0.10);
+  --dk-info:        #6366f1;
+  --dk-info-bg:     rgba(99, 102, 241, 0.10);
 
   /* ── Radius ──────────────────────────────────── */
   --card-radius:    12px;
@@ -66,20 +63,32 @@
   --input-radius:   8px;
   --btn-radius:     8px;
 
-  /* ── Ombres dark (double couche) ─────────────── */
-  --dk-shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.25);
-  --dk-shadow-md:  0 4px 14px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
-  --dk-shadow-lg:  0 10px 32px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.35);
+  /* ── Ombres légères ──────────────────────────── */
+  --dk-shadow-sm:  0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --dk-shadow-md:  0 4px 14px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.05);
+  --dk-shadow-lg:  0 10px 32px rgba(0,0,0,0.11), 0 4px 12px rgba(0,0,0,0.06);
 
   /* ── Glassmorphism ───────────────────────────── */
-  --dk-glass-border: rgba(255,255,255,0.06);
-  --dk-glass-bg:     rgba(255,255,255,0.03);
+  --dk-glass-border: rgba(0,0,0,0.07);
+  --dk-glass-bg:     rgba(255,255,255,0.75);
 
   /* ── Scrollbar ───────────────────────────────── */
-  --dk-scrollbar-thumb: #3a3a4a;
+  --dk-scrollbar-thumb: #d1d5db;
   --dk-scrollbar-track: transparent;
 
-  /* ── Shorthand aliases (used by new shell/nav/topbar CSS) ── */
+  /* ── Layout tokens (sidebar, nav, topbar) ─────── */
+  --dk-nav-link-color:   rgba(0,0,0,0.55);
+  --dk-nav-link-hover:   rgba(0,0,0,0.05);
+  --dk-topbar-border:    rgba(0,0,0,0.08);
+  --dk-topbar-icon-bg:   rgba(0,0,0,0.05);
+  --dk-topbar-icon-border: rgba(0,0,0,0.10);
+  --dk-topbar-text:      #111827;
+  --dk-section-label:    rgba(0,0,0,0.38);
+  --dk-nav-text:         rgba(0,0,0,0.50);
+  --dk-nav-text-active:  #111827;
+  --dk-nav-border:       rgba(0,0,0,0.08);
+
+  /* ── Shorthand aliases ────────────────────────── */
   --bg:            var(--dk-bg);
   --surface:       var(--dk-surface);
   --card:          var(--dk-card);
