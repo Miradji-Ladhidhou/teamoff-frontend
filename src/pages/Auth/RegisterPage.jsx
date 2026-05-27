@@ -205,7 +205,7 @@ const RegisterPage = () => {
                         </Button>
                         <Form.Control.Feedback type="invalid">{validationErrors.admin_password}</Form.Control.Feedback>
                         {!validationErrors.admin_password && (
-                          <Form.Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>
+                          <Form.Text style={{ color: 'var(--dk-text-muted)', fontSize: '0.75rem' }}>
                             Min. 8 caractères avec au moins un caractère spécial (!@#$%...)
                           </Form.Text>
                         )}

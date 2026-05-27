@@ -117,7 +117,7 @@ const MyProfilePage = () => {
   return (
     <Container className="py-3 profile-page">
       {/* Hero header centré */}
-      <div style={{ background: 'var(--card, var(--dk-card))', borderRadius: 16, margin: '0 0 16px', padding: '24px 16px 20px', textAlign: 'center', border: '1px solid var(--border, var(--dk-border))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+      <div style={{ background: 'var(--card, var(--dk-card))', borderRadius: 16, margin: '0 0 16px', padding: '24px 16px 20px', textAlign: 'center', border: '1px solid var(--border, var(--dk-border))', boxShadow: 'var(--dk-shadow-sm)' }}>
         <div
           className={`avatar avatar-lg ${avatarColor}`}
           style={{ width: 64, height: 64, fontSize: 22, margin: '0 auto 10px' }}
