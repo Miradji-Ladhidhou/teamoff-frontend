@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Navbar, Nav, Offcanvas, Button, Badge, Form } from 'react-bootstrap';
+import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
-  FaBars,
   FaSignOutAlt,
   FaHome,
   FaUsers,
@@ -67,8 +66,6 @@ const Layout = () => {
   const navigate = useNavigate();
 
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [search, setSearch] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
 
   const handleNewNotification = useCallback(() => {
@@ -90,15 +87,9 @@ const Layout = () => {
 
   const navItems = useMemo(() => getNavigationForRole(user?.role) || [], [user?.role]);
 
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return navItems;
-    return navItems.filter((item) => item.label.toLowerCase().includes(q));
-  }, [navItems, search]);
-
-  const primaryItems = filteredItems.filter((item) => item.section === 'primary');
-  const secondaryItems = filteredItems.filter((item) => item.section === 'secondary');
-  const bottomItems = [...navItems.filter((item) => item.section === 'primary').slice(0, 3), { path: '__more__', label: 'Plus', icon: 'more' }];
+  const primaryItems = useMemo(() => navItems.filter((item) => item.section === 'primary'), [navItems]);
+  const secondaryItems = useMemo(() => navItems.filter((item) => item.section === 'secondary'), [navItems]);
+  const bottomItems = [...primaryItems.slice(0, 4), { path: '__more__', label: 'Menu', icon: 'more' }];
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -134,40 +125,19 @@ const Layout = () => {
 
   const renderSidebarContent = (isMobile = false) => (
     <>
-      <div className="mb-3">
-        <div className="fw-bold">{user?.prenom} {user?.nom}</div>
-        <small className="ui-text-soft">{user?.entreprise_nom}</small>
-        <div className="mt-2">
-          <Badge className="role-badge">{roleLabel[user?.role] || 'Compte'}</Badge>
-        </div>
+      <div className="sidebar-user mb-3">
+        <div className="sidebar-user__name">{user?.prenom} {user?.nom}</div>
+        <div className="small ui-text-soft">{user?.entreprise_nom}</div>
+        <Badge className="role-badge mt-1">{roleLabel[user?.role] || 'Compte'}</Badge>
       </div>
 
-      <Form.Control
-        type="search"
-        className="mb-3"
-        placeholder="Rechercher une page..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className={`role-section-title mb-2 ${isMobile ? 'ui-text-soft' : ''}`}>Essentiel</div>
-      <Nav className="flex-column mb-2">
+      <Nav className="flex-column mb-1">
         {primaryItems.map((item) => renderNavItem(item, isMobile))}
       </Nav>
 
-      <div className="d-grid mb-2">
-        <Button
-          variant={showAdvanced ? 'secondary' : 'outline-secondary'}
-          size="sm"
-          onClick={() => setShowAdvanced((prev) => !prev)}
-        >
-          {showAdvanced ? 'Masquer options avancées' : 'Afficher options avancées'}
-        </Button>
-      </div>
-
-      {(showAdvanced || search.trim()) && (
+      {secondaryItems.length > 0 && (
         <>
-          <div className={`role-section-title mb-2 mt-2 ${isMobile ? 'ui-text-soft' : ''}`}>Options</div>
+          <div className="sidebar-sep my-2" />
           <Nav className="flex-column mb-3">
             {secondaryItems.map((item) => renderNavItem(item, isMobile))}
           </Nav>
@@ -186,13 +156,14 @@ const Layout = () => {
     <div className={`app-shell role-shell role-${user?.role || 'employe'}`}>
       {/* Desktop sidebar (≥992px) */}
       <aside className="sidebar role-sidebar flex-column p-3">
+        <div className="sidebar-brand">Team<span>Off</span></div>
         {renderSidebarContent(false)}
       </aside>
 
       {/* Mobile offcanvas */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Navigation</Offcanvas.Title>
+          <Offcanvas.Title className="fw-bold">Team<span style={{ color: 'var(--role-accent)' }}>Off</span></Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
@@ -223,7 +194,9 @@ const Layout = () => {
         </Navbar>
 
         <main className="page-content role-content">
-          <Outlet />
+          <div className="content-container">
+            <Outlet />
+          </div>
         </main>
 
         <AppFooter />

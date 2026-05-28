@@ -21,7 +21,6 @@
 
 .card:hover {
   box-shadow: var(--dk-shadow-md);
-  transform: translateY(-2px);
 }
 
 /* ────────────── Glass cards ────────────── */
@@ -40,7 +39,7 @@
 
 .glass-card:hover {
   box-shadow: var(--dk-shadow-md);
-  transform: translateY(-2px);
+
 }
 
 .glass-card-light {
@@ -56,7 +55,7 @@
 
 .glass-card-light:hover {
   box-shadow: var(--dk-shadow-md);
-  transform: translateY(-1px);
+
 }
 
 /* ────────────── Mobile card list ────────────── */
@@ -197,7 +196,7 @@
 
 .stat-card:hover {
   box-shadow: var(--dk-shadow-md);
-  transform: translateY(-2px);
+
 }
 
 .stat-card::before {
