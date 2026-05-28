@@ -357,3 +357,23 @@
   border-radius: 10px;
   padding: 1.25rem;
 }
+
+/* ────────────── Solde preview (modal) ────────────── */
+.solde-preview {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.solde-preview__value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.solde-preview__formula {
+  font-size: 11px;
+  color: var(--dk-text-muted);
+  margin-top: 4px;
+}
