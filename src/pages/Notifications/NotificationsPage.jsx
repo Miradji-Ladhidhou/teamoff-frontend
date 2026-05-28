@@ -326,7 +326,6 @@ const NotificationsPage = () => {
             </div>
           </div>
         )}
-      </div>
     </Container>
   );
 };
