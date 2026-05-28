@@ -278,9 +278,21 @@ const NouveauCongePage = () => {
     return fallbackMessage;
   };
 
+  const buildPayload = (data) => {
+    const payload = {
+      conge_type_id: data.conge_type_id,
+      date_debut: data.date_debut,
+      date_fin: data.date_fin,
+      commentaire_employe: data.commentaire_employe || null,
+    };
+    if (data.debut_demi_journee) payload.debut_demi_journee = data.debut_demi_journee;
+    if (data.fin_demi_journee) payload.fin_demi_journee = data.fin_demi_journee;
+    return payload;
+  };
+
   const submitCreateLeave = async (precheckWarning = null) => {
     try {
-      const response = await congesService.create(formData);
+      const response = await congesService.create(buildPayload(formData));
       const warningMessage = response?.data?.overlap_warning?.message;
       if (warningMessage && warningMessage !== precheckWarning) {
         alert.showErrorModal(warningMessage, {
@@ -324,7 +336,7 @@ const NouveauCongePage = () => {
             return;
           }
 
-          response = await congesService.update(id, formData);
+          response = await congesService.update(id, buildPayload(formData));
         } else {
           const overlapCheck = await congesService.checkOverlap(formData);
           const overlapAction = overlapCheck?.data?.action;

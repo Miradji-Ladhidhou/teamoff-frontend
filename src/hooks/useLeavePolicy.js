@@ -30,10 +30,12 @@ export const useLeavePolicy = () => {
       }
     };
 
-    if (user?.entreprise_id) {
+    if (user?.entreprise_id && ['admin_entreprise', 'manager'].includes(user?.role)) {
       loadPolicy();
+    } else {
+      setLoading(false);
     }
-  }, [user?.entreprise_id]);
+  }, [user?.entreprise_id, user?.role]);
 
   /**
    * Valider si une modification est autorisée
