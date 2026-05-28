@@ -1,7 +1,7 @@
 import './politique-conges.css';
 import '../../styles/settings.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Card, Row, Col, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Spinner, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, usersService, congeTypesService } from '../../services/api';
 import leavePoliciesAPI from '../../services/leavePoliciesAPI';
@@ -87,16 +87,12 @@ const PolitiqueCongesPage = () => {
   const [servicePolicies, setServicePolicies] = useState({});
   const [newServiceName, setNewServiceName] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
-  const [serviceViewMode, setServiceViewMode] = useState('cards');
   const [visibleServicesCount, setVisibleServicesCount] = useState(8);
-  const [expandedServices, setExpandedServices] = useState({});
-  const [showServicePolicies, setShowServicePolicies] = useState(false);
   const [congeTypes, setCongeTypes] = useState([]);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [editingTypeId, setEditingTypeId] = useState(null);
   const [savingType, setSavingType] = useState(false);
   const [typeForm, setTypeForm] = useState(DEFAULT_CONGE_TYPE_FORM);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [timezone, setTimezone] = useState('Europe/Paris');
   const [savingTz, setSavingTz] = useState(false);
   const [tzError, setTzError] = useState('');
@@ -386,18 +382,6 @@ const PolitiqueCongesPage = () => {
 
   const visibleServiceEntries = filteredServiceEntries.slice(0, visibleServicesCount);
 
-  const toggleServiceExpanded = (serviceName) => {
-    setExpandedServices((prev) => ({ ...prev, [serviceName]: !prev[serviceName] }));
-  };
-
-  const setAllServicesExpanded = (expanded) => {
-    const next = {};
-    filteredServiceEntries.forEach(([name]) => {
-      next[name] = expanded;
-    });
-    setExpandedServices((prev) => ({ ...prev, ...next }));
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
     setSuccess('');
@@ -474,87 +458,59 @@ const PolitiqueCongesPage = () => {
 
   return (
     <Container fluid="sm">
-      <div className="page-title-bar">
+      <div className="page-title-bar mb-3">
         <span className="section-title-bar__text">Politique de congé</span>
-        <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)}>Info</Button>
-        </div>
       </div>
 
-      <SectionTabs
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-      />
+      <SectionTabs activeSection={activeSection} setActiveSection={setActiveSection} />
 
+      {/* ── Types de congé ── */}
       {isSectionVisible('types') && (
-      <Card id="section-types-conge" className="mb-4">
-        <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-          <div>
-            <strong>Types de congé</strong>
-            <div className="text-muted small">Ajoutez et modifiez les types disponibles dans les formulaires de demande.</div>
+        <div id="section-types-conge" className="mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="section-label-title">Types de congé</div>
+            <Button type="button" variant="primary" size="sm" onClick={openCreateTypeModal}>
+              + Ajouter un type
+            </Button>
           </div>
-          <Button type="button" variant="primary" onClick={openCreateTypeModal} className="w-100 w-md-auto">
-            Ajouter un type de congé
-          </Button>
-        </Card.Header>
-        <Card.Body className="p-0">
+
           {congeTypes.length === 0 ? (
-            <div className="p-4 text-center text-muted">Aucun type de congé configuré.</div>
+            <div className="text-center py-4 text-muted">Aucun type configuré.</div>
           ) : (
             <>
-              <div className="d-md-none mobile-card-list px-3 py-2">
+              <div className="user-list-mobile d-md-none">
                 {congeTypes.map((type) => (
-                  <div key={`mobile-type-${type.id}`} className="mobile-card-list__item">
-                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div>
-                        <div className="fw-semibold">{type.libelle}</div>
-                        <div className="small text-muted">Quota annuel: {type.quota_annuel}</div>
-                      </div>
+                  <div key={type.id} className="user-row-btn" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                    <div className="d-flex justify-content-between w-100">
+                      <strong style={{ fontSize: 13 }}>{type.libelle}</strong>
                       <span className="badge info">{type.code}</span>
                     </div>
-                    <div className="mb-3">
-                      <span className={`badge ${type.demi_journee_autorisee ? 'approved' : 'info'}`}>
-                        {type.demi_journee_autorisee ? 'Demi-journée autorisée' : 'Demi-journée non autorisée'}
-                      </span>
+                    <div className="small" style={{ color: 'var(--dk-text-soft)' }}>
+                      {type.quota_annuel} j/an · {type.demi_journee_autorisee ? 'Demi-j OK' : 'Journée entière'}
                     </div>
-                    <div className="d-flex gap-2">
-                      <Button type="button" size="sm" variant="outline-primary" className="flex-fill" onClick={() => openEditTypeModal(type)}>
-                        Modifier
-                      </Button>
-                      <Button type="button" size="sm" variant="outline-danger" className="flex-fill" onClick={() => handleDeleteCongeType(type.id)}>
-                        Supprimer
-                      </Button>
+                    <div className="d-flex gap-2 w-100 mt-1">
+                      <Button size="sm" variant="outline-primary" className="flex-fill" onClick={() => openEditTypeModal(type)}>Modifier</Button>
+                      <Button size="sm" variant="outline-danger" className="flex-fill" onClick={() => handleDeleteCongeType(type.id)}>Supprimer</Button>
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="settings-table-wrap d-none d-md-block">
-                <Table responsive hover className="mb-0 settings-table">
+              <div className="conges-list-wrap d-none d-md-block">
+                <Table hover className="users-dense-table mb-0">
                   <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Libellé</th>
-                      <th>Quota annuel</th>
-                      <th>Demi-journée</th>
-                      <th>Actions</th>
-                    </tr>
+                    <tr><th>Code</th><th>Libellé</th><th>Quota / an</th><th>Demi-journée</th><th style={{ width: 1 }}></th></tr>
                   </thead>
                   <tbody>
                     {congeTypes.map((type) => (
                       <tr key={type.id}>
                         <td><span className="badge info">{type.code}</span></td>
-                        <td>{type.libelle}</td>
-                        <td>{type.quota_annuel}</td>
+                        <td><strong>{type.libelle}</strong></td>
+                        <td>{type.quota_annuel} j</td>
                         <td>{type.demi_journee_autorisee ? 'Oui' : 'Non'}</td>
                         <td>
-                          <div className="d-flex gap-2">
-                            <Button type="button" size="sm" variant="outline-primary" onClick={() => openEditTypeModal(type)}>
-                              Modifier
-                            </Button>
-                            <Button type="button" size="sm" variant="outline-danger" onClick={() => handleDeleteCongeType(type.id)}>
-                              Supprimer
-                            </Button>
+                          <div className="d-flex gap-1">
+                            <Button size="sm" variant="outline-primary" onClick={() => openEditTypeModal(type)}>Modifier</Button>
+                            <Button size="sm" variant="outline-danger" onClick={() => handleDeleteCongeType(type.id)}>Supprimer</Button>
                           </div>
                         </td>
                       </tr>
@@ -564,340 +520,127 @@ const PolitiqueCongesPage = () => {
               </div>
             </>
           )}
-        </Card.Body>
-      </Card>
+        </div>
       )}
 
-      <Card>
-        <Card.Body>
-          <Form onSubmit={handleSave}>
-            {isSectionVisible('general') && (
-              <GeneralRulesSection
-                policy={policy}
-                setField={setField}
-                setPolicy={setPolicy}
-              />
-            )}
+      {/* ── Règles + Annulation + Services ── */}
+      <Form onSubmit={handleSave}>
+        {isSectionVisible('general') && (
+          <GeneralRulesSection policy={policy} setField={setField} setPolicy={setPolicy} />
+        )}
 
-            {isSectionVisible('cancellation') && (
-              <CancellationSection
-                policy={policy}
-                setField={setField}
-                leavePolicy={leavePolicy}
-                setLeavePolicy={setLeavePolicy}
-              />
-            )}
+        {isSectionVisible('cancellation') && (
+          <CancellationSection
+            policy={policy}
+            setField={setField}
+            leavePolicy={leavePolicy}
+            setLeavePolicy={setLeavePolicy}
+          />
+        )}
 
-            {isSectionVisible('services') && (
-            <div id="section-politiques-services">
-            <Card className="mb-4">
-              <Card.Body className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                  <div className="fw-semibold">Politiques par service</div>
-                  <div className="small text-muted">{Object.keys(servicePolicies).length} service(s)</div>
-                </div>
-                <Button
-                  type="button"
-                  variant={showServicePolicies ? 'outline-secondary' : 'primary'}
-                  onClick={() => setShowServicePolicies((prev) => !prev)}
-                >
-                  {showServicePolicies ? 'Masquer le détail' : 'Configurer par service'}
-                </Button>
-              </Card.Body>
-            </Card>
-
-            {showServicePolicies && (
-            <Form.Group className="mb-4">
-              <Form.Label>Politiques par service</Form.Label>
-              <Row className="g-2 mb-3">
-                <Col xs={12} md={8}>
-                  <Form.Control
-                    type="text"
-                    value={newServiceName}
-                    onChange={(e) => setNewServiceName(e.target.value)}
-                    placeholder="Ajouter un service (ex: Support, RH, Commercial)"
-                  />
-                </Col>
-                <Col xs={12} md={4}>
-                  <Button type="button" variant="outline-primary" className="w-100" onClick={addServicePolicy}>
-                    Ajouter le service
-                  </Button>
-                </Col>
-              </Row>
-
-              {Object.keys(servicePolicies).length === 0 && (
-                <div className="alert alert-light mb-0" role="status">Aucun service paramétré.</div>
-              )}
-
-              {Object.keys(servicePolicies).length > 0 && (
-                <Card className="mb-3">
-                  <Card.Body className="py-3">
-                    <Row className="g-2 align-items-center">
-                      <Col xs={12} md={5}>
-                        <Form.Control
-                          type="text"
-                          value={serviceSearch}
-                          onChange={(e) => {
-                            setServiceSearch(e.target.value);
-                            setVisibleServicesCount(8);
-                          }}
-                          placeholder="Rechercher un service"
-                        />
-                      </Col>
-                      <Col xs={12} sm={6} md={3}>
-                        <div className="small text-muted">
-                          {filteredServiceEntries.length}/{serviceEntries.length}
-                        </div>
-                      </Col>
-                      <Col xs={12} sm={6} md={4}>
-                        <div className="d-flex gap-2 flex-wrap justify-content-md-end">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={serviceViewMode === 'cards' ? 'primary' : 'outline-primary'}
-                            onClick={() => setServiceViewMode('cards')}
-                          >
-                            Vue cartes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={serviceViewMode === 'table' ? 'primary' : 'outline-primary'}
-                            onClick={() => setServiceViewMode('table')}
-                          >
-                            Edition rapide
-                          </Button>
-                          {serviceViewMode === 'cards' && (
-                            <>
-                              <Button type="button" size="sm" variant="outline-secondary" onClick={() => setAllServicesExpanded(true)}>
-                                Tout déplier
-                              </Button>
-                              <Button type="button" size="sm" variant="outline-secondary" onClick={() => setAllServicesExpanded(false)}>
-                                Tout replier
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              )}
-
-              {serviceViewMode === 'cards' && visibleServiceEntries.map(([serviceName, servicePolicy]) => (
-                <Card key={serviceName} className="mb-3">
-                  <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div className="d-flex align-items-center gap-2 flex-wrap">
-                      <strong>{serviceName}</strong>
-                      <span className="badge info">Politique isolée</span>
-                      <span className="badge info">{servicePolicy.approval_workflow === 'admin_only' ? 'Admin uniquement' : servicePolicy.approval_workflow === 'manager_only' ? 'Manager uniquement' : 'Manager puis Admin'}</span>
-                      <span className="badge info">Préavis: {servicePolicy.minimum_notice_days ?? 0}j</span>
-                    </div>
-                    <div className="d-flex align-items-center gap-2 w-100 w-sm-auto">
-                      <Button type="button" size="sm" variant="outline-secondary" onClick={() => toggleServiceExpanded(serviceName)}>
-                        {expandedServices[serviceName] ? 'Replier' : 'Déplier'}
-                      </Button>
-                      <Button type="button" size="sm" variant="outline-danger" onClick={() => removeServicePolicy(serviceName)}>
-                        Supprimer
-                      </Button>
-                    </div>
-                  </Card.Header>
-                  {expandedServices[serviceName] && (
-                  <Card.Body>
-                    <Row>
-                      <Col xs={12} md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Chevauchement</Form.Label>
-                          <Form.Select
-                            value={servicePolicy.overlap_policy || 'block'}
-                            onChange={(e) => setServiceField(serviceName, 'overlap_policy', e.target.value)}
-                          >
-                            <option value="block">Bloquer</option>
-                            <option value="warning">Autoriser et alerter</option>
-                            <option value="allow">Autoriser</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col xs={12} md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Workflow</Form.Label>
-                          <Form.Select
-                            value={servicePolicy.approval_workflow || 'manager_admin'}
-                            onChange={(e) => setServiceField(serviceName, 'approval_workflow', e.target.value)}
-                          >
-                            <option value="manager_admin">Manager puis Admin</option>
-                            <option value="manager_only">Manager uniquement</option>
-                            <option value="admin_only">Admin uniquement</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-
-                    <Row>
-                      <Col xs={12} md={4}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Préavis min</Form.Label>
-                          <Form.Control
-                            type="number"
-                            min="0"
-                            value={servicePolicy.minimum_notice_days ?? 0}
-                            onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col xs={12} md={4}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Max consécutif</Form.Label>
-                          <Form.Control
-                            type="number"
-                            min="1"
-                            value={servicePolicy.max_consecutive_days ?? 365}
-                            onChange={(e) => setServiceField(serviceName, 'max_consecutive_days', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col xs={12} md={4}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Max absences simultanées</Form.Label>
-                          <Form.Control
-                            type="number"
-                            min="0"
-                            value={servicePolicy.max_employees_on_leave ?? 0}
-                            onChange={(e) => setServiceField(serviceName, 'max_employees_on_leave', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                  )}
-                </Card>
-              ))}
-
-              {serviceViewMode === 'table' && visibleServiceEntries.length > 0 && (
-                <Card className="mb-3">
-                  <Card.Body className="p-0">
-                    <div className="settings-table-wrap">
-                      <div className="settings-table-hint d-md-none">Glissez horizontalement pour éditer les colonnes.</div>
-                      <Table responsive hover className="mb-0 align-middle settings-table">
-                      <thead>
-                        <tr>
-                          <th className="th-col-service">Service</th>
-                          <th className="th-col-overlap">Chevauchement</th>
-                          <th className="th-col-workflow">Workflow</th>
-                          <th className="th-col-notice">Préavis</th>
-                          <th className="th-col-consec">Max consécutif</th>
-                          <th className="th-col-simul">Max simultanées</th>
-                          <th className="th-col-actions">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleServiceEntries.map(([serviceName, servicePolicy]) => (
-                          <tr key={serviceName}>
-                            <td>
-                              <div className="fw-semibold">{serviceName}</div>
-                            </td>
-                            <td>
-                              <Form.Select
-                                size="sm"
-                                value={servicePolicy.overlap_policy || 'block'}
-                                onChange={(e) => setServiceField(serviceName, 'overlap_policy', e.target.value)}
-                              >
-                                <option value="block">Bloquer</option>
-                                <option value="warning">Autoriser et alerter</option>
-                                <option value="allow">Autoriser</option>
-                              </Form.Select>
-                            </td>
-                            <td>
-                              <Form.Select
-                                size="sm"
-                                value={servicePolicy.approval_workflow || 'manager_admin'}
-                                onChange={(e) => setServiceField(serviceName, 'approval_workflow', e.target.value)}
-                              >
-                                <option value="manager_admin">Manager puis Admin</option>
-                                <option value="manager_only">Manager uniquement</option>
-                                <option value="admin_only">Admin uniquement</option>
-                              </Form.Select>
-                            </td>
-                            <td>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                min="0"
-                                value={servicePolicy.minimum_notice_days ?? 0}
-                                onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                min="1"
-                                value={servicePolicy.max_consecutive_days ?? 365}
-                                onChange={(e) => setServiceField(serviceName, 'max_consecutive_days', e.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                min="0"
-                                value={servicePolicy.max_employees_on_leave ?? 0}
-                                onChange={(e) => setServiceField(serviceName, 'max_employees_on_leave', e.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <Button type="button" size="sm" variant="outline-danger" onClick={() => removeServicePolicy(serviceName)}>
-                                Supprimer
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      </Table>
-                    </div>
-                  </Card.Body>
-                </Card>
-              )}
-
-              {filteredServiceEntries.length > visibleServicesCount && (
-                <div className="d-grid">
-                  <Button
-                    type="button"
-                    variant="outline-primary"
-                    onClick={() => setVisibleServicesCount((prev) => prev + 8)}
-                  >
-                    Afficher 8 services de plus
-                  </Button>
-                </div>
-              )}
-
-              {Object.keys(servicePolicies).length > 0 && filteredServiceEntries.length === 0 && (
-                <div className="alert alert-light mb-0" role="status">Aucun service ne correspond à votre recherche.</div>
-              )}
-            </Form.Group>
-            )}
+        {isSectionVisible('services') && (
+          <div id="section-politiques-services" className="mb-4">
+            <div className="section-label-title mb-3">
+              Politiques par service
+              <span className="text-muted fw-normal ms-2" style={{ fontSize: 11 }}>({Object.keys(servicePolicies).length} service{Object.keys(servicePolicies).length !== 1 ? 's' : ''})</span>
             </div>
-            )}
 
-            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-top pt-3 mt-4">
-              <small className="text-muted">Les modifications sont prises en compte après enregistrement.</small>
-              <div className="d-grid w-100 w-sm-auto">
-                <AsyncButton
-                  type="submit"
-                  isLoading={saving}
-                  showSpinner={saving}
-                  loadingText="Enregistrement..."
-                  className="w-100"
-                >
-                  Enregistrer les modifications
-                </AsyncButton>
+            <Row className="g-2 mb-3">
+              <Col xs={9} md={5}>
+                <Form.Control
+                  type="text"
+                  value={newServiceName}
+                  onChange={(e) => setNewServiceName(e.target.value)}
+                  placeholder="Nom du service (ex : RH, Support…)"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addServicePolicy(); } }}
+                />
+              </Col>
+              <Col xs={3} md="auto">
+                <Button type="button" variant="outline-primary" onClick={addServicePolicy} className="w-100">+ Ajouter</Button>
+              </Col>
+            </Row>
+
+            {serviceEntries.length > 5 && (
+              <div className="users-filter-bar mb-2">
+                <Form.Control
+                  type="text"
+                  value={serviceSearch}
+                  onChange={(e) => { setServiceSearch(e.target.value); setVisibleServicesCount(8); }}
+                  placeholder="Rechercher un service…"
+                  className="users-filter-bar__search"
+                />
+                <span className="badge info users-filter-bar__count">{filteredServiceEntries.length}/{serviceEntries.length}</span>
               </div>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
+            )}
 
-      {/* ── Fuseau horaire ─────────────────────────────────────────── */}
+            {serviceEntries.length > 0 && (
+              <>
+                <div className="conges-list-wrap mb-2" style={{ overflowX: 'auto' }}>
+                  <Table hover className="users-dense-table mb-0" style={{ minWidth: 600 }}>
+                    <thead>
+                      <tr>
+                        <th>Service</th>
+                        <th>Chevauchement</th>
+                        <th>Workflow</th>
+                        <th>Préavis</th>
+                        <th>Max j consec.</th>
+                        <th>Max simul.</th>
+                        <th style={{ width: 1 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleServiceEntries.map(([serviceName, servicePolicy]) => (
+                        <tr key={serviceName}>
+                          <td><strong>{serviceName}</strong></td>
+                          <td>
+                            <Form.Select size="sm" value={servicePolicy.overlap_policy || 'block'} onChange={(e) => setServiceField(serviceName, 'overlap_policy', e.target.value)}>
+                              <option value="block">Bloquer</option>
+                              <option value="warning">Alerter</option>
+                              <option value="allow">Autoriser</option>
+                            </Form.Select>
+                          </td>
+                          <td>
+                            <Form.Select size="sm" value={servicePolicy.approval_workflow || 'manager_admin'} onChange={(e) => setServiceField(serviceName, 'approval_workflow', e.target.value)}>
+                              <option value="manager_admin">Manager + Admin</option>
+                              <option value="manager_only">Manager seul</option>
+                              <option value="admin_only">Admin seul</option>
+                            </Form.Select>
+                          </td>
+                          <td><Form.Control size="sm" type="number" min="0" style={{ width: 65 }} value={servicePolicy.minimum_notice_days ?? 0} onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)} /></td>
+                          <td><Form.Control size="sm" type="number" min="1" style={{ width: 65 }} value={servicePolicy.max_consecutive_days ?? 365} onChange={(e) => setServiceField(serviceName, 'max_consecutive_days', e.target.value)} /></td>
+                          <td><Form.Control size="sm" type="number" min="0" style={{ width: 65 }} value={servicePolicy.max_employees_on_leave ?? 0} onChange={(e) => setServiceField(serviceName, 'max_employees_on_leave', e.target.value)} /></td>
+                          <td>
+                            <Button type="button" size="sm" variant="outline-danger" onClick={() => removeServicePolicy(serviceName)} title="Supprimer">✕</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+                {filteredServiceEntries.length > visibleServicesCount && (
+                  <Button type="button" size="sm" variant="outline-secondary" onClick={() => setVisibleServicesCount((p) => p + 8)}>
+                    Afficher 8 de plus…
+                  </Button>
+                )}
+                {serviceEntries.length > 0 && filteredServiceEntries.length === 0 && (
+                  <div className="text-muted small">Aucun service ne correspond à la recherche.</div>
+                )}
+              </>
+            )}
+            {serviceEntries.length === 0 && (
+              <div className="text-muted small">Aucun service — ajoutez-en un ci-dessus pour des règles spécifiques par département.</div>
+            )}
+          </div>
+        )}
+
+        <div className="d-flex justify-content-end border-top pt-3 mt-4">
+          <AsyncButton type="submit" isLoading={saving} showSpinner={saving} loadingText="Enregistrement…">
+            Enregistrer les modifications
+          </AsyncButton>
+        </div>
+      </Form>
+
+      {/* ── Fuseau horaire ── */}
       {isSectionVisible('timezone') && (
         <TimezoneSection
           timezone={timezone}
@@ -908,22 +651,6 @@ const PolitiqueCongesPage = () => {
           timezoneOptions={TIMEZONE_OPTIONS}
         />
       )}
-
-      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Info politique</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ul className="mb-0">
-            <li>Réglez d'abord workflow, préavis et max consécutif.</li>
-            <li>Ensuite ajustez les services si nécessaire.</li>
-            <li>Enregistrez pour appliquer.</li>
-          </ul>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
-        </Modal.Footer>
-      </Modal>
 
       <Modal show={showTypeModal} onHide={closeTypeModal} centered>
         <Modal.Header closeButton>
