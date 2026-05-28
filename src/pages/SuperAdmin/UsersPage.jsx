@@ -1,7 +1,7 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, Pagination } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle, FaEnvelope, FaCoins } from 'react-icons/fa';
+import { Container, Row, Col, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaEnvelope, FaCoins } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
@@ -41,25 +41,23 @@ const UsersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const [statusFilter, setStatusFilter] = useState('');
+  const ITEMS_PER_PAGE = 50;
 
   // Réinitialise la page quand les filtres changent
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, companyFilter, roleFilter]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, companyFilter, roleFilter, statusFilter]);
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [servicesByCompany, setServicesByCompany] = useState({});
   const [activeUserActionId, setActiveUserActionId] = useState(null);
   const submitAction = useAsyncAction();
   const exportAction = useAsyncAction();
   const mutateUserAction = useAsyncAction();
-  const [resendAction] = useState(() => ({}));
-  const resendInvitationAction = useAsyncAction();
 
   useEffect(() => {
     loadData();
@@ -314,12 +312,13 @@ const UsersManagement = () => {
   };
 
   const filteredUsers = useMemo(() => users.filter((targetUser) => {
-    const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''}`.toLowerCase();
+    const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''} ${targetUser.service || ''}`.toLowerCase();
     const matchesSearch = !searchTerm || searchableText.includes(searchTerm.toLowerCase());
     const matchesCompany = !companyFilter || targetUser.entreprise_id === companyFilter;
     const matchesRole = !roleFilter || targetUser.role === roleFilter;
-    return matchesSearch && matchesCompany && matchesRole;
-  }), [users, searchTerm, companyFilter, roleFilter]);
+    const matchesStatus = !statusFilter || targetUser.statut === statusFilter;
+    return matchesSearch && matchesCompany && matchesRole && matchesStatus;
+  }), [users, searchTerm, companyFilter, roleFilter, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
@@ -335,6 +334,11 @@ const UsersManagement = () => {
     const classes = { actif: 'approved', inactif: 'info', en_attente: 'pending' };
     const labels = { actif: 'ACTIF', inactif: 'INACTIF', en_attente: 'EN ATTENTE' };
     return <span className={`badge ${classes[status] || 'info'}`}>{labels[status] || status.toUpperCase()}</span>;
+  };
+
+  const getStatusDot = (status) => {
+    const colors = { actif: 'var(--dk-success)', inactif: 'var(--dk-error)', en_attente: 'var(--dk-warning)' };
+    return <span className="status-dot" style={{ background: colors[status] || 'var(--dk-text-muted)' }} title={status} />;
   };
 
   const openDetailsModal = (targetUser) => {
@@ -367,391 +371,241 @@ const UsersManagement = () => {
     );
   }
 
+  const renderPagination = (className = '') => totalPages > 1 ? (
+    <div className={`d-flex justify-content-between align-items-center px-3 py-2 users-pager ${className}`}>
+      <small className="text-muted">
+        {(safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredUsers.length)} sur {filteredUsers.length}
+      </small>
+      <div className="d-flex gap-1">
+        <Button size="sm" variant="outline-secondary" disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)}>‹ Préc.</Button>
+        <Button size="sm" variant="outline-secondary" disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Suiv. ›</Button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <Container fluid="sm" className="users-management-page">
-      {/* En-tête responsive */}
+      {/* En-tête */}
       <div className="page-title-bar">
-        <span className="section-title-bar__text">Gestion des Utilisateurs</span>
+        <span className="section-title-bar__text">Utilisateurs</span>
         <div className="d-flex flex-wrap gap-2">
-          <Button variant="outline-secondary" onClick={() => setShowInfoModal(true)} title="Informations">
-            <span className="d-none d-sm-inline">Info</span>
-            <span className="d-sm-none"><FaInfoCircle /></span>
-          </Button>
-          <AsyncButton
-            variant="outline-secondary"
-            onClick={handleExportCsv}
-            action={exportAction}
-            loadingText=""
-            title="Exporter CSV"
-          >
-            <FaDownload className="d-none d-sm-inline me-2" />
-            <span className="d-none d-sm-inline">CSV</span>
-            <FaDownload className="d-sm-none" />
+          <AsyncButton variant="outline-secondary" onClick={handleExportCsv} action={exportAction} loadingText="" title="Exporter CSV">
+            <FaDownload className="me-1" /><span className="d-none d-sm-inline">Export CSV</span>
           </AsyncButton>
-          <label className="btn btn-outline-secondary mb-0" style={{ cursor: importAction.isRunning ? 'wait' : 'pointer' }} title="Importer des utilisateurs via CSV">
-            <FaDownload className="me-2" style={{ transform: 'rotate(180deg)' }} />
+          <label className="btn btn-outline-secondary mb-0" style={{ cursor: importAction.isRunning ? 'wait' : 'pointer' }} title="Importer via CSV">
+            <FaDownload className="me-1" style={{ transform: 'rotate(180deg)' }} />
             <span className="d-none d-sm-inline">Import CSV</span>
             <input type="file" accept=".csv,text/csv" className="d-none" onChange={handleImportCsv} disabled={importAction.isRunning} />
           </label>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setEditingUser(null);
-              resetForm();
-              setShowModal(true);
-            }}
-          >
-            <FaPlus className="me-2" />
-            <span className="d-none d-sm-inline">Nouvel </span>Utilisateur
+          <Button variant="primary" onClick={() => { setEditingUser(null); resetForm(); setShowModal(true); }}>
+            <FaPlus className="me-1" /><span className="d-none d-sm-inline">Nouvel </span>utilisateur
           </Button>
         </div>
       </div>
 
-      <Card className="mb-4 users-management-filters">
-        <Card.Body>
-          <Row className="g-2 align-items-center users-management-filters__row">
-            <Col xs={12} md={4}>
-              <InputGroup>
-                <InputGroup.Text>
-                  <FaSearch />
-                </InputGroup.Text>
-                <Form.Control
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs={6} md={3}>
-              {isSuperAdmin ? (
-                <Form.Select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)}>
-                  <option value="">Toutes les entreprises</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.nom}
-                    </option>
-                  ))}
-                </Form.Select>
-              ) : (
-                <Form.Control value={companiesById[user?.entreprise_id] || 'Entreprise courante'} disabled />
-              )}
-            </Col>
-            <Col xs={6} md={3}>
-              <Form.Select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
-                <option value="">Tous les roles</option>
-                {isSuperAdmin && <option value="super_admin">Super Admin</option>}
-                {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
-                <option value="manager">Manager</option>
-                <option value="employe">Employe</option>
-              </Form.Select>
-            </Col>
-            <Col xs={12} md={2} className="text-md-end users-management-filters__count">
-              <span className="badge info">
-                {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
-              </span>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      {/* Filtres */}
+      <div className="users-filter-bar mb-3">
+        <InputGroup className="users-filter-bar__search">
+          <InputGroup.Text><FaSearch /></InputGroup.Text>
+          <Form.Control type="text" placeholder="Nom, email, service…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </InputGroup>
+        {isSuperAdmin && (
+          <Form.Select className="users-filter-bar__select" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
+            <option value="">Toutes entreprises</option>
+            {companies.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
+          </Form.Select>
+        )}
+        <Form.Select className="users-filter-bar__select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="">Tous rôles</option>
+          {isSuperAdmin && <option value="super_admin">Super Admin</option>}
+          {isSuperAdmin && <option value="admin_entreprise">Admin</option>}
+          <option value="manager">Manager</option>
+          <option value="employe">Employé</option>
+        </Form.Select>
+        <Form.Select className="users-filter-bar__select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">Tous statuts</option>
+          <option value="actif">Actif</option>
+          <option value="inactif">Inactif</option>
+          <option value="en_attente">En attente</option>
+        </Form.Select>
+        <span className="badge info users-filter-bar__count">
+          {filteredUsers.length}{users.length !== filteredUsers.length ? `/${users.length}` : ''}
+        </span>
+      </div>
 
-      <Card>
-        <Card.Body className="p-0 p-md-3">
-          {filteredUsers.length === 0 ? (
-            <div className="text-center py-4">
-              <FaUsers size={48} className="text-muted mb-3" />
-              <h5>Aucun utilisateur trouvé</h5>
-              <p className="text-muted small">
-                {searchTerm || companyFilter || roleFilter
-                  ? 'Aucun utilisateur ne correspond à vos critères.'
-                  : 'Commencez par créer votre premier utilisateur.'}
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Vue carte — mobile uniquement */}
-              <div className="d-md-none mobile-card-list px-3 users-management-mobile-list">
+      {filteredUsers.length === 0 ? (
+        <div className="text-center py-5">
+          <FaUsers size={36} className="text-muted mb-3" />
+          <p className="text-muted mb-0">
+            {searchTerm || companyFilter || roleFilter || statusFilter
+              ? 'Aucun utilisateur ne correspond aux filtres.'
+              : 'Créez votre premier utilisateur.'}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Liste compacte — mobile */}
+          <div className="user-list-mobile d-md-none">
+            {pagedUsers.map((targetUser) => (
+              <button
+                key={targetUser.id}
+                type="button"
+                className="user-row-btn"
+                onClick={() => openDetailsModal(targetUser)}
+              >
+                <div className={`user-row-avatar ${roleToAvatarColor(targetUser.role)}`}>
+                  {getInitials(targetUser)}
+                </div>
+                <div className="user-row-info">
+                  <div className="user-row-name">{targetUser.prenom} {targetUser.nom}</div>
+                  <div className="user-row-sub">{targetUser.service || targetUser.email}</div>
+                </div>
+                <div className="user-row-right">
+                  {getRoleBadge(targetUser.role)}
+                  {getStatusDot(targetUser.statut)}
+                </div>
+                <span className="user-row-chevron">›</span>
+              </button>
+            ))}
+          </div>
+          {renderPagination('d-md-none border-top')}
+
+          {/* Tableau dense — desktop */}
+          <div className="d-none d-md-block users-management-table-wrap">
+            <Table hover responsive className="users-dense-table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Service</th>
+                  <th>Rôle</th>
+                  <th>Statut</th>
+                  <th style={{ width: 1 }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {pagedUsers.map((targetUser) => (
-                  <div key={targetUser.id} className="mobile-card-list__item users-management-mobile-list__item">
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <div className={`avatar avatar-sm ${roleToAvatarColor(targetUser.role)}`}>
-                        {getInitials(targetUser)}
-                      </div>
-                      <div className="min-w-0 flex-grow-1">
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
-                          {targetUser.prenom} {targetUser.nom}
+                  <tr key={targetUser.id} className="user-table-row" onClick={() => openDetailsModal(targetUser)}>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <div className={`user-row-avatar user-row-avatar--sm ${roleToAvatarColor(targetUser.role)}`}>
+                          {getInitials(targetUser)}
                         </div>
-                        <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
-                          {targetUser.role || 'Rôle inconnu'}
+                        <div>
+                          <div className="user-display-name">{targetUser.prenom} {targetUser.nom}</div>
+                          <div className="user-display-email">{targetUser.email}</div>
                         </div>
                       </div>
-                      {getStatusBadge(targetUser.statut)}
-                    </div>
-                    <div className="d-flex flex-wrap gap-1 users-management-mobile-list__actions">
-                      <Button variant="outline-secondary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openDetailsModal(targetUser)}>
-                        Detail
-                      </Button>
-                      <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(targetUser)}>
-                        Modifier
-                      </Button>
-                      {!isSuperAdmin && (
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          className="flex-grow-1 justify-content-center"
-                          onClick={() => navigate(`/soldes?userId=${targetUser.id}`)}
-                          title="Gérer les soldes"
-                        >
-                          <FaCoins />
-                        </Button>
-                      )}
-                      <AsyncButton
-                        variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
-                        size="sm"
-                        onClick={() => toggleUserStatus(targetUser)}
-                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
-                        loadingText=""
-                        disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
-                      >
-                        {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
-                      </AsyncButton>
-                      {targetUser.statut === 'en_attente' && (
+                    </td>
+                    <td><span className="text-muted" style={{ fontSize: '12px' }}>{targetUser.service || '—'}</span></td>
+                    <td>{getRoleBadge(targetUser.role)}</td>
+                    <td>{getStatusBadge(targetUser.statut)}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex gap-1 flex-nowrap">
+                        <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier"><FaEdit /></Button>
+                        {!isSuperAdmin && (
+                          <Button variant="outline-info" size="sm" onClick={() => navigate(`/soldes?userId=${targetUser.id}`)} title="Soldes"><FaCoins /></Button>
+                        )}
                         <AsyncButton
-                          variant="outline-info"
+                          variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                           size="sm"
-                          onClick={() => handleResendInvitation(targetUser)}
-                          title="Renvoyer l'invitation"
+                          onClick={() => toggleUserStatus(targetUser)}
+                          title={targetUser.statut === 'actif' ? 'Désactiver' : 'Activer'}
                           isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
                           loadingText=""
+                          disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
                         >
-                          <FaEnvelope />
+                          {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
                         </AsyncButton>
-                      )}
-                      <AsyncButton
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(targetUser.id)}
-                        disabled={targetUser.id === user?.id}
-                        isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                        showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
-                        loadingText=""
-                      >
-                        <FaTrash />
-                      </AsyncButton>
-                    </div>
-                  </div>
+                        {targetUser.statut === 'en_attente' && (
+                          <AsyncButton variant="outline-info" size="sm" onClick={() => handleResendInvitation(targetUser)} title="Renvoyer invitation"
+                            isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id} loadingText="">
+                            <FaEnvelope />
+                          </AsyncButton>
+                        )}
+                        <AsyncButton
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(targetUser.id)}
+                          title="Supprimer"
+                          disabled={targetUser.id === user?.id}
+                          isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                          loadingText="">
+                          <FaTrash />
+                        </AsyncButton>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
+              </tbody>
+            </Table>
+          </div>
+          {renderPagination('d-none d-md-flex border-top')}
+        </>
+      )}
 
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-center pt-3 d-md-none">
-                  <Pagination size="sm">
-                    <Pagination.Prev disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <Pagination.Item key={i + 1} active={i + 1 === safePage} onClick={() => setCurrentPage(i + 1)}>{i + 1}</Pagination.Item>
-                    ))}
-                    <Pagination.Next disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} />
-                  </Pagination>
-                </div>
-              )}
-
-              {/* Vue tableau — desktop uniquement */}
-              <div className="d-none d-md-block users-management-table-wrap">
-                <Table hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Utilisateur</th>
-                      <th>Role</th>
-                      <th>Statut</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagedUsers.map((targetUser) => (
-                      <tr key={targetUser.id}>
-                        <td>
-                          <div>
-                            <strong>{targetUser.prenom} {targetUser.nom}</strong>
-                          </div>
-                        </td>
-                        <td>{getRoleBadge(targetUser.role)}</td>
-                        <td>{getStatusBadge(targetUser.statut)}</td>
-                        <td>
-                          <div className="d-flex gap-1 users-management-table-actions">
-                            <Button variant="outline-secondary" size="sm" onClick={() => openDetailsModal(targetUser)} title="Detail">
-                              Detail
-                            </Button>
-                            <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
-                              <FaEdit />
-                            </Button>
-                            {!isSuperAdmin && (
-                              <Button
-                                variant="outline-info"
-                                size="sm"
-                                onClick={() => navigate(`/soldes?userId=${targetUser.id}`)}
-                                title="Gérer les soldes"
-                              >
-                                <FaCoins />
-                              </Button>
-                            )}
-                            <AsyncButton
-                              variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
-                              size="sm"
-                              onClick={() => toggleUserStatus(targetUser)}
-                              title={targetUser.statut === 'actif' ? 'Desactiver' : 'Activer'}
-                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
-                              loadingText=""
-                              disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
-                            >
-                              {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
-                            </AsyncButton>
-                            {targetUser.statut === 'en_attente' && (
-                              <AsyncButton
-                                variant="outline-info"
-                                size="sm"
-                                onClick={() => handleResendInvitation(targetUser)}
-                                title="Renvoyer l'invitation"
-                                isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                                loadingText=""
-                              >
-                                <FaEnvelope />
-                              </AsyncButton>
-                            )}
-                            <AsyncButton
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleDelete(targetUser.id)}
-                              title="Supprimer"
-                              disabled={targetUser.id === user?.id}
-                              isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                              showSpinner={mutateUserAction.showSpinner && activeUserActionId === targetUser.id}
-                              loadingText=""
-                            >
-                              <FaTrash />
-                            </AsyncButton>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center px-3 pt-3 d-none d-lg-flex">
-                  <small className="text-muted">
-                    {(safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredUsers.length)} sur {filteredUsers.length}
-                  </small>
-                  <Pagination size="sm" className="mb-0">
-                    <Pagination.Prev disabled={safePage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <Pagination.Item key={i + 1} active={i + 1 === safePage} onClick={() => setCurrentPage(i + 1)}>{i + 1}</Pagination.Item>
-                    ))}
-                    <Pagination.Next disabled={safePage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} />
-                  </Pagination>
-                </div>
-              )}
-            </>
-          )}
-        </Card.Body>
-      </Card>
-
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered dialogClassName="users-management-modal">
+      {/* Modal créer / modifier */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" backdrop="static" keyboard={!submitAction.isRunning} centered>
         <Modal.Header closeButton={!submitAction.isRunning}>
           <Modal.Title>{editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body className="users-management-modal__body">
-            
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Prenom *</Form.Label>
-                  <Form.Control type="text" value={formData.prenom} onChange={(event) => setFormData({ ...formData, prenom: event.target.value })} required disabled={submitAction.isRunning} />
+                  <Form.Label>Prénom *</Form.Label>
+                  <Form.Control type="text" value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nom *</Form.Label>
-                  <Form.Control type="text" value={formData.nom} onChange={(event) => setFormData({ ...formData, nom: event.target.value })} required disabled={submitAction.isRunning} />
+                  <Form.Control type="text" value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} required disabled={submitAction.isRunning} />
                 </Form.Group>
               </Col>
             </Row>
-
             <Form.Group className="mb-3">
               <Form.Label>Email *</Form.Label>
-              <Form.Control type="email" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required disabled={submitAction.isRunning} />
+              <Form.Control type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={submitAction.isRunning} />
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Date d'embauche</Form.Label>
-              <Form.Control
-                type="date"
-                value={formData.date_embauche}
-                onChange={(event) => setFormData({ ...formData, date_embauche: event.target.value })}
-                disabled={submitAction.isRunning}
-              />
-              <Form.Text className="text-muted">
-                Utilisée pour le calcul proratisé des congés lors d'une arrivée en cours d'année.
-              </Form.Text>
+              <Form.Control type="date" value={formData.date_embauche} onChange={(e) => setFormData({ ...formData, date_embauche: e.target.value })} disabled={submitAction.isRunning} />
             </Form.Group>
-
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Role *</Form.Label>
-                  <Form.Select value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value, service: ['employe', 'manager'].includes(event.target.value) ? formData.service : '' })} required disabled={submitAction.isRunning}>
+                  <Form.Label>Rôle *</Form.Label>
+                  <Form.Select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value, service: ['employe', 'manager'].includes(e.target.value) ? formData.service : '' })} required disabled={submitAction.isRunning}>
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                     {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
-                    <option value="employe">Employe</option>
+                    <option value="employe">Employé</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Service {formData.role === 'employe' ? '*' : ''}</Form.Label>
-                  <Form.Select
-                    value={formData.service}
-                    onChange={(event) => setFormData({ ...formData, service: event.target.value })}
-                    required={formData.role === 'employe'}
-                    disabled={submitAction.isRunning || selectableServices.length === 0 || !isServiceRole}
-                  >
-                    <option value="">{selectableServices.length > 0 ? 'Sélectionner un service' : 'Aucun service disponible'}</option>
-                    {selectableServices.map((serviceName) => (
-                      <option key={serviceName} value={serviceName}>{serviceName}</option>
-                    ))}
+                  <Form.Label>Service{formData.role === 'employe' ? ' *' : ''}</Form.Label>
+                  <Form.Select value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                    required={formData.role === 'employe'} disabled={submitAction.isRunning || selectableServices.length === 0 || !isServiceRole}>
+                    <option value="">{selectableServices.length > 0 ? 'Sélectionner' : 'Aucun service'}</option>
+                    {selectableServices.map((s) => <option key={s} value={s}>{s}</option>)}
                   </Form.Select>
-                  <Form.Text className="text-muted">
-                    {selectableServices.length === 0 && isServiceRole
-                      ? '⚠️ Aucun service disponible. Créez des services depuis la page Services avant d\'assigner ce rôle.'
-                      : !isServiceRole
-                      ? 'Les services s\'appliquent aux employés et aux managers.'
-                      : 'Les services sont gérés depuis la page Services.'}
-                  </Form.Text>
+                  {selectableServices.length === 0 && isServiceRole && (
+                    <div className="small text-warning mt-1">⚠️ Créez des services depuis Règles & services d'abord.</div>
+                  )}
                 </Form.Group>
               </Col>
             </Row>
-
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Entreprise *</Form.Label>
                   {isSuperAdmin ? (
-                    <Form.Select
-                      value={formData.entreprise_id}
-                      onChange={(event) => setFormData({ ...formData, entreprise_id: event.target.value, service: '' })}
-                      required
-                      disabled={submitAction.isRunning}
-                    >
-                      <option value="">Selectionner une entreprise</option>
-                      {companies.map((company) => (
-                        <option key={company.id} value={company.id}>
-                          {company.nom}
-                        </option>
-                      ))}
+                    <Form.Select value={formData.entreprise_id} onChange={(e) => setFormData({ ...formData, entreprise_id: e.target.value, service: '' })} required disabled={submitAction.isRunning}>
+                      <option value="">Sélectionner</option>
+                      {companies.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
                     </Form.Select>
                   ) : (
                     <Form.Control value={companiesById[user?.entreprise_id] || 'Entreprise courante'} disabled />
@@ -761,7 +615,7 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Statut</Form.Label>
-                  <Form.Select value={formData.statut} onChange={(event) => setFormData({ ...formData, statut: event.target.value })} disabled={submitAction.isRunning}>
+                  <Form.Select value={formData.statut} onChange={(e) => setFormData({ ...formData, statut: e.target.value })} disabled={submitAction.isRunning}>
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                     <option value="en_attente">En attente</option>
@@ -772,13 +626,7 @@ const UsersManagement = () => {
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Nouveau mot de passe</Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={formData.password}
-                      onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-                      placeholder="Laisser vide pour conserver le mot de passe actuel"
-                      disabled={submitAction.isRunning}
-                    />
+                    <Form.Control type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="Laisser vide = inchangé" disabled={submitAction.isRunning} />
                   </Form.Group>
                 </Col>
               )}
@@ -786,87 +634,82 @@ const UsersManagement = () => {
             {editingUser && ['manager', 'admin_entreprise'].includes(formData.role) && (
               <Form.Group className="mb-3">
                 <Form.Label>Délégué (en cas d'absence)</Form.Label>
-                <Form.Select
-                  value={formData.delegue_id || ''}
-                  onChange={(e) => setFormData({ ...formData, delegue_id: e.target.value || null })}
-                  disabled={submitAction.isRunning}
-                >
+                <Form.Select value={formData.delegue_id || ''} onChange={(e) => setFormData({ ...formData, delegue_id: e.target.value || null })} disabled={submitAction.isRunning}>
                   <option value="">Aucune délégation</option>
-                  {users
-                    .filter(u => u.entreprise_id === (isSuperAdmin ? formData.entreprise_id : user?.entreprise_id) && u.id !== editingUser?.id && u.statut === 'actif')
-                    .map(u => (
-                      <option key={u.id} value={u.id}>{u.prenom} {u.nom} ({u.role})</option>
-                    ))
-                  }
+                  {users.filter((u) => u.entreprise_id === (isSuperAdmin ? formData.entreprise_id : user?.entreprise_id) && u.id !== editingUser?.id && u.statut === 'actif')
+                    .map((u) => <option key={u.id} value={u.id}>{u.prenom} {u.nom} ({u.role})</option>)}
                 </Form.Select>
-                <Form.Text className="text-muted">Ce délégué pourra valider les congés de votre équipe en votre absence.</Form.Text>
               </Form.Group>
             )}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitAction.isRunning}>Annuler</Button>
-            <AsyncButton
-              variant="primary"
-              type="submit"
-              action={submitAction}
-              loadingText={editingUser ? 'Mise a jour...' : 'Creation...'}
-            >
-              {editingUser ? 'Mettre a jour' : 'Creer'}
+            <AsyncButton variant="primary" type="submit" action={submitAction} loadingText={editingUser ? 'Mise à jour…' : 'Création…'}>
+              {editingUser ? 'Enregistrer' : 'Créer'}
             </AsyncButton>
           </Modal.Footer>
         </Form>
       </Modal>
 
-      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+      {/* Modal détail — hub d'actions */}
+      <Modal show={showDetailsModal} onHide={closeDetailsModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Info utilisateurs</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ul className="mb-0">
-            <li>La liste affiche uniquement le minimum.</li>
-            <li>Utilisez Detail pour voir email, entreprise et date d'embauche.</li>
-            <li>Modifier/Activer/Supprimer restent dans les actions.</li>
-          </ul>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={showDetailsModal} onHide={closeDetailsModal} centered dialogClassName="users-management-details-modal">
-        <Modal.Header closeButton>
-          <Modal.Title>Detail utilisateur</Modal.Title>
+          <Modal.Title>
+            {selectedUserDetails && (
+              <div className="d-flex align-items-center gap-2">
+                <div className={`user-row-avatar user-row-avatar--sm ${roleToAvatarColor(selectedUserDetails.role)}`}>
+                  {getInitials(selectedUserDetails)}
+                </div>
+                <span>{selectedUserDetails.prenom} {selectedUserDetails.nom}</span>
+              </div>
+            )}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedUserDetails && (
-            <div className="d-grid gap-2 small users-management-details-grid">
-              <div><strong>Nom:</strong> {selectedUserDetails.prenom} {selectedUserDetails.nom}</div>
-              <div><strong>Email:</strong> {selectedUserDetails.email || 'Non defini'}</div>
-              <div><strong>Role:</strong> {selectedUserDetails.role || 'Non defini'}</div>
-              <div><strong>Statut:</strong> {selectedUserDetails.statut || 'Non defini'}</div>
-              <div><strong>Service:</strong> {selectedUserDetails.service || 'Non defini'}</div>
-              <div><strong>Entreprise:</strong> {companiesById[selectedUserDetails.entreprise_id] || 'Non definie'}</div>
-              <div><strong>Date embauche:</strong> {formatDate(selectedUserDetails.date_embauche)}</div>
-              <div><strong>Mise a jour:</strong> {formatDate(selectedUserDetails.updatedAt)}</div>
+            <div className="users-details-grid">
+              <div className="users-details-row"><span>Email</span><span>{selectedUserDetails.email || '—'}</span></div>
+              <div className="users-details-row"><span>Rôle</span><span>{getRoleBadge(selectedUserDetails.role)}</span></div>
+              <div className="users-details-row"><span>Statut</span><span>{getStatusBadge(selectedUserDetails.statut)}</span></div>
+              <div className="users-details-row"><span>Service</span><span>{selectedUserDetails.service || '—'}</span></div>
+              {isSuperAdmin && <div className="users-details-row"><span>Entreprise</span><span>{companiesById[selectedUserDetails.entreprise_id] || '—'}</span></div>}
+              <div className="users-details-row"><span>Embauche</span><span>{formatDate(selectedUserDetails.date_embauche)}</span></div>
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="flex-wrap gap-2">
+          <Button variant="outline-primary" size="sm" onClick={() => { closeDetailsModal(); handleEdit(selectedUserDetails); }}>
+            <FaEdit className="me-1" />Modifier
+          </Button>
+          {!isSuperAdmin && (
+            <Button variant="outline-info" size="sm" onClick={() => { closeDetailsModal(); navigate(`/soldes?userId=${selectedUserDetails.id}`); }}>
+              <FaCoins className="me-1" />Soldes
+            </Button>
+          )}
           {selectedUserDetails?.statut === 'en_attente' && (
-            <AsyncButton
-              variant="outline-info"
-              size="sm"
-              onClick={() => {
-                handleResendInvitation(selectedUserDetails);
-                closeDetailsModal();
-              }}
+            <AsyncButton variant="outline-info" size="sm"
+              onClick={() => { handleResendInvitation(selectedUserDetails); closeDetailsModal(); }}
               isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
-              loadingText="Envoi..."
-            >
-              <FaEnvelope className="me-1" /> Renvoyer l'invitation
+              loadingText="Envoi…">
+              <FaEnvelope className="me-1" />Renvoyer invitation
             </AsyncButton>
           )}
-          <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
+          <AsyncButton
+            variant={selectedUserDetails?.statut === 'actif' ? 'outline-warning' : 'outline-success'}
+            size="sm"
+            onClick={() => { closeDetailsModal(); toggleUserStatus(selectedUserDetails); }}
+            isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+            loadingText="">
+            {selectedUserDetails?.statut === 'actif' ? <><FaUserTimes className="me-1" />Désactiver</> : <><FaUserCheck className="me-1" />Activer</>}
+          </AsyncButton>
+          <AsyncButton variant="outline-danger" size="sm"
+            onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
+            disabled={selectedUserDetails?.id === user?.id}
+            isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+            loadingText="">
+            <FaTrash className="me-1" />Supprimer
+          </AsyncButton>
+          <Button variant="secondary" size="sm" className="ms-auto" onClick={closeDetailsModal}>Fermer</Button>
         </Modal.Footer>
       </Modal>
     </Container>

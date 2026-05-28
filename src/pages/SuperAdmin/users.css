@@ -1,138 +1,226 @@
-/* ────────────── Users SuperAdmin ────────────── */
+/* ────────────── Users page ────────────── */
 .users-management-page {
   overflow-x: hidden;
 }
 
-.users-management-filters,
-.users-management-table-wrap,
-.users-management-modal__body,
-.users-management-details-grid {
-  min-width: 0;
-}
-
-.users-management-filters__badge {
-  max-width: 100%;
-  white-space: normal;
-}
-
-/* Mobile list */
-.users-management-mobile-list__item {
-  overflow: hidden;
-  background: var(--dk-elevated);
-  border: 1px solid var(--dk-border);
-  border-radius: var(--card-radius, 0.75rem);
-  box-shadow: var(--dk-shadow-sm);
-  transition: box-shadow var(--transition-base), transform var(--transition-fast);
-}
-
-.users-management-mobile-list__item:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--dk-shadow-md);
-}
-
-.users-management-mobile-list__actions {
+/* ── Barre de filtres ── */
+.users-filter-bar {
+  display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
-.users-management-mobile-list__actions > * {
-  flex: 1 1 calc(50% - 0.25rem);
-  min-width: 0;
+.users-filter-bar__search {
+  flex: 1 1 200px;
+  min-width: 160px;
 }
 
-/* Avatar circle */
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--dk-surface);
+.users-filter-bar__select {
+  flex: 0 1 140px;
+  min-width: 110px;
+}
+
+.users-filter-bar__count {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Liste mobile compacte ── */
+.user-list-mobile {
+  background: var(--dk-card);
   border: 1px solid var(--dk-border);
-  box-shadow: var(--dk-shadow-sm);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.user-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--dk-border);
+  color: var(--dk-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+  min-height: 52px;
+}
+
+.user-row-btn:last-child {
+  border-bottom: none;
+}
+
+.user-row-btn:hover,
+.user-row-btn:active {
+  background: var(--dk-hover);
+}
+
+.user-row-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--dk-accent);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
   flex-shrink: 0;
+}
+
+.user-row-avatar--sm {
+  width: 26px;
+  height: 26px;
+  font-size: 9px;
+}
+
+.user-row-avatar.blue   { background: var(--dk-accent); }
+.user-row-avatar.amber  { background: var(--role-manager,  #f59e0b); }
+.user-row-avatar.purple { background: var(--role-superadmin, #7c3aed); }
+.user-row-avatar.red    { background: var(--dk-error); }
+
+.user-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dk-text);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.user-row-sub {
+  font-size: 11px;
+  color: var(--dk-text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.user-row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.user-row-chevron {
+  color: var(--dk-text-muted);
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
-/* Table row hover */
+/* ── Tableau dense desktop ── */
 .users-management-table-wrap {
   overflow-x: auto;
 }
 
-.users-management-table-wrap .table tbody tr {
-  transition: background var(--transition-fast);
+.users-dense-table {
+  font-size: 13px;
 }
 
-.users-management-table-wrap .table tbody tr:hover {
+.users-dense-table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.users-dense-table tbody td {
+  padding: 6px 10px;
+  vertical-align: middle;
+}
+
+.user-table-row {
+  cursor: pointer;
+}
+
+.user-table-row:hover {
   background: var(--dk-hover);
 }
 
-.users-management-table-actions {
-  flex-wrap: wrap;
+/* ── Pagination ── */
+.users-pager {
+  padding: 10px 12px;
+  background: var(--dk-card);
 }
 
-/* Modal */
-.users-management-modal .modal-dialog,
-.users-management-details-modal .modal-dialog {
-  margin: 0.75rem;
-}
-
-.users-management-modal__body,
-.users-management-details-grid {
-  word-break: break-word;
-}
-
-/* User name / email */
+/* ── Noms / emails ── */
 .user-display-name {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 13px;
   color: var(--dk-text);
+  line-height: 1.3;
 }
 
 .user-display-email {
-  font-size: 0.75rem;
+  font-size: 11px;
   color: var(--dk-text-soft);
   margin-top: 1px;
 }
 
-/* Role badge */
-.user-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.18em 0.55em;
-  border-radius: 999px;
-  background: rgba(91, 141, 238, 0.12);
-  color: var(--dk-accent);
-  border: 1px solid rgba(91, 141, 238, 0.22);
+/* ── Modal détail ── */
+.users-details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-/* ────────────── Responsive ────────────── */
-@media (max-width: 767.98px) {
-  .users-management-page .page-header {
-    margin-bottom: 1rem;
-  }
+.users-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dk-border);
+  gap: 12px;
+  font-size: 13px;
+}
 
-  .users-management-filters .card-body,
-  .users-management-page .card-body {
-    padding-left: 0.875rem;
-    padding-right: 0.875rem;
-  }
+.users-details-row:last-child {
+  border-bottom: none;
+}
 
-  .users-management-filters__count {
-    text-align: left !important;
-    color: var(--dk-text-muted);
+.users-details-row > span:first-child {
+  color: var(--dk-text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.users-details-row > span:last-child {
+  color: var(--dk-text);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ── Modal form ── */
+.users-management-modal__body {
+  word-break: break-word;
+}
+
+/* ── Responsive ── */
+@media (max-width: 575.98px) {
+  .users-filter-bar__select {
+    flex: 1 1 calc(50% - 4px);
   }
 }
