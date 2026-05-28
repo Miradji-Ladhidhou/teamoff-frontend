@@ -1,7 +1,7 @@
 import './jours-feries.css';
 import '../../styles/settings.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Spinner, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Table, Spinner, Form, Modal } from 'react-bootstrap';
 import { FaCalendarTimes, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { joursFeriesService, entreprisesService } from '../../services/api';
@@ -391,10 +391,9 @@ const JoursFeriesPage = () => {
       </div>
 
       {canManage && (
-        <Card className="mb-3">
-          <Card.Body>
-            <Row className="g-3 align-items-end">
-              {user?.role === 'super_admin' && (
+        <div className="filters-panel mb-3">
+          <Row className="g-3 align-items-end">
+            {user?.role === 'super_admin' && (
                 <Col xs={12} md={5}>
                   <Form.Label>Entreprise</Form.Label>
                   <Form.Select
@@ -441,16 +440,12 @@ const JoursFeriesPage = () => {
               L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
               puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
             </div>
-          </Card.Body>
-        </Card>
+        </div>
       )}
 
       {canManage && (
-        <Card className="mb-3">
-          <Card.Header>
-            <h6 className="mb-0">Modèles régionaux (copier/coller, export/import CSV)</h6>
-          </Card.Header>
-          <Card.Body>
+        <div className="filters-panel mb-3">
+          <div className="section-label-title mb-3">Modèles régionaux</div>
             <Row className="g-3 align-items-end">
               <Col xs={12} md={4}>
                 <Form.Label>Nom du modèle</Form.Label>
@@ -541,12 +536,10 @@ const JoursFeriesPage = () => {
                 placeholder={"date,libelle,recurrent,est_travail\n2026-01-01,Jour de l'An,true,false"}
               />
             </Form.Group>
-          </Card.Body>
-        </Card>
+        </div>
       )}
 
-      <Card>
-        <Card.Body className="p-0">
+      <div className="conges-list-wrap">
           {joursFeries.length === 0 ? (
             <div className="text-center py-5">
               <FaCalendarTimes size={48} className="text-muted mb-3" />
@@ -658,8 +651,7 @@ const JoursFeriesPage = () => {
               </div>
             </>
           )}
-        </Card.Body>
-      </Card>
+      </div>
 
       {/* Modal d'édition/ajout */}
       <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static" keyboard={!saveAction.isRunning} centered>

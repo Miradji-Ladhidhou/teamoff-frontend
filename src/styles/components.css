@@ -319,3 +319,41 @@
   border-color: var(--accent-blue, var(--dk-accent));
   box-shadow: 0 0 0 3px rgba(91,141,238,0.15);
 }
+
+/* ────────────── Flat section utilities (card replacement) ────────────── */
+.filters-panel {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.conges-list-wrap {
+  border: 1px solid var(--dk-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--dk-card);
+}
+
+.section-label-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dk-text-muted);
+}
+
+.export-preview-row {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.exports-page__card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: 10px;
+  padding: 1.25rem;
+}

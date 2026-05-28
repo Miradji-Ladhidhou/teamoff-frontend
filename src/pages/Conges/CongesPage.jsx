@@ -1,6 +1,6 @@
 import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Container, Row, Col, Card, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -458,8 +458,7 @@ const CongesPage = () => {
       </div>
 
       {showFilters && (
-        <Card className="mb-3">
-          <Card.Body>
+        <div className="filters-panel mb-3">
             <Row className="g-3">
               <Col md={3}>
                 <Form.Group className="mb-3">
@@ -560,12 +559,10 @@ const CongesPage = () => {
                 </Form.Group>
               </Col>
             </Row>
-          </Card.Body>
-        </Card>
+        </div>
       )}
 
-      <Card>
-        <Card.Body className="p-0">
+      <div className="conges-list-wrap">
           {loading ? (
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" />
@@ -755,8 +752,7 @@ const CongesPage = () => {
               )}
             </>
           )}
-        </Card.Body>
-      </Card>
+      </div>
 
       <Modal show={showValidateModal} onHide={closeValidateModal} centered backdrop="static" keyboard={!validateAction.isRunning}>
         <Modal.Header closeButton={!validateAction.isRunning}>

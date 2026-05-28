@@ -1,6 +1,6 @@
 import './holidays-blocked.css';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Card, ButtonGroup, Button } from 'react-bootstrap';
+import { Container, ButtonGroup, Button } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import JoursFeriesPage from '../JoursFeries/JoursFeriesPage';
 import JoursBloquesPage from '../JoursBloques/JoursBloquesPage';
@@ -31,24 +31,16 @@ const HolidaysBlockedPage = () => {
         <span className="section-title-bar__text">Jours spéciaux</span>
       </div>
 
-      <Card className="mb-3">
-        <Card.Body>
-          <ButtonGroup aria-label="Navigation jours spéciaux">
-            <Button
-              variant={activeTab === 'feries' ? 'primary' : 'outline-secondary'}
-              onClick={() => switchTab('feries')}
-            >
-              Jours fériés
-            </Button>
-            <Button
-              variant={activeTab === 'bloques' ? 'primary' : 'outline-secondary'}
-              onClick={() => switchTab('bloques')}
-            >
-              Jours bloqués
-            </Button>
-          </ButtonGroup>
-        </Card.Body>
-      </Card>
+      <div className="mb-3">
+        <ButtonGroup aria-label="Navigation jours spéciaux">
+          <Button variant={activeTab === 'feries' ? 'primary' : 'outline-secondary'} onClick={() => switchTab('feries')}>
+            Jours fériés
+          </Button>
+          <Button variant={activeTab === 'bloques' ? 'primary' : 'outline-secondary'} onClick={() => switchTab('bloques')}>
+            Jours bloqués
+          </Button>
+        </ButtonGroup>
+      </div>
 
       <style>{`
         .days-merged .section-title-bar:first-of-type,

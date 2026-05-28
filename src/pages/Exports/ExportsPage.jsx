@@ -1,6 +1,6 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
 import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
@@ -373,11 +373,8 @@ const ExportsPage = () => {
 
       <Row className="g-4 exports-page__content">
         <Col xs={12} lg={8}>
-          <Card className="exports-page__card">
-            <Card.Header>
-              <h5 className="mb-0">Paramètres d'export</h5>
-            </Card.Header>
-            <Card.Body>
+          <div className="exports-page__card">
+            <h5 className="section-label-title mb-3">Paramètres d'export</h5>
               <Form>
                 {/* Type d'export */}
                 <Form.Group className="mb-3">
@@ -617,26 +614,19 @@ const ExportsPage = () => {
                     <>
                       <div className="d-md-none mobile-card-list export-preview-mobile-list">
                         {previewData.rows.map((row, index) => (
-                          <Card key={`preview-mobile-row-${index}`} className="mb-2">
-                            <Card.Body className="py-2 px-3 export-preview-mobile-card__body">
-                              {compactPreviewColumns.map((column) => (
-                                <div key={`${column}-mobile-${index}`} className="d-flex justify-content-between gap-2 py-1 border-bottom small export-preview-mobile-card__row">
-                                  <span className="text-muted">{column}</span>
-                                  <span className="fw-semibold text-end">{String(row[column] ?? '-')}</span>
-                                </div>
-                              ))}
-                              <div className="pt-2">
-                                <Button
-                                  variant="outline-secondary"
-                                  size="sm"
-                                  className="w-100"
-                                  onClick={() => openPreviewDetailsModal(row)}
-                                >
-                                  Detail
-                                </Button>
+                          <div key={`preview-mobile-row-${index}`} className="export-preview-row">
+                            {compactPreviewColumns.map((column) => (
+                              <div key={`${column}-mobile-${index}`} className="d-flex justify-content-between gap-2 py-1 border-bottom small export-preview-mobile-card__row">
+                                <span className="text-muted">{column}</span>
+                                <span className="fw-semibold text-end">{String(row[column] ?? '-')}</span>
                               </div>
-                            </Card.Body>
-                          </Card>
+                            ))}
+                            <div className="pt-2">
+                              <Button variant="outline-secondary" size="sm" className="w-100" onClick={() => openPreviewDetailsModal(row)}>
+                                Détail
+                              </Button>
+                            </div>
+                          </div>
                         ))}
                       </div>
 
@@ -676,8 +666,7 @@ const ExportsPage = () => {
                   )}
                 </div>
               )}
-            </Card.Body>
-          </Card>
+          </div>
         </Col>
 
       </Row>

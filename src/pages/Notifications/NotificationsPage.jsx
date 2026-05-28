@@ -1,6 +1,6 @@
 import './notifications.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Spinner, Pagination, Form } from 'react-bootstrap';
+import { Container, Button, Spinner, Pagination, Form } from 'react-bootstrap';
 import { FaBell, FaCheck, FaCheckDouble } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -224,22 +224,16 @@ const NotificationsPage = () => {
         ))}
       </div>
 
-      <Card>
-        <Card.Header className="d-flex flex-wrap justify-content-end align-items-center gap-2">
-          <small className="text-muted">Par page</small>
-          <Form.Select
-            size="sm"
-            className="notifications-items-per-page"
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-          </Form.Select>
-        </Card.Header>
+      <div className="notif-list-header">
+        <small className="text-muted">Par page</small>
+        <Form.Select size="sm" className="notifications-items-per-page" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+        </Form.Select>
+      </div>
 
-        <Card.Body className="p-0">
+      <div className="notif-list-wrap">
           {displayedNotifications.length === 0 ? (
             <div className="notif-empty">
               <FaBell size={36} className="mb-3" style={{ opacity: 0.3 }} />
@@ -321,29 +315,18 @@ const NotificationsPage = () => {
               })}
             </div>
           )}
-        </Card.Body>
+        </div>
 
         {totalItems > 0 && totalPages > 1 && (
-          <Card.Footer className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+          <div className="notif-pager">
             <small className="text-muted">{startIndex}–{endIndex} sur {totalItems}</small>
-            <Pagination className="mb-0 flex-wrap justify-content-center">
-              <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
-              <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
-                const page = Math.max(1, currentPage - 2) + index;
-                if (page > totalPages) return null;
-                return (
-                  <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
-                    {page}
-                  </Pagination.Item>
-                );
-              })}
-              <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
-              <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
-            </Pagination>
-          </Card.Footer>
+            <div className="d-flex gap-1">
+              <Button size="sm" variant="outline-secondary" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>‹ Préc.</Button>
+              <Button size="sm" variant="outline-secondary" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Suiv. ›</Button>
+            </div>
+          </div>
         )}
-      </Card>
+      </div>
     </Container>
   );
 };

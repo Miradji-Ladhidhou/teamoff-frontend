@@ -80,3 +80,26 @@
     padding-left: calc(0.75rem - 3px);
   }
 }
+
+/* ── Flat list (no card wrapper) ── */
+.notif-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 0 8px;
+}
+
+.notif-list-wrap {
+  border: 1px solid var(--dk-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--dk-card);
+}
+
+.notif-pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 4px 0;
+}
