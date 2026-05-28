@@ -31,6 +31,7 @@ const NotificationsPage = lazy(() => import('./pages/Notifications/Notifications
 const JoursFeriesPage = lazy(() => import('./pages/JoursFeries/JoursFeriesPage'));
 const PolicyServicesPage = lazy(() => import('./pages/PolicyServices/PolicyServicesPage'));
 const HolidaysBlockedPage = lazy(() => import('./pages/HolidaysBlocked/HolidaysBlockedPage'));
+const JoursBloquesPage = lazy(() => import('./pages/JoursBloques/JoursBloquesPage'));
 const MaintenancePage = lazy(() => import('./pages/Maintenance/MaintenancePage'));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage'));
 const ContactPage = lazy(() => import('./pages/Contact/ContactPage'));
@@ -298,6 +299,7 @@ function App() {
         <Route element={<ProtectedRoute roles={['admin_entreprise']} />}>
           <Route element={<Layout />}>
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/soldes" element={<JoursBloquesPage />} />
             <Route path="/jours-feries" element={<HolidaysBlockedPage />} />
             <Route path="/politique-conges" element={<PolicyServicesPage />} />
             <Route path="/parametres-jours-bloques" element={<Navigate to="/jours-feries?tab=bloques" replace />} />

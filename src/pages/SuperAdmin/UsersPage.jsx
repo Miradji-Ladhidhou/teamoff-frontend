@@ -1,7 +1,8 @@
 import './users.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, Pagination } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle, FaEnvelope } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaInfoCircle, FaEnvelope, FaCoins } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
@@ -31,6 +32,7 @@ const DEFAULT_FORM = {
 const UsersManagement = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
+  const navigate = useNavigate();
   const alert = useAlert();
   const { confirm } = useConfirmation();
 
@@ -492,6 +494,17 @@ const UsersManagement = () => {
                       <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(targetUser)}>
                         Modifier
                       </Button>
+                      {!isSuperAdmin && (
+                        <Button
+                          variant="outline-info"
+                          size="sm"
+                          className="flex-grow-1 justify-content-center"
+                          onClick={() => navigate(`/soldes?userId=${targetUser.id}`)}
+                          title="Gérer les soldes"
+                        >
+                          <FaCoins />
+                        </Button>
+                      )}
                       <AsyncButton
                         variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                         size="sm"
@@ -572,6 +585,16 @@ const UsersManagement = () => {
                             <Button variant="outline-primary" size="sm" onClick={() => handleEdit(targetUser)} title="Modifier">
                               <FaEdit />
                             </Button>
+                            {!isSuperAdmin && (
+                              <Button
+                                variant="outline-info"
+                                size="sm"
+                                onClick={() => navigate(`/soldes?userId=${targetUser.id}`)}
+                                title="Gérer les soldes"
+                              >
+                                <FaCoins />
+                              </Button>
+                            )}
                             <AsyncButton
                               variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                               size="sm"

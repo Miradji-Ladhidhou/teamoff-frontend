@@ -16,6 +16,7 @@ import {
   FaEllipsisH,
   FaThLarge,
   FaCalendarTimes,
+  FaCoins,
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,6 +37,7 @@ const iconMap = {
   info: FaInfoCircle,
   holiday: FaCalendarTimes,
   more: FaEllipsisH,
+  balance: FaCoins,
 };
 
 const roleLabel = {

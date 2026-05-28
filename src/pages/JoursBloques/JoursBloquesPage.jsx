@@ -1,6 +1,7 @@
 import './jours-bloques.css';
 import '../../styles/settings.css';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -74,6 +75,8 @@ const JoursBloquesPage = () => {
   const { confirmationMessage, requestConfirmation, clearConfirmation } = useInlineConfirmation();
   const { user } = useAuth();
   const entrepriseId = user?.entreprise_id;
+  const [searchParams] = useSearchParams();
+  const urlUserId = searchParams.get('userId');
 
   const [loading, setLoading] = useState(true);
   const [savingPolicy, setSavingPolicy] = useState(false);
@@ -89,13 +92,13 @@ const JoursBloquesPage = () => {
   const [specificDateRangeStart, setSpecificDateRangeStart] = useState('');
   const [specificDateRangeEnd, setSpecificDateRangeEnd] = useState('');
   const [showAdvancedWeekendRules, setShowAdvancedWeekendRules] = useState(false);
-  const [showCountersSection, setShowCountersSection] = useState(false);
+  const [showCountersSection, setShowCountersSection] = useState(!!urlUserId);
 
   const [users, setUsers] = useState([]);
   const [congeTypes, setCongeTypes] = useState([]);
   const [loadingCongeTypes, setLoadingCongeTypes] = useState(false);
 
-  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState(urlUserId || '');
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [counters, setCounters] = useState([]);
   const [loadingCounters, setLoadingCounters] = useState(false);
@@ -146,7 +149,14 @@ const JoursBloquesPage = () => {
         setCongeTypes(nextTypes);
 
         if (nextUsers.length > 0) {
-          setSelectedUserId((prev) => prev || nextUsers[0].id);
+          setSelectedUserId((prev) => {
+            if (prev) return prev;
+            if (urlUserId) {
+              const match = nextUsers.find((u) => String(u.id) === String(urlUserId));
+              if (match) return match.id;
+            }
+            return nextUsers[0].id;
+          });
         }
       } catch (errLoad) {
         console.error('Erreur chargement paramètres jours bloqués:', errLoad);
