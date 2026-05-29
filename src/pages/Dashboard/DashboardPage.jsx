@@ -8,6 +8,8 @@ import { congesService, quotasService, notificationsService, congeTypesService, 
 import { useAlert } from '../../hooks/useAlert';
 import OnboardingWizard from '../../components/OnboardingWizard/OnboardingWizard';
 
+const statutPriority = { valide_manager: 0, en_attente_manager: 1, valide_final: 2, refuse_manager: 3, refuse_final: 3 };
+
 const accentToBarColor = (accent) => {
   const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
   return map[accent] || 'blue';
@@ -115,7 +117,10 @@ const DashboardPage = () => {
         }
 
         setStats(statsData);
-        setRecentConges(conges.slice(0, 5));
+        const sorted = [...conges].sort((a, b) =>
+          (statutPriority[a.statut] ?? 9) - (statutPriority[b.statut] ?? 9)
+        );
+        setRecentConges(sorted.slice(0, 5));
         setNotifications(notifs);
 
         if (['employe', 'manager'].includes(user?.role) && user.id) {
@@ -244,14 +249,15 @@ const DashboardPage = () => {
 
   const getCongeAccent = (statut) => {
     switch (statut) {
-      case 'en_attente_manager': return { accent: 'pending', label: 'EN ATTENTE' };
-      case 'valide_manager':     return { accent: 'info',    label: 'VALIDÉ MANAGER' };
-      case 'valide_final':       return { accent: 'success', label: 'VALIDÉ' };
+      case 'en_attente_manager': return { accent: 'pending', label: 'En att. manager' };
+      case 'valide_manager':     return { accent: 'info',    label: 'En att. validation admin' };
+      case 'valide_final':       return { accent: 'success', label: 'Approuvé' };
       case 'refuse_manager':
-      case 'refuse_final':       return { accent: 'danger',  label: 'REFUSÉ' };
+      case 'refuse_final':       return { accent: 'danger',  label: 'Refusé' };
       default:                   return { accent: 'pending', label: statut };
     }
   };
+
 
   if (loading) {
     return (
