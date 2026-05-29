@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService, quotasService, notificationsService, congeTypesService } from '../../services/api';
+import { congesService, quotasService, notificationsService, congeTypesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import OnboardingWizard from '../../components/OnboardingWizard/OnboardingWizard';
 
@@ -27,8 +27,10 @@ const DashboardPage = () => {
     enAttente: 0,
     valides: 0,
     refuses: 0,
-    aValider: 0
+    aValiderManager: 0,
+    aValiderAdmin: 0,
   });
+  const [workflow, setWorkflow] = useState('manager_admin');
   const [recentConges, setRecentConges] = useState([]);
   const [soldes, setSoldes] = useState(null);
   const [soldesLoadError, setSoldesLoadError] = useState(false);
@@ -66,25 +68,48 @@ const DashboardPage = () => {
           congesParams.utilisateur_id = user.id;
         }
 
-        const [congesResponse, notificationsResponse] = await Promise.all([
+        const requests = [
           congesService.getAll(congesParams),
-          notificationsService.getAll({ limit: 5 })
-        ]);
+          notificationsService.getAll({ limit: 5 }),
+        ];
+        if (user?.entreprise_id) {
+          requests.push(entreprisesService.getPolitique(user.entreprise_id));
+        }
+
+        const [congesResponse, notificationsResponse, policyResponse] = await Promise.all(requests);
 
         const conges = Array.isArray(congesResponse.data?.items) ? congesResponse.data.items : (Array.isArray(congesResponse.data) ? congesResponse.data : []);
         const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
+        const wf = policyResponse?.data?.politique_conges?.approval_workflow || 'manager_admin';
+        setWorkflow(wf);
 
         let statsData = {
           totalConges: congesResponse.data?.total ?? conges.length,
           enAttente: conges.filter(c => c.statut === 'en_attente_manager').length,
-          valides: conges.filter(c => c.statut === 'valide_final' || c.statut === 'valide_manager').length,
-          refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length
+          valides: conges.filter(c => c.statut === 'valide_final').length,
+          refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length,
+          aValiderManager: 0,
+          aValiderAdmin: 0,
         };
 
-        if (user?.role === 'manager' || user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
-          const allCongesResponse = await congesService.getAll({ statut: 'en_attente_manager', limit: 500 });
-          const allConges = Array.isArray(allCongesResponse.data?.items) ? allCongesResponse.data.items : (Array.isArray(allCongesResponse.data) ? allCongesResponse.data : []);
-          statsData.aValider = allConges.length;
+        if (user?.role === 'manager' && (wf === 'manager_admin' || wf === 'manager_only')) {
+          const r = await congesService.getAll({ statut: 'en_attente_manager', limit: 500 });
+          const items = Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : []);
+          statsData.aValiderManager = items.length;
+        }
+
+        if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
+          if (wf === 'manager_admin') {
+            const [rManager, rAdmin] = await Promise.all([
+              congesService.getAll({ statut: 'en_attente_manager', limit: 500 }),
+              congesService.getAll({ statut: 'valide_manager', limit: 500 }),
+            ]);
+            statsData.aValiderManager = (Array.isArray(rManager.data?.items) ? rManager.data.items : (Array.isArray(rManager.data) ? rManager.data : [])).length;
+            statsData.aValiderAdmin = (Array.isArray(rAdmin.data?.items) ? rAdmin.data.items : (Array.isArray(rAdmin.data) ? rAdmin.data : [])).length;
+          } else if (wf === 'admin_only') {
+            const r = await congesService.getAll({ statut: 'en_attente_manager', limit: 500 });
+            statsData.aValiderAdmin = (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : [])).length;
+          }
         }
 
         setStats(statsData);
@@ -268,30 +293,105 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Stat cards — 2-col mobile, 4-col desktop */}
+      {/* Stat cards — adaptées au rôle et au workflow */}
       <div className="stats-grid">
-        {[
-          { label: 'Total congés', value: stats.totalConges, color: 'blue' },
-          { label: 'En attente',   value: stats.enAttente,   color: 'amber' },
-          { label: 'Validés',      value: stats.valides,     color: 'green' },
-          { label: 'Refusés',      value: stats.refuses,     color: 'red' },
-        ].map((stat, idx) => (
-          <div key={idx} className={`stat-card ${stat.color}`}>
-            <div className="stat-label">{stat.label}</div>
-            <div className={`stat-value ${stat.color}`}>{stat.value}</div>
+        {/* Employé : ses propres congés */}
+        {user?.role === 'employe' && [
+          { label: 'Total',      value: stats.totalConges, color: 'blue' },
+          { label: 'En attente', value: stats.enAttente,   color: 'amber' },
+          { label: 'Validés',    value: stats.valides,     color: 'green' },
+          { label: 'Refusés',    value: stats.refuses,     color: 'red' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
           </div>
         ))}
-        {stats.aValider !== undefined && (
-          <div className="stat-card red pulse-urgent">
+
+        {/* Manager */}
+        {user?.role === 'manager' && [
+          { label: 'Total équipe', value: stats.totalConges, color: 'blue' },
+          { label: 'Validés',      value: stats.valides,     color: 'green' },
+          { label: 'Refusés',      value: stats.refuses,     color: 'red' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
+          </div>
+        ))}
+        {user?.role === 'manager' && (workflow === 'manager_admin' || workflow === 'manager_only') && (
+          <div className={`stat-card amber${stats.aValiderManager > 0 ? ' pulse-urgent' : ''}`}>
             <div className="stat-label">À valider</div>
-            <div className="stat-value red">{stats.aValider}</div>
-            {stats.aValider > 0 && (
-              <Button as={Link} to="/conges" variant="outline-danger" size="sm" className="mt-2">
-                Traiter →
-              </Button>
+            <div className="stat-value amber">{stats.aValiderManager}</div>
+            {stats.aValiderManager > 0 && (
+              <Button as={Link} to="/conges-equipe" variant="outline-warning" size="sm" className="mt-2">Traiter →</Button>
             )}
           </div>
         )}
+
+        {/* Admin entreprise — manager_admin : 2 étapes */}
+        {user?.role === 'admin_entreprise' && workflow === 'manager_admin' && [
+          { label: 'Total',              value: stats.totalConges,     color: 'blue' },
+          { label: 'Validés',            value: stats.valides,         color: 'green' },
+          { label: 'Refusés',            value: stats.refuses,         color: 'red' },
+          { label: 'En att. manager',    value: stats.aValiderManager, color: 'amber', urgent: stats.aValiderManager > 0 },
+          { label: 'À valider (admin)',  value: stats.aValiderAdmin,   color: 'red',   urgent: stats.aValiderAdmin > 0,   link: '/conges' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}${s.urgent ? ' pulse-urgent' : ''}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
+            {s.urgent && s.link && s.value > 0 && (
+              <Button as={Link} to={s.link} variant="outline-danger" size="sm" className="mt-2">Traiter →</Button>
+            )}
+          </div>
+        ))}
+
+        {/* Admin entreprise — admin_only : 1 étape */}
+        {user?.role === 'admin_entreprise' && workflow === 'admin_only' && [
+          { label: 'Total',   value: stats.totalConges,   color: 'blue' },
+          { label: 'Validés', value: stats.valides,       color: 'green' },
+          { label: 'Refusés', value: stats.refuses,       color: 'red' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
+          </div>
+        ))}
+        {user?.role === 'admin_entreprise' && workflow === 'admin_only' && (
+          <div className={`stat-card red${stats.aValiderAdmin > 0 ? ' pulse-urgent' : ''}`}>
+            <div className="stat-label">À valider</div>
+            <div className="stat-value red">{stats.aValiderAdmin}</div>
+            {stats.aValiderAdmin > 0 && (
+              <Button as={Link} to="/conges" variant="outline-danger" size="sm" className="mt-2">Traiter →</Button>
+            )}
+          </div>
+        )}
+
+        {/* Admin entreprise — manager_only : les managers gèrent tout */}
+        {user?.role === 'admin_entreprise' && workflow === 'manager_only' && [
+          { label: 'Total',              value: stats.totalConges,     color: 'blue' },
+          { label: 'En att. validation', value: stats.enAttente,       color: 'amber' },
+          { label: 'Validés',            value: stats.valides,         color: 'green' },
+          { label: 'Refusés',            value: stats.refuses,         color: 'red' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
+          </div>
+        ))}
+
+        {/* Super admin */}
+        {user?.role === 'super_admin' && [
+          { label: 'Total',   value: stats.totalConges,   color: 'blue' },
+          { label: 'En att.', value: stats.enAttente,     color: 'amber' },
+          { label: 'Validés', value: stats.valides,       color: 'green' },
+          { label: 'Refusés', value: stats.refuses,       color: 'red' },
+        ].map((s, i) => (
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-value ${s.color}`}>{s.value}</div>
+          </div>
+        ))}
       </div>
 
       <Row>
