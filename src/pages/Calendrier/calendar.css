@@ -66,6 +66,10 @@
   border: 1px solid rgba(245, 158, 11, 0.7);
 }
 
+.legend-dot-ferie {
+  background: #1a2133;
+}
+
 .legend-dot-today {
   background: transparent;
   border: 2px solid var(--dk-accent);
