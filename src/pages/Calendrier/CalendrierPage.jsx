@@ -246,6 +246,17 @@ const CalendrierPage = () => {
     return classes[statut] || 'info';
   };
 
+  const getStatusColor = (statut) => {
+    const colors = {
+      en_attente_manager: 'warning',
+      valide_manager: 'info',
+      valide_final: 'success',
+      refuse_manager: 'danger',
+      refuse_final: 'danger',
+    };
+    return colors[statut] || 'secondary';
+  };
+
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   };
