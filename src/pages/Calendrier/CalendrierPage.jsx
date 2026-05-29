@@ -511,7 +511,7 @@ const CalendrierPage = () => {
                               role="button"
                             >
                               <small className="text-white">
-                                {`Absence · ${event.utilisateur?.prenom || ''}`}
+                                {`${event.type_absence === 'maladie' ? 'Maladie' : 'Absence'} · ${event.utilisateur?.prenom || ''}`}
                               </small>
                             </div>
                           );
