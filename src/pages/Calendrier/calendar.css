@@ -342,20 +342,13 @@
   }
 
   .calendar-ferie {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 6px;
-    height: 6px;
-    margin-bottom: 0;
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.6);
-    font-size: 0;
-    color: transparent;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 8px;
+    white-space: nowrap;
     overflow: hidden;
-    text-indent: -9999px;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .calendar-blocked-specific {

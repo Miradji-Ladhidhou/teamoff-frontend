@@ -472,7 +472,7 @@ const CalendrierPage = () => {
                     {/* Jour férié */}
                     {jourFerie && (
                       <div className="calendar-ferie">
-                        <small className="text-danger fw-bold">{jourFerie.libelle || jourFerie.nom}</small>
+                        {jourFerie.libelle || jourFerie.nom}
                       </div>
                     )}
 
