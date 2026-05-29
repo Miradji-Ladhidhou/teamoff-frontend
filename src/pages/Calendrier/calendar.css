@@ -155,7 +155,11 @@
 }
 
 .calendar-day-ferie {
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, var(--dk-card) 40%);
+  background: #1a2133;
+}
+
+.calendar-day-ferie .calendar-day-number {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .calendar-day-blocked-specific {
@@ -184,13 +188,13 @@
 .calendar-ferie {
   margin-bottom: 6px;
   padding: 2px 6px;
-  border-radius: 999px;
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #92400e;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
   display: inline-block;
   max-width: 100%;
   font-size: 10px;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -347,7 +351,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: var(--dk-warning);
+    background: rgba(255, 255, 255, 0.6);
     font-size: 0;
     color: transparent;
     overflow: hidden;
