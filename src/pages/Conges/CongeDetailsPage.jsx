@@ -416,7 +416,6 @@ const CongeDetailsPage = () => {
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
                     {conge.jours_pris ?? conge.nombre_jours ?? conge.jours_calcules ?? '-'} jour(s)
-                    {(conge.debut_demi_journee || conge.fin_demi_journee) ? ' · Demi-journée' : ' · Journée entière'}
                   </div>
                 </div>
               </div>
