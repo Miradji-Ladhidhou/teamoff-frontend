@@ -25,6 +25,7 @@ const DashboardPage = () => {
   const [stats, setStats] = useState({
     totalConges: 0,
     enAttente: 0,
+    enAttenteAdmin: 0,
     valides: 0,
     refuses: 0,
     aValiderManager: 0,
@@ -86,6 +87,7 @@ const DashboardPage = () => {
         let statsData = {
           totalConges: congesResponse.data?.total ?? conges.length,
           enAttente: conges.filter(c => c.statut === 'en_attente_manager').length,
+          enAttenteAdmin: conges.filter(c => c.statut === 'valide_manager').length,
           valides: conges.filter(c => c.statut === 'valide_final').length,
           refuses: conges.filter(c => c.statut === 'refuse_manager' || c.statut === 'refuse_final').length,
           aValiderManager: 0,
@@ -297,11 +299,12 @@ const DashboardPage = () => {
       <div className="stats-grid">
         {/* Employé : ses propres congés */}
         {user?.role === 'employe' && [
-          { label: 'Total',      value: stats.totalConges, color: 'blue' },
-          { label: 'En attente', value: stats.enAttente,   color: 'amber' },
-          { label: 'Validés',    value: stats.valides,     color: 'green' },
-          { label: 'Refusés',    value: stats.refuses,     color: 'red' },
-        ].map((s, i) => (
+          { label: 'Total',         value: stats.totalConges,    color: 'blue' },
+          { label: 'En att. manager', value: stats.enAttente,    color: 'amber', hide: stats.enAttente === 0 && stats.enAttenteAdmin === 0 },
+          { label: 'En att. admin', value: stats.enAttenteAdmin, color: 'amber', hide: stats.enAttenteAdmin === 0 },
+          { label: 'Approuvés',     value: stats.valides,        color: 'green' },
+          { label: 'Refusés',       value: stats.refuses,        color: 'red' },
+        ].filter(s => !s.hide).map((s, i) => (
           <div key={i} className={`stat-card ${s.color}`}>
             <div className="stat-label">{s.label}</div>
             <div className={`stat-value ${s.color}`}>{s.value}</div>
@@ -310,10 +313,11 @@ const DashboardPage = () => {
 
         {/* Manager */}
         {user?.role === 'manager' && [
-          { label: 'Total équipe', value: stats.totalConges, color: 'blue' },
-          { label: 'Validés',      value: stats.valides,     color: 'green' },
-          { label: 'Refusés',      value: stats.refuses,     color: 'red' },
-        ].map((s, i) => (
+          { label: 'Total équipe',  value: stats.totalConges,    color: 'blue' },
+          { label: 'En att. admin', value: stats.enAttenteAdmin, color: 'amber', hide: stats.enAttenteAdmin === 0 },
+          { label: 'Approuvés',     value: stats.valides,        color: 'green' },
+          { label: 'Refusés',       value: stats.refuses,        color: 'red' },
+        ].filter(s => !s.hide).map((s, i) => (
           <div key={i} className={`stat-card ${s.color}`}>
             <div className="stat-label">{s.label}</div>
             <div className={`stat-value ${s.color}`}>{s.value}</div>
