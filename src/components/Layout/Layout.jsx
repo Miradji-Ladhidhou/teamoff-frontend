@@ -174,7 +174,7 @@ const Layout = () => {
           <span className="topbar-logo">Team<span>Off</span></span>
           <div className="d-flex align-items-center gap-2">
             <button className="topbar-icon-btn position-relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
-              <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />
+              <FaBell size={14} style={{ color: 'var(--dk-text-soft)' }} />
               {unreadCount > 0 && (
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
                   {unreadCount > 99 ? '99+' : unreadCount}
