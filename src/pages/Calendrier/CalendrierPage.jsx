@@ -533,53 +533,14 @@ const CalendrierPage = () => {
       </Card>
 
       {/* Légende */}
-      <Card className="calendar-legend-card">
-        <Card.Body>
-          <h6 className="mb-3">Légende</h6>
-          <Row className="calendar-legend-grid">
-            <Col md={6}>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-success me-2"></div>
-                <small>Congé validé final</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-warning me-2"></div>
-                <small>Congé en attente manager</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-danger me-2"></div>
-                <small>Congé refusé</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-info me-2"></div>
-                <small>Congé validé manager</small>
-              </div>
-            </Col>
-            <Col md={6}>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-primary me-2"></div>
-                <small>Absence exceptionnelle</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color bg-success me-2"></div>
-                <small>Absence maladie</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color legend-color-holiday me-2"></div>
-                <small>Jour férié</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color legend-color-blocked me-2"></div>
-                <small>Date bloquée</small>
-              </div>
-              <div className="calendar-legend-row">
-                <div className="legend-color border border-primary me-2"></div>
-                <small>Aujourd'hui</small>
-              </div>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      <div className="calendar-legend-bar">
+        <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Approuvé</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-warning"></span>En attente</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-holiday"></span>Jour férié</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-today"></span>Aujourd'hui</span>
+      </div>
 
       <Modal show={showEventDetailsModal} onHide={closeEventDetailsModal} centered>
         <Modal.Header closeButton>

@@ -36,6 +36,41 @@
   overflow: hidden;
 }
 
+/* ── Légende compacte en ligne ── */
+.calendar-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 10px 4px 4px;
+}
+
+.calendar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--dk-text-soft);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot-holiday {
+  background: rgba(245, 158, 11, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.7);
+}
+
+.legend-dot-today {
+  background: transparent;
+  border: 2px solid var(--dk-accent);
+}
+
 .calendar-shell-card__body {
   max-width: 100%;
   overflow-x: auto;
