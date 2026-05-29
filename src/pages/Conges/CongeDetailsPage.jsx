@@ -412,8 +412,11 @@ const CongeDetailsPage = () => {
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
-                    {formatDateShort(conge.date_debut)} → {formatDateShort(conge.date_fin)}
-                    {conge.debut_demi_journee && <span style={{ fontWeight: 400, marginLeft: 4 }}>({conge.debut_demi_journee === 'matin' ? 'Matin' : 'Après-midi'})</span>}
+                    {formatDateShort(conge.date_debut)}
+                    {conge.debut_demi_journee && <span style={{ fontWeight: 400, fontSize: '11px', marginLeft: 3 }}>({conge.debut_demi_journee === 'apres_midi' ? 'après-midi' : 'matin'})</span>}
+                    {' → '}
+                    {formatDateShort(conge.date_fin)}
+                    {conge.fin_demi_journee && <span style={{ fontWeight: 400, fontSize: '11px', marginLeft: 3 }}>({conge.fin_demi_journee === 'apres_midi' ? 'après-midi' : 'matin'})</span>}
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
                     {conge.jours_pris ?? conge.nombre_jours ?? conge.jours_calcules ?? '-'} jour(s)
