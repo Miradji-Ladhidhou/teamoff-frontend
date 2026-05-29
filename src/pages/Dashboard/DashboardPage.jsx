@@ -68,15 +68,15 @@ const DashboardPage = () => {
           congesParams.utilisateur_id = user.id;
         }
 
-        const requests = [
+        const isAdminRole = ['admin_entreprise', 'super_admin'].includes(user?.role);
+
+        const [congesResponse, notificationsResponse, policyResponse] = await Promise.all([
           congesService.getAll(congesParams),
           notificationsService.getAll({ limit: 5 }),
-        ];
-        if (user?.entreprise_id) {
-          requests.push(entreprisesService.getPolitique(user.entreprise_id));
-        }
-
-        const [congesResponse, notificationsResponse, policyResponse] = await Promise.all(requests);
+          isAdminRole && user?.entreprise_id
+            ? entreprisesService.getPolitique(user.entreprise_id).catch(() => null)
+            : Promise.resolve(null),
+        ]);
 
         const conges = Array.isArray(congesResponse.data?.items) ? congesResponse.data.items : (Array.isArray(congesResponse.data) ? congesResponse.data : []);
         const notifs = Array.isArray(notificationsResponse.data?.items) ? notificationsResponse.data.items : [];
