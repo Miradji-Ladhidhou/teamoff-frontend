@@ -539,7 +539,6 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-today"></span>Aujourd'hui</span>
       </div>
 
       <Modal show={showEventDetailsModal} onHide={closeEventDetailsModal} centered>
