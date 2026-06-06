@@ -382,8 +382,8 @@
   }
 
   .calendar-event {
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
     min-width: 8px;
     padding: 0;
     border-radius: 999px;
