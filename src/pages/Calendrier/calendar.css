@@ -381,15 +381,16 @@
     min-height: 10px;
   }
 
-  .calendar-event {
+.calendar-event {
     width: 100%;
     height: auto;
     min-width: 0;
+
     padding: 1px 2px;
-    border-radius: 4px;
+    border-radius: 3px;
 
     font-size: 7px;
-    line-height: 1.1;
+    line-height: 1;
 
     overflow: hidden;
     text-overflow: ellipsis;
@@ -399,7 +400,7 @@
   .calendar-event small {
     display: block;
     font-size: 7px;
-    line-height: 1.1;
+    line-height: 1;
   }
 
   .calendar-event-more {
