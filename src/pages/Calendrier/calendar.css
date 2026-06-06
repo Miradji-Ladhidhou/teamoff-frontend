@@ -381,27 +381,20 @@
     min-height: 10px;
   }
 
-.calendar-event {
-    width: 100%;
-    height: auto;
-    min-width: 0;
-
-    padding: 1px 2px;
-    border-radius: 3px;
-
-    font-size: 7px;
-    line-height: 1;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
+ /*  .calendar-event {
+    width: 14px;
+    height: 14px;
+    min-width: 8px;
+    padding: 0;
+    border-radius: 999px;
     white-space: nowrap;
+    font-size: 0;
+    line-height: 0;
   }
 
   .calendar-event small {
-    display: block;
-    font-size: 7px;
-    line-height: 1;
-  }
+    display: none;
+  } */
 
   .calendar-event-more {
     padding: 0 3px;
