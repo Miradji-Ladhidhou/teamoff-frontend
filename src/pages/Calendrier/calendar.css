@@ -382,18 +382,24 @@
   }
 
   .calendar-event {
-    width: 14px;
-    height: 14px;
-    min-width: 8px;
-    padding: 0;
-    border-radius: 999px;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    padding: 1px 2px;
+    border-radius: 4px;
+
+    font-size: 7px;
+    line-height: 1.1;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0;
-    line-height: 0;
   }
 
   .calendar-event small {
-    display: none;
+    display: block;
+    font-size: 7px;
+    line-height: 1.1;
   }
 
   .calendar-event-more {
