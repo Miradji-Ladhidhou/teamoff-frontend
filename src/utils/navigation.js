@@ -17,7 +17,7 @@ export const roleNavigation = {
   ],
   manager: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
-    { path: '/conges-equipe', label: 'Congés eq.', icon: 'leave', section: 'primary' },
+    { path: '/conges-equipe', label: 'Congés equipe', icon: 'leave', section: 'primary' },
     { path: '/absences', label: 'Absences', icon: 'calendar', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
