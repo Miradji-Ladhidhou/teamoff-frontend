@@ -381,9 +381,9 @@
     min-height: 10px;
   }
 
- /*  .calendar-event {
-    width: 14px;
-    height: 14px;
+  .calendar-event {
+    width: 20px;
+    height: 20px;
     min-width: 8px;
     padding: 0;
     border-radius: 999px;
@@ -394,7 +394,7 @@
 
   .calendar-event small {
     display: none;
-  } */
+  }
 
   .calendar-event-more {
     padding: 0 3px;
