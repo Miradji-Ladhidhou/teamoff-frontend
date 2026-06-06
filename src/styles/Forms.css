@@ -21,7 +21,7 @@
 .form-select:focus {
   background-color: var(--dk-elevated) !important;
   border-color: var(--dk-accent) !important;
-  color: var(--dk-text) !important;
+  color: #ffffff !important;
   box-shadow: 0 0 0 0.2rem var(--dk-accent-border) !important;
   outline: none;
 }
