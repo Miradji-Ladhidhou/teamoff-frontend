@@ -88,6 +88,9 @@
   --dk-nav-text-active:  #111827;
   --dk-nav-border:       rgba(0,0,0,0.08);
 
+  /* ── Native accent color (checkboxes, radios, sliders) ── */
+  accent-color: var(--dk-accent);
+
   /* ── Shorthand aliases ────────────────────────── */
   --bg:            var(--dk-bg);
   --surface:       var(--dk-surface);

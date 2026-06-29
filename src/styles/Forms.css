@@ -19,11 +19,17 @@
 
 .form-control:focus,
 .form-select:focus {
-  background-color: var(--dk-elevated) !important;
+  background-color: var(--dk-surface) !important;
   border-color: var(--dk-accent) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 0 0.2rem var(--dk-accent-border) !important;
+  color: var(--dk-text) !important;
+  box-shadow: 0 0 0 3px var(--dk-accent-border) !important;
   outline: none;
+}
+
+/* Assure que les options du select héritent des bonnes couleurs */
+.form-select option {
+  background-color: var(--dk-surface);
+  color: var(--dk-text);
 }
 
 .form-control:disabled,
@@ -44,7 +50,13 @@
 
 .form-check-input {
   background-color: var(--dk-elevated) !important;
-  border-color: var(--dk-border) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer;
+}
+
+.form-check-input:focus {
+  border-color: var(--dk-accent) !important;
+  box-shadow: 0 0 0 3px var(--dk-accent-border) !important;
 }
 
 .form-check-input:checked {
@@ -53,11 +65,12 @@
 }
 
 .form-check-label {
-  color: var(--dk-text-soft);
+  color: var(--dk-text);
+  cursor: pointer;
 }
 
 .input-group-text {
-  background-color: var(--dk-surface) !important;
+  background-color: var(--dk-elevated) !important;
   border-color: var(--dk-border) !important;
   color: var(--dk-text-soft) !important;
 }

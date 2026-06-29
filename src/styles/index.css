@@ -224,10 +224,10 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-.status-badge--pending  { background: rgba(240,168,85,0.15);   color: #f0a855; border: 1px solid rgba(240,168,85,0.25); }
-.status-badge--success  { background: rgba(52,211,153,0.12);   color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
-.status-badge--danger   { background: rgba(248,113,113,0.12);  color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
-.status-badge--info     { background: rgba(91,141,238,0.12);   color: #5b8dee; border: 1px solid rgba(91,141,238,0.25); }
+.status-badge--pending  { background: var(--dk-warning-bg);    color: var(--dk-warning);  border: 1px solid rgba(217,119,6,0.25); }
+.status-badge--success  { background: var(--dk-success-bg);    color: var(--dk-success);  border: 1px solid rgba(5,150,105,0.25); }
+.status-badge--danger   { background: var(--dk-error-bg);      color: var(--dk-error);    border: 1px solid rgba(220,38,38,0.25); }
+.status-badge--info     { background: var(--dk-accent-soft);   color: var(--dk-accent);   border: 1px solid var(--dk-accent-border); }
 
 /* ────────────── Page title bar (main page header) ────────────── */
 .page-title-bar {
@@ -344,6 +344,65 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.7rem;
   color: var(--dk-text-muted);
   flex-shrink: 0;
+}
+
+/* ────────────── Pagination globale ────────────── */
+.pagination .page-link {
+  background-color: var(--dk-surface);
+  border-color: var(--dk-border);
+  color: var(--dk-text-soft);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.pagination .page-link:hover {
+  background-color: var(--dk-elevated);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--role-accent, var(--dk-accent));
+  border-color: var(--role-accent, var(--dk-accent));
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: var(--dk-surface);
+  color: var(--dk-text-muted);
+  border-color: var(--dk-border);
+}
+
+/* ────────────── Dropdowns globaux ────────────── */
+.dropdown-menu {
+  background-color: var(--dk-surface) !important;
+  border: 1px solid var(--dk-border) !important;
+  box-shadow: var(--dk-shadow-md) !important;
+  border-radius: var(--card-radius) !important;
+  padding: 0.35rem !important;
+}
+
+.dropdown-item {
+  color: var(--dk-text) !important;
+  border-radius: 6px !important;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.75rem !important;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--dk-elevated) !important;
+  color: var(--dk-text) !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--dk-accent-soft) !important;
+  color: var(--dk-accent) !important;
+}
+
+.dropdown-divider {
+  border-color: var(--dk-border) !important;
 }
 
 /* ────────────── Bootstrap dark-theme overrides ────────────── */

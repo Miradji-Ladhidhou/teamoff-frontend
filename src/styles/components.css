@@ -317,7 +317,8 @@
 
 .input:focus {
   border-color: var(--accent-blue, var(--dk-accent));
-  box-shadow: 0 0 0 3px rgba(91,141,238,0.15);
+  box-shadow: 0 0 0 3px var(--dk-accent-border);
+  color: var(--dk-text);
 }
 
 /* ────────────── Flat section utilities (card replacement) ────────────── */

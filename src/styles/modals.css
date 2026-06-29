@@ -245,7 +245,8 @@
 .modal-body .form-control:focus,
 .modal-body .form-select:focus {
   border-color: var(--dk-accent);
-  box-shadow: 0 0 0 0.2rem rgba(91, 141, 238, 0.22);
+  color: var(--dk-text) !important;
+  box-shadow: 0 0 0 3px var(--dk-accent-border);
 }
 
 /* ==================== MODAL FOOTER ==================== */
