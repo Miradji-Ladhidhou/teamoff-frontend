@@ -16,6 +16,7 @@ import {
   FaThLarge,
   FaCalendarTimes,
   FaCoins,
+  FaHistory,
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -37,6 +38,7 @@ const iconMap = {
   holiday: FaCalendarTimes,
   more: FaEllipsisH,
   balance: FaCoins,
+  history: FaHistory,
 };
 
 const roleLabel = {

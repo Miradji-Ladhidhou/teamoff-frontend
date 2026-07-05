@@ -40,6 +40,7 @@ const PrivacyPage = lazy(() => import('./pages/Privacy/PrivacyPage'));
 const HelpPage = lazy(() => import('./pages/Help/HelpPage'));
 const MyProfilePage = lazy(() => import('./pages/MyProfile/MyProfilePage'));
 const AbsencesPage = lazy(() => import('./pages/Absences/AbsencesPage'));
+const HistoriqueCongesPage = lazy(() => import('./pages/HistoriqueConges/HistoriqueCongesPage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
@@ -275,6 +276,7 @@ function App() {
             <Route path="/conges/nouveau" element={<NouveauCongePage />} />
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
+            <Route path="/historique-conges" element={<HistoriqueCongesPage />} />
             <Route path="/absences" element={<AbsencesPage />} />
             <Route path="/absences/equipe" element={<Navigate to="/absences" replace />} />
             <Route path="/calendrier" element={<CalendrierPage />} />

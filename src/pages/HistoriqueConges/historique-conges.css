@@ -1,0 +1,66 @@
+.historique-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.historique-balance-card {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  padding: 14px 18px;
+  box-shadow: var(--dk-shadow-sm);
+}
+
+.historique-balance-card__type {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--dk-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+
+.historique-balance-card__stats {
+  display: flex;
+  gap: 0;
+  justify-content: space-between;
+}
+
+.historique-balance-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.historique-balance-stat + .historique-balance-stat {
+  border-left: 1px solid var(--dk-border-soft);
+}
+
+.historique-balance-stat__val {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--dk-text);
+  line-height: 1.1;
+}
+
+.historique-balance-stat__lbl {
+  font-size: 0.65rem;
+  color: var(--dk-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+@media (max-width: 575.98px) {
+  .historique-balance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .historique-balance-stat__val {
+    font-size: 1.1rem;
+  }
+}
