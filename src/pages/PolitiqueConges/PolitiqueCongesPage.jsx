@@ -11,6 +11,9 @@ import SectionTabs from './components/SectionTabs';
 import GeneralRulesSection from './components/GeneralRulesSection';
 import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
+import BlockedDaysSection from './components/BlockedDaysSection';
+import NotificationsSection from './components/NotificationsSection';
+import AccrualSection from './components/AccrualSection';
 
 const DEFAULT_POLICY = {
   overlap_policy: 'block',
@@ -28,6 +31,19 @@ const DEFAULT_POLICY = {
     by_service: {},
   },
   service_policies: {},
+  blocked_days: {
+    exclude_weekends: true,
+    exclude_holidays: true,
+    count_saturday: false,
+    count_sunday: false,
+    specific_dates: [],
+  },
+  accrual_by_type: {},
+  notification_settings: {
+    on_create: true,
+    on_validate: true,
+    on_reject: true,
+  },
 };
 
 const DEFAULT_SERVICE_POLICY = {
@@ -536,6 +552,18 @@ const PolitiqueCongesPage = () => {
             leavePolicy={leavePolicy}
             setLeavePolicy={setLeavePolicy}
           />
+        )}
+
+        {isSectionVisible('jours') && (
+          <BlockedDaysSection policy={policy} setPolicy={setPolicy} />
+        )}
+
+        {isSectionVisible('notifications') && (
+          <NotificationsSection policy={policy} setPolicy={setPolicy} />
+        )}
+
+        {isSectionVisible('acquisition') && (
+          <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
         )}
 
         {isSectionVisible('services') && (
