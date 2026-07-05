@@ -38,7 +38,10 @@ const NouveauCongePage = () => {
   const [loadingData, setLoadingData] = useState(true);
   const alert = useAlert();
   const [validationErrors, setValidationErrors] = useState({});
-  const [joursCalcules, setJoursCalcules] = useState(0);
+  const [joursCalcules, setJoursCalcules] = useState(null);
+  const [joursPolitique, setJoursPolitique] = useState(null);
+  const [calculLoading, setCalculLoading] = useState(false);
+  const calcDebounceRef = useRef(null);
   const [initialCongeStatut, setInitialCongeStatut] = useState(null);
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
   const [formDirty, setFormDirty] = useState(false);
@@ -66,11 +69,31 @@ const NouveauCongePage = () => {
   }, [id, user?.id, user?.role]);
 
   useEffect(() => {
-    if (formData.date_debut && formData.date_fin && formData.conge_type_id) {
-      calculateJours();
-    } else if (!formData.conge_type_id) {
-      setJoursCalcules(0);
+    if (!formData.date_debut || !formData.date_fin || !formData.conge_type_id) {
+      setJoursCalcules(null);
+      setJoursPolitique(null);
+      return;
     }
+    clearTimeout(calcDebounceRef.current);
+    calcDebounceRef.current = setTimeout(async () => {
+      try {
+        setCalculLoading(true);
+        const res = await congesService.calculateDays({
+          date_debut: formData.date_debut,
+          date_fin: formData.date_fin,
+          debut_demi_journee: formData.debut_demi_journee || 'matin',
+          fin_demi_journee: formData.fin_demi_journee || 'apres_midi',
+        });
+        setJoursCalcules(res.data.jours);
+        setJoursPolitique(res.data.politique);
+      } catch {
+        setJoursCalcules(null);
+        setJoursPolitique(null);
+      } finally {
+        setCalculLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(calcDebounceRef.current);
   }, [formData.date_debut, formData.date_fin, formData.debut_demi_journee, formData.fin_demi_journee, formData.conge_type_id]);
 
   const loadInitialData = async () => {
@@ -130,31 +153,6 @@ const NouveauCongePage = () => {
       alert.error('Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);
-    }
-  };
-
-  const calculateJours = async () => {
-    try {
-      // Simulation du calcul côté frontend (idéalement faire un appel API)
-      const start = new Date(formData.date_debut);
-      const end = new Date(formData.date_fin);
-      let jours = 0;
-
-      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-        const dayOfWeek = date.getDay();
-        // Compter seulement les jours ouvrés (lundi à vendredi)
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-          jours++;
-        }
-      }
-
-      // Ajuster pour les demi-journées
-      if (formData.debut_demi_journee === 'apres_midi') jours -= 0.5;
-      if (formData.fin_demi_journee === 'matin') jours -= 0.5;
-
-      setJoursCalcules(jours);
-    } catch (err) {
-      console.error('Erreur lors du calcul des jours:', err);
     }
   };
 
@@ -556,11 +554,29 @@ const NouveauCongePage = () => {
             )}
 
             {/* Récap jours calculés */}
-            {joursCalcules > 0 && (
+            {(formData.date_debut && formData.date_fin && formData.conge_type_id) && (
               <div className="nc-days-preview">
-                <span className="nc-days-preview__count">{joursCalcules}</span>
-                <span className="nc-days-preview__label">jour{joursCalcules > 1 ? 's' : ''} ouvré{joursCalcules > 1 ? 's' : ''}</span>
-                <span className="nc-days-preview__note">(estimation — jours fériés déduits par le serveur)</span>
+                {calculLoading ? (
+                  <><Spinner animation="border" size="sm" className="me-2" /><span className="nc-days-preview__note">Calcul en cours…</span></>
+                ) : joursCalcules !== null ? (
+                  <>
+                    <span className="nc-days-preview__count">{joursCalcules}</span>
+                    <span className="nc-days-preview__label">jour{joursCalcules !== 1 ? 's' : ''} décomptés</span>
+                    {joursPolitique && (
+                      <div className="nc-politique-tags">
+                        <span className={`nc-policy-tag nc-policy-tag--${joursPolitique.count_saturday ? 'on' : 'off'}`}>
+                          Sam. {joursPolitique.count_saturday ? 'compté' : 'exclu'}
+                        </span>
+                        <span className={`nc-policy-tag nc-policy-tag--${joursPolitique.count_sunday ? 'on' : 'off'}`}>
+                          Dim. {joursPolitique.count_sunday ? 'compté' : 'exclu'}
+                        </span>
+                        <span className={`nc-policy-tag nc-policy-tag--${joursPolitique.exclude_holidays ? 'off' : 'on'}`}>
+                          J. fériés {joursPolitique.exclude_holidays ? 'exclus' : 'comptés'}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </div>
             )}
           </div>

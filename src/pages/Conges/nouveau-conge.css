@@ -178,6 +178,35 @@
   font-style: italic;
 }
 
+.nc-politique-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.nc-policy-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  letter-spacing: 0.01em;
+}
+
+.nc-policy-tag--on {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.nc-policy-tag--off {
+  background: rgba(156, 163, 175, 0.12);
+  color: var(--dk-text-muted);
+  border-color: rgba(156, 163, 175, 0.25);
+}
+
 /* ── Actions ── */
 .nc-actions {
   display: flex;
