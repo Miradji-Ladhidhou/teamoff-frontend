@@ -15,7 +15,7 @@ const LegalPage = () => {
             <Card.Header><h5 className="mb-0">Éditeur</h5></Card.Header>
             <Card.Body>
               <p><strong>Raison sociale :</strong> TeamOff SAS</p>
-              <p><strong>Responsable de publication :</strong> Ladhidhoum Miradji</p>
+              <p><strong>Responsable de publication :</strong> TeamOff SAS</p>
               <p><strong>Adresse :</strong> Allée Galabert, ZAC Moulin Joli, 97419 La Possession, La Réunion — France</p>
               <p><strong>Email :</strong> saas.teamoff@gmail.com</p>
               <p className="mb-0"><strong>Activité :</strong> Édition et exploitation d'un logiciel SaaS de gestion des congés et absences</p>
