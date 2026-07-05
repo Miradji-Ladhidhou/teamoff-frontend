@@ -218,7 +218,7 @@ const NouveauCongePage = () => {
     }
 
     // Vérifier le solde disponible
-    if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules > 0) {
+    if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
       const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
       const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
       const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
@@ -276,17 +276,14 @@ const NouveauCongePage = () => {
     return fallbackMessage;
   };
 
-  const buildPayload = (data) => {
-    const payload = {
-      conge_type_id: data.conge_type_id,
-      date_debut: data.date_debut,
-      date_fin: data.date_fin,
-      commentaire_employe: data.commentaire_employe || null,
-    };
-    if (data.debut_demi_journee) payload.debut_demi_journee = data.debut_demi_journee;
-    if (data.fin_demi_journee) payload.fin_demi_journee = data.fin_demi_journee;
-    return payload;
-  };
+  const buildPayload = (data) => ({
+    conge_type_id: data.conge_type_id,
+    date_debut: data.date_debut,
+    date_fin: data.date_fin,
+    debut_demi_journee: data.debut_demi_journee || null,
+    fin_demi_journee: data.fin_demi_journee || null,
+    commentaire_employe: data.commentaire_employe || null,
+  });
 
   const submitCreateLeave = async (precheckWarning = null) => {
     try {
