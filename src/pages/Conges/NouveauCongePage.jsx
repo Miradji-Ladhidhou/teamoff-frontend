@@ -68,6 +68,16 @@ const NouveauCongePage = () => {
     loadInitialData();
   }, [id, user?.id, user?.role]);
 
+  // When the leave type changes (or is first resolved), clear stale half-day values
+  // if the selected type doesn't allow half-days — otherwise they'd be silently sent.
+  useEffect(() => {
+    if (!formData.conge_type_id || congeTypes.length === 0) return;
+    const selectedType = congeTypes.find(t => t.id === formData.conge_type_id);
+    if (selectedType?.demi_journee_autorisee === false && (formData.debut_demi_journee || formData.fin_demi_journee)) {
+      setFormData(prev => ({ ...prev, debut_demi_journee: '', fin_demi_journee: '' }));
+    }
+  }, [formData.conge_type_id, congeTypes]);
+
   useEffect(() => {
     if (!formData.date_debut || !formData.date_fin || !formData.conge_type_id) {
       setJoursCalcules(null);
