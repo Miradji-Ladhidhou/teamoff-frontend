@@ -2,7 +2,7 @@ import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Container, Row, Col, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaFilter, FaSearch, FaChevronRight, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -70,8 +70,6 @@ const CongesPage = () => {
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
   const [rejectComment, setRejectComment] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedCongeDetails, setSelectedCongeDetails] = useState(null);
   const validateAction = useAsyncAction();
   const rejectAction = useAsyncAction();
 
@@ -294,24 +292,6 @@ const CongesPage = () => {
     setShowRejectModal(false);
     setSelectedCongeToReject(null);
     setRejectComment('');
-  };
-
-  const openDetailsModal = (conge) => {
-    setSelectedCongeDetails(conge);
-    setShowDetailsModal(true);
-  };
-
-  const closeDetailsModal = () => {
-    setShowDetailsModal(false);
-    setSelectedCongeDetails(null);
-  };
-
-  const canEditConge = (conge) => {
-    if (!conge) return false;
-    if (isAdmin()) {
-      return conge.statut === 'en_attente_manager' || conge.statut === 'valide_final';
-    }
-    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
   const canValidateConge = (conge) => {
@@ -681,9 +661,10 @@ const CongesPage = () => {
                         <td>
                           <div className="d-flex gap-1 conges-table-actions">
                             <Button
+                              as={Link}
+                              to={`/conges/${conge.id}`}
                               variant="outline-primary"
                               size="sm"
-                              onClick={() => openDetailsModal(conge)}
                             >
                               Détail
                             </Button>
@@ -847,65 +828,6 @@ const CongesPage = () => {
           >
             Rejeter
           </AsyncButton>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={showDetailsModal} onHide={closeDetailsModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Détail du congé</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedCongeDetails && (
-            <div className="d-grid gap-2 small">
-              {isAdmin() && (
-                <div>
-                  <strong>Employé:</strong> {getEmployeLabel(selectedCongeDetails)}
-                </div>
-              )}
-              {user?.role === 'super_admin' && (
-                <div>
-                  <strong>Entreprise:</strong> {getEntrepriseLabel(selectedCongeDetails)}
-                </div>
-              )}
-              <div>
-                <strong>Type:</strong> {getCongeTypeLabel(selectedCongeDetails)}
-              </div>
-              <div>
-                <strong>Période:</strong> {formatDate(selectedCongeDetails.date_debut)} - {formatDate(selectedCongeDetails.date_fin)}
-              </div>
-              <div>
-                <strong>Jours pris:</strong> {formatDays(selectedCongeDetails.jours_pris ?? selectedCongeDetails.jours_calcules)}
-              </div>
-              <div>
-                <strong>Jours restants:</strong> {formatDays(selectedCongeDetails.jours_restants)}
-              </div>
-              <div>
-                <strong>Date demande:</strong> {formatDate(selectedCongeDetails.date_demande || selectedCongeDetails.created_at || selectedCongeDetails.createdAt)}
-              </div>
-              <div>
-                <strong>Statut:</strong> {getStatusBadge(selectedCongeDetails.statut)}
-              </div>
-              {selectedCongeDetails.commentaire_employe && (
-                <div>
-                  <strong>Commentaire:</strong> {selectedCongeDetails.commentaire_employe}
-                </div>
-              )}
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          {selectedCongeDetails && canEditConge(selectedCongeDetails) && (
-            <Button
-              as={Link}
-              to={`/conges/${selectedCongeDetails.id}/edit`}
-              variant="outline-primary"
-              size="sm"
-              onClick={closeDetailsModal}
-            >
-              <FaEdit className="me-1" /> Modifier
-            </Button>
-          )}
-          <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
         </Modal.Footer>
       </Modal>
 
