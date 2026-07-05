@@ -8,31 +8,9 @@ const AbsenceForm = ({ onSuccess }) => {
   const [typeAbsence, setTypeAbsence] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
-  const [justificatif, setJustificatif] = useState(null);
   const [commentaire, setCommentaire] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
-
-  // Réinitialise le justificatif si le type change
-  const handleTypeChange = (e) => {
-    setTypeAbsence(e.target.value);
-    setJustificatif(null);
-  };
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB — correspond à la limite multer backend
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) { setJustificatif(null); return; }
-    if (file.size > MAX_FILE_SIZE) {
-      setError('Le fichier dépasse la taille maximale autorisée (5 Mo).');
-      e.target.value = '';
-      setJustificatif(null);
-      return;
-    }
-    setError('');
-    setJustificatif(file);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,11 +26,6 @@ const AbsenceForm = ({ onSuccess }) => {
       return;
     }
 
-    if (typeAbsence === 'maladie' && !justificatif) {
-      setError('Un justificatif est obligatoire pour un arrêt maladie.');
-      return;
-    }
-
     setSending(true);
 
     try {
@@ -61,15 +34,12 @@ const AbsenceForm = ({ onSuccess }) => {
       formData.append('date_debut', dateDebut);
       formData.append('date_fin', dateFin);
       formData.append('commentaire', commentaire);
-      if (justificatif) formData.append('justificatif', justificatif);
 
-      // Pas de Content-Type explicite — axios détecte FormData et pose le boundary correct
       await api.post('/absences', formData);
 
       setTypeAbsence('');
       setDateDebut('');
       setDateFin('');
-      setJustificatif(null);
       setCommentaire('');
 
       alert.success('Absence déclarée avec succès !');
@@ -88,11 +58,11 @@ const AbsenceForm = ({ onSuccess }) => {
     <form onSubmit={handleSubmit} className="absence-form">
       <div className="absence-form-fields">
         <div className="absence-form-field">
-          <label className="absence-form-label">Type d’absence *</label>
+          <label className="absence-form-label">Type d'absence *</label>
           <select
             className="absence-form-select"
             value={typeAbsence}
-            onChange={handleTypeChange}
+            onChange={(e) => setTypeAbsence(e.target.value)}
             required
           >
             <option value="">Sélectionner</option>
@@ -125,18 +95,12 @@ const AbsenceForm = ({ onSuccess }) => {
       </div>
 
       {typeAbsence === 'maladie' && (
-        <div className="absence-form-field">
-          <label className="absence-form-label">Justificatif (PDF, JPG ou PNG, 5 Mo max) *</label>
-          <input
-            className="absence-form-input"
-            type="file"
-            accept="application/pdf,image/jpeg,image/png"
-            onChange={handleFileChange}
-            required
-          />
-          <small className="absence-form-hint">
-            Le document sera transmis en pièce jointe au manager et à l'administrateur.
-          </small>
+        <div className="absence-form-notice">
+          <span className="absence-form-notice__icon">📋</span>
+          <span>
+            N'oubliez pas de déposer votre justificatif d'arrêt maladie (avis d'arrêt de travail)
+            directement auprès de votre entreprise dans les plus brefs délais.
+          </span>
         </div>
       )}
 
@@ -162,7 +126,7 @@ const AbsenceForm = ({ onSuccess }) => {
         disabled={sending}
         style={sending ? { opacity: 0.7 } : {}}
       >
-        Déclarer l’absence
+        Déclarer l'absence
       </button>
     </form>
   );

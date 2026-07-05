@@ -66,6 +66,25 @@
   resize: vertical;
 }
 
+.absence-form-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--dk-warning-bg);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: var(--input-radius);
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: var(--dk-warning);
+  line-height: 1.5;
+}
+
+.absence-form-notice__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  margin-top: 1px;
+}
+
 .absence-form-error {
   color: var(--dk-error);
   font-size: 0.84rem;
