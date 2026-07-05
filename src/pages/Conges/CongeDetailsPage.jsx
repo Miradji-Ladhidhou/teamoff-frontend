@@ -281,8 +281,11 @@ const CongeDetailsPage = () => {
 
   const canEdit = () => {
     if (!conge) return false;
-    if (isSuperAdmin && conge.statut === 'valide_final') return policyValidation.canModify;
-    if (user?.role === 'admin_entreprise' && conge.statut === 'valide_final') return policyValidation.canModify;
+    if (isSuperAdmin || user?.role === 'admin_entreprise') {
+      if (conge.statut === 'valide_final') return policyValidation.canModify;
+      if (conge.statut === 'en_attente_manager') return true;
+      return false;
+    }
     return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
