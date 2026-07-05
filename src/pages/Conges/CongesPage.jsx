@@ -2,7 +2,7 @@ import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Container, Row, Col, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch, FaChevronRight, FaEdit } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -304,6 +304,14 @@ const CongesPage = () => {
   const closeDetailsModal = () => {
     setShowDetailsModal(false);
     setSelectedCongeDetails(null);
+  };
+
+  const canEditConge = (conge) => {
+    if (!conge) return false;
+    if (isAdmin()) {
+      return conge.statut === 'en_attente_manager' || conge.statut === 'valide_final';
+    }
+    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
 
   const canValidateConge = (conge) => {
@@ -886,6 +894,17 @@ const CongesPage = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
+          {selectedCongeDetails && canEditConge(selectedCongeDetails) && (
+            <Button
+              as={Link}
+              to={`/conges/${selectedCongeDetails.id}/edit`}
+              variant="outline-primary"
+              size="sm"
+              onClick={closeDetailsModal}
+            >
+              <FaEdit className="me-1" /> Modifier
+            </Button>
+          )}
           <Button variant="secondary" onClick={closeDetailsModal}>Fermer</Button>
         </Modal.Footer>
       </Modal>
