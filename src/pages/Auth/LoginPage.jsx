@@ -13,10 +13,10 @@ import { authService } from '../../services/api';
 import './login.css';
 
 const FEATURES = [
-  { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et notifications instantanées.' },
+  { icon: FaCalendarCheck, label: 'Congés & absences', desc: 'Demandes, validations et notifications en temps réel.' },
   { icon: FaUsersCog,      label: 'Workflow d\'approbation', desc: 'Validation par le manager puis l\'administrateur.' },
-  { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, statistiques et exports CSV.' },
-  { icon: FaShieldAlt,     label: 'Sécurité & audit', desc: 'Logs d\'activité et gestion des rôles.' },
+  { icon: FaChartBar,      label: 'Tableaux de bord', desc: 'Quotas, historique, statistiques et exports CSV.' },
+  { icon: FaShieldAlt,     label: 'Sécurité & accès', desc: 'Logs d\'activité et gestion des rôles par profil.' },
 ];
 
 const STATS = [
@@ -199,7 +199,7 @@ const LoginPage = () => {
 
           {/* ── HERO ── */}
           <div className="landing-col-hero">
-            <div className="landing-badge">Gestion RH simplifiée</div>
+            <div className="landing-badge">Gestion des congés simplifiée</div>
 
             <h1 className="landing-hero__title">
               Gérez vos congés<br />
