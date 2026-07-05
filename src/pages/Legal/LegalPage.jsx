@@ -63,8 +63,8 @@ const LegalPage = () => {
           <Card>
             <Card.Header><h5 className="mb-0">Propriété intellectuelle</h5></Card.Header>
             <Card.Body>
-              <p>L'ensemble des éléments composant la plateforme TeamOff (code source, interfaces, marque, logo) est la propriété exclusive de TeamOff SAS et est protégé par les lois relatives à la propriété intellectuelle en vigueur.</p>
-              <p className="mb-0">Toute reproduction, représentation ou exploitation non autorisée de ces éléments est strictement interdite sans accord écrit préalable de TeamOff SAS.</p>
+              <p>L'ensemble des éléments composant la plateforme TeamOff (code source, interfaces, marque, logo) est la propriété exclusive de son auteur et est protégé par les lois relatives à la propriété intellectuelle en vigueur.</p>
+              <p className="mb-0">Toute reproduction, représentation ou exploitation non autorisée de ces éléments est strictement interdite sans accord écrit préalable.</p>
             </Card.Body>
           </Card>
         </Col>
