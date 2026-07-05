@@ -14,11 +14,11 @@ const LegalPage = () => {
           <Card>
             <Card.Header><h5 className="mb-0">Éditeur</h5></Card.Header>
             <Card.Body>
-              <p><strong>Raison sociale :</strong> TeamOff SAS</p>
-              <p><strong>Responsable de publication :</strong> TeamOff SAS</p>
-              <p><strong>Adresse :</strong> Allée Galabert, ZAC Moulin Joli, 97419 La Possession, La Réunion — France</p>
-              <p><strong>Email :</strong> saas.teamoff@gmail.com</p>
-              <p className="mb-0"><strong>Activité :</strong> Édition et exploitation d'un logiciel SaaS de gestion des congés et absences</p>
+              <p><strong>Nom du projet :</strong> TeamOff</p>
+              <p><strong>Nature :</strong> Projet indépendant en cours de développement — structure juridique en cours de constitution</p>
+              <p><strong>Localisation :</strong> La Réunion, France</p>
+              <p><strong>Email de contact :</strong> <a href="mailto:saas.teamoff@gmail.com">saas.teamoff@gmail.com</a></p>
+              <p className="mb-0"><strong>Activité :</strong> Développement d'un logiciel SaaS de gestion des congés et absences à destination des entreprises</p>
             </Card.Body>
           </Card>
         </Col>
