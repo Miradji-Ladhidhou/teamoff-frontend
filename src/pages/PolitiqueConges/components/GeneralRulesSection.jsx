@@ -125,6 +125,21 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
         </div>
       </div>
 
+      <div className="settings-row">
+        <div className="settings-row__info">
+          <div className="settings-row__label">Managers — accès à l'historique des employés</div>
+          <div className="settings-row__desc">Les managers peuvent consulter l'historique de congés de tous les employés. Désactiver pour qu'ils ne voient que le leur.</div>
+        </div>
+        <div className="settings-row__control">
+          <Form.Check
+            type="switch"
+            checked={Boolean(policy.manager_can_view_employee_history ?? true)}
+            onChange={(e) => setField('manager_can_view_employee_history', e.target.checked)}
+            label=""
+          />
+        </div>
+      </div>
+
     </div>
   );
 };

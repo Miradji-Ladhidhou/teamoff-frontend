@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Form, Table, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService, quotasService, usersService } from '../../services/api';
+import { congesService, quotasService, usersService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -31,7 +31,15 @@ const HistoriqueCongesPage = () => {
   const alert = useAlert();
 
   const isEmployee = user?.role === 'employe';
-  const canViewOthers = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
+  const isManager = user?.role === 'manager';
+  const isAdmin = ['admin_entreprise', 'super_admin'].includes(user?.role);
+
+  // managers_can_view_employee_history policy — loaded from backend, default true
+  const [managerCanView, setManagerCanView] = useState(true);
+  const [policyLoaded, setPolicyLoaded] = useState(false);
+
+  // Effective permission: admin always yes, manager depends on policy, employee no
+  const canViewOthers = isAdmin || (isManager && managerCanView);
 
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [selectedUserId, setSelectedUserId] = useState(isEmployee ? (user?.id || '') : '');
@@ -41,6 +49,29 @@ const HistoriqueCongesPage = () => {
   const [leaves, setLeaves] = useState([]);
   const [balance, setBalance] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Load company policy to check manager_can_view_employee_history
+  useEffect(() => {
+    if (!user?.entreprise_id || isEmployee) {
+      setPolicyLoaded(true);
+      return;
+    }
+    entreprisesService.getPolitique(user.entreprise_id)
+      .then((resp) => {
+        const pol = resp.data?.politique_conges || resp.data || {};
+        // default true when the key is absent (backwards compatible)
+        setManagerCanView(pol.manager_can_view_employee_history !== false);
+      })
+      .catch(() => {})
+      .finally(() => setPolicyLoaded(true));
+  }, [user?.entreprise_id, isEmployee]);
+
+  // When policy restricts manager, reset to own history
+  useEffect(() => {
+    if (isManager && !managerCanView && selectedUserId !== user?.id) {
+      setSelectedUserId(user?.id || '');
+    }
+  }, [isManager, managerCanView, user?.id]);
 
   // Load users for manager/admin dropdown
   useEffect(() => {
@@ -60,7 +91,8 @@ const HistoriqueCongesPage = () => {
   }, [canViewOthers]);
 
   const loadData = useCallback(async () => {
-    const userId = isEmployee ? user?.id : selectedUserId;
+    if (!policyLoaded) return;
+    const userId = (isEmployee || (isManager && !managerCanView)) ? user?.id : selectedUserId;
     setLoading(true);
     try {
       const params = { limit: 200, annee: selectedYear };
@@ -86,7 +118,7 @@ const HistoriqueCongesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [isEmployee, user?.id, selectedUserId, selectedYear]);
+  }, [isEmployee, isManager, managerCanView, policyLoaded, user?.id, selectedUserId, selectedYear]);
 
   useEffect(() => {
     loadData();

@@ -31,6 +31,7 @@ const DEFAULT_POLICY = {
     by_service: {},
   },
   service_policies: {},
+  manager_can_view_employee_history: true,
   blocked_days: {
     exclude_weekends: true,
     exclude_holidays: true,
