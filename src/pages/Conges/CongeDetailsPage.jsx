@@ -107,6 +107,13 @@ const CongeDetailsPage = () => {
         return;
       }
 
+      // admin_entreprise et super_admin peuvent toujours modifier/annuler
+      // un congé validé — la politique s'applique uniquement aux employés/managers
+      if (isAdminLevel) {
+        setPolicyValidation({ loading: false, canModify: true, canCancel: true, reason: null, code: null });
+        return;
+      }
+
       setPolicyValidation((prev) => ({ ...prev, loading: true }));
       const [modifyResult, cancelResult] = await Promise.all([
         validateModification({ congeId: conge.id, congeStatus: conge.statut, congeStartDate: conge.date_debut }),
