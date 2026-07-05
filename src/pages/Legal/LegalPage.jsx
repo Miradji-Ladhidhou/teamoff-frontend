@@ -15,33 +15,56 @@ const LegalPage = () => {
             <Card.Header><h5 className="mb-0">Éditeur</h5></Card.Header>
             <Card.Body>
               <p><strong>Raison sociale :</strong> TeamOff SAS</p>
-              <p><strong>Responsable de publication :</strong> TeamOff SaaS</p>
-              <p><strong>Adresse :</strong> Allée Galabert Zac Moulin Joli 97419 La Possession</p>
-              <p className="mb-0"><strong>Contact juridique :</strong> saas.teamoff@gmail.com</p>
+              <p><strong>Responsable de publication :</strong> Ladhidhoum Miradji</p>
+              <p><strong>Adresse :</strong> Allée Galabert, ZAC Moulin Joli, 97419 La Possession, La Réunion — France</p>
+              <p><strong>Email :</strong> saas.teamoff@gmail.com</p>
+              <p className="mb-0"><strong>Activité :</strong> Édition et exploitation d'un logiciel SaaS de gestion des congés et absences</p>
             </Card.Body>
           </Card>
         </Col>
+
         <Col lg={6} className="mb-4">
           <Card>
             <Card.Header><h5 className="mb-0">Hébergement</h5></Card.Header>
             <Card.Body>
-              <p><strong>Hébergeur frontend :</strong> Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA</p>
-              <p><strong>Hébergeur backend :</strong> Render, 1001 Page St, San Francisco, CA 94117, USA</p>
-              <p><strong>Base de données :</strong> Neon, 228 Park Ave S, PMB 77235, New York, NY 10003-1502, USA</p>
-              <p><strong>Contact Vercel :</strong> privacy@vercel.com</p>
-              <p><strong>Contact Render :</strong> support@render.com</p>
-              <p className="mb-0"><strong>Contact Neon :</strong> support@neon.tech</p>
+              <p>
+                <strong>Frontend :</strong> Vercel Inc.<br />
+                440 N Barranca Ave #4133, Covina, CA 91723, USA<br />
+                <a href="mailto:privacy@vercel.com">privacy@vercel.com</a>
+              </p>
+              <p>
+                <strong>Backend (API) :</strong> Render Services Inc.<br />
+                1001 Page St, San Francisco, CA 94117, USA<br />
+                <a href="mailto:support@render.com">support@render.com</a>
+              </p>
+              <p className="mb-0">
+                <strong>Base de données :</strong> Supabase Inc.<br />
+                595 Pacific Ave., Floor 4, San Francisco, CA 94133, USA<br />
+                <a href="mailto:privacy@supabase.com">privacy@supabase.com</a>
+              </p>
             </Card.Body>
           </Card>
         </Col>
+
         <Col lg={12} className="mb-4">
           <Card>
-            <Card.Header><h5 className="mb-0">Conditions d'usage</h5></Card.Header>
+            <Card.Header><h5 className="mb-0">Conditions d'utilisation</h5></Card.Header>
             <Card.Body>
-              <p>La plateforme est destinée à la gestion des congés, des validations et des référentiels RH associés.</p>
-              <p>Les utilisateurs s'engagent à préserver la confidentialité de leurs accès et à n'utiliser l'application qu'à des fins professionnelles autorisées.</p>
-              <p>L'application est conçue pour fonctionner 24h/24, 7j/7, sous réserve de la disponibilité des prestataires d'hébergement.</p>
-              <p className="mb-0">Les journaux d'audit, notifications et exports peuvent être conservés selon les politiques internes de l'organisation.</p>
+              <p>La plateforme TeamOff est destinée exclusivement à la gestion des congés, des absences, des validations et des référentiels RH dans un cadre professionnel.</p>
+              <p>Les utilisateurs s'engagent à maintenir la confidentialité de leurs identifiants et à n'utiliser l'application qu'à des fins professionnelles autorisées par leur organisation.</p>
+              <p>L'accès à la plateforme est soumis à l'attribution d'un compte par un administrateur de l'entreprise. TeamOff se réserve le droit de suspendre tout accès en cas d'utilisation non conforme.</p>
+              <p>La disponibilité du service dépend des prestataires d'hébergement tiers (Vercel, Render, Supabase). TeamOff ne peut garantir une disponibilité de 100 % et décline toute responsabilité en cas d'interruption imputable à ces prestataires.</p>
+              <p className="mb-0">Les journaux d'audit, données d'export et historiques de congés sont conservés selon les paramètres définis par chaque organisation cliente, dans les limites prévues par la réglementation applicable.</p>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col lg={12} className="mb-4">
+          <Card>
+            <Card.Header><h5 className="mb-0">Propriété intellectuelle</h5></Card.Header>
+            <Card.Body>
+              <p>L'ensemble des éléments composant la plateforme TeamOff (code source, interfaces, marque, logo) est la propriété exclusive de TeamOff SAS et est protégé par les lois relatives à la propriété intellectuelle en vigueur.</p>
+              <p className="mb-0">Toute reproduction, représentation ou exploitation non autorisée de ces éléments est strictement interdite sans accord écrit préalable de TeamOff SAS.</p>
             </Card.Body>
           </Card>
         </Col>

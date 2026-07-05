@@ -11,27 +11,28 @@ const FooterAccordion = ({ darkMode = false }) => {
         <Accordion.Header>Informations utiles</Accordion.Header>
         <Accordion.Body>
           <ul className="mb-0">
-            <li><Link to="/legal" className={linkClass}>Informations légales</Link></li>
-            <li><Link to="/privacy" className={linkClass}>Confidentialité</Link></li>
-            <li><Link to="/contact" className={linkClass}>Contact</Link></li>
-            <li><Link to="/help" className={linkClass}>Centre d'aide</Link></li>
+            <li><Link to="/legal" className={linkClass}>Mentions légales</Link></li>
+            <li><Link to="/privacy" className={linkClass}>Politique de confidentialité & RGPD</Link></li>
+            <li><Link to="/contact" className={linkClass}>Contact & support</Link></li>
+            <li><Link to="/help" className={linkClass}>Centre d'aide / FAQ</Link></li>
           </ul>
         </Accordion.Body>
       </Accordion.Item>
 
       <Accordion.Item eventKey="1">
-        <Accordion.Header>Moyens de contact</Accordion.Header>
+        <Accordion.Header>Nous contacter</Accordion.Header>
         <Accordion.Body>
           <ul className="mb-0">
-            <li><strong>Email support :</strong> saas.teamoff@gmail.com</li>
-            <li><strong>Support technique :</strong> 24h/24, 7j/7</li>
-            <li><strong>Référent :</strong> TeamOff SaaS</li>
+            <li><strong>Support :</strong> <a href="mailto:saas.teamoff@gmail.com">saas.teamoff@gmail.com</a></li>
+            <li><strong>Incident technique :</strong> objet "INCIDENT" dans votre email</li>
+            <li><strong>RGPD / données personnelles :</strong> objet "RGPD"</li>
+            <li><strong>Délai de réponse :</strong> 1 à 3 jours ouvrés</li>
           </ul>
         </Accordion.Body>
       </Accordion.Item>
 
       <Accordion.Item eventKey="2">
-        <Accordion.Header>Les plus consultées</Accordion.Header>
+        <Accordion.Header>Accès rapide</Accordion.Header>
         <Accordion.Body>
           <ul className="mb-0">
             <li><Link to="/" className={linkClass}>Connexion</Link></li>
@@ -46,10 +47,14 @@ const FooterAccordion = ({ darkMode = false }) => {
         <Accordion.Header>Gages de confiance</Accordion.Header>
         <Accordion.Body>
           <ul className="mb-0">
-            <li>Contrôle des accès par rôle</li>
-            <li>Journal d'audit des actions</li>
-            <li>Sauvegardes et export des données</li>
-            <li>Confidentialité des informations collaborateurs</li>
+            <li>Contrôle d'accès strict par rôle (RBAC) — employé, manager, admin</li>
+            <li>Communications chiffrées HTTPS / TLS sur l'ensemble des échanges</li>
+            <li>Mots de passe hachés (bcrypt) — jamais stockés en clair</li>
+            <li>Authentification sécurisée par tokens JWT avec rotation automatique</li>
+            <li>Journal d'audit complet des actions sensibles</li>
+            <li>Base de données chiffrée en transit (SSL requis)</li>
+            <li>Données hébergées chez des prestataires certifiés (Vercel, Render, Supabase)</li>
+            <li>Politique RGPD conforme — droits d'accès, rectification et suppression</li>
           </ul>
         </Accordion.Body>
       </Accordion.Item>
