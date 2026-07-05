@@ -470,13 +470,29 @@ const NouveauCongePage = () => {
               const solde = getSoldeForType(formData.conge_type_id);
               if (!solde) return null;
               const disponible = Number(solde.solde_disponible ?? 0);
-              const apres = disponible - joursCalcules;
-              const enDanger = joursCalcules > 0 && apres < 0;
-              const avertissement = joursCalcules > 0 && apres >= 0 && apres < 2;
+
+              // En mode édition, les jours de la demande initiale sont déjà
+              // déduits du disponible (reserves ou acquis). On les réintègre
+              // pour afficher le vrai solde avant/après modification.
+              const origDays = isEditMode ? Number(initialCongeSnapshot?.jours_calcules || 0) : 0;
+              const origTypeId = initialCongeSnapshot?.conge_type_id || '';
+              const origYear = initialCongeSnapshot?.date_debut
+                ? new Date(initialCongeSnapshot.date_debut).getFullYear() : null;
+              const newYear = formData.date_debut
+                ? new Date(formData.date_debut).getFullYear() : null;
+              const sameCounter = isEditMode
+                && origTypeId === formData.conge_type_id
+                && origYear !== null && origYear === newYear;
+              const effectiveDisponible = sameCounter ? disponible + origDays : disponible;
+
+              const hasCalc = joursCalcules !== null && joursCalcules > 0;
+              const apres = hasCalc ? effectiveDisponible - joursCalcules : null;
+              const enDanger = hasCalc && apres < 0;
+              const avertissement = hasCalc && apres !== null && apres >= 0 && apres < 2;
               return (
                 <div className={`nc-solde-hint ${enDanger ? 'nc-solde-hint--danger' : avertissement ? 'nc-solde-hint--warn' : 'nc-solde-hint--ok'}`}>
-                  <span>{disponible.toFixed(1)} j disponibles</span>
-                  {joursCalcules > 0 && (
+                  <span>{effectiveDisponible.toFixed(1)} j disponibles</span>
+                  {hasCalc && apres !== null && (
                     <span>→ <strong>{apres.toFixed(1)} j</strong> après</span>
                   )}
                   {enDanger && <span className="nc-solde-badge">⚠ Solde insuffisant</span>}
