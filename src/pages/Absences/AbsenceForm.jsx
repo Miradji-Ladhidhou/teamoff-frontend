@@ -29,13 +29,7 @@ const AbsenceForm = ({ onSuccess }) => {
     setSending(true);
 
     try {
-      const formData = new FormData();
-      formData.append('type_absence', typeAbsence);
-      formData.append('date_debut', dateDebut);
-      formData.append('date_fin', dateFin);
-      formData.append('commentaire', commentaire);
-
-      await api.post('/absences', formData);
+      await api.post('/absences', { type_absence: typeAbsence, date_debut: dateDebut, date_fin: dateFin, commentaire });
 
       setTypeAbsence('');
       setDateDebut('');
@@ -93,16 +87,6 @@ const AbsenceForm = ({ onSuccess }) => {
           />
         </div>
       </div>
-
-      {typeAbsence === 'maladie' && (
-        <div className="absence-form-notice">
-          <span className="absence-form-notice__icon">📋</span>
-          <span>
-            N'oubliez pas de déposer votre justificatif d'arrêt maladie (avis d'arrêt de travail)
-            directement auprès de votre entreprise dans les plus brefs délais.
-          </span>
-        </div>
-      )}
 
       <div className="absence-form-field">
         <label className="absence-form-label">Commentaire *</label>

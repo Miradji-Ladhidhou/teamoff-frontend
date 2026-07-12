@@ -25,15 +25,7 @@ const AbsencesPage = () => {
       <Card className="mb-4">
         <Card.Body>
           <h2 className="h5 mb-2">Déclarer une absence</h2>
-          <ul className="mb-2">
-            <li>Un justificatif est obligatoire pour un arrêt maladie.</li>
-            <li><b>Les absences et arrêts maladie sont enregistrés immédiatement, sans validation ni refus.</b></li>
-            <li>Vous pouvez consulter l'historique et le planning ci-dessous.</li>
-          </ul>
-          <div className="alert alert-info mt-2 absence-calendar-alert">
-            <b>Note :</b> Les absences ne sont pas soumises à un workflow de validation. Elles sont ajoutées au planning dès la déclaration.<br/>
-            Pour toute correction, contactez votre manager ou l'administration.
-          </div>
+          <p className="mb-0 text-muted small">Les absences sont enregistrées immédiatement et visibles dans le planning. Pour toute correction, contactez votre manager ou l'administration.</p>
         </Card.Body>
       </Card>
 
