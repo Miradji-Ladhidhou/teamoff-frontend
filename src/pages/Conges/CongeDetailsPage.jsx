@@ -7,8 +7,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
-import useLeavePolicy from '../../hooks/useLeavePolicy';
-import { LeaveActionRestriction } from '../../components/LeaveActionRestriction';
 import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_SELF_CANCELLATION_POLICY = {
@@ -38,16 +36,8 @@ const CongeDetailsPage = () => {
   const [validationComment, setValidationComment] = useState('');
   const [validationOverlapInfo, setValidationOverlapInfo] = useState(null);
   const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
-  const [policyValidation, setPolicyValidation] = useState({
-    loading: false,
-    canModify: true,
-    canCancel: true,
-    reason: null,
-    code: null,
-  });
   const [selfCancellationPolicy, setSelfCancellationPolicy] = useState(DEFAULT_SELF_CANCELLATION_POLICY);
   const [history, setHistory] = useState([]);
-  const { validateModification, validateCancellation } = useLeavePolicy();
   const action = useAsyncAction();
 
   useEffect(() => {
@@ -90,51 +80,6 @@ const CongeDetailsPage = () => {
       cancelled = true;
     };
   }, [conge?.id, conge?.statut, id, user?.role]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const runPolicyValidation = async () => {
-      const isAdminLevel = isSuperAdmin || user?.role === 'admin_entreprise';
-
-      if (!conge || !['valide_final', 'valide_manager'].includes(conge.statut)) {
-        setPolicyValidation({ loading: false, canModify: true, canCancel: true, reason: null, code: null });
-        return;
-      }
-
-      if (!isAdminLevel) {
-        setPolicyValidation({ loading: false, canModify: false, canCancel: false, reason: null, code: null });
-        return;
-      }
-
-      // admin_entreprise et super_admin peuvent toujours modifier/annuler
-      // un congé validé — la politique s'applique uniquement aux employés/managers
-      if (isAdminLevel) {
-        setPolicyValidation({ loading: false, canModify: true, canCancel: true, reason: null, code: null });
-        return;
-      }
-
-      setPolicyValidation((prev) => ({ ...prev, loading: true }));
-      const [modifyResult, cancelResult] = await Promise.all([
-        validateModification({ congeId: conge.id, congeStatus: conge.statut, congeStartDate: conge.date_debut }),
-        validateCancellation({ congeId: conge.id, congeStatus: conge.statut, congeStartDate: conge.date_debut }),
-      ]);
-
-      if (cancelled) return;
-
-      setPolicyValidation({
-        loading: false,
-        canModify: Boolean(modifyResult?.allowed),
-        canCancel: Boolean(cancelResult?.allowed),
-        reason: modifyResult?.allowed ? cancelResult?.reason : modifyResult?.reason,
-        code: modifyResult?.allowed ? cancelResult?.code : modifyResult?.code,
-      });
-    };
-
-    runPolicyValidation();
-
-    return () => { cancelled = true; };
-  }, [conge?.id, conge?.statut, user?.role]);
 
   useEffect(() => {
     let cancelled = false;
@@ -282,9 +227,7 @@ const CongeDetailsPage = () => {
   const canEdit = () => {
     if (!conge) return false;
     if (isSuperAdmin || user?.role === 'admin_entreprise') {
-      if (conge.statut === 'valide_final') return policyValidation.canModify;
-      if (conge.statut === 'en_attente_manager') return true;
-      return false;
+      return conge.statut === 'valide_final' || conge.statut === 'en_attente_manager';
     }
     return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
   };
@@ -301,7 +244,7 @@ const CongeDetailsPage = () => {
 
     if ((isSuperAdmin || user?.role === 'admin_entreprise') &&
         (conge.statut === 'valide_final' || conge.statut === 'valide_manager')) {
-      return policyValidation.canCancel;
+      return true;
     }
 
     return false;
@@ -395,15 +338,6 @@ const CongeDetailsPage = () => {
 
       {/* Actions header (modifier / annuler) */}
       <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
-        {conge.statut === 'valide_final' && !policyValidation.loading && (
-          <LeaveActionRestriction
-            isValidated
-            canModify={policyValidation.canModify}
-            canCancel={policyValidation.canCancel}
-            reason={policyValidation.reason}
-            code={policyValidation.code}
-          />
-        )}
         {canEdit() && (
           <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
             <FaEdit className="me-1" /> Modifier

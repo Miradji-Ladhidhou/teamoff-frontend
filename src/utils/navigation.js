@@ -10,7 +10,6 @@ export const roleNavigation = {
   employe: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/mes-conges', label: 'Mes congés', icon: 'leave', section: 'primary' },
-    { path: '/historique-conges', label: 'Historique', icon: 'history', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
@@ -18,7 +17,6 @@ export const roleNavigation = {
   manager: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/conges-equipe', label: 'Congés équipe', icon: 'leave', section: 'primary' },
-    { path: '/historique-conges', label: 'Historique', icon: 'history', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
@@ -28,7 +26,6 @@ export const roleNavigation = {
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/users', label: 'Utilisateurs', icon: 'users', section: 'primary' },
     { path: '/conges', label: 'Congés', icon: 'leave', section: 'primary' },
-    { path: '/historique-conges', label: 'Historique', icon: 'history', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/politique-conges', label: 'Règles & services', icon: 'settings', section: 'secondary' },
     { path: '/soldes', label: 'Soldes', icon: 'balance', section: 'secondary' },
