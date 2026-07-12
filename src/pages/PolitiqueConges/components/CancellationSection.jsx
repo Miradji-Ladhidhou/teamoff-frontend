@@ -60,16 +60,6 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
             />
           </Form.Group>
         </Col>
-        <Col xs={12} md={6}>
-          <Form.Group>
-            <Form.Label>Rétroactivité max (jours)</Form.Label>
-            <Form.Control
-              type="number" min="0"
-              value={leavePolicy.max_backdate_days}
-              onChange={(e) => setLeavePolicy((prev) => ({ ...prev, max_backdate_days: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
       </Row>
       <Row className="g-3">
         <Col xs={12} md={6}>

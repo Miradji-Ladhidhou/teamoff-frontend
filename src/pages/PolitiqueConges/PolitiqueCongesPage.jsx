@@ -66,7 +66,6 @@ const DEFAULT_LEAVE_POLICY = {
   allow_modify_validated: false,
   allow_cancel_validated: false,
   min_notice_days: 0,
-  max_backdate_days: 0,
   require_manager_approval: true,
   require_admin_approval: true,
 };
@@ -442,7 +441,6 @@ const PolitiqueCongesPage = () => {
         allow_modify_validated: Boolean(leavePolicy.allow_modify_validated),
         allow_cancel_validated: Boolean(leavePolicy.allow_cancel_validated),
         min_notice_days: Number(leavePolicy.min_notice_days || 0),
-        max_backdate_days: Number(leavePolicy.max_backdate_days || 0),
         require_manager_approval: Boolean(leavePolicy.require_manager_approval),
         require_admin_approval: Boolean(leavePolicy.require_admin_approval),
       });

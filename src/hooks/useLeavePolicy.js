@@ -108,10 +108,6 @@ export const useLeavePolicy = () => {
 
     return {
       minNoticeText: `${policy.min_notice_days} jour(s) minimum de préavis`,
-      maxBackdateText:
-        policy.max_backdate_days > 0
-          ? `Modifications rétroactives de jusqu'à ${policy.max_backdate_days} jour(s) autorisées`
-          : 'Aucune modification rétroactive autorisée',
       requiresManagerApproval: policy.require_manager_approval,
       requiresAdminApproval: policy.require_admin_approval,
       allowsModifyValidated: policy.allow_modify_validated,
