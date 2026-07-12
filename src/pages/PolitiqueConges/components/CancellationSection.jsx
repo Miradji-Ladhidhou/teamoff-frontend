@@ -49,7 +49,7 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           />
         </Col>
       </Row>
-      <Row className="g-3 mb-3">
+      <Row className="g-3">
         <Col xs={12} md={6}>
           <Form.Group>
             <Form.Label>Préavis minimum (jours)</Form.Label>
@@ -59,26 +59,6 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
               onChange={(e) => setLeavePolicy((prev) => ({ ...prev, min_notice_days: e.target.value }))}
             />
           </Form.Group>
-        </Col>
-      </Row>
-      <Row className="g-3">
-        <Col xs={12} md={6}>
-          <Form.Check
-            type="switch"
-            id="req-manager"
-            label="Validation manager requise"
-            checked={Boolean(leavePolicy.require_manager_approval)}
-            onChange={(e) => setLeavePolicy((prev) => ({ ...prev, require_manager_approval: e.target.checked }))}
-          />
-        </Col>
-        <Col xs={12} md={6}>
-          <Form.Check
-            type="switch"
-            id="req-admin"
-            label="Validation admin requise"
-            checked={Boolean(leavePolicy.require_admin_approval)}
-            onChange={(e) => setLeavePolicy((prev) => ({ ...prev, require_admin_approval: e.target.checked }))}
-          />
         </Col>
       </Row>
     </div>

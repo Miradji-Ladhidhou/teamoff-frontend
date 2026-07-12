@@ -47,7 +47,6 @@ const NouveauCongePage = () => {
   const [formDirty, setFormDirty] = useState(false);
   const submittedRef = useRef(false);
   useUnsavedChanges(formDirty && !submittedRef.current);
-  const [showOverlapModal, setShowOverlapModal] = useState(false);
   const { validateModification } = useLeavePolicy();
   useEffect(() => {
     if (isEditMode) return;

@@ -345,8 +345,6 @@ const JoursFeriesPage = () => {
     });
   };
 
-  const importLoading = importNationalAction.isRunning;
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       weekday: 'long',

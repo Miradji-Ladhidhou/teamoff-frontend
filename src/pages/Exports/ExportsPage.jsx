@@ -1,7 +1,7 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
-import { FaDownload, FaFileExcel, FaFilePdf, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
+import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';

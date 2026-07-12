@@ -1,14 +1,9 @@
 import React from 'react';
 
 const TABS = [
-  { id: 'general',       label: 'Règles générales',   emoji: '⚙️' },
-  { id: 'cancellation',  label: 'Annulations',         emoji: '↩️' },
-  { id: 'jours',         label: 'Jours décomptés',    emoji: '📅' },
-  { id: 'notifications', label: 'Notifications',       emoji: '🔔' },
-  { id: 'acquisition',   label: 'Acquisition',         emoji: '📈' },
-  { id: 'services',      label: 'Par service',         emoji: '🏢' },
-  { id: 'timezone',      label: 'Fuseau horaire',      emoji: '🕐' },
-  { id: 'types',         label: 'Types de congés',     emoji: '📋' },
+  { id: 'conges',  label: 'Types & Quotas', emoji: '📋' },
+  { id: 'regles',  label: 'Règles',         emoji: '⚙️' },
+  { id: 'equipe',  label: 'Notifications',  emoji: '🔔' },
 ];
 
 const SectionTabs = ({ activeSection, setActiveSection }) => {

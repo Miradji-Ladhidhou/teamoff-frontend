@@ -7,11 +7,8 @@ import { Container, Card, Spinner } from 'react-bootstrap';
 const CalendrierPage = React.lazy(() => import('../Calendrier/CalendrierPage'));
 
 const AbsencesPage = () => {
-  const [refresh, setRefresh] = React.useState(false);
-  const handleSuccess = () => setRefresh(r => !r);
   const { user } = useAuth();
 
-  const canEdit = user && ['manager', 'admin_entreprise', 'super_admin'].includes(user.role);
   const canDeclareAbsence = user && ['employe', 'manager', 'admin_entreprise'].includes(user.role);
 
   return (
@@ -32,7 +29,7 @@ const AbsencesPage = () => {
       {canDeclareAbsence && (
         <Card className="mb-4">
           <Card.Body>
-            <AbsenceForm onSuccess={handleSuccess} />
+            <AbsenceForm />
           </Card.Body>
         </Card>
       )}

@@ -11,7 +11,6 @@ import SectionTabs from './components/SectionTabs';
 import GeneralRulesSection from './components/GeneralRulesSection';
 import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
-import BlockedDaysSection from './components/BlockedDaysSection';
 import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 
@@ -110,11 +109,8 @@ const PolitiqueCongesPage = () => {
   const [savingType, setSavingType] = useState(false);
   const [typeForm, setTypeForm] = useState(DEFAULT_CONGE_TYPE_FORM);
   const [timezone, setTimezone] = useState('Europe/Paris');
-  const [savingTz, setSavingTz] = useState(false);
-  const [tzError, setTzError] = useState('');
-  const [tzSuccess, setTzSuccess] = useState('');
   const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
-  const [activeSection, setActiveSection] = useState('all');
+  const [activeSection, setActiveSection] = useState('conges');
 
   const entrepriseId = user?.entreprise_id;
 
@@ -189,38 +185,16 @@ const PolitiqueCongesPage = () => {
     setSuccess('');
   }, [success, alert]);
 
-  useEffect(() => {
-    if (!tzError) return;
-    alert.showErrorModal(tzError, { title: 'Erreur', autoCloseMs: 0 });
-    setTzError('');
-  }, [tzError, alert]);
-
-  useEffect(() => {
-    if (!tzSuccess) return;
-    alert.showSuccessModal(tzSuccess, { autoCloseMs: 4000 });
-    setTzSuccess('');
-  }, [tzSuccess, alert]);
-
   const setField = (name, value) => {
     setPolicy((prev) => ({ ...prev, [name]: value }));
   };
 
-  const isSectionVisible = (section) => activeSection === 'all' || activeSection === section;
-
-  const handleSaveTimezone = async (e) => {
-    e.preventDefault();
-    setTzError('');
-    setTzSuccess('');
-    try {
-      setSavingTz(true);
-      await entreprisesService.updateParametres(entrepriseId, { timezone });
-      setTzSuccess('Fuseau horaire enregistré avec succès.');
-    } catch (err) {
-      setTzError(err.response?.data?.message || 'Erreur lors de la sauvegarde du fuseau horaire.');
-    } finally {
-      setSavingTz(false);
-    }
+  const SECTION_MAP = {
+    conges: ['types', 'acquisition'],
+    regles: ['general', 'cancellation', 'timezone'],
+    equipe: ['notifications', 'services'],
   };
+  const isSectionVisible = (section) => Boolean(SECTION_MAP[activeSection]?.includes(section));
 
   const tzPreview = (() => {
     try {
@@ -444,6 +418,7 @@ const PolitiqueCongesPage = () => {
         require_manager_approval: Boolean(leavePolicy.require_manager_approval),
         require_admin_approval: Boolean(leavePolicy.require_admin_approval),
       });
+      await entreprisesService.updateParametres(entrepriseId, { timezone });
       setSuccess('Politique de congé mise à jour avec succès.');
     } catch (err) {
       console.error('Erreur sauvegarde politique:', err);
@@ -553,16 +528,47 @@ const PolitiqueCongesPage = () => {
           />
         )}
 
-        {isSectionVisible('jours') && (
-          <BlockedDaysSection policy={policy} setPolicy={setPolicy} />
-        )}
-
         {isSectionVisible('notifications') && (
           <NotificationsSection policy={policy} setPolicy={setPolicy} />
         )}
 
         {isSectionVisible('acquisition') && (
+          <div className="mb-4">
+            <div className="section-label-title mb-3">Quotas par défaut</div>
+            <div className="settings-fields-grid">
+              <div className="settings-field">
+                <label className="settings-field__label">Congés payés annuels (jours)</label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  value={policy.conges_payes_annuels}
+                  onChange={(e) => setField('conges_payes_annuels', e.target.value)}
+                />
+              </div>
+              <div className="settings-field">
+                <label className="settings-field__label">RTT annuels (jours)</label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  value={policy.rtt_annuels}
+                  onChange={(e) => setField('rtt_annuels', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isSectionVisible('acquisition') && (
           <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
+        )}
+
+        {isSectionVisible('timezone') && (
+          <TimezoneSection
+            timezone={timezone}
+            setTimezone={setTimezone}
+            tzPreview={tzPreview}
+            timezoneOptions={TIMEZONE_OPTIONS}
+          />
         )}
 
         {isSectionVisible('services') && (
@@ -666,18 +672,6 @@ const PolitiqueCongesPage = () => {
           </AsyncButton>
         </div>
       </Form>
-
-      {/* ── Fuseau horaire ── */}
-      {isSectionVisible('timezone') && (
-        <TimezoneSection
-          timezone={timezone}
-          setTimezone={setTimezone}
-          tzPreview={tzPreview}
-          savingTz={savingTz}
-          handleSaveTimezone={handleSaveTimezone}
-          timezoneOptions={TIMEZONE_OPTIONS}
-        />
-      )}
 
       <Modal show={showTypeModal} onHide={closeTypeModal} centered>
         <Modal.Header closeButton>

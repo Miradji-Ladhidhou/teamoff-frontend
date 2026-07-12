@@ -1,6 +1,6 @@
 import './notifications.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Button, Spinner, Pagination, Form } from 'react-bootstrap';
+import { Container, Button, Spinner, Form } from 'react-bootstrap';
 import { FaBell, FaCheck, FaCheckDouble } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';

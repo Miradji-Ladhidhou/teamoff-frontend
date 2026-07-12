@@ -219,14 +219,6 @@ const CalendrierPage = () => {
     return [...mappedConges, ...mappedAbsences];
   };
 
-  const isJourFerie = (date) => {
-    return joursFeries.some(jf => {
-      const jfDate = normalizeLocalDate(jf.date);
-      const currentDate = normalizeLocalDate(date);
-      return jfDate?.getTime() === currentDate?.getTime();
-    });
-  };
-
   const getJourFerieForDay = (date) => {
     return joursFeries.find(jf => {
       const jfDate = normalizeLocalDate(jf.date);

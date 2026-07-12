@@ -16,7 +16,6 @@ import {
   FaThLarge,
   FaCalendarTimes,
   FaCoins,
-  FaHistory,
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -38,7 +37,6 @@ const iconMap = {
   holiday: FaCalendarTimes,
   more: FaEllipsisH,
   balance: FaCoins,
-  history: FaHistory,
 };
 
 const roleLabel = {
@@ -47,20 +45,6 @@ const roleLabel = {
   admin_entreprise: 'Admin entreprise',
 };
 
-const topbarNotes = {
-  '/dashboard': 'Consultez votre vue d ensemble',
-  '/mes-conges': 'Suivez vos demandes de conges',
-  '/conges-equipe': 'Validez les conges de votre equipe',
-  '/conges': 'Gerez les conges de l entreprise',
-  '/users': 'Administrez les comptes utilisateurs',
-  '/absences': 'Suivez les absences en cours',
-  '/calendrier': 'Visualisez le planning global',
-  '/politique-conges': 'Parametrez regles et services',
-  '/jours-feries': 'Configurez les jours speciaux',
-  '/exports': 'Exportez vos donnees rapidement',
-  '/notifications': 'Consultez les alertes importantes',
-  '/help': 'Accedez a l aide contextuelle',
-};
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -98,12 +82,6 @@ const Layout = () => {
   const activeTitle = useMemo(() => {
     const match = navItems.find((item) => isActive(item.path));
     return match?.label || 'TeamOff';
-  }, [navItems, location.pathname]);
-
-  const topbarNote = useMemo(() => {
-    const activeItem = navItems.find((item) => isActive(item.path));
-    if (!activeItem) return 'Navigation simple';
-    return topbarNotes[activeItem.path] || `Section ${activeItem.label}`;
   }, [navItems, location.pathname]);
 
   const goTo = (path, closeSidebar = false) => {
@@ -192,7 +170,6 @@ const Layout = () => {
         {/* Desktop topbar */}
         <Navbar className="role-topbar desktop-topbar d-none d-lg-flex px-3">
           <Navbar.Brand className="mb-0">{activeTitle}</Navbar.Brand>
-          <span className="role-topbar-note ms-auto">{topbarNote}</span>
         </Navbar>
 
         <main className="page-content role-content">

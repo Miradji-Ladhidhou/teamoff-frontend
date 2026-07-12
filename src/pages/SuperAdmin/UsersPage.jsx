@@ -287,7 +287,6 @@ const UsersManagement = () => {
     });
   };
 
-  const exportLoading = exportAction.isRunning;
   const importAction = useAsyncAction();
 
   const handleImportCsv = async (e) => {

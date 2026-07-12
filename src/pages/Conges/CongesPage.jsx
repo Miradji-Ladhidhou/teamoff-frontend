@@ -53,10 +53,8 @@ const CongesPage = () => {
     dateDemandeFin: '',
     sortBy: 'date_demande',
     sortOrder: 'desc',
-    page: 1,
     limit: 10
   });
-  const [serverTotalPages, setServerTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showValidateModal, setShowValidateModal] = useState(false);
@@ -69,7 +67,6 @@ const CongesPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedCongeToReject, setSelectedCongeToReject] = useState(null);
   const [rejectComment, setRejectComment] = useState('');
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const validateAction = useAsyncAction();
   const rejectAction = useAsyncAction();
 
@@ -99,8 +96,6 @@ const CongesPage = () => {
       const response = await congesService.getAll(params);
       const items = Array.isArray(response.data?.items) ? response.data.items : (Array.isArray(response.data) ? response.data : []);
       setConges(items);
-      const total = response.data?.total ?? items.length;
-      setServerTotalPages(Math.max(Math.ceil(total / filters.limit), 1));
     } catch (err) {
       alert.error(err.response?.data?.message || 'Erreur lors du chargement des congés');
     } finally {
@@ -122,7 +117,6 @@ const CongesPage = () => {
     setFilters((prev) => ({
       ...prev,
       conge_type_id: congeTypeId,
-      page: 1
     }));
   }, [location.search]);
 
@@ -203,7 +197,6 @@ const CongesPage = () => {
     setFilters(prev => ({
       ...prev,
       [field]: value,
-      page: 1
     }));
   };
 
@@ -423,47 +416,17 @@ const CongesPage = () => {
         <Button
           variant={showFilters ? 'secondary' : 'outline-secondary'}
           size="sm"
-          onClick={() => {
-            if (showFilters) {
-              setFilters(prev => ({
-                ...prev,
-                search: '',
-                joursRestantsMin: '',
-                joursRestantsMax: '',
-                dateDemandeDebut: '',
-                dateDemandeFin: '',
-                page: 1,
-              }));
-              setCurrentPage(1);
-            }
-            setShowFilters(s => !s);
-          }}
+          onClick={() => setShowFilters(s => !s)}
           className="d-flex align-items-center flex-shrink-0"
         >
           <FaFilter className="me-2" />
-          {showFilters ? 'Fermer filtres' : 'Filtres avancés'}
+          {showFilters ? 'Masquer filtres' : 'Filtres avancés'}
         </Button>
       </div>
 
       {showFilters && (
         <div className="filters-panel mb-3">
             <Row className="g-3">
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Statut</Form.Label>
-                  <Form.Select
-                    value={filters.statut}
-                    onChange={(e) => handleFilterChange('statut', e.target.value)}
-                  >
-                    <option value="">Tous les statuts</option>
-                    <option value="en_attente_manager">En attente manager</option>
-                    <option value="valide_manager">Validé manager</option>
-                    <option value="valide_final">Validé final</option>
-                    <option value="refuse_manager">Refusé manager</option>
-                    <option value="refuse_final">Refusé final</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
               <Col md={5}>
                 <Form.Group className="mb-3">
                   <Form.Label>Recherche</Form.Label>
@@ -547,6 +510,14 @@ const CongesPage = () => {
                 </Form.Group>
               </Col>
             </Row>
+            <div className="d-flex justify-content-end">
+              <Button variant="outline-secondary" size="sm" onClick={() => {
+                setFilters(prev => ({ ...prev, search: '', joursRestantsMin: '', joursRestantsMax: '', dateDemandeDebut: '', dateDemandeFin: '' }));
+                setCurrentPage(1);
+              }}>
+                Réinitialiser
+              </Button>
+            </div>
         </div>
       )}
 
@@ -831,21 +802,6 @@ const CongesPage = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Info congés</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ul className="mb-0">
-            <li>Utilisez les filtres pour aller vite.</li>
-            <li>Cliquez sur Détail pour voir toutes les données.</li>
-            <li>Les validations/rejets restent dans les actions.</li>
-          </ul>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Fermer</Button>
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 };

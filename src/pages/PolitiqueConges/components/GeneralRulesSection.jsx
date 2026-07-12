@@ -74,28 +74,8 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
         </div>
       </div>
 
-      {/* ── Bloc 3 : Quotas & report ── */}
-      <div className="settings-fields-grid settings-fields-grid--3 mb-4">
-        <div className="settings-field">
-          <label className="settings-field__label">Congés payés annuels (jours)</label>
-          <Form.Control
-            type="number"
-            min="0"
-            value={policy.conges_payes_annuels}
-            onChange={(e) => setField('conges_payes_annuels', e.target.value)}
-          />
-        </div>
-
-        <div className="settings-field">
-          <label className="settings-field__label">RTT annuels (jours)</label>
-          <Form.Control
-            type="number"
-            min="0"
-            value={policy.rtt_annuels}
-            onChange={(e) => setField('rtt_annuels', e.target.value)}
-          />
-        </div>
-
+      {/* ── Bloc 3 : Report ── */}
+      <div className="settings-fields-grid mb-4">
         <div className="settings-field">
           <label className="settings-field__label">Report annuel max (jours)</label>
           <Form.Control

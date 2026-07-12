@@ -2,7 +2,7 @@ import './conge-details.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaUser, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';

@@ -2,7 +2,7 @@ import './dashboard.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaPlus, FaArrowRight } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
