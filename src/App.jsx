@@ -40,7 +40,6 @@ const PrivacyPage = lazy(() => import('./pages/Privacy/PrivacyPage'));
 const HelpPage = lazy(() => import('./pages/Help/HelpPage'));
 const MyProfilePage = lazy(() => import('./pages/MyProfile/MyProfilePage'));
 const AbsencesPage = lazy(() => import('./pages/Absences/AbsencesPage'));
-const HistoriqueCongesPage = lazy(() => import('./pages/HistoriqueConges/HistoriqueCongesPage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
