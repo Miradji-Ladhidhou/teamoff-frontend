@@ -366,7 +366,7 @@ const CalendrierPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="page-loading py-3">
+      <Container fluid className="page-loading py-3">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="text-muted">Chargement du calendrier...</p>
@@ -376,18 +376,18 @@ const CalendrierPage = () => {
   }
 
   return (
-    <Container fluid="sm" className="calendar-page">
+    <Container fluid className="calendar-page">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Calendrier</span>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 cal-header-actions">
           {canDeclareAbsence && (
-            <Button variant="outline-secondary" size="sm" onClick={() => setShowAbsenceModal(true)}>
-              Absence
+            <Button variant="outline-secondary" size="sm" onClick={() => setShowAbsenceModal(true)} className="cal-btn-absence">
+              <span className="cal-btn-label">Absence</span>
             </Button>
           )}
           {canCreateLeave && (
-            <Button as={Link} to="/conges/nouveau" size="sm">
-              <FaPlus className="me-1" />Congé
+            <Button as={Link} to="/conges/nouveau" size="sm" className="cal-btn-conge">
+              <FaPlus /><span className="cal-btn-label ms-1">Congé</span>
             </Button>
           )}
           <Button variant="outline-secondary" size="sm" onClick={() => setShowFilters(v => !v)}>
@@ -605,13 +605,13 @@ const CalendrierPage = () => {
               </Form.Select>
             </Form.Group>
             <Row className="g-2">
-              <Col>
+              <Col xs={12} sm={6}>
                 <Form.Group>
                   <Form.Label>Date de début *</Form.Label>
                   <Form.Control type="date" value={absenceForm.date_debut} onChange={e => setAbsenceForm(p => ({ ...p, date_debut: e.target.value }))} required />
                 </Form.Group>
               </Col>
-              <Col>
+              <Col xs={12} sm={6}>
                 <Form.Group>
                   <Form.Label>Date de fin *</Form.Label>
                   <Form.Control type="date" value={absenceForm.date_fin} onChange={e => setAbsenceForm(p => ({ ...p, date_fin: e.target.value }))} required />

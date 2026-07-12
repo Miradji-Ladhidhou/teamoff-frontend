@@ -295,8 +295,12 @@
 /* ---------------- MOBILE ---------------- */
 @media (max-width: 768px) {
   .calendar-page {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .cal-btn-label {
+    display: none;
   }
 
   .calendar-grid-wrapper {
