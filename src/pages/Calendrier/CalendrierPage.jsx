@@ -90,6 +90,10 @@ const CalendrierPage = () => {
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
+  const [showAbsenceModal, setShowAbsenceModal] = useState(false);
+  const [absenceForm, setAbsenceForm] = useState({ type_absence: '', date_debut: '', date_fin: '', commentaire: '' });
+  const [absenceSending, setAbsenceSending] = useState(false);
+  const [absenceError, setAbsenceError] = useState('');
   const [selectionStart, setSelectionStart] = useState(null);
   const [selectionEnd, setSelectionEnd] = useState(null);
   const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
@@ -99,6 +103,8 @@ const CalendrierPage = () => {
     utilisateur: 'all'
   });
   const entrepriseId = user?.entreprise_id;
+  const canDeclareAbsence = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
+  const canCreateLeave = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
 
   useEffect(() => {
     loadCalendarData();
@@ -330,6 +336,31 @@ const CalendrierPage = () => {
     setSelectedEventDetails(null);
   };
 
+  const handleAbsenceSubmit = async (e) => {
+    e.preventDefault();
+    setAbsenceError('');
+    if (!absenceForm.type_absence || !absenceForm.date_debut || !absenceForm.date_fin || !absenceForm.commentaire.trim()) {
+      setAbsenceError('Tous les champs sont obligatoires.');
+      return;
+    }
+    if (absenceForm.date_fin < absenceForm.date_debut) {
+      setAbsenceError('La date de fin doit être postérieure ou égale à la date de début.');
+      return;
+    }
+    try {
+      setAbsenceSending(true);
+      await api.post('/absences', absenceForm);
+      setShowAbsenceModal(false);
+      setAbsenceForm({ type_absence: '', date_debut: '', date_fin: '', commentaire: '' });
+      alert.success('Absence déclarée avec succès !');
+      loadCalendarData();
+    } catch (err) {
+      setAbsenceError(err.response?.data?.message || 'Erreur lors de la déclaration.');
+    } finally {
+      setAbsenceSending(false);
+    }
+  };
+
   const days = getDaysInMonth(currentDate);
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -349,6 +380,19 @@ const CalendrierPage = () => {
       <div className="page-title-bar">
         <span className="section-title-bar__text">Calendrier</span>
         <div className="d-flex gap-2">
+          {canDeclareAbsence && (
+            <Button variant="outline-secondary" size="sm" onClick={() => setShowAbsenceModal(true)}>
+              Absence
+            </Button>
+          )}
+          {canCreateLeave && (
+            <Button as={Link} to="/conges/nouveau" size="sm">
+              <FaPlus className="me-1" />Congé
+            </Button>
+          )}
+          <Button variant="outline-secondary" size="sm" onClick={() => setShowFilters(v => !v)}>
+            <FaFilter />
+          </Button>
         </div>
       </div>
 
@@ -541,6 +585,51 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
       </div>
+
+      <Modal show={showAbsenceModal} onHide={() => { setShowAbsenceModal(false); setAbsenceError(''); }} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Déclarer une absence</Modal.Title>
+        </Modal.Header>
+        <form onSubmit={handleAbsenceSubmit}>
+          <Modal.Body className="d-grid gap-3">
+            <Form.Group>
+              <Form.Label>Type d'absence *</Form.Label>
+              <Form.Select
+                value={absenceForm.type_absence}
+                onChange={e => setAbsenceForm(p => ({ ...p, type_absence: e.target.value }))}
+                required
+              >
+                <option value="">Sélectionner</option>
+                <option value="maladie">Arrêt maladie</option>
+                <option value="absence_exceptionnelle">Absence exceptionnelle</option>
+              </Form.Select>
+            </Form.Group>
+            <Row className="g-2">
+              <Col>
+                <Form.Group>
+                  <Form.Label>Date de début *</Form.Label>
+                  <Form.Control type="date" value={absenceForm.date_debut} onChange={e => setAbsenceForm(p => ({ ...p, date_debut: e.target.value }))} required />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group>
+                  <Form.Label>Date de fin *</Form.Label>
+                  <Form.Control type="date" value={absenceForm.date_fin} onChange={e => setAbsenceForm(p => ({ ...p, date_fin: e.target.value }))} required />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Form.Group>
+              <Form.Label>Commentaire *</Form.Label>
+              <Form.Control as="textarea" rows={3} value={absenceForm.commentaire} onChange={e => setAbsenceForm(p => ({ ...p, commentaire: e.target.value }))} required />
+            </Form.Group>
+            {absenceError && <div className="text-danger small">{absenceError}</div>}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => { setShowAbsenceModal(false); setAbsenceError(''); }} disabled={absenceSending}>Annuler</Button>
+            <Button type="submit" disabled={absenceSending}>{absenceSending ? 'Envoi…' : 'Déclarer'}</Button>
+          </Modal.Footer>
+        </form>
+      </Modal>
 
       <Modal show={showEventDetailsModal} onHide={closeEventDetailsModal} centered>
         <Modal.Header closeButton>
