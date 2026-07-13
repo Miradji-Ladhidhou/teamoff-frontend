@@ -227,20 +227,31 @@ export default function AttestationPage() {
         .calc-head {
           font-size: 9px; font-weight: 700; color: #1d4ed8;
           letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 10px;
+          font-family: Arial, sans-serif; margin-bottom: 4px;
+        }
+        .calc-period {
+          font-size: 10px; color: #6b7f96; font-family: Arial, sans-serif;
+          margin-bottom: 10px; font-style: italic;
         }
         .calc-row {
-          display: flex; justify-content: space-between; align-items: center;
+          display: flex; justify-content: space-between; align-items: baseline;
           padding: 4px 0;
           border-bottom: 1px solid rgba(37,99,235,0.1);
           font-size: 11px; font-family: Arial, sans-serif;
         }
         .calc-row:last-child { border-bottom: none; }
-        .calc-label { color: #4a6080; }
-        .calc-value { font-weight: 700; color: #1e3a5f; }
-        .calc-row.total { margin-top: 6px; padding-top: 6px; border-top: 2px solid #2563eb; border-bottom: none; }
+        .calc-label { color: #4a6080; line-height: 1.3; }
+        .calc-sublabel { font-size: 9px; color: #94a3b8; display: block; margin-top: 1px; }
+        .calc-value { font-weight: 700; color: #1e3a5f; white-space: nowrap; }
+        .calc-value.minus { color: #64748b; }
+        .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 6px 0; }
+        .calc-row.total { padding-top: 2px; }
         .calc-row.total .calc-label { color: #1e3a5f; font-weight: 700; }
         .calc-row.total .calc-value { color: #2563eb; font-size: 14px; }
+        .calc-note {
+          font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif;
+          font-style: italic; margin-top: 6px; line-height: 1.4;
+        }
 
         .legal-mention {
           font-size: 9px;
@@ -405,21 +416,45 @@ export default function AttestationPage() {
 
               <div className="calc-block">
                 <div className="calc-head">Décompte des jours</div>
-                <div className="calc-row">
-                  <span className="calc-label">Jours calendaires</span>
-                  <span className="calc-value">{jours.calendaires}</span>
+                <div className="calc-period">
+                  du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}
                 </div>
+
                 <div className="calc-row">
-                  <span className="calc-label">— Week-ends exclus</span>
-                  <span className="calc-value" style={{ color: '#64748b' }}>−{jours.weekend}</span>
+                  <span className="calc-label">
+                    Durée totale de la période
+                    <span className="calc-sublabel">jours calendaires</span>
+                  </span>
+                  <span className="calc-value">{jours.calendaires} j</span>
                 </div>
+
                 <div className="calc-row">
-                  <span className="calc-label">— Jours fériés exclus</span>
-                  <span className="calc-value" style={{ color: '#64748b' }}>−{jours.feries_hors_weekend}</span>
+                  <span className="calc-label">
+                    Samedis et dimanches
+                    <span className="calc-sublabel">non décomptés</span>
+                  </span>
+                  <span className="calc-value minus">−{jours.weekend} j</span>
                 </div>
+
+                {jours.feries_hors_weekend > 0 && (
+                  <div className="calc-row">
+                    <span className="calc-label">
+                      Jours fériés en semaine
+                      <span className="calc-sublabel">non décomptés</span>
+                    </span>
+                    <span className="calc-value minus">−{jours.feries_hors_weekend} j</span>
+                  </div>
+                )}
+
+                <hr className="calc-divider" />
+
                 <div className="calc-row total">
-                  <span className="calc-label">= Jours ouvrés</span>
-                  <span className="calc-value">{jours.ouvres}</span>
+                  <span className="calc-label">Jours de congé accordés</span>
+                  <span className="calc-value">{jours.ouvres} j</span>
+                </div>
+
+                <div className="calc-note">
+                  Calculé selon la politique de congés de l'entreprise
                 </div>
               </div>
 
