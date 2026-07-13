@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { alertService } from './alertService';
+import { toastService } from './toastService';
 import {
   isNotificationDisabledForCurrentRoute,
   setNotificationDisabledRoutes,
@@ -101,7 +101,7 @@ api.interceptors.response.use(
   (response) => {
     if (shouldNotify(response.config)) {
       const message = response.data?.message;
-      if (message) alertService.addToast(normalizeNotificationMessage(message, 'success'), 'success', 4000);
+      if (message) toastService.add(normalizeNotificationMessage(message, 'success'), 'success', 4000);
     }
     return response;
   },
