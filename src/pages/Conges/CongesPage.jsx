@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
+import { toastService } from '../../services/toastService';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -325,6 +326,7 @@ const CongesPage = () => {
         await congesService.validate(selectedCongeToValidate, {
           commentaire: validateComment.trim(),
         });
+        toastService.add('Congé validé avec succès.', 'success');
         closeValidateModal();
         loadConges();
       } catch (err) {
@@ -345,6 +347,7 @@ const CongesPage = () => {
     await rejectAction.run(async () => {
       try {
         await congesService.reject(selectedCongeToReject, { commentaire: rejectComment.trim() });
+        toastService.add('Congé rejeté.', 'info');
         closeRejectModal();
         loadConges();
       } catch (err) {
