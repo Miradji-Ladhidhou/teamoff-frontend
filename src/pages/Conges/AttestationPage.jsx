@@ -421,40 +421,33 @@ export default function AttestationPage() {
                 </div>
 
                 <div className="calc-row">
-                  <span className="calc-label">
-                    Durée totale de la période
-                    <span className="calc-sublabel">jours calendaires</span>
-                  </span>
-                  <span className="calc-value">{jours.calendaires} j</span>
+                  <span className="calc-label">Durée de la période</span>
+                  <span className="calc-value">{jours.calendaires} jours calendaires</span>
                 </div>
 
-                <div className="calc-row">
-                  <span className="calc-label">
-                    Samedis et dimanches
-                    <span className="calc-sublabel">non décomptés</span>
-                  </span>
-                  <span className="calc-value minus">−{jours.weekend} j</span>
-                </div>
+                {jours.weekend > 0 && (
+                  <div className="calc-row" style={{ paddingLeft: 10 }}>
+                    <span className="calc-label" style={{ fontSize: 10 }}>dont week-ends</span>
+                    <span className="calc-value minus" style={{ fontSize: 10 }}>{jours.weekend} j</span>
+                  </div>
+                )}
 
                 {jours.feries_hors_weekend > 0 && (
-                  <div className="calc-row">
-                    <span className="calc-label">
-                      Jours fériés en semaine
-                      <span className="calc-sublabel">non décomptés</span>
-                    </span>
-                    <span className="calc-value minus">−{jours.feries_hors_weekend} j</span>
+                  <div className="calc-row" style={{ paddingLeft: 10 }}>
+                    <span className="calc-label" style={{ fontSize: 10 }}>dont jours fériés en semaine</span>
+                    <span className="calc-value minus" style={{ fontSize: 10 }}>{jours.feries_hors_weekend} j</span>
                   </div>
                 )}
 
                 <hr className="calc-divider" />
 
                 <div className="calc-row total">
-                  <span className="calc-label">Jours de congé accordés</span>
-                  <span className="calc-value">{jours.ouvres} j</span>
+                  <span className="calc-label">Congé accordé</span>
+                  <span className="calc-value">{jours.ouvres} jours ouvrés</span>
                 </div>
 
                 <div className="calc-note">
-                  Calculé selon la politique de congés de l'entreprise
+                  Calculé par le système selon la politique de congés de l'entreprise (jours ouvrés, fériés exclus…)
                 </div>
               </div>
 
