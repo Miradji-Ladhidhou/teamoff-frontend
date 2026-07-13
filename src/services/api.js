@@ -60,6 +60,7 @@ const shouldNotify = (config = {}) => {
 
   const url = config.url || '';
   if (url.includes('/auth/login')) return false;
+  if (url.includes('/auth/logout')) return false;
   return true;
 };
 
