@@ -5,7 +5,6 @@ import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, congeTypesService, quotasService } from '../../services/api';
-import { toastService } from '../../services/toastService';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import useLeavePolicy from '../../hooks/useLeavePolicy';
@@ -385,7 +384,7 @@ const NouveauCongePage = () => {
         }
 
         submittedRef.current = true;
-        toastService.add(isEditMode ? 'Modification prise en compte.' : 'Demande de congé prise en compte.', 'success');
+        alert.success(isEditMode ? 'Modification prise en compte.' : 'Demande de congé prise en compte.');
         navigate(returnPath);
       } catch (err) {
         console.error(`Erreur lors de ${isEditMode ? 'la modification' : 'la création'} du congé:`, err);

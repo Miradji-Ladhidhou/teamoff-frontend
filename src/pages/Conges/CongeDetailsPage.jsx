@@ -5,7 +5,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
-import { toastService } from '../../services/toastService';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -132,7 +131,7 @@ const CongeDetailsPage = () => {
       try {
         const isFinalValidated = ['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager');
         await congesService.delete(id, isFinalValidated ? { commentaire: cancelComment.trim() } : {});
-        toastService.add('Demande de congé supprimée.', 'success');
+        alert.success('Demande de congé supprimée.');
         navigate('/conges', { replace: true });
       } catch (err) {
         console.error('Erreur lors de la suppression:', err);
@@ -149,10 +148,10 @@ const CongeDetailsPage = () => {
       try {
         if (newStatus === 'valide') {
           await congesService.validate(id, { commentaire: comment });
-          toastService.add('Congé validé avec succès.', 'success');
+          alert.success('Congé validé avec succès.');
         } else if (newStatus === 'refuse') {
           await congesService.reject(id, { commentaire: comment });
-          toastService.add('Congé refusé.', 'info');
+          alert.info('Congé refusé.');
         }
         await loadCongeDetails();
         setShowCommentModal(false);
