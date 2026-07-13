@@ -347,9 +347,9 @@ const CongeDetailsPage = () => {
       <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
         {conge?.statut === 'valide_final' && (
           <Button
-            variant="outline-secondary"
             size="sm"
             onClick={() => window.open(`/conges/${id}/attestation`, '_blank')}
+            style={{ background: '#dc2626', borderColor: '#dc2626', color: '#fff', fontWeight: 700 }}
           >
             <FaFilePdf className="me-1" /> Attestation PDF
           </Button>
