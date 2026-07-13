@@ -234,24 +234,38 @@ export default function AttestationPage() {
           margin-bottom: 10px; font-style: italic;
         }
         .calc-row {
-          display: flex; justify-content: space-between; align-items: baseline;
+          display: flex; justify-content: space-between; align-items: center;
           padding: 4px 0;
           border-bottom: 1px solid rgba(37,99,235,0.1);
           font-size: 11px; font-family: Arial, sans-serif;
         }
         .calc-row:last-child { border-bottom: none; }
-        .calc-label { color: #4a6080; line-height: 1.3; }
-        .calc-sublabel { font-size: 9px; color: #94a3b8; display: block; margin-top: 1px; }
+        .calc-label { color: #4a6080; }
         .calc-value { font-weight: 700; color: #1e3a5f; white-space: nowrap; }
-        .calc-value.minus { color: #64748b; }
         .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 6px 0; }
-        .calc-row.total { padding-top: 2px; }
         .calc-row.total .calc-label { color: #1e3a5f; font-weight: 700; }
         .calc-row.total .calc-value { color: #2563eb; font-size: 14px; }
-        .calc-note {
-          font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif;
-          font-style: italic; margin-top: 6px; line-height: 1.4;
+        .detail-section { margin: 6px 0 4px; }
+        .detail-title {
+          font-size: 9px; font-weight: 700; color: #4a6080;
+          text-transform: uppercase; letter-spacing: 0.8px;
+          font-family: Arial, sans-serif; margin-bottom: 3px;
         }
+        .detail-row {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 2px 0 2px 8px;
+          font-size: 10px; font-family: Arial, sans-serif; color: #4a6080;
+        }
+        .detail-date { flex: 1; }
+        .badge-inclus {
+          font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+          background: #dcfce7; color: #15803d;
+        }
+        .badge-exclu {
+          font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+          background: #fee2e2; color: #b91c1c;
+        }
+        .detail-none { font-size: 10px; color: #94a3b8; font-family: Arial, sans-serif; padding: 2px 0 2px 8px; font-style: italic; }
 
         .legal-mention {
           font-size: 9px;
@@ -416,28 +430,56 @@ export default function AttestationPage() {
 
               <div className="calc-block">
                 <div className="calc-head">Décompte des jours</div>
-                <div className="calc-period">
-                  du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}
-                </div>
+                <div className="calc-period">du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}</div>
 
                 <div className="calc-row">
                   <span className="calc-label">Jours calendaires</span>
                   <span className="calc-value">{jours.calendaires} j</span>
                 </div>
 
-                <div className="calc-row">
-                  <span className="calc-label">
-                    Jours exclus
-                    <span className="calc-sublabel">week-ends, fériés, non travaillés</span>
-                  </span>
-                  <span className="calc-value minus">−{jours.calendaires - jours.ouvres} j</span>
-                </div>
+                {/* Week-ends */}
+                {(() => {
+                  const weekends = jours.detail.filter(d => d.type === 'weekend');
+                  return weekends.length > 0 && (
+                    <div className="detail-section">
+                      <div className="detail-title">Week-ends</div>
+                      {weekends.map((d, i) => (
+                        <div key={i} className="detail-row">
+                          <span className="detail-date">{d.label} {fmt(d.date)}</span>
+                          {d.inclus
+                            ? <span className="badge-inclus">inclus</span>
+                            : <span className="badge-exclu">exclu</span>
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Jours fériés */}
+                {(() => {
+                  const feries = jours.detail.filter(d => d.type === 'ferie');
+                  return (
+                    <div className="detail-section">
+                      <div className="detail-title">Jours fériés</div>
+                      {feries.length === 0
+                        ? <div className="detail-none">Aucun jour férié sur la période</div>
+                        : feries.map((d, i) => (
+                          <div key={i} className="detail-row">
+                            <span className="detail-date">{d.label} — {fmt(d.date)}</span>
+                            <span className="badge-exclu">exclu</span>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  );
+                })()}
 
                 <hr className="calc-divider" />
 
                 <div className="calc-row total">
-                  <span className="calc-label">= Congé accordé</span>
-                  <span className="calc-value">{jours.ouvres} jours ouvrés</span>
+                  <span className="calc-label">= Jours de congé accordés</span>
+                  <span className="calc-value">{jours.ouvres} j</span>
                 </div>
               </div>
 
