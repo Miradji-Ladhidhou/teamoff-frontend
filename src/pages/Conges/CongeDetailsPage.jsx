@@ -622,7 +622,7 @@ const CongeDetailsPage = () => {
               {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? (
                 <><FaTimes size={11} className="me-2" />Annuler le congé</>
               ) : (
-                <><FaTrash size={11} className="me-2" />Supprimer la demande</>
+                <><FaTimes size={11} className="me-2" />Annuler la demande</>
               )}
             </button>
           )}
@@ -668,13 +668,13 @@ const CongeDetailsPage = () => {
           <Modal.Title>
             {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager')
               ? "Confirmer l'annulation"
-              : 'Confirmer la suppression'}
+              : "Confirmer l'annulation"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager')
             ? "Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l'employé sera recalculé automatiquement et il sera notifié."
-            : 'Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action est irréversible.'}
+            : "Êtes-vous sûr de vouloir annuler cette demande de congé ? Le manager sera notifié par email."}
 
           {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') && (
             <Form.Group className="mt-3">
