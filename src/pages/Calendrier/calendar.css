@@ -466,6 +466,82 @@
   }
 }
 
+/* ---------------- RÉCAP DU MOIS ---------------- */
+.cal-recap-header {
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.cal-recap-count {
+  font-weight: 700;
+  color: var(--bs-body-color);
+}
+
+.cal-recap-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-recap-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  flex-wrap: wrap;
+}
+
+.cal-recap-row:last-child {
+  border-bottom: none;
+}
+
+.cal-recap-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cal-recap-name {
+  font-weight: 600;
+  min-width: 100px;
+  flex: 1 1 100px;
+}
+
+.cal-recap-type {
+  color: var(--bs-secondary);
+  flex: 2 1 120px;
+}
+
+.cal-recap-dates {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--bs-body-color);
+}
+
+.cal-recap-statut {
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 575px) {
+  .cal-recap-row {
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .cal-recap-name {
+    min-width: 80px;
+  }
+}
+
 /* ---------------- TIMELINE (optionnel) ---------------- */
 .timeline-item {
   position: relative;

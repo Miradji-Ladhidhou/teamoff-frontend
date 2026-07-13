@@ -578,6 +578,76 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
       </div>
 
+      {/* Liste récap du mois */}
+      {(() => {
+        const fmt = (d) => {
+          const date = normalizeLocalDate(d);
+          if (!date) return '-';
+          return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        };
+
+        const statusLabel = {
+          en_attente_manager: 'En attente',
+          valide_manager: 'Validé',
+          valide_final: 'Validé',
+          refuse_manager: 'Refusé',
+          refuse_final: 'Refusé',
+        };
+
+        const absenceLabel = {
+          maladie: 'Arrêt maladie',
+          absence_exceptionnelle: 'Abs. except.',
+        };
+
+        const rows = [
+          ...conges.map(c => ({
+            key: `c-${c.id}`,
+            prenom: c.utilisateur?.prenom || c.utilisateur_prenom || '',
+            nom: c.utilisateur?.nom || c.utilisateur_nom || '',
+            type: getCongeTypeLabel(c),
+            statut: statusLabel[c.statut] || c.statut,
+            color: getStatusColor(c.statut),
+            debut: c.date_debut,
+            fin: c.date_fin,
+            sort: c.date_debut,
+          })),
+          ...absences.map(a => ({
+            key: `a-${a.id}`,
+            prenom: a.utilisateur?.prenom || '',
+            nom: a.utilisateur?.nom || '',
+            type: absenceLabel[a.type_absence] || a.type_absence,
+            statut: null,
+            color: a.type_absence === 'maladie' ? 'success' : 'primary',
+            debut: a.date_debut,
+            fin: a.date_fin,
+            sort: a.date_debut,
+          })),
+        ].sort((a, b) => (a.sort || '').localeCompare(b.sort || ''));
+
+        if (rows.length === 0) return null;
+
+        return (
+          <Card className="mt-3 mb-3">
+            <Card.Body className="p-0">
+              <div className="cal-recap-header">
+                Événements du mois · <span className="cal-recap-count">{rows.length}</span>
+              </div>
+              <div className="cal-recap-list">
+                {rows.map(row => (
+                  <div key={row.key} className="cal-recap-row">
+                    <span className={`cal-recap-dot bg-${row.color}`} />
+                    <span className="cal-recap-name">{row.prenom} {row.nom}</span>
+                    <span className="cal-recap-type">{row.type}</span>
+                    <span className="cal-recap-dates">{fmt(row.debut)} → {fmt(row.fin)}</span>
+                    {row.statut && <span className={`cal-recap-statut text-${row.color}`}>{row.statut}</span>}
+                  </div>
+                ))}
+              </div>
+            </Card.Body>
+          </Card>
+        );
+      })()}
+
       <Modal show={showAbsenceModal} onHide={() => { setShowAbsenceModal(false); setAbsenceError(''); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>Déclarer une absence</Modal.Title>
