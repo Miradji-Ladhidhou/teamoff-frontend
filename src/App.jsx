@@ -24,6 +24,7 @@ const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const CongesPage = lazy(() => import('./pages/Conges/CongesPage'));
 const CongeDetailsPage = lazy(() => import('./pages/Conges/CongeDetailsPage'));
 const NouveauCongePage = lazy(() => import('./pages/Conges/NouveauCongePage'));
+const AttestationPage = lazy(() => import('./pages/Conges/AttestationPage'));
 const UsersPage = lazy(() => import('./pages/Users/UsersPage'));
 const CalendrierPage = lazy(() => import('./pages/Calendrier/CalendrierPage'));
 const ExportsPage = lazy(() => import('./pages/Exports/ExportsPage'));
@@ -265,6 +266,15 @@ function App() {
             </Suspense>
           }
         />
+
+        {/* Attestation PDF — protégée mais sans layout */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/conges/:id/attestation" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AttestationPage />
+            </Suspense>
+          } />
+        </Route>
 
         {/* Routes protégées standard — tous les utilisateurs authentifiés */}
         <Route element={<ProtectedRoute />}>
