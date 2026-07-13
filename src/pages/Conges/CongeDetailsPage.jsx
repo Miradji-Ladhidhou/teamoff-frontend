@@ -38,12 +38,16 @@ const CongeDetailsPage = () => {
   const [validationOverlapLoading, setValidationOverlapLoading] = useState(false);
   const [selfCancellationPolicy, setSelfCancellationPolicy] = useState(DEFAULT_SELF_CANCELLATION_POLICY);
   const [history, setHistory] = useState([]);
+  const [jourDetail, setJourDetail] = useState(null);
   const action = useAsyncAction();
 
   useEffect(() => {
     loadCongeDetails();
     congesService.getHistory(id)
       .then((res) => setHistory(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {});
+    congesService.getAttestationData(id)
+      .then((res) => setJourDetail(res.data?.jours || null))
       .catch(() => {});
   }, [id]);
 
@@ -455,12 +459,61 @@ const CongeDetailsPage = () => {
             <Card className="mb-3">
               <Card.Body className="p-0">
                 <div className="calcul-details-box">
-                  <div><span>Jours sur la période</span><span>{formatDays(conge.calcul_details.jours_dans_periode)}</span></div>
-                  <div><span>Jours bloqués</span><span>{formatDays(conge.calcul_details.jours_bloques)}</span></div>
-                  <div><span>Jours fériés exclus</span><span>{formatDays(conge.calcul_details.jours_feries_exclus)}</span></div>
-                  <div><span>Demi-journées déduites</span><span>{formatDays(conge.calcul_details.jours_demi_journees_deduites)}</span></div>
-                  <div><span>Jours déduits du calcul</span><span>{formatDays(conge.calcul_details.jours_deduits_calcul)}</span></div>
-                  <div><span>Jours pris calculés</span><span>{formatDays(conge.calcul_details.jours_pris_calcules)}</span></div>
+
+                  {/* Ligne totale */}
+                  <div><span>Jours calendaires</span><span>{formatDays(conge.calcul_details.jours_dans_periode)}</span></div>
+
+                  {/* Week-ends */}
+                  {jourDetail?.detail?.filter(d => d.type === 'weekend').length > 0 && (
+                    <>
+                      <div style={{ paddingTop: 4, paddingBottom: 2 }}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.6 }}>Week-ends</span>
+                        <span />
+                      </div>
+                      {jourDetail.detail.filter(d => d.type === 'weekend').map((d, i) => (
+                        <div key={i} style={{ paddingLeft: 10 }}>
+                          <span style={{ fontSize: '11px' }}>{d.label} {formatDateShort(d.date + 'T00:00:00')}</span>
+                          <span>
+                            {d.inclus
+                              ? <span style={{ fontSize: '10px', background: 'rgba(21,128,61,0.12)', color: '#15803d', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>inclus</span>
+                              : <span style={{ fontSize: '10px', background: 'rgba(185,28,28,0.1)', color: '#b91c1c', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>exclu</span>
+                            }
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Jours fériés */}
+                  {jourDetail && (
+                    <>
+                      <div style={{ paddingTop: 4, paddingBottom: 2 }}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.6 }}>Jours fériés</span>
+                        <span />
+                      </div>
+                      {jourDetail.detail.filter(d => d.type === 'ferie').length === 0
+                        ? <div style={{ paddingLeft: 10 }}><span style={{ fontSize: '11px', opacity: 0.5, fontStyle: 'italic' }}>Aucun sur la période</span><span /></div>
+                        : jourDetail.detail.filter(d => d.type === 'ferie').map((d, i) => (
+                          <div key={i} style={{ paddingLeft: 10 }}>
+                            <span style={{ fontSize: '11px' }}>{d.label} — {formatDateShort(d.date + 'T00:00:00')}</span>
+                            <span style={{ fontSize: '10px', background: 'rgba(185,28,28,0.1)', color: '#b91c1c', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>exclu</span>
+                          </div>
+                        ))
+                      }
+                    </>
+                  )}
+
+                  {/* Demi-journées si présentes */}
+                  {parseFloat(conge.calcul_details.jours_demi_journees_deduites) > 0 && (
+                    <div><span>Demi-journées déduites</span><span>−{formatDays(conge.calcul_details.jours_demi_journees_deduites)}</span></div>
+                  )}
+
+                  {/* Total */}
+                  <div style={{ borderTop: '2px solid var(--accent-blue, #5b8dee)', marginTop: 4, paddingTop: 6, fontWeight: 700 }}>
+                    <span>= Jours pris</span>
+                    <span>{formatDays(conge.calcul_details.jours_pris_calcules)}</span>
+                  </div>
+
                 </div>
               </Card.Body>
             </Card>
