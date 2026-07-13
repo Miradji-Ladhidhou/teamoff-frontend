@@ -289,8 +289,8 @@ const NouveauCongePage = () => {
     conge_type_id: data.conge_type_id,
     date_debut: data.date_debut,
     date_fin: data.date_fin,
-    debut_demi_journee: data.debut_demi_journee || null,
-    fin_demi_journee: data.fin_demi_journee || null,
+    ...(data.debut_demi_journee ? { debut_demi_journee: data.debut_demi_journee } : {}),
+    ...(data.fin_demi_journee ? { fin_demi_journee: data.fin_demi_journee } : {}),
     commentaire_employe: data.commentaire_employe || null,
   });
 
