@@ -98,6 +98,10 @@ function processRefreshQueue(error, token = null) {
 
 api.interceptors.response.use(
   (response) => {
+    if (shouldNotify(response.config)) {
+      const message = response.data?.message;
+      if (message) emitApiNotification(message, 'success');
+    }
     return response;
   },
   async (error) => {
