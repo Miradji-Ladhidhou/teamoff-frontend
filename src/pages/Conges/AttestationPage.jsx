@@ -122,38 +122,38 @@ export default function AttestationPage() {
         }
         .doc-header {
           background: #1e3a5f;
-          padding: 28px 36px 22px;
+          padding: 14px 28px 12px;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
         }
         .company-name {
           color: #fff;
-          font-size: 20px;
+          font-size: 16px;
           font-weight: 700;
           letter-spacing: 0.5px;
           font-family: 'Georgia', serif;
         }
         .company-sub {
           color: rgba(255,255,255,0.55);
-          font-size: 11px;
-          margin-top: 3px;
+          font-size: 10px;
+          margin-top: 2px;
           font-family: Arial, sans-serif;
           font-weight: 400;
         }
         .ref-block { text-align: right; }
-        .ref-label { color: rgba(255,255,255,0.55); font-size: 9px; font-family: Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
-        .ref-value { color: rgba(255,255,255,0.9); font-size: 11px; font-family: 'Courier New', monospace; margin-top: 2px; }
+        .ref-label { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+        .ref-value { color: rgba(255,255,255,0.9); font-size: 10px; font-family: 'Courier New', monospace; margin-top: 1px; }
         .doc-stripe {
-          height: 5px;
+          height: 4px;
           background: linear-gradient(90deg, #2563eb 0%, #4f9cf9 60%, #93c5fd 100%);
         }
         .doc-title-band {
-          padding: 18px 36px 16px;
+          padding: 9px 28px 8px;
           border-bottom: 1px solid #e5e9ef;
         }
         .doc-title {
-          font-size: 15px;
+          font-size: 13px;
           font-weight: 700;
           color: #1e3a5f;
           letter-spacing: 2px;
@@ -161,21 +161,21 @@ export default function AttestationPage() {
           font-family: 'Georgia', serif;
         }
         .doc-subtitle {
-          font-size: 11px;
+          font-size: 10px;
           color: #6b7f96;
-          margin-top: 4px;
+          margin-top: 2px;
           font-family: Arial, sans-serif;
           font-weight: 400;
         }
         .doc-intro {
-          padding: 20px 36px 0;
+          padding: 10px 28px 0;
         }
         .doc-intro p {
-          font-size: 12px;
+          font-size: 11px;
           font-family: Arial, sans-serif;
           color: #2d3748;
-          line-height: 1.8;
-          margin: 0 0 10px 0;
+          line-height: 1.65;
+          margin: 0 0 5px 0;
           text-align: justify;
         }
         .doc-intro p strong {
@@ -183,22 +183,22 @@ export default function AttestationPage() {
           font-weight: 700;
         }
         .doc-intro .valoir-droit {
-          font-size: 11px;
+          font-size: 10px;
           color: #6b7f96;
           font-style: italic;
-          margin-top: 4px;
+          margin-top: 2px;
         }
-        .doc-body { flex: 1; padding: 20px 36px 0; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .doc-body { flex: 1; padding: 10px 28px 0; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .section-card {
           border: 1px solid #e0e6ef;
-          border-radius: 6px;
+          border-radius: 5px;
           overflow: hidden;
         }
         .section-head {
           background: #f4f7fb;
-          padding: 8px 14px;
-          font-size: 9px;
+          padding: 5px 10px;
+          font-size: 8px;
           font-weight: 700;
           color: #4a6080;
           letter-spacing: 1.2px;
@@ -206,128 +206,128 @@ export default function AttestationPage() {
           font-family: Arial, sans-serif;
           border-bottom: 1px solid #e0e6ef;
         }
-        .section-body { padding: 4px 0; }
+        .section-body { padding: 2px 0; }
         .info-row-doc {
           display: grid;
-          grid-template-columns: 95px 1fr;
-          padding: 6px 14px;
+          grid-template-columns: 80px 1fr;
+          padding: 4px 10px;
           border-bottom: 1px solid #f0f3f8;
-          font-size: 11px;
-          line-height: 1.4;
+          font-size: 10px;
+          line-height: 1.35;
         }
         .info-row-doc:last-child { border-bottom: none; }
         .lbl { color: #6b7f96; font-family: Arial, sans-serif; font-weight: 400; }
         .val { color: #1a2b40; font-family: Arial, sans-serif; font-weight: 600; word-break: break-word; }
         .val.statut-ok { color: #15803d; }
 
-        .bottom-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .bottom-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 
         .comments-block {
           border-left: 3px solid #d97706;
           background: #fffbeb;
-          padding: 12px 14px;
-          border-radius: 0 6px 6px 0;
+          padding: 8px 10px;
+          border-radius: 0 5px 5px 0;
         }
         .comments-head {
-          font-size: 9px; font-weight: 700; color: #92400e;
+          font-size: 8px; font-weight: 700; color: #92400e;
           letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 8px;
+          font-family: Arial, sans-serif; margin-bottom: 5px;
         }
-        .comment-item { margin-bottom: 8px; }
+        .comment-item { margin-bottom: 5px; }
         .comment-item:last-child { margin-bottom: 0; }
-        .comment-who { font-size: 9px; color: #a16207; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .comment-text { font-size: 11px; color: #3b2e00; font-family: Arial, sans-serif; font-style: italic; line-height: 1.4; }
-        .no-comment { font-size: 11px; color: #a0aec0; font-family: Arial, sans-serif; font-style: italic; }
+        .comment-who { font-size: 8px; color: #a16207; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+        .comment-text { font-size: 10px; color: #3b2e00; font-family: Arial, sans-serif; font-style: italic; line-height: 1.35; }
+        .no-comment { font-size: 10px; color: #a0aec0; font-family: Arial, sans-serif; font-style: italic; }
 
         .calc-block {
           background: #eff6ff;
           border: 1px solid #bfdbfe;
-          border-radius: 6px;
-          padding: 12px 14px;
+          border-radius: 5px;
+          padding: 8px 10px;
         }
         .calc-head {
-          font-size: 9px; font-weight: 700; color: #1d4ed8;
+          font-size: 8px; font-weight: 700; color: #1d4ed8;
           letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 4px;
+          font-family: Arial, sans-serif; margin-bottom: 3px;
         }
         .calc-period {
-          font-size: 10px; color: #6b7f96; font-family: Arial, sans-serif;
-          margin-bottom: 10px; font-style: italic;
+          font-size: 9px; color: #6b7f96; font-family: Arial, sans-serif;
+          margin-bottom: 6px; font-style: italic;
         }
         .calc-row {
           display: flex; justify-content: space-between; align-items: center;
-          padding: 4px 0;
+          padding: 3px 0;
           border-bottom: 1px solid rgba(37,99,235,0.1);
-          font-size: 11px; font-family: Arial, sans-serif;
+          font-size: 10px; font-family: Arial, sans-serif;
         }
         .calc-row:last-child { border-bottom: none; }
         .calc-label { color: #4a6080; }
         .calc-value { font-weight: 700; color: #1e3a5f; white-space: nowrap; }
-        .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 6px 0; }
+        .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 4px 0; }
         .calc-row.total .calc-label { color: #1e3a5f; font-weight: 700; }
-        .calc-row.total .calc-value { color: #2563eb; font-size: 14px; }
-        .detail-section { margin: 6px 0 4px; }
+        .calc-row.total .calc-value { color: #2563eb; font-size: 12px; }
+        .detail-section { margin: 4px 0 2px; }
         .detail-title {
-          font-size: 9px; font-weight: 700; color: #4a6080;
+          font-size: 8px; font-weight: 700; color: #4a6080;
           text-transform: uppercase; letter-spacing: 0.8px;
-          font-family: Arial, sans-serif; margin-bottom: 3px;
+          font-family: Arial, sans-serif; margin-bottom: 2px;
         }
         .detail-row {
           display: flex; justify-content: space-between; align-items: center;
-          padding: 2px 0 2px 8px;
-          font-size: 10px; font-family: Arial, sans-serif; color: #4a6080;
+          padding: 1px 0 1px 6px;
+          font-size: 9px; font-family: Arial, sans-serif; color: #4a6080;
         }
         .detail-date { flex: 1; }
         .badge-inclus {
-          font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+          font-size: 7px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
           background: #dcfce7; color: #15803d;
         }
         .badge-exclu {
-          font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+          font-size: 7px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
           background: #fee2e2; color: #b91c1c;
         }
-        .detail-none { font-size: 10px; color: #94a3b8; font-family: Arial, sans-serif; padding: 2px 0 2px 8px; font-style: italic; }
+        .detail-none { font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif; padding: 1px 0 1px 6px; font-style: italic; }
 
         .legal-mention {
-          font-size: 9px;
+          font-size: 8px;
           color: #a0aec0;
           font-family: Arial, sans-serif;
           font-style: italic;
           text-align: center;
-          padding: 0 36px 12px;
-          line-height: 1.5;
+          padding: 0 28px 8px;
+          line-height: 1.4;
         }
 
         .signatures {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          padding: 0 36px 24px;
+          gap: 14px;
+          padding: 0 28px 14px;
         }
-        .sig-block { padding: 14px; border-radius: 6px; }
+        .sig-block { padding: 10px 12px; border-radius: 5px; }
         .sig-block.employee { background: #eff6ff; border: 1px solid #bfdbfe; }
         .sig-block.direction { background: #f8f9fa; border: 1px solid #e0e6ef; }
         .sig-role {
-          font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 2px;
+          font-size: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+          font-family: Arial, sans-serif; margin-bottom: 1px;
         }
         .sig-block.employee .sig-role { color: #1d4ed8; }
         .sig-block.direction .sig-role { color: #8a9ab0; }
-        .sig-name { font-size: 13px; font-family: 'Georgia', serif; color: #1a2b40; font-weight: 700; margin-bottom: 2px; }
-        .sig-block.direction .sig-name { color: #8a9ab0; font-size: 11px; font-weight: 400; font-style: italic; }
-        .sig-line { margin-top: 28px; border-top: 1px solid; padding-top: 4px; font-size: 9px; font-family: Arial, sans-serif; }
+        .sig-name { font-size: 12px; font-family: 'Georgia', serif; color: #1a2b40; font-weight: 700; margin-bottom: 1px; }
+        .sig-block.direction .sig-name { color: #8a9ab0; font-size: 10px; font-weight: 400; font-style: italic; }
+        .sig-line { margin-top: 22px; border-top: 1px solid; padding-top: 3px; font-size: 8px; font-family: Arial, sans-serif; }
         .sig-block.employee .sig-line { border-color: #bfdbfe; color: #93c5fd; }
         .sig-block.direction .sig-line { border-color: #d1d9e6; color: #b0bec5; }
 
         .doc-footer {
           background: #1e3a5f;
-          padding: 10px 36px;
+          padding: 7px 28px;
           display: flex;
           justify-content: space-between;
           align-items: center;
         }
-        .footer-left { color: rgba(255,255,255,0.55); font-size: 9px; font-family: Arial, sans-serif; }
-        .footer-right { color: rgba(255,255,255,0.55); font-size: 9px; font-family: Arial, sans-serif; }
+        .footer-left { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; }
+        .footer-right { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; }
 
         @media print {
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -336,8 +336,10 @@ export default function AttestationPage() {
           .page-wrap { padding: 0 !important; background: transparent !important; }
           .doc {
             width: 100% !important;
-            min-height: 100vh !important;
+            height: 297mm !important;
+            min-height: unset !important;
             box-shadow: none !important;
+            overflow: hidden !important;
           }
           @page { margin: 0; size: A4 portrait; }
         }
