@@ -167,7 +167,28 @@ export default function AttestationPage() {
           font-family: Arial, sans-serif;
           font-weight: 400;
         }
-        .doc-body { flex: 1; padding: 24px 36px 0; }
+        .doc-intro {
+          padding: 20px 36px 0;
+        }
+        .doc-intro p {
+          font-size: 12px;
+          font-family: Arial, sans-serif;
+          color: #2d3748;
+          line-height: 1.8;
+          margin: 0 0 10px 0;
+          text-align: justify;
+        }
+        .doc-intro p strong {
+          color: #1e3a5f;
+          font-weight: 700;
+        }
+        .doc-intro .valoir-droit {
+          font-size: 11px;
+          color: #6b7f96;
+          font-style: italic;
+          margin-top: 4px;
+        }
+        .doc-body { flex: 1; padding: 20px 36px 0; }
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .section-card {
           border: 1px solid #e0e6ef;
@@ -356,6 +377,23 @@ export default function AttestationPage() {
             <div className="doc-subtitle">
               Délivrée par {data.entreprise.nom} · Généré automatiquement via TeamOff
             </div>
+          </div>
+
+          {/* Paragraphe d'attestation */}
+          <div className="doc-intro">
+            <p>
+              La société <strong>{data.entreprise.nom}</strong> atteste par le présent document
+              que <strong>{nomComplet}</strong>
+              {data.employe.service ? <>, employé(e) au sein du service <strong>{data.employe.service}</strong>,</> : null}
+              {data.employe.date_embauche ? <> en poste depuis le <strong>{fmtEmbauche(data.employe.date_embauche)}</strong>,</> : null}
+              {' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong> du{' '}
+              <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
+              pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>,
+              conformément à la politique de congés de l'entreprise.
+            </p>
+            <p className="valoir-droit">
+              Ce document est établi à la demande de l'intéressé(e) pour servir et valoir ce que de droit.
+            </p>
           </div>
 
           {/* Corps */}
