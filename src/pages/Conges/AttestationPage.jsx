@@ -421,33 +421,23 @@ export default function AttestationPage() {
                 </div>
 
                 <div className="calc-row">
-                  <span className="calc-label">Durée de la période</span>
-                  <span className="calc-value">{jours.calendaires} jours calendaires</span>
+                  <span className="calc-label">Jours calendaires</span>
+                  <span className="calc-value">{jours.calendaires} j</span>
                 </div>
 
-                {jours.weekend > 0 && (
-                  <div className="calc-row" style={{ paddingLeft: 10 }}>
-                    <span className="calc-label" style={{ fontSize: 10 }}>dont week-ends</span>
-                    <span className="calc-value minus" style={{ fontSize: 10 }}>{jours.weekend} j</span>
-                  </div>
-                )}
-
-                {jours.feries_hors_weekend > 0 && (
-                  <div className="calc-row" style={{ paddingLeft: 10 }}>
-                    <span className="calc-label" style={{ fontSize: 10 }}>dont jours fériés en semaine</span>
-                    <span className="calc-value minus" style={{ fontSize: 10 }}>{jours.feries_hors_weekend} j</span>
-                  </div>
-                )}
+                <div className="calc-row">
+                  <span className="calc-label">
+                    Jours exclus
+                    <span className="calc-sublabel">week-ends, fériés, non travaillés</span>
+                  </span>
+                  <span className="calc-value minus">−{jours.calendaires - jours.ouvres} j</span>
+                </div>
 
                 <hr className="calc-divider" />
 
                 <div className="calc-row total">
-                  <span className="calc-label">Congé accordé</span>
+                  <span className="calc-label">= Congé accordé</span>
                   <span className="calc-value">{jours.ouvres} jours ouvrés</span>
-                </div>
-
-                <div className="calc-note">
-                  Calculé par le système selon la politique de congés de l'entreprise (jours ouvrés, fériés exclus…)
                 </div>
               </div>
 
