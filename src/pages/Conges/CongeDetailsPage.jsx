@@ -2,7 +2,7 @@ import './conge-details.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaCalendarAlt, FaComment, FaList } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaCalendarAlt, FaComment, FaList, FaFilePdf } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -339,8 +339,17 @@ const CongeDetailsPage = () => {
         )}
       </div>
 
-      {/* Actions header (modifier / annuler) */}
+      {/* Actions header (modifier / attestation / annuler) */}
       <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        {conge?.statut === 'valide_final' && (
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={() => window.open(`/conges/${id}/attestation`, '_blank')}
+          >
+            <FaFilePdf className="me-1" /> Attestation PDF
+          </Button>
+        )}
         {canEdit() && (
           <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
             <FaEdit className="me-1" /> Modifier
