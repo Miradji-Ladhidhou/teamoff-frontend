@@ -531,6 +531,14 @@
   white-space: nowrap;
 }
 
+.cal-recap-commentaire {
+  font-size: 0.78rem;
+  color: var(--bs-secondary);
+  font-style: italic;
+  flex: 1 1 100%;
+  padding-left: 1.1rem;
+}
+
 @media (max-width: 575px) {
   .cal-recap-row {
     gap: 0.35rem;

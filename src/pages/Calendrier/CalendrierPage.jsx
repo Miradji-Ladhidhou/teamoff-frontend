@@ -609,6 +609,7 @@ const CalendrierPage = () => {
             color: getStatusColor(c.statut),
             debut: c.date_debut,
             fin: c.date_fin,
+            commentaire: c.commentaire_employe || '',
             sort: c.date_debut,
           })),
           ...absences.map(a => ({
@@ -620,6 +621,7 @@ const CalendrierPage = () => {
             color: a.type_absence === 'maladie' ? 'success' : 'primary',
             debut: a.date_debut,
             fin: a.date_fin,
+            commentaire: a.commentaire || '',
             sort: a.date_debut,
           })),
         ].sort((a, b) => (a.sort || '').localeCompare(b.sort || ''));
@@ -640,6 +642,7 @@ const CalendrierPage = () => {
                     <span className="cal-recap-type">{row.type}</span>
                     <span className="cal-recap-dates">{fmt(row.debut)} → {fmt(row.fin)}</span>
                     {row.statut && <span className={`cal-recap-statut text-${row.color}`}>{row.statut}</span>}
+                    {row.commentaire && <span className="cal-recap-commentaire">{row.commentaire}</span>}
                   </div>
                 ))}
               </div>
