@@ -185,7 +185,6 @@ export const congesService = {
   reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
   getById: (id) => api.get(`/conges/${id}`),
   getHistory: (id) => api.get(`/conges/${id}/history`),
-  getAttestation: (id) => api.get(`/conges/${id}/attestation`),
   calculateDays: (data) => api.post('/conges/calculate-days', data),
 };
 

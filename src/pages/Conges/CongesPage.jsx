@@ -2,10 +2,9 @@ import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Container, Row, Col, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaFilter, FaSearch, FaChevronRight, FaFilePdf } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
-import { downloadAttestation } from '../../utils/downloadAttestation';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -288,22 +287,6 @@ const CongesPage = () => {
     setRejectComment('');
   };
 
-  const [attestationLoading, setAttestationLoading] = useState({});
-
-  const handleDownloadAttestation = async (congeId, e) => {
-    e?.stopPropagation();
-    e?.preventDefault();
-    setAttestationLoading(prev => ({ ...prev, [congeId]: true }));
-    try {
-      const res = await congesService.getAttestation(congeId);
-      await downloadAttestation(res.data);
-    } catch (err) {
-      alert.error('Erreur lors de la génération de l\'attestation');
-    } finally {
-      setAttestationLoading(prev => ({ ...prev, [congeId]: false }));
-    }
-  };
-
   const canValidateConge = (conge) => {
     const workflow = conge?.effective_approval_workflow;
 
@@ -583,17 +566,6 @@ const CongesPage = () => {
                                 <Button variant="outline-danger" size="sm"
                                   onClick={(e) => { e.preventDefault(); openRejectModal(conge.id); }}>✗</Button>
                               )}
-                              {conge.statut === 'valide_final' && (
-                                <Button
-                                  variant="outline-secondary"
-                                  size="sm"
-                                  title="Télécharger l'attestation"
-                                  disabled={attestationLoading[conge.id]}
-                                  onClick={(e) => handleDownloadAttestation(conge.id, e)}
-                                >
-                                  {attestationLoading[conge.id] ? '…' : <FaFilePdf size={11} />}
-                                </Button>
-                              )}
                               <FaChevronRight size={10} style={{ color: 'var(--text-muted, var(--dk-text-muted))', marginLeft: 2 }} />
                             </div>
                           </div>
@@ -667,18 +639,6 @@ const CongesPage = () => {
                             >
                               Détail
                             </Button>
-
-                            {conge.statut === 'valide_final' && (
-                              <Button
-                                variant="outline-secondary"
-                                size="sm"
-                                title="Télécharger l'attestation PDF"
-                                disabled={attestationLoading[conge.id]}
-                                onClick={() => handleDownloadAttestation(conge.id)}
-                              >
-                                {attestationLoading[conge.id] ? '…' : <><FaFilePdf size={12} className="me-1" />Attestation</>}
-                              </Button>
-                            )}
 
                             {(canValidateConge(conge) || canRejectConge(conge)) && (
                               <>
