@@ -10,7 +10,7 @@ const fmt = (dateStr) => {
 
 const fmtEmbauche = (dateStr) => {
   if (!dateStr) return '—';
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
   if (isNaN(d)) return '—';
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 };
