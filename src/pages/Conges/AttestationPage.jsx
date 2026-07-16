@@ -336,12 +336,17 @@ export default function AttestationPage() {
           .print-btn { display: none !important; }
           .page-wrap { padding: 0 !important; background: transparent !important; }
           .doc {
-            width: 100% !important;
+            width: 210mm !important;
             height: 297mm !important;
             min-height: unset !important;
+            padding: 0 !important;
             box-shadow: none !important;
             overflow: hidden !important;
           }
+          .doc-header { padding: 14px 28px 12px !important; }
+          .doc-footer { padding: 7px 28px !important; }
+          .legal-mention { padding: 0 28px 8px !important; }
+          .sig-grid { padding: 0 28px 14px !important; }
           @page { margin: 0; size: A4 portrait; }
         }
       `}</style>
