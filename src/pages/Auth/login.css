@@ -259,6 +259,15 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+/* Forcer la couleur du texte saisi (Bootstrap var(--bs-body-color) résiste à !important sur .class) */
+.landing-root input.form-control,
+.landing-root input.form-control:focus,
+.landing-root input.form-control:active {
+  color: #fff !important;
+  background-color: rgba(255,255,255,0.06) !important;
+  --bs-body-color: #fff;
+}
+
 .landing-input:focus {
   border-color: rgba(91,141,238,0.6) !important;
   box-shadow: 0 0 0 3px rgba(91,141,238,0.12) !important;
