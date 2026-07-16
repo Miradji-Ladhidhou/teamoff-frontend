@@ -589,11 +589,6 @@ export default function AttestationPage() {
             </div>
           </div>
 
-          {/* Pied de page */}
-          <div className="doc-footer">
-            <div className="footer-left">{data.entreprise.nom} · Attestation de congé</div>
-            <div className="footer-right">Ref. {data.reference} · {data.genere_le}</div>
-          </div>
 
         </div>
       </div>
