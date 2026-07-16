@@ -475,10 +475,15 @@ const DashboardPage = () => {
                           <span style={{ color: 'var(--text-muted, var(--dk-text-muted))', fontSize: '0.85rem' }}>›</span>
                         </div>
                         <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
-                          {isAdmin()
-                            ? `${conge.utilisateur?.prenom || ''} ${conge.utilisateur?.nom || ''}`
+                          {(isAdmin() || user?.role === 'manager')
+                            ? (`${conge.utilisateur?.prenom || ''} ${conge.utilisateur?.nom || ''}`.trim() || 'Employé')
                             : (conge.conge_type?.libelle || 'Type inconnu')}
                         </div>
+                        {(isAdmin() || user?.role === 'manager') && (
+                          <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
+                            {conge.conge_type?.libelle || conge.conge_type_libelle || ''}
+                          </div>
+                        )}
                         <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
                           {formatDate(conge.date_debut)} → {formatDate(conge.date_fin)}
                           {conge.jours_calcules && <span className="ms-1">· {conge.jours_calcules}j</span>}
