@@ -136,7 +136,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--dk-section-label, rgba(0,0,0,0.38));
+  color: var(--dk-section-label, rgba(0,0,0,0.55));
   padding: 12px 12px 6px;
 }
 
@@ -350,7 +350,7 @@
   cursor: pointer;
   background: none;
   border: none;
-  color: var(--dk-nav-text, rgba(0,0,0,0.5));
+  color: var(--dk-nav-text, rgba(0,0,0,0.60));
   transition: color 0.12s, background 0.12s;
 }
 
@@ -372,7 +372,7 @@
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--dk-nav-text, rgba(0,0,0,0.5));
+  color: var(--dk-nav-text, rgba(0,0,0,0.60));
   white-space: nowrap;
   line-height: 1;
 }

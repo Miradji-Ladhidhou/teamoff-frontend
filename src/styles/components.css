@@ -7,7 +7,7 @@
 /* ────────────── Status badges ────────────── */
 .badge.pending {
   background: rgba(240,168,85,0.12)  !important;
-  color: var(--accent-amber, var(--dk-warning))  !important;
+  color: #92400e !important;
   border: 1px solid rgba(240,168,85,0.2) !important;
   border-radius: 20px !important;
   font-size: 9px !important;
@@ -18,7 +18,7 @@
 
 .badge.approved {
   background: rgba(52,211,153,0.12)  !important;
-  color: var(--accent-green, var(--dk-success))  !important;
+  color: #047857 !important;
   border: 1px solid rgba(52,211,153,0.15) !important;
   border-radius: 20px !important;
   font-size: 9px !important;
@@ -29,7 +29,7 @@
 
 .badge.refused {
   background: rgba(248,113,113,0.12) !important;
-  color: var(--accent-red,   var(--dk-error))    !important;
+  color: #991b1b !important;
   border: 1px solid rgba(248,113,113,0.15) !important;
   border-radius: 20px !important;
   font-size: 9px !important;
@@ -40,7 +40,7 @@
 
 .badge.info {
   background: rgba(91,141,238,0.12)  !important;
-  color: var(--accent-blue,  var(--dk-accent))   !important;
+  color: #4338ca !important;
   border: 1px solid rgba(91,141,238,0.15) !important;
   border-radius: 20px !important;
   font-size: 9px !important;

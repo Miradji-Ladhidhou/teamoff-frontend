@@ -224,10 +224,10 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-.status-badge--pending  { background: var(--dk-warning-bg);    color: var(--dk-warning);  border: 1px solid rgba(217,119,6,0.25); }
-.status-badge--success  { background: var(--dk-success-bg);    color: var(--dk-success);  border: 1px solid rgba(5,150,105,0.25); }
-.status-badge--danger   { background: var(--dk-error-bg);      color: var(--dk-error);    border: 1px solid rgba(220,38,38,0.25); }
-.status-badge--info     { background: var(--dk-accent-soft);   color: var(--dk-accent);   border: 1px solid var(--dk-accent-border); }
+.status-badge--pending  { background: var(--dk-warning-bg);    color: #92400e;   border: 1px solid rgba(217,119,6,0.25); }
+.status-badge--success  { background: var(--dk-success-bg);    color: #047857;   border: 1px solid rgba(5,150,105,0.25); }
+.status-badge--danger   { background: var(--dk-error-bg);      color: #991b1b;   border: 1px solid rgba(220,38,38,0.25); }
+.status-badge--info     { background: var(--dk-accent-soft);   color: #4338ca;   border: 1px solid var(--dk-accent-border); }
 
 /* ────────────── Page title bar (main page header) ────────────── */
 .page-title-bar {
@@ -285,7 +285,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--dk-text-muted);
+  color: var(--dk-text-soft);
 }
 
 .section-title-bar__action {
@@ -309,19 +309,19 @@ h1, h2, h3, h4, h5, h6 {
 .alert-banner--warning {
   background: rgba(240,168,85,0.1);
   border: 1px solid rgba(240,168,85,0.2);
-  color: var(--dk-warning);
+  color: #92400e;
   }
 
 .alert-banner--info {
   background: var(--dk-info-bg);
   border: 1px solid var(--dk-accent-border);
-  color: var(--dk-info);
+  color: #4338ca;
   }
 
 .alert-banner--danger {
   background: var(--dk-error-bg);
   border: 1px solid rgba(248,113,113,0.25);
-  color: var(--dk-error);
+  color: #991b1b;
   }
 
 .alert-banner__text {
@@ -475,7 +475,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--dk-text-muted);
+  color: var(--dk-text-soft);
   margin-bottom: 0.5rem;
 }
 
@@ -485,7 +485,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--dk-text-muted);
+  color: var(--dk-text-soft);
   margin-bottom: 2px;
   display: block;
 }

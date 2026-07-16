@@ -176,7 +176,7 @@
   padding: 8px;
   border-radius: 9px;
   background: rgba(52,211,153,0.12);
-  color: var(--accent-green, var(--dk-success));
+  color: #047857;
   border: 1px solid rgba(52,211,153,0.2);
   font-size: 10px;
   font-weight: 700;
@@ -199,7 +199,7 @@
   padding: 8px;
   border-radius: 9px;
   background: rgba(248,113,113,0.08);
-  color: var(--accent-red, var(--dk-error));
+  color: #991b1b;
   border: 1px solid rgba(248,113,113,0.2);
   font-size: 10px;
   font-weight: 700;
