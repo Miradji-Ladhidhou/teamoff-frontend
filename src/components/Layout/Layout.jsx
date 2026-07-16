@@ -16,6 +16,7 @@ import {
   FaThLarge,
   FaCalendarTimes,
   FaCoins,
+  FaUserCircle,
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -105,7 +106,12 @@ const Layout = () => {
 
   const renderSidebarContent = (isMobile = false) => (
     <>
-      <div className="sidebar-user mb-3">
+      <div
+        className="sidebar-user mb-3"
+        onClick={() => goTo('/my-profile', isMobile)}
+        style={{ cursor: 'pointer' }}
+        title="Mon profil"
+      >
         <div className="sidebar-user__name">{user?.prenom} {user?.nom}</div>
         <div className="small ui-text-soft">{user?.entreprise_nom}</div>
         <Badge className="role-badge mt-1">{roleLabel[user?.role] || 'Compte'}</Badge>
@@ -124,6 +130,14 @@ const Layout = () => {
         </>
       )}
 
+      <Button
+        variant="outline-secondary"
+        size="sm"
+        className="w-100 mb-2"
+        onClick={() => goTo('/my-profile', isMobile)}
+      >
+        <FaUserCircle className="me-2" />Mon profil
+      </Button>
       <Button variant="outline-danger" size="sm" className="w-100" onClick={logout}>
         <FaSignOutAlt className="me-2" />Déconnexion
       </Button>
@@ -170,6 +184,28 @@ const Layout = () => {
         {/* Desktop topbar */}
         <Navbar className="role-topbar desktop-topbar d-none d-lg-flex px-3">
           <Navbar.Brand className="mb-0">{activeTitle}</Navbar.Brand>
+          <div className="ms-auto d-flex align-items-center gap-2">
+            <button
+              className="topbar-icon-btn position-relative"
+              onClick={() => navigate('/notifications')}
+              aria-label="Notifications"
+            >
+              <FaBell size={14} style={{ color: 'var(--dk-text-soft)' }} />
+              {unreadCount > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              className="topbar-avatar"
+              onClick={() => navigate('/my-profile')}
+              aria-label="Mon profil"
+              title="Mon profil"
+            >
+              {initials}
+            </button>
+          </div>
         </Navbar>
 
         <main className="page-content role-content">
