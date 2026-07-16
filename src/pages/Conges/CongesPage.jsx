@@ -379,6 +379,7 @@ const CongesPage = () => {
   };
 
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
+  const showEmployeeColumn = isAdmin() || user?.role === 'manager';
   const statusChips = [
     { value: '', label: 'Tous' },
     { value: 'en_attente_manager', label: 'En attente' },
@@ -574,7 +575,7 @@ const CongesPage = () => {
                           <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text, var(--dk-text))', marginBottom: 2 }}>
                             {getCongeTypeLabel(conge)}
                           </div>
-                          {isAdmin() && (
+                          {showEmployeeColumn && (
                             <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))' }}>
                               {getEmployeLabel(conge)}
                             </div>
@@ -605,7 +606,7 @@ const CongesPage = () => {
                 <Table hover className="mb-0">
                   <thead className="table-light">
                     <tr>
-                      {isAdmin() && <th>Employé</th>}
+                      {showEmployeeColumn && <th>Employé</th>}
                       {user?.role === 'super_admin' && <th>Entreprise</th>}
                       <th>Type</th>
                       <th>Période</th>
@@ -616,7 +617,7 @@ const CongesPage = () => {
                   <tbody>
                     {paginatedConges.map((conge) => (
                       <tr key={conge.id}>
-                        {isAdmin() && <td>{getEmployeLabel(conge)}</td>}
+                        {showEmployeeColumn && <td>{getEmployeLabel(conge)}</td>}
                         {user?.role === 'super_admin' && <td>{getEntrepriseLabel(conge)}</td>}
                         <td>{getCongeTypeLabel(conge)}</td>
                         <td>
