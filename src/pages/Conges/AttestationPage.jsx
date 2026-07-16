@@ -32,6 +32,7 @@ export default function AttestationPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [emailState, setEmailState] = useState('idle'); // idle | sending | success | error
   const printedRef = useRef(false);
 
   useEffect(() => {
@@ -95,19 +96,45 @@ export default function AttestationPage() {
   const jours = data.jours;
   const coms = commentaires();
 
+  const handleSendEmail = async () => {
+    setEmailState('sending');
+    try {
+      await congesService.sendAttestationEmail(id);
+      setEmailState('success');
+      setTimeout(() => setEmailState('idle'), 4000);
+    } catch (err) {
+      setEmailState('error');
+      setTimeout(() => setEmailState('idle'), 4000);
+    }
+  };
+
   return (
     <>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #e8edf2; }
-        .print-btn {
+        .action-btns {
           position: fixed; top: 16px; right: 16px; z-index: 1000;
+          display: flex; gap: 8px; align-items: center;
+        }
+        .print-btn {
           background: #1e3a5f; color: #fff; border: none; border-radius: 6px;
           padding: 9px 20px; font-size: 16px; font-weight: 600; cursor: pointer;
           box-shadow: 0 2px 8px rgba(0,0,0,0.18);
           display: flex; align-items: center; gap: 8px;
         }
         .print-btn:hover { background: #16304f; }
+        .email-btn {
+          background: #0e7490; color: #fff; border: none; border-radius: 6px;
+          padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+          display: flex; align-items: center; gap: 8px;
+          white-space: nowrap;
+        }
+        .email-btn:hover:not(:disabled) { background: #0c6478; }
+        .email-btn:disabled { opacity: 0.7; cursor: default; }
+        .email-btn.success { background: #15803d; }
+        .email-btn.error { background: #b91c1c; }
         .page-wrap { min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
 
         @media screen and (max-width: 840px) {
@@ -359,6 +386,8 @@ export default function AttestationPage() {
             overflow: hidden !important;
           }
           .print-btn { display: none !important; }
+          .email-btn { display: none !important; }
+          .action-btns { display: none !important; }
           .page-wrap {
             width: 210mm !important;
             height: 297mm !important;
@@ -387,14 +416,30 @@ export default function AttestationPage() {
         }
       `}</style>
 
-      <button className="print-btn" onClick={() => window.print()}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-          <polyline points="6 9 6 2 18 2 18 9"/>
-          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-          <rect x="6" y="14" width="12" height="8"/>
-        </svg>
-        Imprimer / PDF
-      </button>
+      <div className="action-btns">
+        <button className="print-btn" onClick={() => window.print()}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Imprimer / PDF
+        </button>
+        <button
+          className={`email-btn${emailState === 'success' ? ' success' : emailState === 'error' ? ' error' : ''}`}
+          onClick={handleSendEmail}
+          disabled={emailState === 'sending'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          {emailState === 'sending' ? 'Envoi…'
+            : emailState === 'success' ? 'Envoyé !'
+            : emailState === 'error' ? 'Erreur'
+            : 'Envoyer par email'}
+        </button>
+      </div>
 
       <div className="page-wrap">
         <div className="doc">
