@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import TeamOffLogo from '../../components/TeamOffLogo';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaSignInAlt, FaCalendarCheck, FaUsersCog, FaShieldAlt, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -91,7 +92,7 @@ const LoginPage = () => {
 
       {/* ── NAVBAR ── */}
       <nav className="landing-nav">
-        <span className="landing-nav__brand">TeamOff</span>
+        <TeamOffLogo size="sm" variant="dark" />
         <div className="landing-nav__links">
           <Link to="/contact" className="landing-nav__link">Contact</Link>
           <Link to="/register" className="landing-nav__cta">Créer un compte</Link>

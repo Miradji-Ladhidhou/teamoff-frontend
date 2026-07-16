@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import TeamOffLogo from '../TeamOffLogo';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
@@ -150,14 +151,14 @@ const Layout = () => {
     <div className={`app-shell role-shell role-${user?.role || 'employe'}`}>
       {/* Desktop sidebar (≥992px) */}
       <aside className="sidebar role-sidebar flex-column p-3">
-        <div className="sidebar-brand">Team<span>Off</span></div>
+        <div className="sidebar-brand"><TeamOffLogo size="sm" variant="light" /></div>
         {renderSidebarContent(false)}
       </aside>
 
       {/* Mobile offcanvas */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title className="fw-bold">Team<span style={{ color: 'var(--role-accent)' }}>Off</span></Offcanvas.Title>
+          <Offcanvas.Title><TeamOffLogo size="sm" variant="light" /></Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
@@ -165,7 +166,7 @@ const Layout = () => {
       <div className="main-area">
         {/* Mobile topbar */}
         <div className="topbar d-lg-none">
-          <span className="topbar-logo">Team<span>Off</span></span>
+          <TeamOffLogo size="xs" variant="light" />
           <div className="d-flex align-items-center gap-2">
             <button className="topbar-icon-btn position-relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
               <FaBell size={14} style={{ color: 'var(--dk-text-soft)' }} />

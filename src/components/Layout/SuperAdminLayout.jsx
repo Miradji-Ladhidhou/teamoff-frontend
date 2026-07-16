@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import TeamOffLogo from '../TeamOffLogo';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
@@ -134,8 +135,7 @@ const SuperAdminLayout = () => {
       {/* Desktop sidebar */}
       <aside className="sidebar role-sidebar flex-column p-3">
         <div className="sidebar-logo mb-2">
-          <FaShieldAlt style={{ color: 'var(--accent-purple, #a78bfa)', marginRight: 8 }} size={16} />
-          Team<span>Off</span>
+          <TeamOffLogo size="sm" variant="light" />
         </div>
         {renderSidebarContent(false)}
       </aside>
@@ -153,7 +153,7 @@ const SuperAdminLayout = () => {
       <div className="main-area">
         {/* Mobile topbar */}
         <div className="topbar d-lg-none">
-          <span className="topbar-logo">Team<span>Off</span></span>
+          <TeamOffLogo size="xs" variant="light" />
           <div className="d-flex align-items-center gap-2">
             <button className="topbar-icon-btn" onClick={() => navigate('/superadmin/notifications')} aria-label="Notifications" style={{ position: 'relative' }}>
               <FaBell size={14} style={{ color: 'rgba(241,241,243,0.7)' }} />

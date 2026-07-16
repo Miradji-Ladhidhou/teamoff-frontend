@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import TeamOffLogo from '../../components/TeamOffLogo';
 import { Container, Row, Col, Card, Form, Button, ProgressBar } from 'react-bootstrap';
 import { FaBuilding, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -93,7 +94,7 @@ const RegisterPage = () => {
             <Card className="shadow-lg dark-card">
               <Card.Body className="p-4">
                 <div className="text-center mb-3">
-                  <h1 className="h3 mb-2">TeamOff</h1>
+                  <TeamOffLogo size="md" variant="light" style={{ justifyContent: 'center', marginBottom: '0.5rem' }} />
                   <small className="text-muted">Créer un compte entreprise</small>
                   <ProgressBar now={progress} className="mt-2 mb-2 progress-xs" />
                   <small className="text-muted">Étape {step} sur 2</small>

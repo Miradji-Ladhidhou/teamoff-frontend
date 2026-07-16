@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import TeamOffLogo from '../../components/TeamOffLogo';
 import { Container, Row, Col, Card, Form, Alert } from 'react-bootstrap';
 import { FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
@@ -56,7 +57,7 @@ const SetPasswordPage = () => {
         <Row className="justify-content-center">
           <Col xs={12} sm={10} md={6} lg={5}>
             <div className="text-center mb-4">
-              <h1 className="fw-bold fs-3">TeamOff</h1>
+              <TeamOffLogo size="md" variant="light" style={{ justifyContent: 'center', marginBottom: '0.25rem' }} />
               <p className="text-muted small">Gestion des congés et absences</p>
             </div>
             <Card className="shadow-sm border-0">
