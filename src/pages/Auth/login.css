@@ -270,6 +270,22 @@
   color: rgba(255,255,255,0.25) !important;
 }
 
+.landing-input {
+  caret-color: #fff;
+}
+
+/* Correction autofill navigateur (Chrome/Safari imposent un fond clair) */
+.landing-input:-webkit-autofill,
+.landing-input:-webkit-autofill:hover,
+.landing-input:-webkit-autofill:focus,
+.landing-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff !important;
+  -webkit-box-shadow: 0 0 0 1000px #0f1832 inset !important;
+  box-shadow: 0 0 0 1000px #0f1832 inset !important;
+  caret-color: #fff !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
 /* ── Submit button ── */
 .landing-btn-primary {
   background: linear-gradient(135deg, #5b8dee, #4a7de0) !important;
