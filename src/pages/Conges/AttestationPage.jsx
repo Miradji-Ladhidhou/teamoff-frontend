@@ -344,9 +344,29 @@ export default function AttestationPage() {
 
         @media print {
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+          html {
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          body {
+            width: 210mm !important;
+            height: 297mm !important;
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
           .print-btn { display: none !important; }
-          .page-wrap { padding: 0 !important; background: transparent !important; }
+          .page-wrap {
+            width: 210mm !important;
+            height: 297mm !important;
+            padding: 0 !important;
+            background: transparent !important;
+            display: block !important;
+            overflow: hidden !important;
+          }
           .doc {
             width: 210mm !important;
             height: 297mm !important;
@@ -354,6 +374,7 @@ export default function AttestationPage() {
             padding: 0 !important;
             box-shadow: none !important;
             overflow: hidden !important;
+            zoom: 1 !important;
           }
           .doc-header { padding: 14px 28px 12px !important; }
           .doc-footer { padding: 7px 28px !important; }
