@@ -26,29 +26,33 @@
   --z-overlay: 10000;
   --z-modal:   10001;
 
-  /* SUCCESS — emerald light theme */
+  /* SUCCESS */
   --clr-success:        var(--dk-success);
-  --clr-success-bg:     rgba(5, 150, 105, 0.08);
-  --clr-success-border: var(--dk-success);
-  --clr-success-icon:   var(--dk-success);
+  --clr-success-bg:     #15803d;
+  --clr-success-border: #15803d;
+  --clr-success-icon:   #fff;
+  --clr-success-text:   #fff;
 
-  /* ERROR — soft red light theme */
+  /* ERROR */
   --clr-error:          var(--dk-error);
-  --clr-error-bg:       rgba(220, 38, 38, 0.08);
-  --clr-error-border:   var(--dk-error);
-  --clr-error-icon:     var(--dk-error);
+  --clr-error-bg:       #b91c1c;
+  --clr-error-border:   #b91c1c;
+  --clr-error-icon:     #fff;
+  --clr-error-text:     #fff;
 
-  /* WARNING — amber light theme */
+  /* WARNING */
   --clr-warning:        var(--dk-warning);
-  --clr-warning-bg:     rgba(217, 119, 6, 0.08);
-  --clr-warning-border: var(--dk-warning);
-  --clr-warning-icon:   var(--dk-warning);
+  --clr-warning-bg:     #b45309;
+  --clr-warning-border: #b45309;
+  --clr-warning-icon:   #fff;
+  --clr-warning-text:   #fff;
 
-  /* INFO — indigo light theme */
+  /* INFO */
   --clr-info:           var(--dk-accent);
-  --clr-info-bg:        rgba(99, 102, 241, 0.08);
-  --clr-info-border:    var(--dk-accent);
-  --clr-info-icon:      var(--dk-accent);
+  --clr-info-bg:        #1d4ed8;
+  --clr-info-border:    #1d4ed8;
+  --clr-info-icon:      #fff;
+  --clr-info-text:      #fff;
 
   /* DANGER (modal) */
   --clr-danger:        var(--dk-error);
@@ -122,15 +126,16 @@
 .toast-item {
   pointer-events: auto;
   border-radius: var(--alert-radius-sm);
-  box-shadow: var(--alert-shadow-md);
-  background: var(--dk-elevated);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  background: var(--clr-warning-bg);
+  color: var(--clr-warning-text);
   padding: 14px 16px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   animation: toastIn 0.25s ease-out forwards;
   min-height: 52px;
-  border-left: 3px solid var(--clr-warning-border);
+  border-left: 3px solid rgba(255,255,255,0.35);
   width: 100%;
   box-sizing: border-box;
 }
@@ -140,30 +145,27 @@
 }
 
 .toast-success {
-  border-left-color: var(--clr-success-border);
   background: var(--clr-success-bg);
+  color: var(--clr-success-text);
+  border-left-color: rgba(255,255,255,0.35);
 }
 
 .toast-error {
-  border-left-color: var(--clr-error-border);
   background: var(--clr-error-bg);
+  color: var(--clr-error-text);
+  border-left-color: rgba(255,255,255,0.35);
 }
 
 .toast-info {
-  border-left-color: var(--clr-info-border);
   background: var(--clr-info-bg);
+  color: var(--clr-info-text);
+  border-left-color: rgba(255,255,255,0.35);
 }
 
-.toast-icon-success {
-  color: var(--clr-success-icon);
-}
-
-.toast-icon-error {
-  color: var(--clr-error-icon);
-}
-
+.toast-icon-success,
+.toast-icon-error,
 .toast-icon-info {
-  color: var(--clr-info-icon);
+  color: #fff;
 }
 
 /* ===================================================================
@@ -187,20 +189,17 @@
   width: 18px;
   height: 18px;
   display: flex;
-  color: var(--clr-text-primary);
+  color: inherit;
 }
 
-/* Texte sombre sur fond pastel clair — contraste WCAG AA garanti */
 .toast-message {
   flex: 1;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
   word-break: break-word;
-  color: var(--clr-text-primary);
+  color: inherit;
 }
-
-/* Couleur couverte par .toast-message */
 
 .toast-close-btn {
   flex-shrink: 0;
@@ -215,16 +214,14 @@
   height: 22px;
   border-radius: 4px;
   margin-left: auto;
-  color: var(--clr-text-primary);
-  opacity: 0.65;
+  color: inherit;
+  opacity: 0.75;
   transition: opacity 0.15s, background 0.15s;
 }
 
-/* Couleur couverte par .toast-close-btn */
-
 .toast-close-btn:hover {
   opacity: 1;
-  background: var(--dk-hover);
+  background: rgba(255,255,255,0.15);
 }
 
 /* ===================================================================
