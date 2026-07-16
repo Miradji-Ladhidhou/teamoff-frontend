@@ -103,7 +103,7 @@ export default function AttestationPage() {
         .print-btn {
           position: fixed; top: 16px; right: 16px; z-index: 1000;
           background: #1e3a5f; color: #fff; border: none; border-radius: 6px;
-          padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+          padding: 9px 20px; font-size: 16px; font-weight: 600; cursor: pointer;
           box-shadow: 0 2px 8px rgba(0,0,0,0.18);
           display: flex; align-items: center; gap: 8px;
         }
@@ -119,31 +119,32 @@ export default function AttestationPage() {
           font-family: 'Georgia', 'Times New Roman', serif;
           position: relative;
           overflow: hidden;
+          padding: 20px;
         }
         .doc-header {
           background: #1e3a5f;
-          padding: 14px 28px 12px;
+          padding: 20px 28px 12px;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
         }
         .company-name {
           color: #fff;
-          font-size: 16px;
+          font-size: 18px;
           font-weight: 700;
           letter-spacing: 0.5px;
           font-family: 'Georgia', serif;
         }
         .company-sub {
           color: rgba(255,255,255,0.55);
-          font-size: 10px;
+          font-size: 12px;
           margin-top: 2px;
           font-family: Arial, sans-serif;
           font-weight: 400;
         }
         .ref-block { text-align: right; }
-        .ref-label { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
-        .ref-value { color: rgba(255,255,255,0.9); font-size: 10px; font-family: 'Courier New', monospace; margin-top: 1px; }
+        .ref-label { color: rgba(255,255,255,0.55); font-size: 10px; font-family: Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+        .ref-value { color: rgba(255,255,255,0.9); font-size: 12px; font-family: 'Courier New', monospace; margin-top: 1px; }
         .doc-stripe {
           height: 4px;
           background: linear-gradient(90deg, #2563eb 0%, #4f9cf9 60%, #93c5fd 100%);
@@ -153,7 +154,7 @@ export default function AttestationPage() {
           border-bottom: 1px solid #e5e9ef;
         }
         .doc-title {
-          font-size: 13px;
+          font-size: 15px;
           font-weight: 700;
           color: #1e3a5f;
           letter-spacing: 2px;
@@ -161,7 +162,7 @@ export default function AttestationPage() {
           font-family: 'Georgia', serif;
         }
         .doc-subtitle {
-          font-size: 10px;
+          font-size: 12px;
           color: #6b7f96;
           margin-top: 2px;
           font-family: Arial, sans-serif;
@@ -171,7 +172,7 @@ export default function AttestationPage() {
           padding: 10px 28px 0;
         }
         .doc-intro p {
-          font-size: 11px;
+          font-size: 13px;
           font-family: Arial, sans-serif;
           color: #2d3748;
           line-height: 1.65;
@@ -183,7 +184,7 @@ export default function AttestationPage() {
           font-weight: 700;
         }
         .doc-intro .valoir-droit {
-          font-size: 10px;
+          font-size: 12px;
           color: #6b7f96;
           font-style: italic;
           margin-top: 2px;
@@ -198,7 +199,7 @@ export default function AttestationPage() {
         .section-head {
           background: #f4f7fb;
           padding: 5px 10px;
-          font-size: 8px;
+          font-size: 10px;
           font-weight: 700;
           color: #4a6080;
           letter-spacing: 1.2px;
@@ -212,7 +213,7 @@ export default function AttestationPage() {
           grid-template-columns: 80px 1fr;
           padding: 4px 10px;
           border-bottom: 1px solid #f0f3f8;
-          font-size: 10px;
+          font-size: 12px;
           line-height: 1.35;
         }
         .info-row-doc:last-child { border-bottom: none; }
@@ -229,15 +230,15 @@ export default function AttestationPage() {
           border-radius: 0 5px 5px 0;
         }
         .comments-head {
-          font-size: 8px; font-weight: 700; color: #92400e;
+          font-size: 10px; font-weight: 700; color: #92400e;
           letter-spacing: 1px; text-transform: uppercase;
           font-family: Arial, sans-serif; margin-bottom: 5px;
         }
         .comment-item { margin-bottom: 5px; }
         .comment-item:last-child { margin-bottom: 0; }
-        .comment-who { font-size: 8px; color: #a16207; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
-        .comment-text { font-size: 10px; color: #3b2e00; font-family: Arial, sans-serif; font-style: italic; line-height: 1.35; }
-        .no-comment { font-size: 10px; color: #a0aec0; font-family: Arial, sans-serif; font-style: italic; }
+        .comment-who { font-size: 10px; color: #a16207; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+        .comment-text { font-size: 12px; color: #3b2e00; font-family: Arial, sans-serif; font-style: italic; line-height: 1.35; }
+        .no-comment { font-size: 12px; color: #a0aec0; font-family: Arial, sans-serif; font-style: italic; }
 
         .calc-block {
           background: #eff6ff;
@@ -246,55 +247,55 @@ export default function AttestationPage() {
           padding: 8px 10px;
         }
         .calc-head {
-          font-size: 8px; font-weight: 700; color: #1d4ed8;
+          font-size: 10px; font-weight: 700; color: #1d4ed8;
           letter-spacing: 1px; text-transform: uppercase;
           font-family: Arial, sans-serif; margin-bottom: 3px;
         }
         .calc-period {
-          font-size: 9px; color: #6b7f96; font-family: Arial, sans-serif;
+          font-size: 10px; color: #6b7f96; font-family: Arial, sans-serif;
           margin-bottom: 6px; font-style: italic;
         }
         .calc-row {
           display: flex; justify-content: space-between; align-items: center;
           padding: 3px 0;
           border-bottom: 1px solid rgba(37,99,235,0.1);
-          font-size: 10px; font-family: Arial, sans-serif;
+          font-size: 12px; font-family: Arial, sans-serif;
         }
         .calc-row:last-child { border-bottom: none; }
         .calc-label { color: #4a6080; }
         .calc-value { font-weight: 700; color: #1e3a5f; white-space: nowrap; }
         .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 4px 0; }
         .calc-row.total .calc-label { color: #1e3a5f; font-weight: 700; }
-        .calc-row.total .calc-value { color: #2563eb; font-size: 12px; }
+        .calc-row.total .calc-value { color: #2563eb; font-size: 14px; }
         .detail-section { margin: 4px 0 2px; }
         .detail-title {
-          font-size: 8px; font-weight: 700; color: #4a6080;
+          font-size: 10px; font-weight: 700; color: #4a6080;
           text-transform: uppercase; letter-spacing: 0.8px;
           font-family: Arial, sans-serif; margin-bottom: 2px;
         }
         .detail-row {
           display: flex; justify-content: space-between; align-items: center;
           padding: 1px 0 1px 6px;
-          font-size: 9px; font-family: Arial, sans-serif; color: #4a6080;
+          font-size: 10px; font-family: Arial, sans-serif; color: #4a6080;
         }
         .detail-date { flex: 1; }
         .badge-inclus {
-          font-size: 7px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
+          font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
           background: #dcfce7; color: #15803d;
         }
         .badge-exclu {
-          font-size: 7px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
+          font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
           background: #fee2e2; color: #b91c1c;
         }
-        .detail-none { font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif; padding: 1px 0 1px 6px; font-style: italic; }
+        .detail-none { font-size: 10px; color: #94a3b8; font-family: Arial, sans-serif; padding: 1px 0 1px 6px; font-style: italic; }
 
         .legal-mention {
-          font-size: 8px;
+          font-size: 10px;
           color: #a0aec0;
           font-family: Arial, sans-serif;
           font-style: italic;
           text-align: center;
-          padding: 0 28px 8px;
+          padding: 0 28px 50px;
           line-height: 1.4;
         }
 
@@ -302,7 +303,7 @@ export default function AttestationPage() {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 14px;
-          padding: 0 28px 14px;
+          padding: 0 28px 100px;
         }
         .sig-block { padding: 10px 12px; border-radius: 5px; }
         .sig-block.employee { background: #eff6ff; border: 1px solid #bfdbfe; }
@@ -321,7 +322,7 @@ export default function AttestationPage() {
 
         .doc-footer {
           background: #1e3a5f;
-          padding: 7px 28px;
+          padding: 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
