@@ -432,25 +432,36 @@ const CongeDetailsPage = () => {
             )}
           </div>
 
-          {/* Commentaire employé */}
-          {conge.commentaire_employe && (
-            <div className="comment-block mb-3">
-              <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))', marginBottom: 4 }}>Commentaire du demandeur</div>
-              <div style={{ fontSize: '12px', color: 'var(--text, var(--dk-text))' }}>
-                <FaComment size={10} className="me-2" style={{ opacity: 0.5 }} />
-                {conge.commentaire_employe}
-              </div>
-            </div>
-          )}
-
-          {/* Commentaire de refus */}
-          {getRefusalComment() && (
-            <div className="comment-block comment-block--danger mb-3">
-              <div style={{ fontSize: '10px', color: 'var(--accent-red, var(--dk-error))', marginBottom: 4 }}>{getRefusalLabel()}</div>
-              <div style={{ fontSize: '12px' }}>
-                <FaComment size={10} className="me-2" />
-                {getRefusalComment()}
-              </div>
+          {/* Commentaires */}
+          {(conge.commentaire_employe || conge.commentaire_manager || conge.commentaire_admin) && (
+            <div className="mb-3">
+              {conge.commentaire_employe && (
+                <div className="comment-block mb-2">
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted, var(--dk-text-muted))', marginBottom: 4 }}>Employé</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text, var(--dk-text))' }}>
+                    <FaComment size={10} className="me-2" style={{ opacity: 0.5 }} />
+                    {conge.commentaire_employe}
+                  </div>
+                </div>
+              )}
+              {conge.commentaire_manager && (
+                <div className={`comment-block mb-2${['refuse_manager', 'refuse_final'].includes(conge.statut) ? ' comment-block--danger' : ''}`}>
+                  <div style={{ fontSize: '10px', color: ['refuse_manager', 'refuse_final'].includes(conge.statut) ? 'var(--accent-red, var(--dk-error))' : 'var(--text-muted, var(--dk-text-muted))', marginBottom: 4 }}>Manager</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text, var(--dk-text))' }}>
+                    <FaComment size={10} className="me-2" style={{ opacity: 0.5 }} />
+                    {conge.commentaire_manager}
+                  </div>
+                </div>
+              )}
+              {conge.commentaire_admin && (
+                <div className={`comment-block mb-2${conge.statut === 'refuse_final' ? ' comment-block--danger' : ''}`}>
+                  <div style={{ fontSize: '10px', color: conge.statut === 'refuse_final' ? 'var(--accent-red, var(--dk-error))' : 'var(--text-muted, var(--dk-text-muted))', marginBottom: 4 }}>Administration</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text, var(--dk-text))' }}>
+                    <FaComment size={10} className="me-2" style={{ opacity: 0.5 }} />
+                    {conge.commentaire_admin}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
