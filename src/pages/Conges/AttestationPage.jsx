@@ -376,10 +376,13 @@ export default function AttestationPage() {
             overflow: hidden !important;
             zoom: 1 !important;
           }
-          .doc-header { padding: 14px 28px 12px !important; }
-          .doc-footer { padding: 7px 28px !important; }
-          .legal-mention { padding: 0 28px 8px !important; }
-          .sig-grid { padding: 0 28px 14px !important; }
+          .doc-header { padding: 10px 28px 8px !important; }
+          .doc-title-band { padding: 5px 28px !important; }
+          .doc-intro { padding: 6px 28px 0 !important; }
+          .doc-body { padding: 6px 28px 0 !important; }
+          .legal-mention { padding: 0 28px 4px !important; }
+          .sig-grid { padding: 0 28px 6px !important; }
+          .doc-footer { padding: 5px 28px !important; }
           @page { margin: 0; size: A4 portrait; }
         }
       `}</style>
