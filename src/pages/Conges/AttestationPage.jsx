@@ -109,6 +109,18 @@ export default function AttestationPage() {
         }
         .print-btn:hover { background: #16304f; }
         .page-wrap { min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+
+        @media screen and (max-width: 840px) {
+          .page-wrap { padding: 20px 0; }
+          .doc { zoom: 0.9; }
+        }
+        @media screen and (max-width: 640px) {
+          .doc { zoom: 0.7; }
+        }
+        @media screen and (max-width: 480px) {
+          .page-wrap { padding: 10px 0; }
+          .doc { zoom: 0.48; }
+        }
         .doc {
           background: #fff;
           width: 794px;
