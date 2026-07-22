@@ -576,6 +576,7 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
       </div>
 
       {/* Liste récap du mois */}
