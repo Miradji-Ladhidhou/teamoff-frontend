@@ -316,8 +316,8 @@
 }
 
 .confirmation-modal.modal-notification-success .modal-btn-confirm {
-  background: var(--clr-success-icon);
-  border-color: var(--clr-success-icon);
+  background: var(--clr-success-bg);
+  border-color: var(--clr-success-bg);
 }
 
 .confirmation-modal.modal-notification-success .modal-btn-confirm:hover:not(:disabled) {
