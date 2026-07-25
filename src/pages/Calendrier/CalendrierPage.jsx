@@ -571,12 +571,15 @@ const CalendrierPage = () => {
 
       {/* Légende */}
       <div className="calendar-legend-bar">
-        <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Approuvé</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Congé approuvé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-warning"></span>En attente</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-info"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
+        {blockedSpecificDates.length > 0 && (
+          <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
+        )}
       </div>
 
       {/* Liste récap du mois */}
