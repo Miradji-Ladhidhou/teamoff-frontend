@@ -12,6 +12,8 @@ import AsyncButton from '../../components/AsyncButton';
 const getCongeAccent = (statut, role) => {
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(role);
   switch (statut) {
+    case 'reserve':
+      return { accent: 'reserve', label: 'Réservé' };
     case 'en_attente_manager':
       return { accent: 'pending', label: 'En attente' };
     case 'valide_manager':
@@ -32,7 +34,7 @@ const accentToBarColor = (accent) => {
 };
 
 const accentToBadgeClass = (accent) => {
-  const map = { pending: 'pending', info: 'info', success: 'approved', danger: 'refused' };
+  const map = { pending: 'pending', info: 'info', success: 'approved', danger: 'refused', reserve: 'reserve' };
   return map[accent] || 'pending';
 };
 

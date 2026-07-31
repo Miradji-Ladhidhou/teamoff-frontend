@@ -231,6 +231,10 @@
   min-width: 0;
 }
 
+.bg-purple {
+  background-color: #7c3aed !important;
+}
+
 /* EVENT */
 .calendar-event {
   padding: 4px 6px;

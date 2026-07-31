@@ -246,6 +246,7 @@ const CalendrierPage = () => {
 
   const getStatusColor = (statut) => {
     const colors = {
+      reserve: 'purple',
       en_attente_manager: 'warning',
       valide_manager: 'info',
       valide_final: 'success',
@@ -575,6 +576,7 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot bg-warning"></span>En attente</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-info"></span>Validé manager</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
         {blockedSpecificDates.length > 0 && (
