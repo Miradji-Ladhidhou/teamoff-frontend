@@ -189,6 +189,7 @@ export const congesService = {
   delete: (id, data = {}) => api.delete(`/conges/${id}`, { data }),
   validate: (id, data = {}) => api.post(`/conges/${id}/validate`, data),
   reject: (id, data = {}) => api.post(`/conges/${id}/reject`, data),
+  activate: (id) => api.post(`/conges/${id}/activate`),
   getById: (id) => api.get(`/conges/${id}`),
   getHistory: (id) => api.get(`/conges/${id}/history`),
   calculateDays: (data) => api.post('/conges/calculate-days', data),

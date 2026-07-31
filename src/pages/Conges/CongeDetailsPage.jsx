@@ -174,6 +174,7 @@ const CongeDetailsPage = () => {
 
   const getStatusAccent = (statut) => {
     const map = {
+      reserve: 'reserve',
       en_attente_manager: 'pending',
       valide_manager: 'info',
       valide_final: 'success',
@@ -185,6 +186,7 @@ const CongeDetailsPage = () => {
 
   const getStatusText = (statut) => {
     const map = {
+      reserve: 'Réservé',
       en_attente_manager: 'En attente manager',
       valide_manager: 'Validé manager',
       valide_final: 'Validé final',
@@ -243,6 +245,8 @@ const CongeDetailsPage = () => {
     if (!conge) return false;
     const isOwnLeave = conge.utilisateur_id === user?.id;
 
+    if (isOwnLeave && conge.statut === 'reserve') return true;
+
     if (isOwnLeave && conge.statut === 'en_attente_manager') {
       if (user?.role === 'employe') return selfCancellationPolicy.allow_employee_cancel_own_pending;
       if (user?.role === 'manager') return selfCancellationPolicy.allow_manager_cancel_own_pending;
@@ -264,6 +268,11 @@ const CongeDetailsPage = () => {
       return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
     }
     return false;
+  };
+
+  const canActivate = () => {
+    if (!conge) return false;
+    return conge.statut === 'reserve' && ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
   };
 
   const formatDate = (dateString) => {
@@ -639,6 +648,37 @@ const CongeDetailsPage = () => {
                     <FaTimes size={10} /> Refuser
                   </button>
                 </div>
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Activer la réservation */}
+          {canActivate() && (
+            <Card className="mb-4">
+              <Card.Header>
+                <h6 className="mb-0">Actions</h6>
+              </Card.Header>
+              <Card.Body>
+                <p className="small text-muted mb-3">
+                  Cette demande est actuellement en statut <strong>Réservé</strong>. Activez-la pour lancer le circuit de validation normal (manager → admin).
+                </p>
+                <button
+                  className="btn-approve"
+                  style={{ background: '#7c3aed', borderColor: '#7c3aed', width: '100%' }}
+                  disabled={action.loading}
+                  onClick={() => action.run(async () => {
+                    try {
+                      await congesService.activate(conge.id);
+                      alert.success('Demande activée avec succès.');
+                      const updated = await congesService.getById(conge.id);
+                      setConge(updated.data);
+                    } catch (err) {
+                      alert.error(err.response?.data?.message || 'Erreur lors de l\'activation');
+                    }
+                  })}
+                >
+                  {action.loading ? <Spinner size="sm" /> : <><FaCheck size={10} className="me-1" /> Activer la demande</>}
+                </button>
               </Card.Body>
             </Card>
           )}
