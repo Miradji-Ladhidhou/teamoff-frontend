@@ -16,6 +16,7 @@ const fmtEmbauche = (dateStr) => {
 };
 
 const STATUT_LABELS = {
+  reserve: 'Réservé (prévisionnel)',
   valide_final: 'Validé',
   valide_manager: 'Validé (manager)',
   en_attente_manager: 'En attente',
@@ -475,10 +476,16 @@ export default function AttestationPage() {
               que <strong>{nomComplet}</strong>
               {data.employe.service ? <>, employé(e) au sein du service <strong>{data.employe.service}</strong>,</> : null}
               {data.employe.date_embauche ? <> en poste depuis le <strong>{fmtEmbauche(data.employe.date_embauche)}</strong>,</> : null}
-              {' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong> du{' '}
-              <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
-              pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>,
-              conformément à la politique de congés de l'entreprise.
+              {data.conge.statut === 'reserve'
+                ? <>{' '}a soumis une <strong>réservation prévisionnelle</strong> de congé de type <strong>« {data.conge.type} »</strong> du{' '}
+                    <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
+                    pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>.
+                    Cette réservation est en attente de validation par la direction.</>
+                : <>{' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong> du{' '}
+                    <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
+                    pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>,
+                    conformément à la politique de congés de l'entreprise.</>
+              }
             </p>
             <p className="valoir-droit">
               Ce document est établi à la demande de l'intéressé(e) pour servir et valoir ce que de droit.
