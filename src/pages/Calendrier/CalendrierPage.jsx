@@ -538,7 +538,7 @@ const CalendrierPage = () => {
                           );
                         } else if (event._eventType === 'absence') {
                           // Couleur : maladie = vert, exceptionnelle = bleu
-                          const absColor = event.type_absence === 'maladie' ? 'success' : 'primary';
+                          const absColor = event.type_absence === 'maladie' ? 'maladie' : 'primary';
                           return (
                             <div
                               key={idx}
@@ -573,15 +573,17 @@ const CalendrierPage = () => {
       {/* Légende */}
       <div className="calendar-legend-bar">
         <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Congé approuvé</span>
-        <span className="calendar-legend-item"><span className="legend-dot bg-warning"></span>En attente</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>En attente</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-info"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
-        <span className="calendar-legend-item"><span className="legend-dot bg-info"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé</span>
-        <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence exceptionnelle</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-maladie"></span>Maladie</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
         {blockedSpecificDates.length > 0 && (
           <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
         )}
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-today"></span>Aujourd'hui</span>
       </div>
 
       {/* Liste récap du mois */}
@@ -624,7 +626,7 @@ const CalendrierPage = () => {
             nom: a.utilisateur?.nom || '',
             type: absenceLabel[a.type_absence] || a.type_absence,
             statut: null,
-            color: a.type_absence === 'maladie' ? 'success' : 'primary',
+            color: a.type_absence === 'maladie' ? 'maladie' : 'primary',
             debut: a.date_debut,
             fin: a.date_fin,
             commentaire: a.commentaire || '',

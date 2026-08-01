@@ -235,6 +235,43 @@
   background-color: #7c3aed !important;
 }
 
+/* Couleurs sombres pour contraste blanc sur fond clair Bootstrap */
+.calendar-event.bg-warning,
+.legend-dot.bg-warning,
+.cal-recap-dot.bg-warning {
+  background-color: #b45309 !important; /* amber-700 : Bootstrap yellow #ffc107 illisible avec texte blanc */
+}
+
+.calendar-event.bg-info,
+.legend-dot.bg-info,
+.cal-recap-dot.bg-info {
+  background-color: #0369a1 !important; /* sky-700 : Bootstrap cyan #0dcaf0 illisible avec texte blanc */
+}
+
+/* Maladie : teal distinct du vert "Congé approuvé" */
+.bg-maladie,
+.calendar-event.bg-maladie,
+.legend-dot.legend-dot-maladie,
+.cal-recap-dot.bg-maladie {
+  background-color: #0e7490 !important; /* teal-600 */
+}
+
+.legend-dot-maladie {
+  background: #0e7490;
+  border: 1px solid #0891b2;
+}
+
+/* Dots légende alignés avec les couleurs corrigées */
+.legend-dot-warning {
+  background: #b45309;
+  border: 1px solid #92400e;
+}
+
+.legend-dot-info {
+  background: #0369a1;
+  border: 1px solid #075985;
+}
+
 /* EVENT */
 .calendar-event {
   padding: 4px 6px;
