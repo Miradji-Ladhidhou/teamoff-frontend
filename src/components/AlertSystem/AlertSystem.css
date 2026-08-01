@@ -304,7 +304,7 @@
 }
 
 .confirmation-modal.modal-notification-success {
-  border-top: 4px solid var(--clr-success-icon);
+  border-top: 4px solid var(--clr-success-bg);
 }
 
 .confirmation-modal.modal-notification-success .modal-header {

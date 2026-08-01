@@ -128,6 +128,28 @@
   background: transparent !important;
 }
 
+.btn-warning {
+  background-color: var(--dk-warning) !important;
+  border-color: var(--dk-warning) !important;
+  color: #fff !important;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+  filter: brightness(1.1);
+}
+
+.btn-outline-warning {
+  color: var(--dk-warning) !important;
+  border-color: var(--dk-warning) !important;
+  background: transparent !important;
+}
+
+.btn-outline-warning:hover {
+  background-color: var(--dk-warning) !important;
+  color: #fff !important;
+}
+
 .btn-link {
   color: var(--dk-accent) !important;
 }

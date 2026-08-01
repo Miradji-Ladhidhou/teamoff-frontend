@@ -664,7 +664,7 @@ const CongeDetailsPage = () => {
                 </p>
                 <button
                   className="btn-approve"
-                  style={{ background: '#7c3aed', borderColor: '#7c3aed', width: '100%' }}
+                  style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', width: '100%' }}
                   disabled={action.loading}
                   onClick={() => action.run(async () => {
                     try {

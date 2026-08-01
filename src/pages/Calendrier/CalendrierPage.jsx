@@ -697,7 +697,7 @@ const CalendrierPage = () => {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => { setShowAbsenceModal(false); setAbsenceError(''); }} disabled={absenceSending}>Annuler</Button>
-            <Button type="submit" disabled={absenceSending}>{absenceSending ? 'Envoi…' : 'Déclarer'}</Button>
+            <Button type="submit" variant="primary" disabled={absenceSending}>{absenceSending ? 'Envoi…' : 'Déclarer'}</Button>
           </Modal.Footer>
         </form>
       </Modal>
