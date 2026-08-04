@@ -221,6 +221,11 @@
   font-weight: 600 !important;
 }
 
+.nc-btn-reserve {
+  flex-shrink: 0;
+  font-weight: 600 !important;
+}
+
 .nc-btn-cancel {
   flex-shrink: 0;
 }

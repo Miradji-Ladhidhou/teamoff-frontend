@@ -182,7 +182,7 @@ const NouveauCongePage = () => {
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (skipBalanceCheck = false) => {
     const errors = {};
     const isAdminEditingValidatedConge =
       isEditMode
@@ -226,8 +226,8 @@ const NouveauCongePage = () => {
       errors.conge_type_id = 'Ce type de congé n\'autorise pas les demi-journées';
     }
 
-    // Vérifier le solde disponible
-    if (!isAdminEditingValidatedConge && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
+    // Vérifier le solde disponible (sauf si la soumission est une réservation explicite N+1)
+    if (!isAdminEditingValidatedConge && !skipBalanceCheck && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
       const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
       const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
       const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
@@ -311,6 +311,15 @@ const NouveauCongePage = () => {
       const finalMessage = extractApiErrorMessage(err, 'Impossible de créer la demande de congé.');
       alert.error(finalMessage);
     }
+  };
+
+  const handleReserverSansSolde = async () => {
+    if (!canCreateLeave) {
+      alert.error('Vous n\'êtes pas autorisé à créer une demande de congé.');
+      return;
+    }
+    if (!validateForm(true)) return; // skip balance check
+    await submitCongeAction.run(() => submitCreateLeave());
   };
 
   const handleSubmit = async (e) => {
@@ -620,20 +629,45 @@ const NouveauCongePage = () => {
           </div>
 
           {/* ── Actions ── */}
-          <div className="nc-actions">
-            <AsyncButton
-              type="submit"
-              variant="primary"
-              className="nc-btn-submit"
-              action={submitCongeAction}
-              loadingText={isEditMode ? 'Enregistrement…' : 'Envoi en cours…'}
-            >
-              {isEditMode ? 'Enregistrer' : 'Envoyer la demande'}
-            </AsyncButton>
-            <Button as={Link} to={returnPath} variant="outline-secondary" disabled={loading} className="nc-btn-cancel">
-              Annuler
-            </Button>
-          </div>
+          {(() => {
+            const reqYear = formData.date_debut ? new Date(formData.date_debut).getFullYear() : null;
+            const isN1 = reqYear !== null && reqYear > new Date().getFullYear();
+            const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
+            const available = Number(soldeType?.solde_disponible ?? 0);
+            const soldeInsuffisant = joursCalcules !== null && joursCalcules > 0 && joursCalcules > available;
+            const showReservationButton = !isEditMode
+              && isN1
+              && soldeInsuffisant
+              && joursPolitique?.autoriser_reservation_sans_solde === true;
+            return (
+              <div className="nc-actions">
+                <AsyncButton
+                  type="submit"
+                  variant="primary"
+                  className="nc-btn-submit"
+                  action={submitCongeAction}
+                  loadingText={isEditMode ? 'Enregistrement…' : 'Envoi en cours…'}
+                >
+                  {isEditMode ? 'Enregistrer' : 'Envoyer la demande'}
+                </AsyncButton>
+                {showReservationButton && (
+                  <AsyncButton
+                    type="button"
+                    variant="outline-primary"
+                    className="nc-btn-reserve"
+                    action={submitCongeAction}
+                    loadingText="Réservation…"
+                    onClick={handleReserverSansSolde}
+                  >
+                    Réserver sans solde
+                  </AsyncButton>
+                )}
+                <Button as={Link} to={returnPath} variant="outline-secondary" disabled={loading} className="nc-btn-cancel">
+                  Annuler
+                </Button>
+              </div>
+            );
+          })()}
 
         </Form>
       </div>
