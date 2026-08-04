@@ -107,6 +107,21 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
 
       <div className="settings-row">
         <div className="settings-row__info">
+          <div className="settings-row__label">Réservations anticipées (année N+1)</div>
+          <div className="settings-row__desc">Permet aux employés de réserver un congé pour l'année suivante même sans solde suffisant. Le congé sera activé automatiquement dès que le solde sera disponible.</div>
+        </div>
+        <div className="settings-row__control">
+          <Form.Check
+            type="switch"
+            checked={Boolean(policy.autoriser_reservation_sans_solde ?? true)}
+            onChange={(e) => setField('autoriser_reservation_sans_solde', e.target.checked)}
+            label=""
+          />
+        </div>
+      </div>
+
+      <div className="settings-row">
+        <div className="settings-row__info">
           <div className="settings-row__label">Managers — accès à l'historique des employés</div>
           <div className="settings-row__desc">Les managers peuvent consulter l'historique de congés de tous les employés. Désactiver pour qu'ils ne voient que le leur.</div>
         </div>

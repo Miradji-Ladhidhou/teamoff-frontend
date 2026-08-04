@@ -352,9 +352,10 @@ const UsersManagement = () => {
 
   const formatDate = (value) => {
     if (!value) return 'Non definie';
-    const parsedDate = new Date(value);
-    if (Number.isNaN(parsedDate.getTime())) return 'Non definie';
-    return parsedDate.toLocaleDateString('fr-FR');
+    const s = String(value).split('T')[0];
+    const parts = s.split('-');
+    if (parts.length !== 3) return 'Non definie';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   if (loading) {

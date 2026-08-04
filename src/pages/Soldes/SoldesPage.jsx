@@ -143,7 +143,7 @@ const SoldesPage = () => {
     try {
       const acquisN = toNum(form.jours_acquis_n);
       const reportes = toNum(form.jours_reportes);
-      await quotasService.upsertUserCounter(selectedUserId, {
+      const saveRes = await quotasService.upsertUserCounter(selectedUserId, {
         annee: selectedYear,
         conge_type_id: form.conge_type_id,
         jours_acquis: acquisN + reportes,
@@ -154,7 +154,25 @@ const SoldesPage = () => {
       closeModal();
       const res = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
       setCounters(Array.isArray(res.data?.items) ? res.data.items : []);
-      alert.success('Solde enregistré.');
+
+      const activated = saveRes.data?.reservations_activees ?? [];
+      const pending = saveRes.data?.reservations_en_attente ?? [];
+      if (activated.length > 0) {
+        const detail = activated
+          .map((r) => {
+            const debut = r.date_debut ? new Date(r.date_debut).toLocaleDateString('fr-FR') : '';
+            const fin = r.date_fin ? new Date(r.date_fin).toLocaleDateString('fr-FR') : '';
+            const label = r.new_statut === 'valide_final' ? 'validé automatiquement' : 'en attente de validation';
+            return `${debut}–${fin} (${label})`;
+          })
+          .join(', ');
+        alert.success(
+          `Solde enregistré. ${activated.length} réservation(s) activée(s) : ${detail}.` +
+            (pending.length > 0 ? ` ${pending.length} en attente de solde suffisant.` : '')
+        );
+      } else {
+        alert.success('Solde enregistré.');
+      }
     } catch (err) {
       alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
     } finally {
@@ -176,7 +194,9 @@ const SoldesPage = () => {
     }
   };
 
-  const soldePreview = toNum(form.jours_acquis_n) + toNum(form.jours_reportes) - toNum(form.jours_pris) - toNum(form.jours_reserves);
+  // Fix #48 : formule alignée sur le backend (acquis - reserves).
+  // jours_acquis est déjà net (réduit lors de chaque prise) ; soustraire jours_pris sur-corrigeait.
+  const soldePreview = toNum(form.jours_acquis_n) + toNum(form.jours_reportes) - toNum(form.jours_reserves);
 
   /* ── Rendu ── */
   if (loading) {
@@ -420,8 +440,6 @@ const SoldesPage = () => {
                 ({toNum(form.jours_reportes).toFixed(1)} N-1
                 {' + '}
                 {toNum(form.jours_acquis_n).toFixed(1)} N)
-                {' − '}
-                {toNum(form.jours_pris).toFixed(1)} pris
                 {toNum(form.jours_reserves) > 0 ? ` − ${toNum(form.jours_reserves).toFixed(1)} réservés` : ''}
               </div>
             </div>

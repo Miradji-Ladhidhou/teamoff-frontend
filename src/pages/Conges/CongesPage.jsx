@@ -375,9 +375,10 @@ const CongesPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const parsedDate = new Date(dateString);
-    if (Number.isNaN(parsedDate.getTime())) return '-';
-    return parsedDate.toLocaleDateString('fr-FR');
+    const s = String(dateString).split('T')[0];
+    const parts = s.split('-');
+    if (parts.length !== 3) return '-';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);

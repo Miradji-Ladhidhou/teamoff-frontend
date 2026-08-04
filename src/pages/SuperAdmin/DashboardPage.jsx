@@ -188,7 +188,7 @@ const SuperAdminDashboard = () => {
                           <span className="badge info">{activity.type || 'Info'}</span>
                         </td>
                         <td>{activity.message || 'Activité système'}</td>
-                        <td>{new Date(activity.createdAt || Date.now()).toLocaleDateString('fr-FR')}</td>
+                        <td>{new Date(activity.createdAt || Date.now()).toLocaleDateString('fr-FR').replace(/\//g, '-')}</td>
                         <td>
                           <span className={`badge ${activity.read ? 'approved' : 'pending'}`}>
                             {activity.read ? 'Lu' : 'Non lu'}

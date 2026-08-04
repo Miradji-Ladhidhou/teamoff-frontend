@@ -25,6 +25,7 @@ const DEFAULT_POLICY = {
   rtt_annuels: 0,
   report_autorise: false,
   report_max_jours: 0,
+  autoriser_reservation_sans_solde: true,
   max_employees_on_leave: {
     global: null,
     by_service: {},
@@ -111,6 +112,7 @@ const PolitiqueCongesPage = () => {
   const [timezone, setTimezone] = useState('Europe/Paris');
   const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
   const [activeSection, setActiveSection] = useState('conges');
+  const [expandedServices, setExpandedServices] = useState({});
 
   const entrepriseId = user?.entreprise_id;
 

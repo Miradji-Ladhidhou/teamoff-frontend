@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie } from 'react-icons/fa';
 import * as api from '../../services/api';
-import { useAlert, useConfirmation } from '../../hooks/useAlert';
+import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -72,10 +72,12 @@ const normalizeByServiceLimits = (byService = {}) => {
 
 const CompaniesManagement = () => {
   const alert = useAlert();
-  const { confirm } = useConfirmation();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  // Fix #57 : confirmation forte avant suppression (re-saisie du nom)
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
   const [editingCompany, setEditingCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState(DEFAULT_FORM);
@@ -342,28 +344,28 @@ const CompaniesManagement = () => {
     });
   };
 
-  const handleDelete = async (companyId) => {
+  const handleDelete = (companyId) => {
     const targetCompany = companies.find(c => c.id === companyId);
-    confirm({
-      title: 'Supprimer cette entreprise ?',
-      description: `Êtes-vous sûr de vouloir supprimer "${targetCompany?.nom}" ? Cette action est irréversible et supprimera tous les conges associes.`,
-      confirmLabel: 'Supprimer définitivement',
-      cancelLabel: 'Annuler',
-      danger: true,
-      onConfirm: async () => {
-        await deleteAction.run(async () => {
-          setActiveCompanyActionId(companyId);
-          try {
-            await api.entreprisesService.delete(companyId);
-            alert.success('Entreprise supprimee avec succes');
-            loadCompanies();
-          } catch (deleteError) {
-            console.error('Erreur suppression entreprise:', deleteError);
-            alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
-          } finally {
-            setActiveCompanyActionId(null);
-          }
-        });
+    if (!targetCompany) return;
+    setDeleteTarget({ id: companyId, nom: targetCompany.nom });
+    setDeleteConfirmInput('');
+  };
+
+  const handleDeleteExecute = async () => {
+    if (!deleteTarget) return;
+    await deleteAction.run(async () => {
+      setActiveCompanyActionId(deleteTarget.id);
+      try {
+        await api.entreprisesService.delete(deleteTarget.id);
+        setDeleteTarget(null);
+        setDeleteConfirmInput('');
+        alert.success('Entreprise supprimée avec succès');
+        loadCompanies();
+      } catch (deleteError) {
+        console.error('Erreur suppression entreprise:', deleteError);
+        alert.error(deleteError.response?.data?.message || 'Erreur lors de la suppression');
+      } finally {
+        setActiveCompanyActionId(null);
       }
     });
   };
@@ -935,6 +937,56 @@ const CompaniesManagement = () => {
             </AsyncButton>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* Fix #57 — Confirmation forte : re-saisie du nom avant suppression */}
+      <Modal
+        show={Boolean(deleteTarget)}
+        onHide={() => { setDeleteTarget(null); setDeleteConfirmInput(''); }}
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="text-danger">Supprimer cette entreprise ?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Cette action est <strong>irréversible</strong> et supprimera définitivement
+            l'entreprise <strong>{deleteTarget?.nom}</strong> ainsi que toutes les données associées
+            (utilisateurs, congés, compteurs).
+          </p>
+          <Form.Group>
+            <Form.Label>
+              Pour confirmer, retapez exactement le nom de l'entreprise&nbsp;:
+            </Form.Label>
+            <Form.Control
+              type="text"
+              value={deleteConfirmInput}
+              onChange={(e) => setDeleteConfirmInput(e.target.value)}
+              placeholder={deleteTarget?.nom}
+              autoFocus
+              disabled={deleteAction.isRunning}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => { setDeleteTarget(null); setDeleteConfirmInput(''); }}
+            disabled={deleteAction.isRunning}
+          >
+            Annuler
+          </Button>
+          <AsyncButton
+            variant="danger"
+            onClick={handleDeleteExecute}
+            action={deleteAction}
+            loadingText="Suppression..."
+            disabled={deleteConfirmInput !== deleteTarget?.nom}
+          >
+            Supprimer définitivement
+          </AsyncButton>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

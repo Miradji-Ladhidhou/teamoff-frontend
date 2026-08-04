@@ -232,7 +232,13 @@ const DashboardPage = () => {
     };
   }, [recentConges, user?.role]);
 
-  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR');
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const s = String(dateString).split('T')[0];
+    const parts = s.split('-');
+    if (parts.length !== 3) return '-';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
 
   const getSoldeTypeLabel = (solde) => {
     if (solde?.conge_type?.libelle) return solde.conge_type.libelle;

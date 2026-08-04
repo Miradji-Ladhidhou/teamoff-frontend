@@ -21,7 +21,8 @@ const SystemSettings = () => {
     smtpHost: '',
     smtpPort: 587,
     smtpUser: '',
-    smtpPassword: '',
+    smtpPassword: '',      // champ de saisie seulement — jamais pré-rempli depuis l'API
+    smtpPasswordSet: false, // true si un mot de passe est configuré côté serveur
     emailFrom: '',
 
     // Paramètres sécurité
@@ -33,7 +34,8 @@ const SystemSettings = () => {
     // Paramètres notifications
     emailNotifications: true,
     pushNotifications: true,
-    slackWebhook: '',
+    slackWebhook: '',       // champ de saisie seulement — jamais pré-rempli depuis l'API
+    slackWebhookSet: false,
 
     // Paramètres base de données
     dbBackupFrequency: 'daily',
@@ -85,6 +87,10 @@ const SystemSettings = () => {
       setSettings(prev => ({
         ...prev,
         ...serverSettings,
+        // Ne jamais pré-remplir les secrets depuis l'API : le champ reste vide.
+        // smtpPasswordSet / slackWebhookSet indiquent si une valeur est configurée.
+        smtpPassword: '',
+        slackWebhook: '',
       }));
     } catch (error) {
       console.error('Erreur chargement paramètres:', error);
@@ -142,15 +148,25 @@ const SystemSettings = () => {
       };
 
       const fields = sectionFields[section] || [];
+      const SKIP_IF_EMPTY = ['smtpPassword', 'slackWebhook'];
       const payload = {};
       fields.forEach((field) => {
+        // Ne pas envoyer les champs secrets si l'admin n'a rien saisi :
+        // une chaîne vide ne doit pas écraser un secret existant côté serveur.
+        if (SKIP_IF_EMPTY.includes(field) && !settings[field]) return;
         payload[field] = settings[field];
       });
 
       const response = await settingsService.updateSection(section, payload);
       const updatedSettings = response.data?.settings;
       if (updatedSettings) {
-        setSettings(prev => ({ ...prev, ...updatedSettings }));
+        setSettings(prev => ({
+          ...prev,
+          ...updatedSettings,
+          // Réinitialiser les champs de saisie secret après sauvegarde
+          smtpPassword: '',
+          slackWebhook: '',
+        }));
       }
 
       await loadHistory({ page: 1 });
@@ -528,11 +544,20 @@ const SystemSettings = () => {
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Mot de passe SMTP</Form.Label>
+                    <Form.Label>
+                      Mot de passe SMTP
+                      {settings.smtpPasswordSet && (
+                        <span className="text-muted ms-2" style={{ fontSize: '0.8em', fontWeight: 'normal' }}>
+                          (configuré — laisser vide pour conserver)
+                        </span>
+                      )}
+                    </Form.Label>
                     <Form.Control
                       type="password"
                       value={settings.smtpPassword}
                       onChange={(e) => handleInputChange('smtpPassword', e.target.value)}
+                      placeholder={settings.smtpPasswordSet ? '••••••••' : 'Entrer le mot de passe SMTP'}
+                      autoComplete="new-password"
                     />
                   </Form.Group>
                 </Col>
