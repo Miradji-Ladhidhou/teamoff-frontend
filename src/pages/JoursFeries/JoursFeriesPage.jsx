@@ -346,11 +346,17 @@ const JoursFeriesPage = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    if (!dateString) return '-';
+    // new Date("YYYY-MM-DD") est interprété en minuit UTC ; toLocaleDateString
+    // peut décaler d'un jour en UTC-N. On construit le Date en minuit LOCAL.
+    const parts = String(dateString).slice(0, 10).split('-').map(Number);
+    if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return '-';
+    const [year, month, day] = parts;
+    return new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
