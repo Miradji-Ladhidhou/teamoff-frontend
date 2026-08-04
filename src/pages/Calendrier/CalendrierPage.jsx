@@ -100,11 +100,20 @@ const CalendrierPage = () => {
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [filters, setFilters] = useState({
     statut: 'all',
-    utilisateur: 'all'
+    utilisateurId: 'all'
   });
   const entrepriseId = user?.entreprise_id;
   const canDeclareAbsence = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
   const canCreateLeave = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
+
+  // RGPD Art. 9 — le commentaire d'un arrêt maladie est une donnée de santé.
+  // Visible uniquement par : l'employé lui-même, le manager, l'admin.
+  const canSeeAbsenceComment = (absence) => {
+    if (!absence || absence.type_absence !== 'maladie') return true;
+    if (['manager', 'admin_entreprise', 'super_admin'].includes(user?.role)) return true;
+    const ownerId = absence.utilisateur_id ?? absence.utilisateur?.id;
+    return ownerId === user?.id;
+  };
 
   useEffect(() => {
     loadCalendarData();
@@ -120,8 +129,14 @@ const CalendrierPage = () => {
       const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
       const lastDay = new Date(year, month, 0).toISOString().slice(0, 10);
 
+      // Fix #53 : résoudre 'me' → user.id avant envoi (le backend attend un UUID).
+      const resolvedFilters = {
+        ...filters,
+        utilisateurId: filters.utilisateurId === 'me' ? user?.id : filters.utilisateurId,
+      };
+
       const [congesResponse, absencesResponse, feriesResponse, blockedDaysResponse] = await Promise.all([
-        calendrierService.getCongesByMonth(year, month, filters),
+        calendrierService.getCongesByMonth(year, month, resolvedFilters),
         api.get('/absences', { params: { date_debut: firstDay, date_fin: lastDay } }),
         calendrierService.getJoursFeriesByMonth(year, month),
         entrepriseId ? entreprisesService.getBlockedDays(entrepriseId).catch(() => null) : Promise.resolve(null),
@@ -220,10 +235,17 @@ const CalendrierPage = () => {
   };
 
   const getJourFerieForDay = (date) => {
+    const target = normalizeLocalDate(date);
+    if (!target) return undefined;
     return joursFeries.find(jf => {
       const jfDate = normalizeLocalDate(jf.date);
-      const currentDate = normalizeLocalDate(date);
-      return jfDate?.getTime() === currentDate?.getTime();
+      if (!jfDate) return false;
+      // Fériés récurrents : seuls mois+jour comptent, l'année stockée est ignorée
+      if (jf.recurrent) {
+        return jfDate.getMonth() === target.getMonth() &&
+               jfDate.getDate()  === target.getDate();
+      }
+      return jfDate.getTime() === target.getTime();
     });
   };
 
@@ -240,6 +262,7 @@ const CalendrierPage = () => {
       valide_final: 'approved',
       refuse_manager: 'refused',
       refuse_final: 'refused',
+      annule: 'cancelled',
     };
     return classes[statut] || 'info';
   };
@@ -252,6 +275,7 @@ const CalendrierPage = () => {
       valide_final: 'success',
       refuse_manager: 'danger',
       refuse_final: 'danger',
+      annule: 'secondary',
     };
     return colors[statut] || 'secondary';
   };
@@ -437,6 +461,7 @@ const CalendrierPage = () => {
                     <option value="valide_final">Validé final</option>
                     <option value="refuse_manager">Refusé manager</option>
                     <option value="refuse_final">Refusé final</option>
+                    <option value="annule">Annulé</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -445,8 +470,8 @@ const CalendrierPage = () => {
                   <Form.Group>
                     <Form.Label>Utilisateur</Form.Label>
                     <Form.Select
-                      name="utilisateur"
-                      value={filters.utilisateur}
+                      name="utilisateurId"
+                      value={filters.utilisateurId}
                       onChange={handleFilterChange}
                     >
                       <option value="all">Tous les utilisateurs</option>
@@ -543,7 +568,7 @@ const CalendrierPage = () => {
                             <div
                               key={idx}
                               className={`calendar-event bg-${absColor}`}
-                              title={`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''} (${event.type_absence})${event.commentaire ? ' : ' + event.commentaire : ''}`}
+                              title={`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''} (${event.type_absence})${canSeeAbsenceComment(event) && event.commentaire ? ' : ' + event.commentaire : ''}`}
                               onClick={(e) => openEventDetailsModal(event, e)}
                               role="button"
                             >
@@ -577,6 +602,7 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-info"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-annule"></span>Annulé (vos congés)</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence exceptionnelle</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-maladie"></span>Maladie</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
@@ -600,6 +626,7 @@ const CalendrierPage = () => {
           valide_final: 'Validé',
           refuse_manager: 'Refusé',
           refuse_final: 'Refusé',
+          annule: 'Annulé',
         };
 
         const absenceLabel = {
@@ -629,7 +656,7 @@ const CalendrierPage = () => {
             color: a.type_absence === 'maladie' ? 'maladie' : 'primary',
             debut: a.date_debut,
             fin: a.date_fin,
-            commentaire: a.commentaire || '',
+            commentaire: canSeeAbsenceComment(a) ? (a.commentaire || '') : '',
             sort: a.date_debut,
           })),
         ].sort((a, b) => (a.sort || '').localeCompare(b.sort || ''));

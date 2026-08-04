@@ -81,6 +81,11 @@
   border: 2px solid var(--dk-accent);
 }
 
+.legend-dot-annule {
+  background: #9ca3af;
+  border: 1px solid #6b7280;
+}
+
 .calendar-shell-card__body {
   max-width: 100%;
   overflow-x: auto;
