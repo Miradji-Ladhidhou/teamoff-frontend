@@ -30,7 +30,7 @@ export const useLeavePolicy = () => {
       }
     };
 
-    if (user?.entreprise_id && ['admin_entreprise', 'manager'].includes(user?.role)) {
+    if (user?.entreprise_id && ['admin_entreprise', 'super_admin'].includes(user?.role)) {
       loadPolicy();
     } else {
       setLoading(false);
