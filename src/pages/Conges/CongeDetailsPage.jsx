@@ -504,7 +504,7 @@ const CongeDetailsPage = () => {
                           </span>
                           {samedis.length > 0 && !countSat
                             ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">—</span>
+                            : <span className="decompte-val decompte-val--muted">{samedis.length} j</span>
                           }
                         </div>
                         {samedis.map((d, i) => (
@@ -531,7 +531,7 @@ const CongeDetailsPage = () => {
                           </span>
                           {dimanches.length > 0 && !countSun
                             ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">—</span>
+                            : <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>
                           }
                         </div>
                         {dimanches.map((d, i) => (
@@ -555,7 +555,7 @@ const CongeDetailsPage = () => {
                           </span>
                           {feries.length > 0
                             ? <span className="decompte-val decompte-val--minus">−{feries.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">—</span>
+                            : <span className="decompte-val decompte-val--muted">0 j</span>
                           }
                         </div>
                         {feries.map((d, i) => (

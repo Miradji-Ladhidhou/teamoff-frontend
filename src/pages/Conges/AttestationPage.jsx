@@ -652,7 +652,7 @@ export default function AttestationPage() {
                       </span>
                       {samedis.length > 0 && !countSat
                         ? <span className="calc-value val-minus">−{samedis.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
                       }
                     </div>
                   );
@@ -673,7 +673,7 @@ export default function AttestationPage() {
                       </span>
                       {dimanches.length > 0 && !countSun
                         ? <span className="calc-value val-minus">−{dimanches.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
                       }
                     </div>
                   );
@@ -691,7 +691,7 @@ export default function AttestationPage() {
                         </span>
                         {feries.length > 0
                           ? <span className="calc-value val-minus">−{feries.length} j</span>
-                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>0 j</span>
                         }
                       </div>
                       {feries.map((d, i) => (
