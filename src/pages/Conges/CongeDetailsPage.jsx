@@ -489,21 +489,24 @@ const CongeDetailsPage = () => {
                     <span className="decompte-val">{jourDetail.calendaires} j</span>
                   </div>
 
-                  {/* Samedis */}
-                  {(() => {
+                  {/* Samedis — toujours affiché selon la politique */}
+                  {jourDetail.politique !== undefined && (() => {
                     const samedis = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
-                    if (samedis.length === 0) return null;
                     const countSat = jourDetail.politique?.count_saturday;
                     return (
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
-                            <span className={`decompte-tag ${countSat ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSat ? 'compté' : 'non compté'}</span>
+                            {samedis.length > 0
+                              ? `${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
+                              : 'Samedis'}
+                            <span className={`decompte-tag ${countSat ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSat ? 'comptés' : 'non comptés'}</span>
                           </span>
-                          {!countSat
-                            ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">{samedis.length} j</span>
+                          {samedis.length > 0
+                            ? (!countSat
+                                ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
+                                : <span className="decompte-val decompte-val--muted">{samedis.length} j</span>)
+                            : null
                           }
                         </div>
                         {samedis.map((d, i) => (
@@ -515,21 +518,24 @@ const CongeDetailsPage = () => {
                     );
                   })()}
 
-                  {/* Dimanches */}
-                  {(() => {
+                  {/* Dimanches — toujours affiché selon la politique */}
+                  {jourDetail.politique !== undefined && (() => {
                     const dimanches = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
-                    if (dimanches.length === 0) return null;
                     const countSun = jourDetail.politique?.count_sunday;
                     return (
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
-                            <span className={`decompte-tag ${countSun ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSun ? 'compté' : 'non compté'}</span>
+                            {dimanches.length > 0
+                              ? `${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
+                              : 'Dimanches'}
+                            <span className={`decompte-tag ${countSun ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSun ? 'comptés' : 'non comptés'}</span>
                           </span>
-                          {!countSun
-                            ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>
+                          {dimanches.length > 0
+                            ? (!countSun
+                                ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
+                                : <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>)
+                            : null
                           }
                         </div>
                         {dimanches.map((d, i) => (

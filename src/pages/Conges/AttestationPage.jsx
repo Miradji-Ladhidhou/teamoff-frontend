@@ -637,40 +637,44 @@ export default function AttestationPage() {
                   <span className="calc-value">{jours.calendaires} j</span>
                 </div>
 
-                {/* Samedis */}
-                {(() => {
+                {/* Samedis — toujours affiché selon la politique */}
+                {jours.politique !== undefined && (() => {
                   const samedis = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
-                  if (samedis.length === 0) return null;
                   const countSat = jours.politique?.count_saturday;
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
-                        <span className={countSat ? 'tag-inclus' : 'tag-exclu'}>{countSat ? 'compté' : 'non compté'}</span>
+                        {samedis.length > 0
+                          ? `${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
+                          : 'Samedis'}
+                        <span className={countSat ? 'tag-inclus' : 'tag-exclu'}>{countSat ? 'comptés' : 'non comptés'}</span>
                       </span>
-                      {!countSat
-                        ? <span className="calc-value val-minus">−{samedis.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
-                      }
+                      {samedis.length > 0 && (
+                        !countSat
+                          ? <span className="calc-value val-minus">−{samedis.length} j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
+                      )}
                     </div>
                   );
                 })()}
 
-                {/* Dimanches */}
-                {(() => {
+                {/* Dimanches — toujours affiché selon la politique */}
+                {jours.politique !== undefined && (() => {
                   const dimanches = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
-                  if (dimanches.length === 0) return null;
                   const countSun = jours.politique?.count_sunday;
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
-                        <span className={countSun ? 'tag-inclus' : 'tag-exclu'}>{countSun ? 'compté' : 'non compté'}</span>
+                        {dimanches.length > 0
+                          ? `${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
+                          : 'Dimanches'}
+                        <span className={countSun ? 'tag-inclus' : 'tag-exclu'}>{countSun ? 'comptés' : 'non comptés'}</span>
                       </span>
-                      {!countSun
-                        ? <span className="calc-value val-minus">−{dimanches.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
-                      }
+                      {dimanches.length > 0 && (
+                        !countSun
+                          ? <span className="calc-value val-minus">−{dimanches.length} j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
+                      )}
                     </div>
                   );
                 })()}
