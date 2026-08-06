@@ -242,6 +242,7 @@ export const quotasService = {
   recalculateProrata: (data = {}) => api.post('/quotas/recalculate-prorata', data),
   getUsage: () => api.get('/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
+  getHistorique: (userId, params = {}) => api.get(`/quotas/historique/${userId}`, { params }),
 };
 
 export const calendrierService = {
