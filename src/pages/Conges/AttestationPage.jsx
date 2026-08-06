@@ -631,12 +631,6 @@ export default function AttestationPage() {
                 <div className="calc-head">Décompte des jours</div>
                 <div className="calc-period">du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}</div>
 
-                {/* Jours calendaires */}
-                <div className="calc-row">
-                  <span className="calc-label">Jours calendaires</span>
-                  <span className="calc-value">{jours.calendaires} j</span>
-                </div>
-
                 {/* Samedis — politique entreprise */}
                 {jours.politique !== undefined && (
                   <div className="calc-row sub-row">

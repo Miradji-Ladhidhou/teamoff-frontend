@@ -483,12 +483,6 @@ const CongeDetailsPage = () => {
                 </div>
                 <div className="decompte-box">
 
-                  {/* Calendaires */}
-                  <div className="decompte-row">
-                    <span className="decompte-lbl">Jours calendaires</span>
-                    <span className="decompte-val">{jourDetail.calendaires} j</span>
-                  </div>
-
                   {/* Samedis — politique entreprise */}
                   {jourDetail.politique !== undefined && (
                     <div className="decompte-row">
