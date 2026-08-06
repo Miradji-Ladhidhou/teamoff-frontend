@@ -489,63 +489,29 @@ const CongeDetailsPage = () => {
                     <span className="decompte-val">{jourDetail.calendaires} j</span>
                   </div>
 
-                  {/* Samedis — toujours affiché selon la politique */}
-                  {jourDetail.politique !== undefined && (() => {
-                    const samedis = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
-                    const countSat = jourDetail.politique?.count_saturday;
-                    return (
-                      <>
-                        <div className="decompte-row">
-                          <span className="decompte-lbl">
-                            {samedis.length > 0
-                              ? `${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
-                              : 'Samedis'}
-                            <span className={`decompte-tag ${countSat ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSat ? 'comptés' : 'non comptés'}</span>
-                          </span>
-                          {samedis.length > 0
-                            ? (!countSat
-                                ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
-                                : <span className="decompte-val decompte-val--muted">{samedis.length} j</span>)
-                            : null
-                          }
-                        </div>
-                        {samedis.map((d, i) => (
-                          <div key={i} className="decompte-row decompte-row--sub">
-                            <span className="decompte-lbl">Sam. {formatDateShort(d.date + 'T00:00:00')}</span>
-                          </div>
-                        ))}
-                      </>
-                    );
-                  })()}
+                  {/* Samedis — politique entreprise */}
+                  {jourDetail.politique !== undefined && (
+                    <div className="decompte-row">
+                      <span className="decompte-lbl">
+                        Samedis
+                        <span className={`decompte-tag ${jourDetail.politique.count_saturday ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>
+                          {jourDetail.politique.count_saturday ? 'comptés' : 'non comptés'}
+                        </span>
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Dimanches — toujours affiché selon la politique */}
-                  {jourDetail.politique !== undefined && (() => {
-                    const dimanches = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
-                    const countSun = jourDetail.politique?.count_sunday;
-                    return (
-                      <>
-                        <div className="decompte-row">
-                          <span className="decompte-lbl">
-                            {dimanches.length > 0
-                              ? `${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
-                              : 'Dimanches'}
-                            <span className={`decompte-tag ${countSun ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSun ? 'comptés' : 'non comptés'}</span>
-                          </span>
-                          {dimanches.length > 0
-                            ? (!countSun
-                                ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
-                                : <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>)
-                            : null
-                          }
-                        </div>
-                        {dimanches.map((d, i) => (
-                          <div key={i} className="decompte-row decompte-row--sub">
-                            <span className="decompte-lbl">Dim. {formatDateShort(d.date + 'T00:00:00')}</span>
-                          </div>
-                        ))}
-                      </>
-                    );
-                  })()}
+                  {/* Dimanches — politique entreprise */}
+                  {jourDetail.politique !== undefined && (
+                    <div className="decompte-row">
+                      <span className="decompte-lbl">
+                        Dimanches
+                        <span className={`decompte-tag ${jourDetail.politique.count_sunday ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>
+                          {jourDetail.politique.count_sunday ? 'comptés' : 'non comptés'}
+                        </span>
+                      </span>
+                    </div>
+                  )}
 
                   {/* Jours fériés */}
                   {(() => {
