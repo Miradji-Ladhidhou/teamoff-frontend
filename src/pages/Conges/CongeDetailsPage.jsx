@@ -492,16 +492,20 @@ const CongeDetailsPage = () => {
                   {/* Samedis */}
                   {(() => {
                     const samedis = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
-                    if (samedis.length === 0) return null;
-                    const inclus = samedis[0].inclus;
+                    const countSat = jourDetail.politique?.count_saturday;
                     return (
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            dont {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
-                            <span className={`decompte-tag ${inclus ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{inclus ? 'compté' : 'non compté'}</span>
+                            {samedis.length > 0
+                              ? `dont ${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
+                              : 'Samedis'}
+                            <span className={`decompte-tag ${countSat ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSat ? 'comptés' : 'non comptés'}</span>
                           </span>
-                          <span className={`decompte-val ${inclus ? 'decompte-val--plus' : 'decompte-val--minus'}`}>{inclus ? '' : '−'}{samedis.length} j</span>
+                          {samedis.length > 0 && !countSat
+                            ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
+                            : <span className="decompte-val decompte-val--muted">—</span>
+                          }
                         </div>
                         {samedis.map((d, i) => (
                           <div key={i} className="decompte-row decompte-row--sub">
@@ -515,16 +519,20 @@ const CongeDetailsPage = () => {
                   {/* Dimanches */}
                   {(() => {
                     const dimanches = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
-                    if (dimanches.length === 0) return null;
-                    const inclus = dimanches[0].inclus;
+                    const countSun = jourDetail.politique?.count_sunday;
                     return (
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            dont {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
-                            <span className={`decompte-tag ${inclus ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{inclus ? 'compté' : 'non compté'}</span>
+                            {dimanches.length > 0
+                              ? `dont ${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
+                              : 'Dimanches'}
+                            <span className={`decompte-tag ${countSun ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSun ? 'comptés' : 'non comptés'}</span>
                           </span>
-                          <span className={`decompte-val ${inclus ? 'decompte-val--plus' : 'decompte-val--minus'}`}>{inclus ? '' : '−'}{dimanches.length} j</span>
+                          {dimanches.length > 0 && !countSun
+                            ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
+                            : <span className="decompte-val decompte-val--muted">—</span>
+                          }
                         </div>
                         {dimanches.map((d, i) => (
                           <div key={i} className="decompte-row decompte-row--sub">
