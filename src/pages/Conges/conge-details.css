@@ -119,6 +119,56 @@
   color: var(--dk-text) !important;
 }
 
+/* ────────────── Décompte des jours ────────────── */
+.decompte-box {
+  font-size: 0.82rem;
+}
+
+.decompte-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid var(--dk-border-soft, rgba(255,255,255,0.05));
+  gap: 0.5rem;
+}
+
+.decompte-row:last-child { border-bottom: none; }
+
+.decompte-row--sub {
+  padding: 0.15rem 0 0.15rem 0.85rem;
+  font-size: 0.76rem;
+  border-bottom: none;
+  opacity: 0.75;
+}
+
+.decompte-row--total {
+  border-top: 2px solid var(--dk-accent, #5b8dee);
+  border-bottom: none;
+  margin-top: 0.2rem;
+  padding-top: 0.35rem;
+  font-weight: 700;
+}
+
+.decompte-lbl { color: var(--dk-text-soft); flex: 1; }
+.decompte-val { font-weight: 700; color: var(--dk-text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.decompte-val--minus { color: var(--dk-error, #f87171) !important; }
+.decompte-val--plus  { color: var(--dk-success, #4ade80) !important; }
+.decompte-val--total { color: var(--dk-accent, #5b8dee) !important; font-size: 0.9rem; }
+.decompte-val--muted { color: var(--dk-text-muted) !important; font-weight: 400; }
+
+.decompte-tag {
+  display: inline-block;
+  font-size: 0.63rem;
+  font-weight: 700;
+  padding: 0 0.32rem;
+  border-radius: 999px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+}
+.decompte-tag--inclus { background: rgba(34,197,94,0.12); color: #22c55e; }
+.decompte-tag--exclu  { background: rgba(248,113,113,0.12); color: var(--dk-error, #f87171); }
+
 /* ────────────── Responsive mobile ────────────── */
 @media (max-width: 575.98px) {
   .conge-details-header {

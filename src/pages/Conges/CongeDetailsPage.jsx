@@ -474,64 +474,103 @@ const CongeDetailsPage = () => {
             </div>
           )}
 
-          {/* Détail du calcul */}
-          {conge.calcul_details && (
+          {/* Décompte des jours */}
+          {jourDetail && (
             <Card className="mb-3">
-              <Card.Body className="p-0">
-                <div className="calcul-details-box">
+              <Card.Body>
+                <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--dk-accent, #5b8dee)', marginBottom: '0.6rem' }}>
+                  Décompte des jours
+                </div>
+                <div className="decompte-box">
 
-                  {/* Ligne totale */}
-                  <div><span>Jours calendaires</span><span>{formatDays(conge.calcul_details.jours_dans_periode)}</span></div>
+                  {/* Calendaires */}
+                  <div className="decompte-row">
+                    <span className="decompte-lbl">Jours calendaires</span>
+                    <span className="decompte-val">{jourDetail.calendaires} j</span>
+                  </div>
 
-                  {/* Week-ends */}
-                  {jourDetail?.detail?.filter(d => d.type === 'weekend').length > 0 && (
-                    <>
-                      <div style={{ paddingTop: 4, paddingBottom: 2 }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.6 }}>Week-ends</span>
-                        <span />
-                      </div>
-                      {jourDetail.detail.filter(d => d.type === 'weekend').map((d, i) => (
-                        <div key={i} style={{ paddingLeft: 10 }}>
-                          <span style={{ fontSize: '11px' }}>{d.label} {formatDateShort(d.date + 'T00:00:00')}</span>
-                          <span>
-                            {d.inclus
-                              ? <span style={{ fontSize: '10px', background: 'rgba(21,128,61,0.12)', color: '#15803d', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>inclus</span>
-                              : <span style={{ fontSize: '10px', background: 'rgba(185,28,28,0.1)', color: '#b91c1c', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>exclu</span>
-                            }
+                  {/* Samedis */}
+                  {(() => {
+                    const samedis = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
+                    if (samedis.length === 0) return null;
+                    const inclus = samedis[0].inclus;
+                    return (
+                      <>
+                        <div className="decompte-row">
+                          <span className="decompte-lbl">
+                            dont {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
+                            <span className={`decompte-tag ${inclus ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{inclus ? 'compté' : 'non compté'}</span>
                           </span>
+                          <span className={`decompte-val ${inclus ? 'decompte-val--plus' : 'decompte-val--minus'}`}>{inclus ? '' : '−'}{samedis.length} j</span>
                         </div>
-                      ))}
-                    </>
-                  )}
+                        {samedis.map((d, i) => (
+                          <div key={i} className="decompte-row decompte-row--sub">
+                            <span className="decompte-lbl">Sam. {formatDateShort(d.date + 'T00:00:00')}</span>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
+
+                  {/* Dimanches */}
+                  {(() => {
+                    const dimanches = jourDetail.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
+                    if (dimanches.length === 0) return null;
+                    const inclus = dimanches[0].inclus;
+                    return (
+                      <>
+                        <div className="decompte-row">
+                          <span className="decompte-lbl">
+                            dont {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
+                            <span className={`decompte-tag ${inclus ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{inclus ? 'compté' : 'non compté'}</span>
+                          </span>
+                          <span className={`decompte-val ${inclus ? 'decompte-val--plus' : 'decompte-val--minus'}`}>{inclus ? '' : '−'}{dimanches.length} j</span>
+                        </div>
+                        {dimanches.map((d, i) => (
+                          <div key={i} className="decompte-row decompte-row--sub">
+                            <span className="decompte-lbl">Dim. {formatDateShort(d.date + 'T00:00:00')}</span>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
 
                   {/* Jours fériés */}
-                  {jourDetail && (
-                    <>
-                      <div style={{ paddingTop: 4, paddingBottom: 2 }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.6 }}>Jours fériés</span>
-                        <span />
-                      </div>
-                      {jourDetail.detail.filter(d => d.type === 'ferie').length === 0
-                        ? <div style={{ paddingLeft: 10 }}><span style={{ fontSize: '11px', opacity: 0.5, fontStyle: 'italic' }}>Aucun sur la période</span><span /></div>
-                        : jourDetail.detail.filter(d => d.type === 'ferie').map((d, i) => (
-                          <div key={i} style={{ paddingLeft: 10 }}>
-                            <span style={{ fontSize: '11px' }}>{d.label} — {formatDateShort(d.date + 'T00:00:00')}</span>
-                            <span style={{ fontSize: '10px', background: 'rgba(185,28,28,0.1)', color: '#b91c1c', borderRadius: 8, padding: '1px 7px', fontWeight: 700 }}>exclu</span>
+                  {(() => {
+                    const feries = jourDetail.detail.filter(d => d.type === 'ferie');
+                    return (
+                      <>
+                        <div className="decompte-row">
+                          <span className="decompte-lbl">
+                            dont {feries.length} jour{feries.length !== 1 ? 's' : ''} férié{feries.length !== 1 ? 's' : ''}
+                            {feries.length > 0 && <span className="decompte-tag decompte-tag--exclu">non compté</span>}
+                          </span>
+                          {feries.length > 0
+                            ? <span className="decompte-val decompte-val--minus">−{feries.length} j</span>
+                            : <span className="decompte-val decompte-val--muted">—</span>
+                          }
+                        </div>
+                        {feries.map((d, i) => (
+                          <div key={i} className="decompte-row decompte-row--sub">
+                            <span className="decompte-lbl">{d.label} — {formatDateShort(d.date + 'T00:00:00')}</span>
                           </div>
-                        ))
-                      }
-                    </>
-                  )}
+                        ))}
+                      </>
+                    );
+                  })()}
 
-                  {/* Demi-journées si présentes */}
-                  {parseFloat(conge.calcul_details.jours_demi_journees_deduites) > 0 && (
-                    <div><span>Demi-journées déduites</span><span>−{formatDays(conge.calcul_details.jours_demi_journees_deduites)}</span></div>
+                  {/* Demi-journée si présente */}
+                  {parseFloat(conge.calcul_details?.jours_demi_journees_deduites) > 0 && (
+                    <div className="decompte-row">
+                      <span className="decompte-lbl">Demi-journée</span>
+                      <span className="decompte-val decompte-val--minus">−{formatDays(conge.calcul_details.jours_demi_journees_deduites)} j</span>
+                    </div>
                   )}
 
                   {/* Total */}
-                  <div style={{ borderTop: '2px solid var(--accent-blue, #5b8dee)', marginTop: 4, paddingTop: 6, fontWeight: 700 }}>
-                    <span>= Jours pris</span>
-                    <span>{formatDays(conge.calcul_details.jours_pris_calcules)}</span>
+                  <div className="decompte-row decompte-row--total">
+                    <span className="decompte-lbl" style={{ color: 'var(--dk-text)' }}>= Jours comptabilisés</span>
+                    <span className="decompte-val decompte-val--total">{jourDetail.ouvres} j</span>
                   </div>
 
                 </div>

@@ -328,6 +328,67 @@ export default function AttestationPage() {
           background: #fee2e2; color: #b91c1c;
         }
         .detail-none { font-size: 10px; color: #94a3b8; font-family: Arial, sans-serif; padding: 1px 0 1px 6px; font-style: italic; }
+        .calc-row.sub-row { padding: 2px 0 2px 10px; border-bottom: none; font-size: 11px; }
+        .calc-row.sub-row .calc-label { color: #6b7f96; }
+        .calc-row.sub-row .calc-value { font-size: 11px; }
+        .val-minus { color: #b91c1c !important; }
+        .val-plus  { color: #15803d !important; }
+        .tag-inclus { display: inline-block; font-size: 9px; font-weight: 700; padding: 0 4px; border-radius: 8px; background: #dcfce7; color: #15803d; margin-left: 4px; vertical-align: middle; }
+        .tag-exclu  { display: inline-block; font-size: 9px; font-weight: 700; padding: 0 4px; border-radius: 8px; background: #fee2e2; color: #b91c1c; margin-left: 4px; vertical-align: middle; }
+        .detail-row-sub { padding-left: 18px; }
+
+        .solde-block {
+          margin: 0 0 10px;
+          background: #f0fdf4;
+          border: 1px solid #86efac;
+          border-radius: 5px;
+          padding: 8px 12px;
+          display: flex;
+          align-items: center;
+          gap: 0;
+          flex-wrap: wrap;
+        }
+        .solde-block-head {
+          font-size: 10px; font-weight: 700; color: #15803d;
+          letter-spacing: 1px; text-transform: uppercase;
+          font-family: Arial, sans-serif;
+          flex: 0 0 100%;
+          margin-bottom: 5px;
+        }
+        .solde-items {
+          display: flex; align-items: center; gap: 0; flex: 1; flex-wrap: wrap;
+        }
+        .solde-item {
+          display: flex; flex-direction: column; align-items: center;
+          padding: 0 14px;
+          border-right: 1px solid #bbf7d0;
+        }
+        .solde-item:first-child { padding-left: 0; }
+        .solde-item:last-child { border-right: none; }
+        .solde-item__val {
+          font-size: 16px; font-weight: 800; font-family: Arial, sans-serif;
+          color: #15803d; font-variant-numeric: tabular-nums;
+        }
+        .solde-item__val.neutral { color: #4a6080; }
+        .solde-item__val.negative { color: #b91c1c; }
+        .solde-item__lbl {
+          font-size: 9px; color: #6b7f96; font-family: Arial, sans-serif;
+          text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; white-space: nowrap;
+        }
+        .solde-restant-chip {
+          margin-left: auto;
+          background: #15803d;
+          color: #fff;
+          border-radius: 4px;
+          padding: 4px 12px;
+          font-size: 13px; font-weight: 800; font-family: Arial, sans-serif;
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+        .solde-restant-chip.negative { background: #b91c1c; }
+        .solde-date {
+          font-size: 9px; color: #6b7280; font-family: Arial, sans-serif; margin-top: 1px; flex: 0 0 100%;
+        }
 
         .legal-mention {
           font-size: 10px;
@@ -413,7 +474,7 @@ export default function AttestationPage() {
           .legal-mention { padding: 0 28px 4px !important; }
           .sig-grid { padding: 0 28px 6px !important; }
           .doc-footer { padding: 5px 28px !important; }
-          @page { margin: 0; size: A4 portrait; }
+          @page { margin: 0mm; size: A4 portrait; }
         }
       `}</style>
 
@@ -528,6 +589,10 @@ export default function AttestationPage() {
                     <span className="val">{data.conge.type}</span>
                   </div>
                   <div className="info-row-doc">
+                    <span className="lbl">Demande</span>
+                    <span className="val">{data.conge.date_creation ? data.conge.date_creation.slice(0, 10).split('-').reverse().join('/') : '—'}</span>
+                  </div>
+                  <div className="info-row-doc">
                     <span className="lbl">Période</span>
                     <span className="val" style={{ fontSize: 10 }}>{periodLabel()}</span>
                   </div>
@@ -566,27 +631,49 @@ export default function AttestationPage() {
                 <div className="calc-head">Décompte des jours</div>
                 <div className="calc-period">du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}</div>
 
+                {/* Jours calendaires */}
                 <div className="calc-row">
                   <span className="calc-label">Jours calendaires</span>
                   <span className="calc-value">{jours.calendaires} j</span>
                 </div>
 
-                {/* Week-ends */}
+                {/* Samedis */}
                 {(() => {
-                  const weekends = jours.detail.filter(d => d.type === 'weekend');
-                  return weekends.length > 0 && (
-                    <div className="detail-section">
-                      <div className="detail-title">Week-ends</div>
-                      {weekends.map((d, i) => (
-                        <div key={i} className="detail-row">
-                          <span className="detail-date">{d.label} {fmt(d.date)}</span>
-                          {d.inclus
-                            ? <span className="badge-inclus">inclus</span>
-                            : <span className="badge-exclu">exclu</span>
-                          }
-                        </div>
-                      ))}
-                    </div>
+                  const samedis = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
+                  if (samedis.length === 0) return null;
+                  const inclus = samedis[0].inclus;
+                  return (
+                    <>
+                      <div className="calc-row sub-row">
+                        <span className="calc-label">
+                          dont {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
+                          <span className={inclus ? 'tag-inclus' : 'tag-exclu'}>{inclus ? 'compté' : 'non compté'}</span>
+                        </span>
+                        <span className={`calc-value ${inclus ? 'val-plus' : 'val-minus'}`}>
+                          {inclus ? '' : '−'}{samedis.length} j
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {/* Dimanches */}
+                {(() => {
+                  const dimanches = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
+                  if (dimanches.length === 0) return null;
+                  const inclus = dimanches[0].inclus;
+                  return (
+                    <>
+                      <div className="calc-row sub-row">
+                        <span className="calc-label">
+                          dont {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
+                          <span className={inclus ? 'tag-inclus' : 'tag-exclu'}>{inclus ? 'compté' : 'non compté'}</span>
+                        </span>
+                        <span className={`calc-value ${inclus ? 'val-plus' : 'val-minus'}`}>
+                          {inclus ? '' : '−'}{dimanches.length} j
+                        </span>
+                      </div>
+                    </>
                   );
                 })()}
 
@@ -594,25 +681,30 @@ export default function AttestationPage() {
                 {(() => {
                   const feries = jours.detail.filter(d => d.type === 'ferie');
                   return (
-                    <div className="detail-section">
-                      <div className="detail-title">Jours fériés</div>
-                      {feries.length === 0
-                        ? <div className="detail-none">Aucun jour férié sur la période</div>
-                        : feries.map((d, i) => (
-                          <div key={i} className="detail-row">
-                            <span className="detail-date">{d.label} — {fmt(d.date)}</span>
-                            <span className="badge-exclu">exclu</span>
-                          </div>
-                        ))
-                      }
-                    </div>
+                    <>
+                      <div className="calc-row sub-row">
+                        <span className="calc-label">
+                          dont {feries.length} jour{feries.length !== 1 ? 's' : ''} férié{feries.length !== 1 ? 's' : ''}
+                          {feries.length > 0 && <span className="tag-exclu">non compté</span>}
+                        </span>
+                        {feries.length > 0
+                          ? <span className="calc-value val-minus">−{feries.length} j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                        }
+                      </div>
+                      {feries.map((d, i) => (
+                        <div key={i} className="detail-row detail-row-sub">
+                          <span className="detail-date">{d.label} — {fmt(d.date)}</span>
+                        </div>
+                      ))}
+                    </>
                   );
                 })()}
 
                 <hr className="calc-divider" />
 
                 <div className="calc-row total">
-                  <span className="calc-label">= Jours de congé accordés</span>
+                  <span className="calc-label">= Jours comptabilisés</span>
                   <span className="calc-value">{jours.ouvres} j</span>
                 </div>
               </div>
@@ -620,6 +712,37 @@ export default function AttestationPage() {
             </div>
 
           </div>
+
+          {/* Solde restant à la date d'émission */}
+          {data.solde && (
+            <div style={{ padding: '0 28px' }}>
+              <div className="solde-block">
+                <div className="solde-block-head">Solde restant à la date d'émission</div>
+                <div className="solde-items">
+                  <div className="solde-item">
+                    <span className="solde-item__val neutral">{data.solde.jours_acquis} j</span>
+                    <span className="solde-item__lbl">Acquis</span>
+                  </div>
+                  <div className="solde-item">
+                    <span className="solde-item__val neutral">− {data.solde.jours_pris} j</span>
+                    <span className="solde-item__lbl">Pris</span>
+                  </div>
+                  {data.solde.jours_reserves > 0 && (
+                    <div className="solde-item">
+                      <span className="solde-item__val neutral">− {data.solde.jours_reserves} j</span>
+                      <span className="solde-item__lbl">Réservés N+1</span>
+                    </div>
+                  )}
+                  <span className={`solde-restant-chip${data.solde.solde_restant < 0 ? ' negative' : ''}`}>
+                    = {data.solde.solde_restant >= 0 ? '' : '−'}{Math.abs(data.solde.solde_restant)} j restant{Math.abs(data.solde.solde_restant) > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="solde-date">
+                  {data.solde.type} · Année {data.solde.annee} · Calculé au {data.genere_le}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mention légale */}
           <div className="legal-mention">
