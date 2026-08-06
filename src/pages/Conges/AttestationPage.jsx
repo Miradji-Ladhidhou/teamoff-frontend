@@ -640,19 +640,17 @@ export default function AttestationPage() {
                 {/* Samedis */}
                 {(() => {
                   const samedis = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi');
+                  if (samedis.length === 0) return null;
                   const countSat = jours.politique?.count_saturday;
-                  if (samedis.length === 0 && countSat === undefined) return null;
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        Samedis
-                        <span className={countSat ? 'tag-inclus' : 'tag-exclu'}>{countSat ? 'comptés' : 'non comptés'}</span>
+                        {samedis.length} samedi{samedis.length > 1 ? 's' : ''}
+                        <span className={countSat ? 'tag-inclus' : 'tag-exclu'}>{countSat ? 'compté' : 'non compté'}</span>
                       </span>
-                      {samedis.length > 0 && !countSat
+                      {!countSat
                         ? <span className="calc-value val-minus">−{samedis.length} j</span>
-                        : samedis.length > 0
-                          ? <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
-                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
                       }
                     </div>
                   );
@@ -661,19 +659,17 @@ export default function AttestationPage() {
                 {/* Dimanches */}
                 {(() => {
                   const dimanches = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche');
+                  if (dimanches.length === 0) return null;
                   const countSun = jours.politique?.count_sunday;
-                  if (dimanches.length === 0 && countSun === undefined) return null;
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        Dimanches
-                        <span className={countSun ? 'tag-inclus' : 'tag-exclu'}>{countSun ? 'comptés' : 'non comptés'}</span>
+                        {dimanches.length} dimanche{dimanches.length > 1 ? 's' : ''}
+                        <span className={countSun ? 'tag-inclus' : 'tag-exclu'}>{countSun ? 'compté' : 'non compté'}</span>
                       </span>
-                      {dimanches.length > 0 && !countSun
+                      {!countSun
                         ? <span className="calc-value val-minus">−{dimanches.length} j</span>
-                        : dimanches.length > 0
-                          ? <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
-                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
+                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
                       }
                     </div>
                   );
