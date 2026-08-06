@@ -668,21 +668,23 @@ const SystemSettings = () => {
                 onSave: () => handleSave('database', 'base de données'),
                 hint: 'Conservez des valeurs prudentes pour éviter une perte de sauvegardes.',
                 extraActions: (
-                  <Button
-                    variant="outline-info"
-                    onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
-                    disabled={loading}
-                  >
-                    <FaDatabase className="me-2" />
-                    Sauvegarde manuelle
-                  </Button>
-                  <Button
-                    variant="outline-success"
-                    onClick={() => openConfirm('backup-drive', 'Sauvegarder la base de données sur Google Drive ?')}
-                    disabled={loading}
-                  >
-                    ☁️ Sauvegarder sur Google Drive
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline-info"
+                      onClick={() => openConfirm('backup', 'Lancer une sauvegarde manuelle de la base de données ?')}
+                      disabled={loading}
+                    >
+                      <FaDatabase className="me-2" />
+                      Sauvegarde manuelle
+                    </Button>
+                    <Button
+                      variant="outline-success"
+                      onClick={() => openConfirm('backup-drive', 'Sauvegarder la base de données sur Google Drive ?')}
+                      disabled={loading}
+                    >
+                      ☁️ Sauvegarder sur Google Drive
+                    </Button>
+                  </>
                 ),
               })}
             </Card.Body>
