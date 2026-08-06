@@ -497,14 +497,14 @@ const CongeDetailsPage = () => {
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            {samedis.length > 0
-                              ? `dont ${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
-                              : 'Samedis'}
+                            Samedis
                             <span className={`decompte-tag ${countSat ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSat ? 'comptés' : 'non comptés'}</span>
                           </span>
                           {samedis.length > 0 && !countSat
                             ? <span className="decompte-val decompte-val--minus">−{samedis.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">{samedis.length} j</span>
+                            : samedis.length > 0
+                              ? <span className="decompte-val decompte-val--muted">{samedis.length} j</span>
+                              : <span className="decompte-val decompte-val--muted">—</span>
                           }
                         </div>
                         {samedis.map((d, i) => (
@@ -524,14 +524,14 @@ const CongeDetailsPage = () => {
                       <>
                         <div className="decompte-row">
                           <span className="decompte-lbl">
-                            {dimanches.length > 0
-                              ? `dont ${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
-                              : 'Dimanches'}
+                            Dimanches
                             <span className={`decompte-tag ${countSun ? 'decompte-tag--inclus' : 'decompte-tag--exclu'}`}>{countSun ? 'comptés' : 'non comptés'}</span>
                           </span>
                           {dimanches.length > 0 && !countSun
                             ? <span className="decompte-val decompte-val--minus">−{dimanches.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>
+                            : dimanches.length > 0
+                              ? <span className="decompte-val decompte-val--muted">{dimanches.length} j</span>
+                              : <span className="decompte-val decompte-val--muted">—</span>
                           }
                         </div>
                         {dimanches.map((d, i) => (
@@ -555,7 +555,7 @@ const CongeDetailsPage = () => {
                           </span>
                           {feries.length > 0
                             ? <span className="decompte-val decompte-val--minus">−{feries.length} j</span>
-                            : <span className="decompte-val decompte-val--muted">0 j</span>
+                            : <span className="decompte-val decompte-val--muted">—</span>
                           }
                         </div>
                         {feries.map((d, i) => (

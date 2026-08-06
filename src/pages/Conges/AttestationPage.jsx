@@ -645,14 +645,14 @@ export default function AttestationPage() {
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        {samedis.length > 0
-                          ? `dont ${samedis.length} samedi${samedis.length > 1 ? 's' : ''}`
-                          : 'Samedis (hors période)'}
+                        Samedis
                         <span className={countSat ? 'tag-inclus' : 'tag-exclu'}>{countSat ? 'comptés' : 'non comptés'}</span>
                       </span>
                       {samedis.length > 0 && !countSat
                         ? <span className="calc-value val-minus">−{samedis.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
+                        : samedis.length > 0
+                          ? <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{samedis.length} j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
                       }
                     </div>
                   );
@@ -666,14 +666,14 @@ export default function AttestationPage() {
                   return (
                     <div className="calc-row sub-row">
                       <span className="calc-label">
-                        {dimanches.length > 0
-                          ? `dont ${dimanches.length} dimanche${dimanches.length > 1 ? 's' : ''}`
-                          : 'Dimanches (hors période)'}
+                        Dimanches
                         <span className={countSun ? 'tag-inclus' : 'tag-exclu'}>{countSun ? 'comptés' : 'non comptés'}</span>
                       </span>
                       {dimanches.length > 0 && !countSun
                         ? <span className="calc-value val-minus">−{dimanches.length} j</span>
-                        : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
+                        : dimanches.length > 0
+                          ? <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>{dimanches.length} j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
                       }
                     </div>
                   );
@@ -691,7 +691,7 @@ export default function AttestationPage() {
                         </span>
                         {feries.length > 0
                           ? <span className="calc-value val-minus">−{feries.length} j</span>
-                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>0 j</span>
+                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
                         }
                       </div>
                       {feries.map((d, i) => (
