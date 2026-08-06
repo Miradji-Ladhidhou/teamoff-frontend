@@ -355,6 +355,7 @@ export const settingsService = {
   updateSection: (section, data) => api.put(`/settings/sections/${section}`, data),
   getSystemInfo: () => api.get('/settings/system-info'),
   runBackup: () => api.post('/settings/actions/backup'),
+  runBackupDrive: () => api.post('/settings/actions/backup-drive'),
   downloadBackup: (filename) => api.get(`/settings/backups/${filename}`, { responseType: 'blob' }),
   runRestart: () => api.post('/settings/actions/restart'),
   setMaintenance: (enabled, maintenanceMessage) => api.post('/settings/actions/maintenance', { enabled, maintenanceMessage }),

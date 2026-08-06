@@ -233,6 +233,13 @@ const SystemSettings = () => {
           link.remove();
           window.URL.revokeObjectURL(url);
         }
+      } else if (action === 'backup-drive') {
+        const response = await settingsService.runBackupDrive();
+        message = response.data?.message || 'Sauvegarde envoyée sur Google Drive.';
+        const driveLink = response.data?.drive?.webViewLink;
+        if (driveLink) {
+          window.open(driveLink, '_blank', 'noopener,noreferrer');
+        }
       } else if (action === 'restart') {
         const response = await settingsService.runRestart();
         message = response.data?.message || 'Redémarrage demandé.';
@@ -651,6 +658,13 @@ const SystemSettings = () => {
                   >
                     <FaDatabase className="me-2" />
                     Sauvegarde manuelle
+                  </Button>
+                  <Button
+                    variant="outline-success"
+                    onClick={() => openConfirm('backup-drive', 'Sauvegarder la base de données sur Google Drive ?')}
+                    disabled={loading}
+                  >
+                    ☁️ Sauvegarder sur Google Drive
                   </Button>
                 ),
               })}
