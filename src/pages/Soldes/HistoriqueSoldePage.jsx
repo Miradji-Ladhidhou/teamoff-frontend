@@ -66,7 +66,7 @@ const HistoriqueSoldePage = () => {
   const [searchParams] = useSearchParams();
   const alert = useAlert();
 
-  const isAdmin = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
+  const isAdmin = ['admin_entreprise', 'super_admin'].includes(user?.role);
 
   const [users, setUsers]           = useState([]);
   const [congeTypes, setCongeTypes] = useState([]);
