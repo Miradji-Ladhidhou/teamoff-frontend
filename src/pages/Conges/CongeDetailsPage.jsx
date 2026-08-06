@@ -483,6 +483,14 @@ const CongeDetailsPage = () => {
                 </div>
                 <div className="decompte-box">
 
+                  {/* Période */}
+                  <div className="decompte-row">
+                    <span className="decompte-lbl">Période</span>
+                    <span className="decompte-val" style={{ fontSize: '0.78rem' }}>
+                      {formatDateShort(jourDetail.date_debut || conge.date_debut)} → {formatDateShort(jourDetail.date_fin || conge.date_fin)}
+                    </span>
+                  </div>
+
                   {/* Samedis — politique entreprise */}
                   {jourDetail.politique !== undefined && (
                     <div className="decompte-row">

@@ -629,7 +629,11 @@ export default function AttestationPage() {
 
               <div className="calc-block">
                 <div className="calc-head">Décompte des jours</div>
-                <div className="calc-period">du {fmt(data.conge.date_debut)} au {fmt(data.conge.date_fin)}</div>
+                {/* Période */}
+                <div className="calc-row">
+                  <span className="calc-label">Période</span>
+                  <span className="calc-value" style={{ fontSize: 11 }}>{fmt(data.conge.date_debut)} → {fmt(data.conge.date_fin)}</span>
+                </div>
 
                 {/* Samedis — politique entreprise */}
                 {jours.politique !== undefined && (
@@ -698,17 +702,19 @@ export default function AttestationPage() {
                 <div className="solde-block-head">Solde restant à la date d'émission</div>
                 <div className="solde-items">
                   <div className="solde-item">
-                    <span className="solde-item__val neutral">{data.solde.jours_acquis} j</span>
-                    <span className="solde-item__lbl">Acquis</span>
+                    <span className="solde-item__val neutral">{data.solde.jours_acquis_initial} j</span>
+                    <span className="solde-item__lbl">Acquis (cumulé)</span>
                   </div>
-                  <div className="solde-item">
-                    <span className="solde-item__val neutral">− {data.solde.jours_pris} j</span>
-                    <span className="solde-item__lbl">Pris</span>
-                  </div>
+                  {data.solde.jours_pris > 0 && (
+                    <div className="solde-item">
+                      <span className="solde-item__val neutral">− {data.solde.jours_pris} j</span>
+                      <span className="solde-item__lbl">Pris</span>
+                    </div>
+                  )}
                   {data.solde.jours_reserves > 0 && (
                     <div className="solde-item">
                       <span className="solde-item__val neutral">− {data.solde.jours_reserves} j</span>
-                      <span className="solde-item__lbl">Réservés N+1</span>
+                      <span className="solde-item__lbl">En attente</span>
                     </div>
                   )}
                   <span className={`solde-restant-chip${data.solde.solde_restant < 0 ? ' negative' : ''}`}>
