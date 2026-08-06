@@ -46,7 +46,9 @@ const SystemSettings = () => {
   const alert = useAlert();
   const [success, setSuccess] = useState('');
   const [systemInfo, setSystemInfo] = useState({});
-  const [confirmModal, setConfirmModal] = useState({ show: false, action: '', label: '' });
+  const [confirmModal, setConfirmModal] = useState({ show: false, action: '', label: '', payload: null });
+  const [driveBackups, setDriveBackups] = useState([]);
+  const [loadingDriveBackups, setLoadingDriveBackups] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'general');
   const [testEmailRecipient, setTestEmailRecipient] = useState('');
   const [settingsHistory, setSettingsHistory] = useState([]);
@@ -205,8 +207,20 @@ const SystemSettings = () => {
     </div>
   );
 
-  const openConfirm = (action, label) => setConfirmModal({ show: true, action, label });
-  const closeConfirm = () => setConfirmModal({ show: false, action: '', label: '' });
+  const openConfirm = (action, label, payload = null) => setConfirmModal({ show: true, action, label, payload });
+  const closeConfirm = () => setConfirmModal({ show: false, action: '', label: '', payload: null });
+
+  const loadDriveBackups = async () => {
+    setLoadingDriveBackups(true);
+    try {
+      const res = await settingsService.getDriveBackups();
+      setDriveBackups(Array.isArray(res.data?.files) ? res.data.files : []);
+    } catch {
+      alert.error('Impossible de charger les sauvegardes Google Drive.');
+    } finally {
+      setLoadingDriveBackups(false);
+    }
+  };
 
   const executeSystemAction = async () => {
     const { action } = confirmModal;
@@ -237,9 +251,12 @@ const SystemSettings = () => {
         const response = await settingsService.runBackupDrive();
         message = response.data?.message || 'Sauvegarde envoyée sur Google Drive.';
         const driveLink = response.data?.drive?.webViewLink;
-        if (driveLink) {
-          window.open(driveLink, '_blank', 'noopener,noreferrer');
-        }
+        if (driveLink) window.open(driveLink, '_blank', 'noopener,noreferrer');
+        await loadDriveBackups();
+      } else if (action === 'restore-drive') {
+        const { fileId, filename } = confirmModal.payload || {};
+        const response = await settingsService.runRestoreDrive(fileId, filename);
+        message = response.data?.message || 'Base de données restaurée.';
       } else if (action === 'restart') {
         const response = await settingsService.runRestart();
         message = response.data?.message || 'Redémarrage demandé.';
@@ -668,6 +685,73 @@ const SystemSettings = () => {
                   </Button>
                 ),
               })}
+            </Card.Body>
+          </Card>
+
+          {/* Sauvegardes Google Drive */}
+          <Card className="mt-3">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">☁️ Sauvegardes Google Drive</h5>
+              <Button variant="outline-secondary" size="sm" onClick={loadDriveBackups} disabled={loadingDriveBackups}>
+                {loadingDriveBackups ? 'Chargement…' : 'Actualiser'}
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {driveBackups.length === 0 ? (
+                <div className="text-center py-3 text-muted small">
+                  Cliquez sur "Actualiser" pour afficher les sauvegardes disponibles sur Google Drive.
+                </div>
+              ) : (
+                <Table hover className="users-dense-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Fichier</th>
+                      <th>Date</th>
+                      <th>Taille</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {driveBackups.map((file) => (
+                      <tr key={file.id}>
+                        <td style={{ fontSize: '0.82rem' }}>{file.name}</td>
+                        <td style={{ fontSize: '0.82rem', whiteSpace: 'nowrap', color: 'var(--dk-text-soft)' }}>
+                          {file.createdTime ? new Date(file.createdTime).toLocaleString('fr-FR') : '—'}
+                        </td>
+                        <td style={{ fontSize: '0.82rem', color: 'var(--dk-text-soft)' }}>
+                          {file.size ? `${(file.size / 1024 / 1024).toFixed(2)} Mo` : '—'}
+                        </td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            {file.webViewLink && (
+                              <Button
+                                size="sm"
+                                variant="outline-secondary"
+                                onClick={() => window.open(file.webViewLink, '_blank', 'noopener,noreferrer')}
+                                title="Voir sur Drive"
+                              >
+                                <FaDownload />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline-danger"
+                              onClick={() => openConfirm(
+                                'restore-drive',
+                                `⚠️ Restaurer "${file.name}" ? Cette action écrasera toutes les données actuelles de la base de données. Cette opération est irréversible.`,
+                                { fileId: file.id, filename: file.name }
+                              )}
+                              disabled={loading}
+                            >
+                              Restaurer
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
             </Card.Body>
           </Card>
         </Tab>
