@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Form, Row, Col, Table, Spinner, Button, Modal, Nav } from 'react-bootstrap';
+import { Container, Form, Row, Col, Table, Spinner, Button, Modal } from 'react-bootstrap';
 import { quotasService, usersService, congeTypesService, entreprisesService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
@@ -30,11 +30,6 @@ const SoldesPage = () => {
   const [loadingCounters, setLoadingCounters] = useState(false);
   const [reportAutorise, setReportAutorise] = useState(false);
   const [reportMaxJours, setReportMaxJours] = useState(0);
-
-  const [activeTab, setActiveTab] = useState('soldes');
-  const [historique, setHistorique] = useState([]);
-  const [loadingHistorique, setLoadingHistorique] = useState(false);
-  const [histCongeTypeId, setHistCongeTypeId] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [editingCounter, setEditingCounter] = useState(null);
@@ -106,27 +101,6 @@ const SoldesPage = () => {
     load();
     return () => { cancelled = true; };
   }, [selectedUserId, selectedYear]);
-
-  /* ── Chargement historique ── */
-  useEffect(() => {
-    if (!selectedUserId || activeTab !== 'historique') return;
-    let cancelled = false;
-    const load = async () => {
-      setLoadingHistorique(true);
-      try {
-        const params = { annee: selectedYear, limit: 100 };
-        if (histCongeTypeId) params.conge_type_id = histCongeTypeId;
-        const res = await quotasService.getHistorique(selectedUserId, params);
-        if (!cancelled) setHistorique(Array.isArray(res.data?.items) ? res.data.items : []);
-      } catch {
-        if (!cancelled) setHistorique([]);
-      } finally {
-        if (!cancelled) setLoadingHistorique(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [selectedUserId, selectedYear, activeTab, histCongeTypeId]);
 
   const selectedUser = useMemo(
     () => users.find((u) => String(u.id) === String(selectedUserId)),
@@ -222,26 +196,6 @@ const SoldesPage = () => {
 
   const soldePreview = toNum(form.jours_acquis_n) + toNum(form.jours_reportes) - toNum(form.jours_reserves);
 
-  const MOUVEMENT_META = {
-    credit_initial:        { label: 'Ouverture',    color: '#22c55e' },
-    credit_mensuel:        { label: 'Crédit',        color: '#22c55e' },
-    report_annee:          { label: 'Report N-1',    color: '#22c55e' },
-    reservation:           { label: 'Réservé',       color: '#f97316' },
-    validation_auto:       { label: 'Déduit (auto)', color: '#ef4444' },
-    validation:            { label: 'Validé',        color: '#94a3b8' },
-    rejet:                 { label: 'Refusé',        color: '#22c55e' },
-    annulation:            { label: 'Annulé',        color: '#22c55e' },
-    activation_reservation:{ label: 'Activé',        color: '#f97316' },
-    ajustement_admin:      { label: 'Ajustement',    color: '#818cf8' },
-  };
-
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
-  const fmtQty  = (q) => {
-    const n = Number(q);
-    if (n === 0) return null;
-    return (n > 0 ? '+' : '') + n.toFixed(2).replace('.00', '') + ' j';
-  };
-
   /* ── Rendu ── */
   if (loading) {
     return (
@@ -290,20 +244,13 @@ const SoldesPage = () => {
         />
       </div>
 
-      {/* Onglets */}
-      <Nav variant="tabs" className="mb-3" activeKey={activeTab} onSelect={setActiveTab}>
-        <Nav.Item><Nav.Link eventKey="soldes">Soldes</Nav.Link></Nav.Item>
-        <Nav.Item><Nav.Link eventKey="historique">Historique</Nav.Link></Nav.Item>
-      </Nav>
-
-      {activeTab === 'soldes' && reportAutorise && (
+      {reportAutorise && (
         <div className="small text-muted mb-3">
           Report N→N+1 activé — max {reportMaxJours} j par type. La colonne N-1 montre les jours portés depuis {selectedYear - 1}.
         </div>
       )}
 
-      {/* Onglet Soldes */}
-      {activeTab === 'soldes' && (loadingCounters ? (
+      {loadingCounters ? (
         <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
       ) : counters.length === 0 ? (
         <div className="text-center py-5">
@@ -393,89 +340,6 @@ const SoldesPage = () => {
               </tbody>
             </Table>
           </div>
-        </>
-      ))}
-
-      {/* Onglet Historique */}
-      {activeTab === 'historique' && (
-        <>
-          {/* Filtre type de congé */}
-          <Form.Select
-            className="mb-3"
-            value={histCongeTypeId}
-            onChange={(e) => setHistCongeTypeId(e.target.value)}
-            style={{ maxWidth: 280 }}
-          >
-            <option value="">Tous les types</option>
-            {congeTypes.map((t) => <option key={t.id} value={t.id}>{t.libelle}</option>)}
-          </Form.Select>
-
-          {loadingHistorique ? (
-            <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
-          ) : historique.length === 0 ? (
-            <div className="text-center py-5 text-muted">
-              Aucun mouvement enregistré pour cette période.<br />
-              <small>Les mouvements sont enregistrés à partir de maintenant.</small>
-            </div>
-          ) : (
-            <div className="conges-list-wrap">
-              <Table hover className="users-dense-table mb-0">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Détail</th>
-                    <th style={{ textAlign: 'right' }}>Mouvement</th>
-                    <th style={{ textAlign: 'right' }}>Solde après</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historique.map((m) => {
-                    const meta = MOUVEMENT_META[m.type] || { label: m.type, color: '#94a3b8' };
-                    const qty = fmtQty(m.quantite);
-                    const qtyColor = Number(m.quantite) > 0 ? '#22c55e' : Number(m.quantite) < 0 ? '#ef4444' : '#94a3b8';
-                    return (
-                      <tr key={m.id}>
-                        <td style={{ whiteSpace: 'nowrap', color: 'var(--dk-text-soft)', fontSize: '0.82rem' }}>
-                          {fmtDate(m.date)}
-                        </td>
-                        <td>
-                          <span style={{
-                            display: 'inline-block',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            padding: '2px 7px',
-                            borderRadius: 999,
-                            background: meta.color + '22',
-                            color: meta.color,
-                            whiteSpace: 'nowrap',
-                          }}>
-                            {meta.label}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--dk-text-soft)' }}>
-                          {m.description || '—'}
-                          {m.conge_type?.libelle && (
-                            <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--dk-text-muted)' }}>
-                              · {m.conge_type.libelle}
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: qtyColor, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                          {qty || <span style={{ color: 'var(--dk-text-muted)', fontWeight: 400 }}>—</span>}
-                        </td>
-                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                          <strong style={{ color: Number(m.solde_apres) < 0 ? '#ef4444' : 'var(--dk-accent)' }}>
-                            {Number(m.solde_apres).toFixed(2).replace('.00', '')} j
-                          </strong>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            </div>
-          )}
         </>
       )}
 

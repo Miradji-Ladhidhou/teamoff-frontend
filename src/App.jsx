@@ -34,6 +34,7 @@ const PolicyServicesPage = lazy(() => import('./pages/PolicyServices/PolicyServi
 const HolidaysBlockedPage = lazy(() => import('./pages/HolidaysBlocked/HolidaysBlockedPage'));
 const JoursBloquesPage = lazy(() => import('./pages/JoursBloques/JoursBloquesPage'));
 const SoldesPage = lazy(() => import('./pages/Soldes/SoldesPage'));
+const HistoriqueSoldePage = lazy(() => import('./pages/Soldes/HistoriqueSoldePage'));
 const MaintenancePage = lazy(() => import('./pages/Maintenance/MaintenancePage'));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage'));
 const ContactPage = lazy(() => import('./pages/Contact/ContactPage'));
@@ -291,6 +292,7 @@ function App() {
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
+            <Route path="/historique-solde" element={<HistoriqueSoldePage />} />
           </Route>
         </Route>
 
