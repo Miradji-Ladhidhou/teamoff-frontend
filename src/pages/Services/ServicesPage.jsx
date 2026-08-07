@@ -9,7 +9,7 @@ import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 
 const DEFAULT_POLICY = {
-  overlap_policy: 'block',
+  overlap_behavior: 'block',
   minimum_notice_days: 0,
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
@@ -83,7 +83,7 @@ const ServicesPage = () => {
       const payload = {
         name: formData.name.trim(),
         policy: {
-          overlap_policy: formData.policy.overlap_policy,
+          overlap_behavior: formData.policy.overlap_behavior || 'block',
           minimum_notice_days: Number(formData.policy.minimum_notice_days || 0),
           max_consecutive_days: Number(formData.policy.max_consecutive_days || 0),
           approval_workflow: formData.policy.approval_workflow,
@@ -257,17 +257,16 @@ const ServicesPage = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Chevauchement</Form.Label>
+                  <Form.Label>Si capacité atteinte</Form.Label>
                   <Form.Select
-                    value={formData.policy.overlap_policy}
+                    value={formData.policy.overlap_behavior || 'block'}
                     onChange={(event) => setFormData({
                       ...formData,
-                      policy: { ...formData.policy, overlap_policy: event.target.value },
+                      policy: { ...formData.policy, overlap_behavior: event.target.value },
                     })}
                   >
                     <option value="block">Bloquer</option>
                     <option value="warning">Alerter</option>
-                    <option value="allow">Autoriser</option>
                   </Form.Select>
                 </Form.Group>
               </Col>

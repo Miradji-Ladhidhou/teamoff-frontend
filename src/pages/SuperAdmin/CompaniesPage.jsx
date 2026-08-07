@@ -17,9 +17,8 @@ const DEFAULT_POLITIQUE = {
   rtt_annuels: 0,
   report_autorise: false,
   report_max_jours: 0,
-  overlap_policy: 'block',
+  overlap_behavior: 'block',
   max_employees_on_leave: {
-    global: '',
     by_service: {}
   },
   approval_workflow: 'manager_admin',
@@ -144,11 +143,8 @@ const CompaniesManagement = () => {
               rtt_annuels: Number(formData.politique_conges.rtt_annuels || 0),
               report_autorise: Boolean(formData.politique_conges.report_autorise),
               report_max_jours: Number(formData.politique_conges.report_max_jours || 0),
-              overlap_policy: formData.politique_conges.overlap_policy,
+              overlap_behavior: formData.politique_conges.overlap_behavior || 'block',
               max_employees_on_leave: {
-                global: formData.politique_conges.max_employees_on_leave.global === ''
-                  ? null
-                  : Number(formData.politique_conges.max_employees_on_leave.global || 0),
                 by_service: normalizeByServiceLimits(formData.politique_conges.max_employees_on_leave.by_service || {}),
               },
               approval_workflow: formData.politique_conges.approval_workflow,
@@ -236,9 +232,8 @@ const CompaniesManagement = () => {
           ? companyPolitique.report_autorise
           : DEFAULT_POLITIQUE.report_autorise,
         report_max_jours: companyPolitique.report_max_jours ?? DEFAULT_POLITIQUE.report_max_jours,
-        overlap_policy: companyPolitique.overlap_policy || DEFAULT_POLITIQUE.overlap_policy,
+        overlap_behavior: companyPolitique.overlap_behavior || DEFAULT_POLITIQUE.overlap_behavior,
         max_employees_on_leave: {
-          global: companyPolitique.max_employees_on_leave?.global ?? '',
           by_service: companyPolitique.max_employees_on_leave?.by_service || DEFAULT_POLITIQUE.max_employees_on_leave.by_service,
         },
         approval_workflow: companyPolitique.approval_workflow || DEFAULT_POLITIQUE.approval_workflow,
@@ -621,20 +616,6 @@ const CompaniesManagement = () => {
                     <Row>
                       <Col md={4}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Gestion des chevauchements</Form.Label>
-                          <Form.Select
-                            value={formData.politique_conges.overlap_policy}
-                            onChange={(event) => handlePolitiqueChange('overlap_policy', event.target.value)}
-                            disabled={submitAction.isRunning}
-                          >
-                            <option value="block">Bloquer</option>
-                            <option value="warning">Avertir</option>
-                            <option value="allow">Autoriser</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group className="mb-3">
                           <Form.Label>Workflow validation</Form.Label>
                           <Form.Select
                             value={formData.politique_conges.approval_workflow}
@@ -649,15 +630,15 @@ const CompaniesManagement = () => {
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Limite simultanée (globale)</Form.Label>
-                          <Form.Control
-                            type="number"
-                            min={0}
-                            value={formData.politique_conges.max_employees_on_leave.global}
-                            onChange={(event) => handleNestedPolitiqueChange('max_employees_on_leave', 'global', event.target.value)}
-                            placeholder="Aucune limite"
+                          <Form.Label>Si capacité service atteinte</Form.Label>
+                          <Form.Select
+                            value={formData.politique_conges.overlap_behavior || 'block'}
+                            onChange={(event) => handlePolitiqueChange('overlap_behavior', event.target.value)}
                             disabled={submitAction.isRunning}
-                          />
+                          >
+                            <option value="block">Bloquer</option>
+                            <option value="warning">Alerter</option>
+                          </Form.Select>
                         </Form.Group>
                       </Col>
                     </Row>

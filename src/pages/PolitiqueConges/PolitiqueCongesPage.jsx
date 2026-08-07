@@ -15,7 +15,7 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 
 const DEFAULT_POLICY = {
-  overlap_policy: 'block',
+  overlap_behavior: 'block',
   minimum_notice_days: 0,
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
@@ -27,7 +27,6 @@ const DEFAULT_POLICY = {
   report_max_jours: 0,
   autoriser_reservation_sans_solde: true,
   max_employees_on_leave: {
-    global: null,
     by_service: {},
   },
   service_policies: {},
@@ -48,7 +47,7 @@ const DEFAULT_POLICY = {
 };
 
 const DEFAULT_SERVICE_POLICY = {
-  overlap_policy: 'block',
+  overlap_behavior: 'block',
   minimum_notice_days: 0,
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
@@ -397,12 +396,11 @@ const PolitiqueCongesPage = () => {
         rtt_annuels: Number(policy.rtt_annuels || 0),
         report_max_jours: Number(policy.report_max_jours || 0),
         max_employees_on_leave: {
-          global: policy.max_employees_on_leave?.global === '' ? null : Number(policy.max_employees_on_leave?.global || 0),
           by_service: byServiceLimits,
         },
         service_policies: Object.entries(servicePolicies).reduce((acc, [serviceName, servicePolicy]) => {
           acc[serviceName] = {
-            overlap_policy: servicePolicy.overlap_policy,
+            overlap_behavior: servicePolicy.overlap_behavior || 'block',
             minimum_notice_days: Number(servicePolicy.minimum_notice_days || 0),
             max_consecutive_days: Number(servicePolicy.max_consecutive_days || 0),
             approval_workflow: servicePolicy.approval_workflow,
@@ -615,7 +613,7 @@ const PolitiqueCongesPage = () => {
                     <thead>
                       <tr>
                         <th>Service</th>
-                        <th>Chevauchement</th>
+                        <th>Comportement</th>
                         <th>Workflow</th>
                         <th>Préavis</th>
                         <th>Max j consec.</th>
@@ -628,10 +626,9 @@ const PolitiqueCongesPage = () => {
                         <tr key={serviceName}>
                           <td><strong>{serviceName}</strong></td>
                           <td>
-                            <Form.Select size="sm" value={servicePolicy.overlap_policy || 'block'} onChange={(e) => setServiceField(serviceName, 'overlap_policy', e.target.value)}>
+                            <Form.Select size="sm" value={servicePolicy.overlap_behavior || 'block'} onChange={(e) => setServiceField(serviceName, 'overlap_behavior', e.target.value)}>
                               <option value="block">Bloquer</option>
                               <option value="warning">Alerter</option>
-                              <option value="allow">Autoriser</option>
                             </Form.Select>
                           </td>
                           <td>

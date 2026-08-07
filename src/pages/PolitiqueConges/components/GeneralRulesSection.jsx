@@ -5,20 +5,8 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
   return (
     <div id="section-regles-generales">
 
-      {/* ── Bloc 1 : Chevauchements & Workflow ── */}
+      {/* ── Bloc 1 : Workflow & chevauchement ── */}
       <div className="settings-fields-grid mb-4">
-        <div className="settings-field">
-          <label className="settings-field__label">Si deux employés sont absents en même temps</label>
-          <Form.Select
-            value={policy.overlap_policy}
-            onChange={(e) => setField('overlap_policy', e.target.value)}
-          >
-            <option value="block">Bloquer la 2ème demande</option>
-            <option value="warning">Autoriser avec alerte</option>
-            <option value="allow">Toujours autoriser</option>
-          </Form.Select>
-        </div>
-
         <div className="settings-field">
           <label className="settings-field__label">Qui valide les congés ?</label>
           <Form.Select
@@ -30,10 +18,22 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             <option value="manager_only">Manager uniquement</option>
           </Form.Select>
         </div>
+
+        <div className="settings-field">
+          <label className="settings-field__label">Si la capacité service est atteinte</label>
+          <Form.Select
+            value={policy.overlap_behavior || 'block'}
+            onChange={(e) => setField('overlap_behavior', e.target.value)}
+          >
+            <option value="block">Bloquer la demande</option>
+            <option value="warning">Autoriser avec alerte</option>
+          </Form.Select>
+          <span className="settings-field__hint">S'applique uniquement si un max d'absences simultanées est défini par service</span>
+        </div>
       </div>
 
       {/* ── Bloc 2 : Durées & délais ── */}
-      <div className="settings-fields-grid settings-fields-grid--3 mb-4">
+      <div className="settings-fields-grid mb-4">
         <div className="settings-field">
           <label className="settings-field__label">Délai minimum avant départ (jours)</label>
           <Form.Control
@@ -54,23 +54,6 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
             onChange={(e) => setField('max_consecutive_days', e.target.value)}
           />
           <span className="settings-field__hint">Un congé ne peut pas dépasser cette durée</span>
-        </div>
-
-        <div className="settings-field">
-          <label className="settings-field__label">Absences simultanées max (global)</label>
-          <Form.Control
-            type="number"
-            min="0"
-            value={policy.max_employees_on_leave?.global ?? ''}
-            onChange={(e) => setPolicy((prev) => ({
-              ...prev,
-              max_employees_on_leave: {
-                ...(prev.max_employees_on_leave || {}),
-                global: e.target.value,
-              },
-            }))}
-          />
-          <span className="settings-field__hint">0 = illimité</span>
         </div>
       </div>
 
@@ -108,7 +91,7 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
       <div className="settings-row">
         <div className="settings-row__info">
           <div className="settings-row__label">Réservations anticipées (année N+1)</div>
-          <div className="settings-row__desc">Permet aux employés de réserver un congé pour l'année suivante même sans solde suffisant. Le congé sera activé automatiquement dès que le solde sera disponible.</div>
+          <div className="settings-row__desc">Quand le solde est insuffisant, l'employé peut réserver un congé pour l'année suivante uniquement (N+1). Impossible pour l'année en cours ou N+2 et au-delà. Le congé bascule automatiquement en "en attente" dès que le solde est crédité.</div>
         </div>
         <div className="settings-row__control">
           <Form.Check
