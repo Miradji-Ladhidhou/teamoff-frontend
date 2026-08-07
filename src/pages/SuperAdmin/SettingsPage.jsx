@@ -704,7 +704,8 @@ const SystemSettings = () => {
                   Cliquez sur "Actualiser" pour afficher les sauvegardes disponibles sur Google Drive.
                 </div>
               ) : (
-                <Table hover className="users-dense-table mb-0">
+                <div className="settings-table-wrap">
+                <Table hover className="drive-backup-table mb-0">
                   <thead>
                     <tr>
                       <th>Fichier</th>
@@ -716,7 +717,7 @@ const SystemSettings = () => {
                   <tbody>
                     {driveBackups.map((file) => (
                       <tr key={file.id}>
-                        <td style={{ fontSize: '0.82rem' }}>{file.name}</td>
+                        <td style={{ fontSize: '0.82rem', wordBreak: 'break-all' }}>{file.name}</td>
                         <td style={{ fontSize: '0.82rem', whiteSpace: 'nowrap', color: 'var(--dk-text-soft)' }}>
                           {file.createdTime ? new Date(file.createdTime).toLocaleString('fr-FR') : '—'}
                         </td>
@@ -724,7 +725,7 @@ const SystemSettings = () => {
                           {file.size ? `${(file.size / 1024 / 1024).toFixed(2)} Mo` : '—'}
                         </td>
                         <td>
-                          <div className="d-flex gap-1">
+                          <div className="d-flex gap-1 flex-wrap">
                             {file.webViewLink && (
                               <Button
                                 size="sm"
@@ -753,6 +754,7 @@ const SystemSettings = () => {
                     ))}
                   </tbody>
                 </Table>
+                </div>
               )}
             </Card.Body>
           </Card>
@@ -843,7 +845,7 @@ const SystemSettings = () => {
         <Tab eventKey="history" title="Historique">
           <Card>
             <Card.Header>
-              <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+              <div className="d-flex settings-history-header justify-content-between align-items-center gap-2 flex-wrap">
                 <h5 className="mb-0">Historique des modifications systeme</h5>
                 <div className="settings-history-toolbar align-items-center flex-wrap">
                   <Form.Select

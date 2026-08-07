@@ -1,9 +1,17 @@
 /* ────────────── Settings SuperAdmin ────────────── */
-.settings-page {
-  overflow-x: hidden;
-}
 
-/* Section setting */
+/* ── Onglets scrollables sur mobile ── */
+.settings-tabs-mobile .nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+}
+.settings-tabs-mobile .nav::-webkit-scrollbar { display: none; }
+.settings-tabs-mobile .nav-link { white-space: nowrap; }
+
+/* ── Section setting ── */
 .setting-item {
   display: flex;
   justify-content: space-between;
@@ -41,7 +49,7 @@
   flex-shrink: 0;
 }
 
-/* Settings section card */
+/* ── Card ── */
 .settings-section-card {
   background: var(--dk-card);
   border: 1px solid var(--dk-border);
@@ -49,12 +57,20 @@
   box-shadow: var(--dk-shadow-sm);
 }
 
-/* Table paramètres */
+/* ── Tables ── */
 .settings-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Danger zone */
+.settings-table-hint {
+  color: var(--dk-text-muted);
+  font-size: 0.78rem;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+/* ── Danger zone ── */
 .settings-danger-zone {
   background: rgba(248, 113, 113, 0.05);
   border: 1px solid rgba(248, 113, 113, 0.2);
@@ -69,8 +85,39 @@
   margin-bottom: 0.5rem;
 }
 
-/* ────────────── Responsive ────────────── */
+/* ── Historique toolbar ── */
+.settings-history-toolbar {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-history-meta {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-history-pagination {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* ── Système actions ── */
+.settings-system-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Table Drive backups — vue carte sur mobile ── */
+.drive-backup-table {
+  width: 100%;
+}
+
+/* ── Responsive ── */
 @media (max-width: 575.98px) {
+
+  /* setting-item */
   .setting-item {
     flex-direction: column;
     gap: 0.5rem;
@@ -82,6 +129,75 @@
 
   .setting-item__control .btn,
   .setting-item__control .form-control {
+    width: 100%;
+  }
+
+  /* Historique toolbar : empiler les contrôles */
+  .settings-history-toolbar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .settings-history-control {
+    width: 100%;
+  }
+
+  /* Historique meta */
+  .settings-history-meta {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  /* Historique pagination */
+  .settings-history-pagination {
+    justify-content: center;
+  }
+
+  /* Système actions : pleine largeur */
+  .settings-system-actions {
+    flex-direction: column;
+  }
+
+  .settings-system-actions .btn {
+    width: 100%;
+  }
+
+  /* Drive backup table → cartes */
+  .drive-backup-table thead {
+    display: none;
+  }
+
+  .drive-backup-table tbody tr {
+    display: block;
+    border: 1px solid var(--dk-border);
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    background: var(--dk-surface, var(--dk-card));
+  }
+
+  .drive-backup-table tbody td {
+    display: block;
+    border: none !important;
+    padding: 0.18rem 0;
+    font-size: 0.82rem;
+  }
+
+  .drive-backup-table tbody td:last-child {
+    padding-top: 0.5rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Header historique : titre + toolbar empilés */
+  .settings-history-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+
+  .settings-history-toolbar {
+    flex-wrap: wrap;
     width: 100%;
   }
 }
