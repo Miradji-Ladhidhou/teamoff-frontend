@@ -256,7 +256,11 @@ const SystemSettings = () => {
       } else if (action === 'restore-drive') {
         const { fileId, filename } = confirmModal.payload || {};
         const response = await settingsService.runRestoreDrive(fileId, filename);
+        const v = response.data?.verification;
         message = response.data?.message || 'Base de données restaurée.';
+        if (v) {
+          message += `\n\nVérification : ${v.utilisateurs} utilisateur(s), ${v.entreprises} entreprise(s), ${v.conges} congé(s).`;
+        }
       } else if (action === 'restart') {
         const response = await settingsService.runRestart();
         message = response.data?.message || 'Redémarrage demandé.';
