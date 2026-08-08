@@ -584,12 +584,20 @@ const UsersManagement = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Rôle *</Form.Label>
-                  <Form.Select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value, service: ['employe', 'manager'].includes(e.target.value) ? formData.service : '' })} required disabled={submitAction.isRunning}>
+                  <Form.Select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value, service: ['employe', 'manager'].includes(e.target.value) ? formData.service : '' })}
+                    required
+                    disabled={submitAction.isRunning || (!!editingUser && editingUser.role === 'admin_entreprise' && !isSuperAdmin)}
+                  >
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                     {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
                     <option value="employe">Employé</option>
                   </Form.Select>
+                  {!!editingUser && editingUser.role === 'admin_entreprise' && !isSuperAdmin && (
+                    <div className="small text-muted mt-1">Le rôle Admin ne peut être modifié que par un super administrateur.</div>
+                  )}
                 </Form.Group>
               </Col>
               <Col md={6}>
