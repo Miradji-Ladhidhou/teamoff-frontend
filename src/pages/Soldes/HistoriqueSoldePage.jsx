@@ -80,6 +80,8 @@ const HistoriqueSoldePage = () => {
   const [historique,        setHistorique]        = useState([]);
   const [loadingHist,       setLoadingHist]       = useState(false);
   const [search,            setSearch]            = useState('');
+  const [userSearch,        setUserSearch]        = useState('');
+  const [showUserDrop,      setShowUserDrop]      = useState(false);
 
   /* ── Chargement initial (users + types) ── */
   useEffect(() => {
@@ -93,7 +95,7 @@ const HistoriqueSoldePage = () => {
         setCongeTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
         if (isAdmin) {
           const list = (Array.isArray(usersRes.data) ? usersRes.data : [])
-            .filter((u) => ['employe', 'manager'].includes(u.role));
+            .filter((u) => u.role !== 'super_admin');
           setUsers(list);
           setSelectedUserId((prev) => {
             if (prev) return prev;
@@ -142,6 +144,19 @@ const HistoriqueSoldePage = () => {
     [users, selectedUserId]
   );
 
+  useEffect(() => {
+    if (selectedUser) setUserSearch(`${selectedUser.prenom} ${selectedUser.nom}`);
+  }, [selectedUser]);
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) =>
+      `${u.prenom} ${u.nom}`.toLowerCase().includes(q) ||
+      (u.service || '').toLowerCase().includes(q)
+    );
+  }, [users, userSearch]);
+
   const filteredHistorique = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return historique;
@@ -166,18 +181,50 @@ const HistoriqueSoldePage = () => {
       {/* Filtres */}
       <div className="users-filter-bar mb-4" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
         {isAdmin && (
-          <Form.Select
-            className="users-filter-bar__search"
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-          >
-            {users.length === 0 && <option value="">Aucun utilisateur</option>}
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
-              </option>
-            ))}
-          </Form.Select>
+          <div style={{ position: 'relative', minWidth: 200, flexShrink: 0 }}>
+            <InputGroup>
+              <InputGroup.Text><FaSearch size={12} /></InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="Rechercher un employé…"
+                value={userSearch}
+                onChange={(e) => { setUserSearch(e.target.value); setShowUserDrop(true); }}
+                onFocus={() => setShowUserDrop(true)}
+                onBlur={() => setTimeout(() => setShowUserDrop(false), 150)}
+              />
+            </InputGroup>
+            {showUserDrop && filteredUsers.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: 'var(--dk-card)', border: '1px solid var(--dk-border)',
+                borderRadius: '0.375rem', zIndex: 1050, maxHeight: 220, overflowY: 'auto',
+                boxShadow: 'var(--dk-shadow-md)', marginTop: 2,
+              }}>
+                {filteredUsers.map((u) => (
+                  <div
+                    key={u.id}
+                    onMouseDown={() => {
+                      setSelectedUserId(u.id);
+                      setUserSearch(`${u.prenom} ${u.nom}`);
+                      setShowUserDrop(false);
+                    }}
+                    style={{
+                      padding: '0.4rem 0.75rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      color: String(u.id) === String(selectedUserId) ? 'var(--dk-accent)' : 'var(--dk-text)',
+                      background: String(u.id) === String(selectedUserId) ? 'var(--dk-elevated)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--dk-elevated)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = String(u.id) === String(selectedUserId) ? 'var(--dk-elevated)' : 'transparent'}
+                  >
+                    {u.prenom} {u.nom}
+                    {u.service && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: 'var(--dk-text-muted)' }}>· {u.service}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         <Form.Control
           type="number"
