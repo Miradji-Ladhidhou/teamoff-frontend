@@ -313,7 +313,14 @@ const SystemSettings = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (exportError) {
-      alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV de l\'historique.');
+      let msg = 'Erreur lors de l\'export CSV de l\'historique.';
+      const errData = exportError.response?.data;
+      if (errData instanceof Blob) {
+        try { const t = await errData.text(); msg = JSON.parse(t)?.message || msg; } catch { /* ignore */ }
+      } else if (errData?.message) {
+        msg = errData.message;
+      }
+      alert.error(msg);
     } finally {
       setLoading(false);
     }

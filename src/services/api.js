@@ -350,7 +350,7 @@ export const auditService = {
 export const settingsService = {
   getAll: () => api.get('/settings'),
   getHistory: (params = {}) => api.get('/settings/history', { params }),
-  exportHistoryCSV: () => api.get('/settings/history/csv', { responseType: 'blob' }),
+  exportHistoryCSV: () => api.get('/settings/history/csv', { responseType: 'blob', timeout: 30000 }),
   updateAll: (data) => api.put('/settings', data),
   updateSection: (section, data) => api.put(`/settings/sections/${section}`, data),
   getSystemInfo: () => api.get('/settings/system-info'),
