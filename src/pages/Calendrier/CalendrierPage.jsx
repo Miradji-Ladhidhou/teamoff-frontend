@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Spinner, Modal } from 'react-bootstrap';
-import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaChevronDown, FaPlus, FaFilter } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { calendrierService, entreprisesService, api } from '../../services/api';
@@ -521,9 +521,10 @@ const CalendrierPage = () => {
             <button
               className="cal-nav-title-btn"
               onClick={() => setShowMonthInput(true)}
-              title="Cliquer pour choisir un mois"
+              title="Choisir un mois"
             >
-              {formatMonthYear(currentDate)}
+              <span className="cal-nav-title-text">{formatMonthYear(currentDate)}</span>
+              <FaChevronDown className="cal-nav-title-icon" />
             </button>
           )}
           <Button variant="outline-secondary" onClick={() => navigateMonth(1)}>

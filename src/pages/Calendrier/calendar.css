@@ -109,39 +109,66 @@
 .cal-nav-title-btn {
   all: unset;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   text-align: center;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--dk-text);
-  padding: 0.15rem 0.5rem;
-  border-radius: 6px;
-  transition: background 0.15s;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--dk-border, #cbd5e1);
+  background: var(--dk-bg-card, #fff);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   text-transform: capitalize;
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cal-nav-title-btn:hover {
+  background: var(--dk-bg-hover, rgba(99,102,241,0.07));
+  border-color: var(--dk-primary, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+
+.cal-nav-title-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cal-nav-title-btn:hover {
-  background: var(--dk-bg-hover, rgba(0,0,0,0.06));
+.cal-nav-title-icon {
+  font-size: 0.65rem;
+  opacity: 0.55;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.cal-nav-title-btn:hover .cal-nav-title-icon {
+  opacity: 0.9;
 }
 
 .cal-month-picker-input {
   width: 100%;
-  border: 1px solid var(--dk-border, #cbd5e1);
-  border-radius: 6px;
-  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--dk-primary, #6366f1);
+  border-radius: 8px;
+  padding: 0.3rem 0.4rem;
   font-size: 0.88rem;
+  font-weight: 600;
   background: var(--dk-bg-card, #fff);
   color: var(--dk-text);
   text-align: center;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+  outline: none;
 }
 
 .cal-today-btn {
   white-space: nowrap;
   font-size: 0.78rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.3rem 0.65rem;
 }
 
 /* ---------------- WRAPPER ---------------- */
