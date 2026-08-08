@@ -94,7 +94,7 @@
 
 .calendar-nav-header {
   display: grid;
-  grid-template-columns: 2.5rem 1fr 2.5rem;
+  grid-template-columns: 2.5rem 1fr 2.5rem auto;
   align-items: center;
   gap: 0.35rem;
 }
@@ -104,6 +104,44 @@
   text-align: center;
   font-size: 0.95rem;
   overflow-wrap: anywhere;
+}
+
+.cal-nav-title-btn {
+  all: unset;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dk-text);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+  text-transform: capitalize;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-nav-title-btn:hover {
+  background: var(--dk-bg-hover, rgba(0,0,0,0.06));
+}
+
+.cal-month-picker-input {
+  width: 100%;
+  border: 1px solid var(--dk-border, #cbd5e1);
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.88rem;
+  background: var(--dk-bg-card, #fff);
+  color: var(--dk-text);
+  text-align: center;
+}
+
+.cal-today-btn {
+  white-space: nowrap;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
 }
 
 /* ---------------- WRAPPER ---------------- */
@@ -499,11 +537,20 @@
   }
 
   .calendar-nav-header {
-    grid-template-columns: 2.25rem 1fr 2.25rem;
+    grid-template-columns: 2.25rem 1fr 2.25rem auto;
   }
 
   .calendar-nav-header__title {
     font-size: 0.88rem;
+  }
+
+  .cal-nav-title-btn {
+    font-size: 0.88rem;
+  }
+
+  .cal-today-btn {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.45rem;
   }
 }
 
@@ -523,6 +570,10 @@
   }
 
   .calendar-nav-header__title {
+    font-size: 1.1rem;
+  }
+
+  .cal-nav-title-btn {
     font-size: 1.1rem;
   }
 }

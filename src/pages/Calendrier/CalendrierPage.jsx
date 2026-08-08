@@ -90,6 +90,7 @@ const CalendrierPage = () => {
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
+  const [showMonthInput, setShowMonthInput] = useState(false);
   const [showAbsenceModal, setShowAbsenceModal] = useState(false);
   const [absenceForm, setAbsenceForm] = useState({ type_absence: '', date_debut: '', date_fin: '', commentaire: '' });
   const [absenceSending, setAbsenceSending] = useState(false);
@@ -167,6 +168,22 @@ const CalendrierPage = () => {
       newDate.setMonth(newDate.getMonth() + direction);
       return newDate;
     });
+  };
+
+  const navigateToToday = () => setCurrentDate(new Date());
+
+  const getMonthInputValue = () => {
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  };
+
+  const handleMonthInputChange = (e) => {
+    const [y, m] = e.target.value.split('-').map(Number);
+    if (y && m) {
+      setCurrentDate(new Date(y, m - 1, 1));
+    }
+    setShowMonthInput(false);
   };
 
   const getDaysInMonth = (date) => {
@@ -491,9 +508,35 @@ const CalendrierPage = () => {
           <Button variant="outline-secondary" onClick={() => navigateMonth(-1)}>
             <FaChevronLeft />
           </Button>
-          <h4 className="mb-0 text-capitalize calendar-nav-header__title">{formatMonthYear(currentDate)}</h4>
+          {showMonthInput ? (
+            <input
+              type="month"
+              className="cal-month-picker-input"
+              value={getMonthInputValue()}
+              onChange={handleMonthInputChange}
+              onBlur={() => setShowMonthInput(false)}
+              autoFocus
+            />
+          ) : (
+            <button
+              className="cal-nav-title-btn"
+              onClick={() => setShowMonthInput(true)}
+              title="Cliquer pour choisir un mois"
+            >
+              {formatMonthYear(currentDate)}
+            </button>
+          )}
           <Button variant="outline-secondary" onClick={() => navigateMonth(1)}>
             <FaChevronRight />
+          </Button>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={navigateToToday}
+            className="cal-today-btn"
+            title="Revenir au mois en cours"
+          >
+            Aujourd'hui
           </Button>
         </Card.Header>
 
