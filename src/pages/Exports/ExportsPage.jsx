@@ -9,9 +9,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
 const ALLOWED_FORMATS_BY_TYPE = {
-  conges: ['csv', 'pdf'],
-  absences: ['csv', 'pdf'],
-  arrets_maladie: ['csv', 'pdf'],
+  tout: ['csv'],
   utilisateurs: ['csv'],
   audit: ['csv'],
   usage: ['pdf'],
@@ -34,7 +32,7 @@ const ExportsPage = () => {
   const [availableServices, setAvailableServices] = useState([]);
 
   const [exportParams, setExportParams] = useState({
-    type: 'conges',
+    type: 'tout',
     format: 'csv',
     dateDebut: '',
     dateFin: '',
@@ -49,23 +47,17 @@ const ExportsPage = () => {
 
   const exportOptions = user?.role === 'super_admin'
     ? [
-      { value: 'conges', label: 'Demandes de congé' },
-      { value: 'absences', label: 'Absences' },
-      { value: 'arrets_maladie', label: 'Arrêts maladie' },
+      { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       { value: 'utilisateurs', label: 'Utilisateurs' },
       { value: 'audit', label: 'Logs d\'audit' },
       { value: 'usage', label: 'Rapport d\'usage' }
     ]
     : user?.role === 'manager'
       ? [
-        { value: 'conges', label: 'Demandes de congé' },
-        { value: 'absences', label: 'Absences' },
-        { value: 'arrets_maladie', label: 'Arrêts maladie' }
+        { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       ]
       : [
-        { value: 'conges', label: 'Demandes de congé' },
-        { value: 'absences', label: 'Absences' },
-        { value: 'arrets_maladie', label: 'Arrêts maladie' },
+        { value: 'tout', label: 'Congés, absences & arrêts maladie' },
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'statistiques', label: 'Statistiques' }
       ];
@@ -195,24 +187,8 @@ const ExportsPage = () => {
         }
 
         // Utiliser les bonnes fonctions selon le type et le format
-        if (type === 'conges') {
-          if (format === 'csv') {
-            response = await exportsService.exportCongesCSV(queryParams);
-          } else if (format === 'pdf') {
-            response = await exportsService.exportCongesPDF(queryParams);
-          }
-        } else if (type === 'absences') {
-          if (format === 'csv') {
-            response = await exportsService.exportAbsencesCSV(queryParams);
-          } else if (format === 'pdf') {
-            response = await exportsService.exportAbsencesPDF(queryParams);
-          }
-        } else if (type === 'arrets_maladie') {
-          if (format === 'csv') {
-            response = await exportsService.exportArretsMaladieCSV(queryParams);
-          } else if (format === 'pdf') {
-            response = await exportsService.exportArretsMaladiePDF(queryParams);
-          }
+        if (type === 'tout') {
+          response = await exportsService.exportToutCSV(queryParams);
         } else if (type === 'utilisateurs') {
           if (format === 'csv') {
             response = await exportsService.exportUtilisateursCSV();
@@ -311,9 +287,7 @@ const ExportsPage = () => {
 
   const getExportTypeIcon = (type) => {
     const icons = {
-      conges: FaCalendarAlt,
-      absences: FaCalendarAlt,
-      arrets_maladie: FaHeartbeat,
+      tout: FaCalendarAlt,
       utilisateurs: FaUsers,
       statistiques: FaChartBar,
       audit: FaFileExcel,
@@ -325,9 +299,7 @@ const ExportsPage = () => {
 
   const getExportTypeLabel = (type) => {
     const labels = {
-      conges: 'Demandes de congé',
-      absences: 'Absences',
-      arrets_maladie: 'Arrêts maladie',
+      tout: 'Congés, absences & arrêts maladie',
       utilisateurs: 'Utilisateurs',
       statistiques: 'Statistiques',
       audit: 'Logs d\'audit',
@@ -450,27 +422,8 @@ const ExportsPage = () => {
                 </Row>
 
                 {/* Filtres spécifiques */}
-                {(exportParams.type === 'conges' || exportParams.type === 'absences' || exportParams.type === 'arrets_maladie') && (
+                {exportParams.type === 'tout' && (
                   <>
-                    {/* Statut uniquement pour congés */}
-                    {exportParams.type === 'conges' && (
-                      <Form.Group className="mb-3">
-                        <Form.Label>Statut des congés</Form.Label>
-                        <Form.Select
-                          name="statut"
-                          value={exportParams.statut}
-                          onChange={handleParamChange}
-                        >
-                          <option value="all">Tous les statuts</option>
-                          <option value="en_attente_manager">En attente manager</option>
-                          <option value="valide_manager">Validé manager</option>
-                          <option value="refuse_manager">Refusé manager</option>
-                          <option value="valide_final">Validé final</option>
-                          <option value="refuse_final">Refusé final</option>
-                        </Form.Select>
-                      </Form.Group>
-                    )}
-
                     {user?.role === 'super_admin' && (
                       <Form.Group className="mb-3">
                         <Form.Label>Entreprise</Form.Label>
