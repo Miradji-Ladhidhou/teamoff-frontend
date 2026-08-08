@@ -507,7 +507,7 @@ const UsersManagement = () => {
                         {!isSuperAdmin && (
                           <Button variant="outline-info" size="sm" onClick={() => navigate(`/soldes?userId=${targetUser.id}`)} title="Soldes"><FaCoins /></Button>
                         )}
-                        {targetUser.email !== PROTECTED_EMAIL && (
+                        {targetUser.email !== PROTECTED_EMAIL && (isSuperAdmin || targetUser.role !== 'admin_entreprise') && (
                           <AsyncButton
                             variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                             size="sm"
@@ -526,7 +526,7 @@ const UsersManagement = () => {
                             <FaEnvelope />
                           </AsyncButton>
                         )}
-                        {targetUser.email !== PROTECTED_EMAIL && (
+                        {targetUser.email !== PROTECTED_EMAIL && (isSuperAdmin || targetUser.role !== 'admin_entreprise') && (
                           <AsyncButton
                             variant="outline-danger"
                             size="sm"
@@ -700,7 +700,7 @@ const UsersManagement = () => {
               <FaEnvelope className="me-1" />Renvoyer invitation
             </AsyncButton>
           )}
-          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (isSuperAdmin || selectedUserDetails?.role !== 'admin_entreprise') && (
             <AsyncButton
               variant={selectedUserDetails?.statut === 'actif' ? 'outline-warning' : 'outline-success'}
               size="sm"
@@ -710,7 +710,7 @@ const UsersManagement = () => {
               {selectedUserDetails?.statut === 'actif' ? <><FaUserTimes className="me-1" />Désactiver</> : <><FaUserCheck className="me-1" />Activer</>}
             </AsyncButton>
           )}
-          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (isSuperAdmin || selectedUserDetails?.role !== 'admin_entreprise') && (
             <AsyncButton variant="outline-danger" size="sm"
               onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
               disabled={selectedUserDetails?.id === user?.id}
