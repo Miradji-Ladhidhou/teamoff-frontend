@@ -3,12 +3,11 @@ import './users.css';
 const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaEnvelope, FaCoins } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
-import { formatGeneratedAt } from '../../services/api';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -59,7 +58,6 @@ const UsersManagement = () => {
   const [servicesByCompany, setServicesByCompany] = useState({});
   const [activeUserActionId, setActiveUserActionId] = useState(null);
   const submitAction = useAsyncAction();
-  const exportAction = useAsyncAction();
   const mutateUserAction = useAsyncAction();
 
   useEffect(() => {
@@ -268,53 +266,6 @@ const UsersManagement = () => {
     });
   };
 
-  const handleExportCsv = async () => {
-    await exportAction.run(async () => {
-      try {
-        const params = { generatedAt: formatGeneratedAt() };
-        if (isSuperAdmin && companyFilter) params.entrepriseId = companyFilter;
-        const response = await api.exportsService.exportUtilisateursCSV(params);
-        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        const date = new Date().toISOString().slice(0, 10);
-
-        link.href = url;
-        link.download = `utilisateurs_${date}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (exportError) {
-        console.error('Erreur export utilisateurs CSV:', exportError);
-        alert.error(exportError.response?.data?.message || 'Erreur lors de l\'export CSV des utilisateurs');
-      }
-    });
-  };
-
-  const importAction = useAsyncAction();
-
-  const handleImportCsv = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    await importAction.run(async () => {
-      try {
-        const res = await api.usersService.importCSV(file);
-        const { message, created, skipped } = res.data;
-        alert.success(`${message}${skipped?.length > 0 ? ` — ${skipped.map((s) => `${s.email}: ${s.reason}`).join(', ')}` : ''}`);
-        loadUsers();
-      } catch (importError) {
-        const serverErrors = importError.response?.data?.errors;
-        if (serverErrors?.length) {
-          alert.error(`Erreurs CSV : ${serverErrors.map((e) => `Ligne ${e.line}: ${e.errors.join(', ')}`).join(' | ')}`);
-        } else {
-          alert.error(importError.response?.data?.message || 'Erreur lors de l\'import CSV');
-        }
-      }
-    });
-  };
-
   const filteredUsers = useMemo(() => users.filter((targetUser) => {
     const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''} ${targetUser.service || ''}`.toLowerCase();
     const matchesSearch = !searchTerm || searchableText.includes(searchTerm.toLowerCase());
@@ -394,14 +345,6 @@ const UsersManagement = () => {
       <div className="page-title-bar">
         <span className="section-title-bar__text">Utilisateurs</span>
         <div className="d-flex flex-wrap gap-2">
-          <AsyncButton variant="outline-secondary" onClick={handleExportCsv} action={exportAction} loadingText="" title="Exporter CSV">
-            <FaDownload className="me-1" /><span className="d-none d-sm-inline">Export CSV</span>
-          </AsyncButton>
-          <label className="btn btn-outline-secondary mb-0" style={{ cursor: importAction.isRunning ? 'wait' : 'pointer' }} title="Importer via CSV">
-            <FaDownload className="me-1" style={{ transform: 'rotate(180deg)' }} />
-            <span className="d-none d-sm-inline">Import CSV</span>
-            <input type="file" accept=".csv,text/csv" className="d-none" onChange={handleImportCsv} disabled={importAction.isRunning} />
-          </label>
           <Button variant="primary" onClick={() => { setEditingUser(null); resetForm(); setShowModal(true); }}>
             <FaPlus className="me-1" /><span className="d-none d-sm-inline">Nouvel </span>utilisateur
           </Button>
