@@ -1,7 +1,7 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
-import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
+import { FaDownload, FaFileExcel, FaCalendarAlt, FaCalendarCheck, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -9,6 +9,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
 const ALLOWED_FORMATS_BY_TYPE = {
+  conges: ['csv'],
   tout: ['csv'],
   utilisateurs: ['csv'],
   audit: ['csv'],
@@ -32,7 +33,7 @@ const ExportsPage = () => {
   const [availableServices, setAvailableServices] = useState([]);
 
   const [exportParams, setExportParams] = useState({
-    type: 'tout',
+    type: 'conges',
     format: 'csv',
     dateDebut: '',
     dateFin: '',
@@ -47,6 +48,7 @@ const ExportsPage = () => {
 
   const exportOptions = user?.role === 'super_admin'
     ? [
+      { value: 'conges', label: 'Congés équipe' },
       { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       { value: 'utilisateurs', label: 'Utilisateurs' },
       { value: 'audit', label: 'Logs d\'audit' },
@@ -54,9 +56,11 @@ const ExportsPage = () => {
     ]
     : user?.role === 'manager'
       ? [
+        { value: 'conges', label: 'Congés équipe' },
         { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       ]
       : [
+        { value: 'conges', label: 'Congés équipe' },
         { value: 'tout', label: 'Congés, absences & arrêts maladie' },
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'statistiques', label: 'Statistiques' }
@@ -187,7 +191,9 @@ const ExportsPage = () => {
         }
 
         // Utiliser les bonnes fonctions selon le type et le format
-        if (type === 'tout') {
+        if (type === 'conges') {
+          response = await exportsService.exportCongesCSV(queryParams);
+        } else if (type === 'tout') {
           response = await exportsService.exportToutCSV(queryParams);
         } else if (type === 'utilisateurs') {
           if (format === 'csv') {
@@ -287,6 +293,7 @@ const ExportsPage = () => {
 
   const getExportTypeIcon = (type) => {
     const icons = {
+      conges: FaCalendarCheck,
       tout: FaCalendarAlt,
       utilisateurs: FaUsers,
       statistiques: FaChartBar,
@@ -299,6 +306,7 @@ const ExportsPage = () => {
 
   const getExportTypeLabel = (type) => {
     const labels = {
+      conges: 'Congés équipe',
       tout: 'Congés, absences & arrêts maladie',
       utilisateurs: 'Utilisateurs',
       statistiques: 'Statistiques',
