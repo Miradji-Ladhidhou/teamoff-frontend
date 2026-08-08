@@ -371,7 +371,7 @@ const CongeDetailsPage = () => {
       </div>
 
       <Row>
-        <Col lg={8}>
+        <Col md={8} className="order-last order-md-first">
           {/* Card dates */}
           <Card className="mb-3">
             <Card.Body>
@@ -611,7 +611,7 @@ const CongeDetailsPage = () => {
           )}
         </Col>
 
-        <Col lg={4}>
+        <Col md={4} className="order-first order-md-last">
           {/* Actions disponibles (approbation) */}
           {canApprove() && (
             <Card className="mb-4">

@@ -511,7 +511,7 @@ const DashboardPage = () => {
       </Row>
 
       {/* Mobile FAB — Nouveau congé */}
-      {['employe', 'manager'].includes(user?.role) && (
+      {['employe', 'manager', 'admin_entreprise'].includes(user?.role) && (
         <Link to="/conges/nouveau" className="dashboard-fab d-md-none" aria-label="Nouveau congé">
           <FaPlus size={20} />
         </Link>

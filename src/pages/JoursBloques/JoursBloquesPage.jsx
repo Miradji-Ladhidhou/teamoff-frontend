@@ -330,7 +330,7 @@ const JoursBloquesPage = () => {
           <>
             <div className="section-label-title mb-2">Acquisition mensuelle automatique</div>
             <div className="conges-list-wrap mb-4">
-              <Table size="sm" className="users-dense-table mb-0">
+              <Table size="sm" responsive className="users-dense-table mb-0">
                 <thead>
                   <tr>
                     <th>Type de congé</th>
@@ -341,7 +341,7 @@ const JoursBloquesPage = () => {
                   {congeTypes.map((type) => (
                     <tr key={type.id}>
                       <td>{type.libelle}</td>
-                      <td style={{ width: 140 }}>
+                      <td style={{ width: '40%' }}>
                         <Form.Control
                           type="number"
                           size="sm"

@@ -416,10 +416,11 @@ const CompaniesManagement = () => {
             variant="outline-secondary"
             onClick={handleExportCsv}
             action={exportAction}
-            loadingText="Export..."
+            loadingText="..."
+            title="Exporter CSV"
           >
-            <FaDownload className="me-2" />
-            Exporter CSV
+            <FaDownload />
+            <span className="d-none d-sm-inline ms-2">Exporter CSV</span>
           </AsyncButton>
           <Button
             variant="primary"
@@ -428,99 +429,123 @@ const CompaniesManagement = () => {
               resetForm();
               setShowModal(true);
             }}
+            title="Nouvelle Entreprise"
           >
-            <FaPlus className="me-2" />
-            Nouvelle Entreprise
+            <FaPlus />
+            <span className="d-none d-sm-inline ms-2">Nouvelle Entreprise</span>
           </Button>
         </div>
       </div>
 
       <Card className="mb-4">
         <Card.Body>
-          <Row>
-            <Col md={6}>
-              <InputGroup>
-                <InputGroup.Text>
-                  <FaSearch />
-                </InputGroup.Text>
-                <Form.Control
-                  type="text"
-                  placeholder="Rechercher une entreprise..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </InputGroup>
-            </Col>
-            <Col md={6} className="text-end">
-              <span className="badge info me-2">
-                {filteredCompanies.length} entreprise{filteredCompanies.length > 1 ? 's' : ''}
-              </span>
-            </Col>
-          </Row>
+          <div className="users-filter-bar">
+            <InputGroup className="users-filter-bar__search">
+              <InputGroup.Text><FaSearch /></InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="Rechercher une entreprise..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </InputGroup>
+            <span className="badge info users-filter-bar__count">
+              {filteredCompanies.length} entreprise{filteredCompanies.length > 1 ? 's' : ''}
+            </span>
+          </div>
         </Card.Body>
       </Card>
 
       <Card>
         <Card.Body>
-          <Table hover responsive>
-            <thead>
-              <tr>
-                <th>Entreprise</th>
-                <th>Statut</th>
-                <th>Politique</th>
-                <th>Parametres</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCompanies.map((company) => (
-                <tr key={company.id}>
-                  <td>
-                    <div>
-                      <strong>{company.nom}</strong>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${company.statut === 'active' ? 'approved' : company.statut === 'suspendue' ? 'pending' : 'info'}`}>
+
+          {/* ── Mobile : cartes ── */}
+          <div className="d-md-none mobile-card-list">
+            {filteredCompanies.map((company) => (
+              <div key={company.id} className="mobile-card-list__item">
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <div>
+                    <div className="fw-semibold">{company.nom}</div>
+                    <span className={`badge mt-1 ${company.statut === 'active' ? 'approved' : company.statut === 'suspendue' ? 'pending' : 'info'}`}>
                       {(company.statut || 'inactive').toUpperCase()}
                     </span>
-                  </td>
-                  <td>
-                    <small className="text-muted">{Object.keys(company.politique_conges || {}).length} cle(s)</small>
-                  </td>
-                  <td>
-                    <small className="text-muted">{Object.keys(company.parametres || {}).length} cle(s)</small>
-                  </td>
-                  <td>
-                    <div className="d-flex gap-1">
-                      <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
-                        <FaEdit />
-                      </Button>
-                      <AsyncButton
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(company.id)}
-                        title="Supprimer"
-                        isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
-                        showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
-                        loadingText=""
-                        disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
-                      >
-                        <FaTrash />
-                      </AsyncButton>
-                    </div>
-                  </td>
+                  </div>
+                </div>
+                <div className="d-flex gap-2 mt-2">
+                  <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(company)}>
+                    <FaEdit className="me-1" /> Modifier
+                  </Button>
+                  <AsyncButton
+                    variant="outline-danger"
+                    size="sm"
+                    className="flex-grow-1 justify-content-center"
+                    onClick={() => handleDelete(company.id)}
+                    isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
+                    showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
+                    loadingText="..."
+                    disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
+                  >
+                    <FaTrash className="me-1" /> Supprimer
+                  </AsyncButton>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Desktop : tableau ── */}
+          <div className="d-none d-md-block">
+            <Table hover responsive>
+              <thead>
+                <tr>
+                  <th>Entreprise</th>
+                  <th>Statut</th>
+                  <th>Politique</th>
+                  <th>Paramètres</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {filteredCompanies.map((company) => (
+                  <tr key={company.id}>
+                    <td><strong>{company.nom}</strong></td>
+                    <td>
+                      <span className={`badge ${company.statut === 'active' ? 'approved' : company.statut === 'suspendue' ? 'pending' : 'info'}`}>
+                        {(company.statut || 'inactive').toUpperCase()}
+                      </span>
+                    </td>
+                    <td><small className="text-muted">{Object.keys(company.politique_conges || {}).length} clé(s)</small></td>
+                    <td><small className="text-muted">{Object.keys(company.parametres || {}).length} clé(s)</small></td>
+                    <td>
+                      <div className="d-flex gap-1">
+                        <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
+                          <FaEdit />
+                        </Button>
+                        <AsyncButton
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(company.id)}
+                          title="Supprimer"
+                          isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
+                          showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
+                          loadingText=""
+                          disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
+                        >
+                          <FaTrash />
+                        </AsyncButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
 
           {filteredCompanies.length === 0 && (
             <div className="text-center py-4">
               <FaBuilding size={48} className="text-muted mb-3" />
-              <h5>Aucune entreprise trouvee</h5>
+              <h5>Aucune entreprise trouvée</h5>
               <p className="text-muted">
-                {searchTerm ? 'Aucune entreprise ne correspond a votre recherche.' : 'Commencez par creer votre premiere entreprise.'}
+                {searchTerm ? 'Aucune entreprise ne correspond à votre recherche.' : 'Commencez par créer votre première entreprise.'}
               </p>
             </div>
           )}

@@ -65,6 +65,24 @@
   justify-content: center;
 }
 
+/* ── Barre de filtres (réutilise le pattern users-filter-bar) ── */
+.users-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.users-filter-bar__search {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.users-filter-bar__count {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ────────────── Responsive ────────────── */
 @media (max-width: 575.98px) {
   .companies-mobile-card {
