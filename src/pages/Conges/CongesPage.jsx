@@ -286,6 +286,7 @@ const CongesPage = () => {
     if (workflow === 'auto') return false;
 
     if (user?.role === 'manager') {
+      if (conge.utilisateur_id === user.id) return false;
       if (workflow === 'admin_only') return false;
       return conge.statut === 'en_attente_manager';
     }
@@ -301,6 +302,7 @@ const CongesPage = () => {
 
   const canRejectConge = (conge) => {
     if (user?.role === 'manager') {
+      if (conge.utilisateur_id === user.id) return false;
       return conge.statut === 'en_attente_manager';
     }
 
