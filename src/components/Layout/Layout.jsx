@@ -22,6 +22,7 @@ import {
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { entreprisesService } from '../../services/api';
 import { getNavigationForRole } from '../../utils/navigation';
 import { useNotificationStream } from '../../hooks/useNotificationStream';
 import AppFooter from './AppFooter';
@@ -57,12 +58,23 @@ const Layout = () => {
 
   const [showSidebar, setShowSidebar] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [managerCanViewAll, setManagerCanViewAll] = useState(true);
 
   const handleNewNotification = useCallback(() => {
     setUnreadCount((c) => c + 1);
   }, []);
 
   useNotificationStream(handleNewNotification);
+
+  useEffect(() => {
+    if (user?.role !== 'manager' || !user?.entreprise_id) return;
+    entreprisesService.getPolitique(user.entreprise_id)
+      .then((res) => {
+        const pol = res.data?.politique_conges || {};
+        setManagerCanViewAll(pol.manager_can_view_employee_history !== false);
+      })
+      .catch(() => setManagerCanViewAll(false));
+  }, [user?.role, user?.entreprise_id]);
 
   // Reset unread count when user visits notifications page
   useEffect(() => {
@@ -75,7 +87,15 @@ const Layout = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const navItems = useMemo(() => getNavigationForRole(user?.role) || [], [user?.role]);
+  const navItems = useMemo(() => {
+    const items = getNavigationForRole(user?.role) || [];
+    if (user?.role === 'manager' && !managerCanViewAll) {
+      return items.map((item) =>
+        item.path === '/conges-equipe' ? { ...item, label: 'Mes congés' } : item
+      );
+    }
+    return items;
+  }, [user?.role, managerCanViewAll]);
 
   const primaryItems = useMemo(() => navItems.filter((item) => item.section === 'primary'), [navItems]);
   const secondaryItems = useMemo(() => navItems.filter((item) => item.section === 'secondary'), [navItems]);

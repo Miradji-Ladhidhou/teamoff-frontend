@@ -91,8 +91,8 @@ const CongesPage = () => {
       if (user?.role === 'employe') {
         params.utilisateur_id = user.id;
       } else if (isManager) {
-        if (viewMode === 'own') params.utilisateur_id = user.id;
-        // viewMode 'all': no user filter — backend returns all company employees
+        if (!canViewAllEmployees || viewMode === 'own') params.utilisateur_id = user.id;
+        // canViewAllEmployees && viewMode 'all': pas de filtre — backend retourne toute l'entreprise
       }
 
       Object.keys(params).forEach(key => { if (!params[key]) delete params[key]; });
@@ -105,7 +105,7 @@ const CongesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role, isManager, viewMode]);
+  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role, isManager, viewMode, canViewAllEmployees]);
 
   useEffect(() => {
     loadConges();
@@ -373,7 +373,7 @@ const CongesPage = () => {
   };
 
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
-  const showEmployeeColumn = isAdmin() || (isManager && viewMode === 'all');
+  const showEmployeeColumn = isAdmin() || (isManager && canViewAllEmployees && viewMode === 'all');
   const statusChips = [
     { value: '', label: 'Tous' },
     { value: 'en_attente_manager', label: 'En attente' },
@@ -388,7 +388,7 @@ const CongesPage = () => {
       {/* En-tête */}
       <div className="page-title-bar">
         <span className="section-title-bar__text">
-          {isAdmin() ? 'Congés' : (isManager && viewMode === 'all' ? 'Congés équipe' : 'Mes congés')}
+          {isAdmin() ? 'Congés' : (isManager && canViewAllEmployees && viewMode === 'all' ? 'Congés équipe' : 'Mes congés')}
         </span>
         <div className="d-flex align-items-center gap-2">
           {isManager && canViewAllEmployees && (
