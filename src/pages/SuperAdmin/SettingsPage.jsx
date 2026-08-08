@@ -375,6 +375,25 @@ const SystemSettings = () => {
         </div>
       </div>
 
+      {/* Mobile : select dropdown */}
+      <div className="d-md-none mb-3">
+        <Form.Select
+          value={activeTab}
+          onChange={(e) => {
+            const t = e.target.value;
+            setActiveTab(t);
+            setSearchParams({ tab: t });
+          }}
+        >
+          <option value="general">Général</option>
+          <option value="security">Sécurité</option>
+          <option value="email">Email</option>
+          <option value="database">Base de données</option>
+          <option value="system">Informations système</option>
+          <option value="history">Historique</option>
+        </Form.Select>
+      </div>
+
       <Tabs
         activeKey={activeTab}
         onSelect={(eventKey) => {
@@ -915,13 +934,13 @@ const SystemSettings = () => {
               </div>
               <div className="settings-table-wrap">
                 <div className="settings-table-hint d-md-none">Glissez horizontalement pour voir l'historique complet.</div>
-                <Table bordered responsive className="settings-table">
+                <Table bordered responsive className="settings-table settings-history-table">
                 <thead>
                   <tr>
                     <th>Date</th>
                     <th>Action</th>
                     <th>Par</th>
-                    <th>Details</th>
+                    <th>Détails</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -932,10 +951,10 @@ const SystemSettings = () => {
                   )}
                   {settingsHistory.map((log) => (
                     <tr key={log.id}>
-                      <td>{new Date(log.createdAt).toLocaleString('fr-FR')}</td>
-                      <td>{getActionLabel(log.action)}</td>
-                      <td>{formatActor(log)}</td>
-                      <td>{formatDetails(log)}</td>
+                      <td data-label="Date">{new Date(log.createdAt).toLocaleString('fr-FR')}</td>
+                      <td data-label="Action">{getActionLabel(log.action)}</td>
+                      <td data-label="Par">{formatActor(log)}</td>
+                      <td data-label="Détails">{formatDetails(log)}</td>
                     </tr>
                   ))}
                 </tbody>

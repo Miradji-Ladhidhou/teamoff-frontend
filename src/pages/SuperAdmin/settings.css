@@ -189,6 +189,11 @@
 }
 
 @media (max-width: 767.98px) {
+  /* Masquer la barre d'onglets — le select mobile la remplace */
+  .settings-tabs-mobile > .nav {
+    display: none !important;
+  }
+
   /* Header historique : titre + toolbar empilés */
   .settings-history-header {
     flex-direction: column;
@@ -199,5 +204,43 @@
   .settings-history-toolbar {
     flex-wrap: wrap;
     width: 100%;
+  }
+
+  /* Historique : table → cartes */
+  .settings-history-table thead {
+    display: none;
+  }
+
+  .settings-history-table tbody tr {
+    display: block;
+    border: 1px solid var(--dk-border);
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    background: var(--dk-surface, var(--dk-card));
+  }
+
+  .settings-history-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border: none !important;
+    padding: 0.2rem 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--dk-border) !important;
+  }
+
+  .settings-history-table tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 0.35rem;
+  }
+
+  .settings-history-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--dk-text-soft);
+    flex-shrink: 0;
+    min-width: 60px;
   }
 }
