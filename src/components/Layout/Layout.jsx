@@ -59,6 +59,7 @@ const Layout = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [managerCanViewAll, setManagerCanViewAll] = useState(true);
+  const [managerCanExport, setManagerCanExport] = useState(true);
 
   const handleNewNotification = useCallback(() => {
     setUnreadCount((c) => c + 1);
@@ -72,8 +73,9 @@ const Layout = () => {
       .then((res) => {
         const pol = res.data?.politique_conges || {};
         setManagerCanViewAll(pol.manager_can_view_employee_history !== false);
+        setManagerCanExport(pol.manager_can_export_team_leaves !== false);
       })
-      .catch(() => setManagerCanViewAll(false));
+      .catch(() => { setManagerCanViewAll(false); setManagerCanExport(false); });
   }, [user?.role, user?.entreprise_id]);
 
   // Reset unread count when user visits notifications page
@@ -88,14 +90,19 @@ const Layout = () => {
   }, [location.pathname]);
 
   const navItems = useMemo(() => {
-    const items = getNavigationForRole(user?.role) || [];
-    if (user?.role === 'manager' && !managerCanViewAll) {
-      return items.map((item) =>
-        item.path === '/conges-equipe' ? { ...item, label: 'Mes congés' } : item
-      );
+    let items = getNavigationForRole(user?.role) || [];
+    if (user?.role === 'manager') {
+      if (!managerCanViewAll) {
+        items = items.map((item) =>
+          item.path === '/conges-equipe' ? { ...item, label: 'Mes congés' } : item
+        );
+      }
+      if (!managerCanExport) {
+        items = items.filter((item) => item.path !== '/exports');
+      }
     }
     return items;
-  }, [user?.role, managerCanViewAll]);
+  }, [user?.role, managerCanViewAll, managerCanExport]);
 
   const primaryItems = useMemo(() => navItems.filter((item) => item.section === 'primary'), [navItems]);
   const secondaryItems = useMemo(() => navItems.filter((item) => item.section === 'secondary'), [navItems]);

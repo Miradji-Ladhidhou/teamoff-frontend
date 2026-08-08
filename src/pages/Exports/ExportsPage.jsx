@@ -1,6 +1,7 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal, Spinner } from 'react-bootstrap';
+import { Navigate } from 'react-router-dom';
 import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
@@ -30,7 +31,7 @@ const ExportsPage = () => {
   const [entreprises, setEntreprises] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
-  const [managerCanExportTeam, setManagerCanExportTeam] = useState(true);
+  const [managerCanExportTeam, setManagerCanExportTeam] = useState(null); // null = chargement en cours
 
   const [exportParams, setExportParams] = useState({
     type: 'tout',
@@ -70,7 +71,8 @@ const ExportsPage = () => {
   }, [success, alert]);
 
   useEffect(() => {
-    if (user?.role !== 'manager' || !user?.entreprise_id) return;
+    if (user?.role !== 'manager') { setManagerCanExportTeam(true); return; }
+    if (!user?.entreprise_id) return;
     entreprisesService.getPolitique(user.entreprise_id)
       .then((res) => {
         const pol = res.data?.politique_conges || {};
@@ -190,11 +192,6 @@ const ExportsPage = () => {
         if (!queryParams.sortBy) delete queryParams.sortBy;
         if (!queryParams.sortOrder) delete queryParams.sortOrder;
         if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
-
-        // Si le manager n'est pas autorisé à exporter toute l'équipe, on limite à ses propres données
-        if (user?.role === 'manager' && !managerCanExportTeam) {
-          queryParams.salarie = user.email;
-        }
         if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
 
         const allowedFormats = ALLOWED_FORMATS_BY_TYPE[type] || ['csv'];
@@ -269,10 +266,6 @@ const ExportsPage = () => {
     if (!queryParams.sortOrder) delete queryParams.sortOrder;
     if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
     if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
-
-    if (user?.role === 'manager' && !managerCanExportTeam) {
-      queryParams.salarie = user.email;
-    }
 
     return queryParams;
   };
@@ -350,6 +343,16 @@ const ExportsPage = () => {
         </div>
       </Container>
     );
+  }
+
+  // Manager : attendre le chargement de la politique avant d'afficher
+  if (user.role === 'manager' && managerCanExportTeam === null) {
+    return <Container><div className="text-center py-5"><Spinner animation="border" variant="primary" /></div></Container>;
+  }
+
+  // Manager sans droit d'export : rediriger
+  if (user.role === 'manager' && managerCanExportTeam === false) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -535,12 +538,6 @@ const ExportsPage = () => {
                       <option value="me">Mes données uniquement</option>
                     </Form.Select>
                   </Form.Group>
-                )}
-
-                {user?.role === 'manager' && !managerCanExportTeam && (
-                  <div className="alert alert-info py-2 small mb-3">
-                    L'export est limité à vos propres données. L'administrateur peut modifier cette option dans les règles de l'entreprise.
-                  </div>
                 )}
 
                 {/* Bouton d'export */}
