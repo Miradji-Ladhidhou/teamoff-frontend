@@ -287,7 +287,7 @@ export const congeTypesService = {
   delete: (id) => api.delete(`/conge-types/${id}`),
 };
 
-const _generatedAt = () => {
+export const formatGeneratedAt = () => {
   try {
     const now = new Date();
     const p = Object.fromEntries(
@@ -301,7 +301,7 @@ const _generatedAt = () => {
     return new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
 };
-const _p = (params = {}) => ({ generatedAt: _generatedAt(), ...params });
+const _p = (params = {}) => ({ generatedAt: formatGeneratedAt(), ...params });
 
 export const exportsService = {
   preview: (params = {}) => api.get('/exports/preview', { params }),

@@ -8,7 +8,7 @@ import {
   FaHistory, FaSearch, FaDownload, FaEye, FaUser, FaBuilding,
   FaCalendarCheck, FaTimes
 } from 'react-icons/fa';
-import { auditService, exportsService } from '../../services/api';
+import { auditService, exportsService, formatGeneratedAt } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 
 // ---------- Helpers purs (hors composant — stables entre renders) ----------
@@ -138,6 +138,7 @@ const AuditLogs = () => {
   const exportLogs = async () => {
     try {
       const response = await exportsService.exportAuditCSV({
+        generatedAt: formatGeneratedAt(),
         action:    actionFilter || undefined,
         search:    searchTerm  || undefined,
         dateDebut: dateDebut   || undefined,

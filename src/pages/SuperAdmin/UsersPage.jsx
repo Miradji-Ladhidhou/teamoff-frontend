@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
+import { formatGeneratedAt } from '../../services/api';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -270,7 +271,7 @@ const UsersManagement = () => {
   const handleExportCsv = async () => {
     await exportAction.run(async () => {
       try {
-        const params = {};
+        const params = { generatedAt: formatGeneratedAt() };
         if (isSuperAdmin && companyFilter) params.entrepriseId = companyFilter;
         const response = await api.exportsService.exportUtilisateursCSV(params);
         const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
