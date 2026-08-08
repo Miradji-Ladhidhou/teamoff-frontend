@@ -128,8 +128,82 @@
   justify-content: center;
 }
 
+/* ────────────── Cartes service ────────────── */
+.svc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.svc-card {
+  border: 1px solid var(--dk-border);
+  border-radius: 0.625rem;
+  background: var(--dk-card);
+  overflow: hidden;
+}
+
+.svc-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  background: var(--dk-elevated);
+  border-bottom: 1px solid var(--dk-border);
+}
+
+.svc-card__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dk-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.svc-card__body {
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.svc-card__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.svc-card__row--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.svc-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.svc-card__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--dk-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 /* ────────────── Responsive ────────────── */
 @media (max-width: 575.98px) {
+  .svc-card__row,
+  .svc-card__row--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .svc-card__body {
+    padding: 0.75rem;
+  }
+
   .politique-rule-row {
     flex-direction: column;
     align-items: flex-start;

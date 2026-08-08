@@ -14,6 +14,7 @@ import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
 import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
+import ServicePoliciesSection from './components/ServicePoliciesSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -588,97 +589,20 @@ const PolitiqueCongesPage = () => {
         )}
 
         {isSectionVisible('services') && (
-          <div id="section-politiques-services" className="mb-4">
-            <div className="section-label-title mb-3">
-              Politiques par service
-              <span className="text-muted fw-normal ms-2" style={{ fontSize: 11 }}>({Object.keys(servicePolicies).length} service{Object.keys(servicePolicies).length !== 1 ? 's' : ''})</span>
-            </div>
-
-            <Row className="g-2 mb-3">
-              <Col xs={9} md={5}>
-                <Form.Control
-                  type="text"
-                  value={newServiceName}
-                  onChange={(e) => setNewServiceName(e.target.value)}
-                  placeholder="Nom du service (ex : RH, Support…)"
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addServicePolicy(); } }}
-                />
-              </Col>
-              <Col xs={3} md="auto">
-                <Button type="button" variant="outline-primary" onClick={addServicePolicy} className="w-100">+ Ajouter</Button>
-              </Col>
-            </Row>
-
-            {serviceEntries.length > 5 && (
-              <div className="users-filter-bar mb-2">
-                <Form.Control
-                  type="text"
-                  value={serviceSearch}
-                  onChange={(e) => { setServiceSearch(e.target.value); setVisibleServicesCount(8); }}
-                  placeholder="Rechercher un service…"
-                  className="users-filter-bar__search"
-                />
-                <span className="badge info users-filter-bar__count">{filteredServiceEntries.length}/{serviceEntries.length}</span>
-              </div>
-            )}
-
-            {serviceEntries.length > 0 && (
-              <>
-                <div className="conges-list-wrap mb-2" style={{ overflowX: 'auto' }}>
-                  <Table hover className="users-dense-table mb-0" style={{ minWidth: 600 }}>
-                    <thead>
-                      <tr>
-                        <th>Service</th>
-                        <th>Comportement</th>
-                        <th>Workflow</th>
-                        <th>Préavis</th>
-                        <th>Max j consec.</th>
-                        <th>Max simul.</th>
-                        <th style={{ width: 1 }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleServiceEntries.map(([serviceName, servicePolicy]) => (
-                        <tr key={serviceName}>
-                          <td><strong>{serviceName}</strong></td>
-                          <td>
-                            <Form.Select size="sm" value={servicePolicy.overlap_behavior || 'block'} onChange={(e) => setServiceField(serviceName, 'overlap_behavior', e.target.value)}>
-                              <option value="block">Bloquer</option>
-                              <option value="warning">Alerter</option>
-                            </Form.Select>
-                          </td>
-                          <td>
-                            <Form.Select size="sm" value={servicePolicy.approval_workflow || 'manager_admin'} onChange={(e) => setServiceField(serviceName, 'approval_workflow', e.target.value)}>
-                              <option value="manager_admin">Manager + Admin</option>
-                              <option value="manager_only">Manager seul</option>
-                              <option value="admin_only">Admin seul</option>
-                            </Form.Select>
-                          </td>
-                          <td><Form.Control size="sm" type="number" min="0" style={{ width: 65 }} value={servicePolicy.minimum_notice_days ?? 0} onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)} /></td>
-                          <td><Form.Control size="sm" type="number" min="1" style={{ width: 65 }} value={servicePolicy.max_consecutive_days ?? 365} onChange={(e) => setServiceField(serviceName, 'max_consecutive_days', e.target.value)} /></td>
-                          <td><Form.Control size="sm" type="number" min="0" style={{ width: 65 }} value={servicePolicy.max_employees_on_leave ?? 0} onChange={(e) => setServiceField(serviceName, 'max_employees_on_leave', e.target.value)} /></td>
-                          <td>
-                            <Button type="button" size="sm" variant="outline-danger" onClick={() => removeServicePolicy(serviceName)} title="Supprimer">✕</Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-                {filteredServiceEntries.length > visibleServicesCount && (
-                  <Button type="button" size="sm" variant="outline-secondary" onClick={() => setVisibleServicesCount((p) => p + 8)}>
-                    Afficher 8 de plus…
-                  </Button>
-                )}
-                {serviceEntries.length > 0 && filteredServiceEntries.length === 0 && (
-                  <div className="text-muted small">Aucun service ne correspond à la recherche.</div>
-                )}
-              </>
-            )}
-            {serviceEntries.length === 0 && (
-              <div className="text-muted small">Aucun service — ajoutez-en un ci-dessus pour des règles spécifiques par département.</div>
-            )}
-          </div>
+          <ServicePoliciesSection
+            newServiceName={newServiceName}
+            setNewServiceName={setNewServiceName}
+            addServicePolicy={addServicePolicy}
+            removeServicePolicy={removeServicePolicy}
+            setServiceField={setServiceField}
+            serviceSearch={serviceSearch}
+            setServiceSearch={setServiceSearch}
+            visibleServicesCount={visibleServicesCount}
+            setVisibleServicesCount={setVisibleServicesCount}
+            serviceEntries={serviceEntries}
+            filteredServiceEntries={filteredServiceEntries}
+            visibleServiceEntries={visibleServiceEntries}
+          />
         )}
 
         {activeSection !== 'types' && (
