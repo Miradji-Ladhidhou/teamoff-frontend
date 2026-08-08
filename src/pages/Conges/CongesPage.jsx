@@ -1,6 +1,6 @@
 import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Container, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Container, Button, ButtonGroup, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -387,25 +387,33 @@ const CongesPage = () => {
     <Container fluid="sm" className="conges-page">
       {/* En-tête */}
       <div className="page-title-bar">
-        {isManager && canViewAllEmployees ? (
-          <Form.Select
-            size="sm"
-            value={viewMode}
-            onChange={(e) => { setViewMode(e.target.value); setCurrentPage(1); }}
-            style={{ width: 'auto', fontWeight: 700, fontSize: '1.1rem', border: 'none', background: 'transparent', padding: '0 1.5rem 0 0', boxShadow: 'none', color: 'inherit', cursor: 'pointer' }}
-          >
-            <option value="all">Congés équipe</option>
-            <option value="own">Mes congés</option>
-          </Form.Select>
-        ) : (
-          <span className="section-title-bar__text">{isAdmin() ? 'Congés' : 'Mes congés'}</span>
-        )}
-        {canCreateLeave && (
-          <Button as={Link} to="/conges/nouveau" variant="primary" size="sm" className="d-flex align-items-center">
-            <FaPlus className="me-2" />
-            Nouveau
-          </Button>
-        )}
+        <span className="section-title-bar__text">
+          {isAdmin() ? 'Congés' : (isManager && viewMode === 'all' ? 'Congés équipe' : 'Mes congés')}
+        </span>
+        <div className="d-flex align-items-center gap-2">
+          {isManager && canViewAllEmployees && (
+            <ButtonGroup size="sm">
+              <Button
+                variant={viewMode === 'all' ? 'primary' : 'outline-primary'}
+                onClick={() => { setViewMode('all'); setCurrentPage(1); }}
+              >
+                Équipe
+              </Button>
+              <Button
+                variant={viewMode === 'own' ? 'primary' : 'outline-primary'}
+                onClick={() => { setViewMode('own'); setCurrentPage(1); }}
+              >
+                Mes congés
+              </Button>
+            </ButtonGroup>
+          )}
+          {canCreateLeave && (
+            <Button as={Link} to="/conges/nouveau" variant="primary" size="sm" className="d-flex align-items-center">
+              <FaPlus className="me-2" />
+              Nouveau
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Barre de recherche + chips statut + tri */}
