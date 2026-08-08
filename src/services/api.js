@@ -146,7 +146,7 @@ api.interceptors.response.use(
     const isMaintenance = error.response?.status === 503
       && error.response?.data?.error === 'MAINTENANCE_MODE';
 
-    if (isMaintenance) {
+    if (isMaintenance && window.location.pathname !== '/maintenance') {
       const message = encodeURIComponent(
         error.response?.data?.message || 'Application en maintenance. Veuillez reessayer plus tard.'
       );
