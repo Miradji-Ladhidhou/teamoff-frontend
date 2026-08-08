@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Form, Spinner, Table } from 'react-bootstrap';
+import { Container, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
+import { FaSearch } from 'react-icons/fa';
 import { quotasService, usersService, congeTypesService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
@@ -78,6 +79,7 @@ const HistoriqueSoldePage = () => {
 
   const [historique,        setHistorique]        = useState([]);
   const [loadingHist,       setLoadingHist]       = useState(false);
+  const [search,            setSearch]            = useState('');
 
   /* ── Chargement initial (users + types) ── */
   useEffect(() => {
@@ -140,6 +142,17 @@ const HistoriqueSoldePage = () => {
     [users, selectedUserId]
   );
 
+  const filteredHistorique = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return historique;
+    return historique.filter((m) => {
+      const typeLabel = (MOUVEMENT_META[m.type]?.label || m.type || '').toLowerCase();
+      const desc = (m.description || '').toLowerCase();
+      const congeLib = (m.conge_type?.libelle || '').toLowerCase();
+      return typeLabel.includes(q) || desc.includes(q) || congeLib.includes(q);
+    });
+  }, [historique, search]);
+
   if (loadingInit) {
     return <Container><div className="text-center py-5"><Spinner animation="border" variant="primary" /></div></Container>;
   }
@@ -183,6 +196,15 @@ const HistoriqueSoldePage = () => {
           <option value="">Tous les types</option>
           {congeTypes.map((t) => <option key={t.id} value={t.id}>{t.libelle}</option>)}
         </Form.Select>
+        <InputGroup style={{ maxWidth: 220, flexShrink: 0 }}>
+          <InputGroup.Text><FaSearch size={12} /></InputGroup.Text>
+          <Form.Control
+            type="text"
+            placeholder="Rechercher…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </InputGroup>
       </div>
 
       {isAdmin && selectedUser && (
@@ -200,11 +222,13 @@ const HistoriqueSoldePage = () => {
           Aucun mouvement enregistré pour cette période.
           <div className="small mt-2">Les mouvements sont enregistrés à partir du déploiement de cette fonctionnalité.</div>
         </div>
+      ) : filteredHistorique.length === 0 ? (
+        <div className="text-center py-5 text-muted">Aucun résultat pour « {search} ».</div>
       ) : (
         <>
           {/* Mobile */}
           <div className="d-md-none">
-            {historique.map((m) => (
+            {filteredHistorique.map((m) => (
               <div key={m.id} style={{
                 background: 'var(--dk-elevated)',
                 border: '1px solid var(--dk-border)',
@@ -252,7 +276,7 @@ const HistoriqueSoldePage = () => {
                 </tr>
               </thead>
               <tbody>
-                {historique.map((m) => (
+                {filteredHistorique.map((m) => (
                   <tr key={m.id}>
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--dk-text-soft)', fontSize: '0.82rem' }}>
                       {fmtDate(m.date)}
