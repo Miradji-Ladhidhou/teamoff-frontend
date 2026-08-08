@@ -294,7 +294,8 @@ const CongesPage = () => {
     if (isAdmin()) {
       if (workflow === 'manager' || workflow === 'manager_only') return false;
       if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
-      return conge.statut === 'valide_manager';
+      if (workflow === 'manager_admin') return conge.statut === 'valide_manager';
+      return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
     }
 
     return false;
@@ -303,6 +304,8 @@ const CongesPage = () => {
   const canRejectConge = (conge) => {
     if (user?.role === 'manager') {
       if (conge.utilisateur_id === user.id) return false;
+      const workflow = conge?.effective_approval_workflow;
+      if (workflow === 'admin_only') return false;
       return conge.statut === 'en_attente_manager';
     }
 
