@@ -1,6 +1,6 @@
 import './users.css';
 
-const PROTECTED_EMAIL = 'ladhidhoum@gmail.com';
+const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaEnvelope, FaCoins } from 'react-icons/fa';
