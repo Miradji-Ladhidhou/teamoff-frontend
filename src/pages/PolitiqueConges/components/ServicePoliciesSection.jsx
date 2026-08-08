@@ -2,6 +2,8 @@ import React from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 
 const ServicePoliciesSection = ({
+  policy,
+  setField,
   newServiceName,
   setNewServiceName,
   addServicePolicy,
@@ -17,6 +19,82 @@ const ServicePoliciesSection = ({
 }) => {
   return (
     <div id="section-politiques-services" className="mb-4">
+
+      {/* ── Règles par défaut ── */}
+      <div className="svc-defaults-card mb-4">
+        <div className="svc-defaults-card__title">Règles par défaut</div>
+        <p className="svc-defaults-card__desc">
+          Ces règles s'appliquent à tous les services qui n'ont pas de configuration spécifique.
+        </p>
+
+        <div className="settings-fields-grid mb-3">
+          <div className="settings-field">
+            <label className="settings-field__label">Qui valide les congés ?</label>
+            <Form.Select
+              value={policy.approval_workflow}
+              onChange={(e) => setField('approval_workflow', e.target.value)}
+            >
+              <option value="manager_admin">Manager, puis Admin</option>
+              <option value="admin_only">Admin uniquement</option>
+              <option value="manager_only">Manager uniquement</option>
+            </Form.Select>
+          </div>
+
+          <div className="settings-field">
+            <label className="settings-field__label">Si la capacité service est atteinte</label>
+            <Form.Select
+              value={policy.overlap_behavior || 'block'}
+              onChange={(e) => setField('overlap_behavior', e.target.value)}
+            >
+              <option value="block">Bloquer la demande</option>
+              <option value="warning">Autoriser avec alerte</option>
+            </Form.Select>
+            <span className="settings-field__hint">S'applique si un max d'absences simultanées est défini par service</span>
+          </div>
+        </div>
+
+        <div className="settings-fields-grid mb-3">
+          <div className="settings-field">
+            <label className="settings-field__label">Délai minimum avant départ (jours)</label>
+            <Form.Control
+              type="number"
+              min="0"
+              value={policy.minimum_notice_days}
+              onChange={(e) => setField('minimum_notice_days', e.target.value)}
+            />
+            <span className="settings-field__hint">Nombre de jours à l'avance requis pour poser un congé</span>
+          </div>
+
+          <div className="settings-field">
+            <label className="settings-field__label">Durée maximale d'un congé (jours)</label>
+            <Form.Control
+              type="number"
+              min="1"
+              value={policy.max_consecutive_days}
+              onChange={(e) => setField('max_consecutive_days', e.target.value)}
+            />
+            <span className="settings-field__hint">Un congé ne peut pas dépasser cette durée</span>
+          </div>
+        </div>
+
+        <div className="settings-row" style={{ borderTop: '1px solid var(--dk-border)', marginTop: '0.5rem', paddingTop: '0.75rem' }}>
+          <div className="settings-row__info">
+            <div className="settings-row__label">Managers — accès à l'historique des employés</div>
+            <div className="settings-row__desc">Les managers peuvent consulter l'historique de congés de tous les employés de leur service.</div>
+          </div>
+          <div className="settings-row__control">
+            <Form.Check
+              type="switch"
+              checked={Boolean(policy.manager_can_view_employee_history ?? true)}
+              onChange={(e) => setField('manager_can_view_employee_history', e.target.checked)}
+              label=""
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Séparateur ── */}
+      <div className="svc-section-label mb-3">Règles par service</div>
 
       {/* ── Ajout d'un service ── */}
       <Row className="g-2 mb-3">
@@ -54,7 +132,7 @@ const ServicePoliciesSection = ({
         </div>
       )}
 
-      {/* ── Liste des services ── */}
+      {/* ── État vide ── */}
       {serviceEntries.length === 0 && (
         <p className="text-muted small mb-0">
           Aucun service — ajoutez-en un ci-dessus pour définir des règles spécifiques par département.
@@ -65,11 +143,11 @@ const ServicePoliciesSection = ({
         <p className="text-muted small mb-0">Aucun service ne correspond à la recherche.</p>
       )}
 
+      {/* ── Liste des services ── */}
       <div className="svc-cards">
         {visibleServiceEntries.map(([serviceName, servicePolicy]) => (
           <div key={serviceName} className="svc-card">
 
-            {/* En-tête */}
             <div className="svc-card__header">
               <span className="svc-card__name">{serviceName}</span>
               <Button
@@ -83,10 +161,8 @@ const ServicePoliciesSection = ({
               </Button>
             </div>
 
-            {/* Corps */}
             <div className="svc-card__body">
 
-              {/* Ligne 1 : Workflow + Comportement */}
               <div className="svc-card__row">
                 <div className="svc-card__field">
                   <label className="svc-card__label">Workflow de validation</label>
@@ -114,7 +190,6 @@ const ServicePoliciesSection = ({
                 </div>
               </div>
 
-              {/* Ligne 2 : 3 champs numériques */}
               <div className="svc-card__row svc-card__row--3">
                 <div className="svc-card__field">
                   <label className="svc-card__label">Préavis min (jours)</label>

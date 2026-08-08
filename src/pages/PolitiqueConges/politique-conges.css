@@ -128,6 +128,37 @@
   justify-content: center;
 }
 
+/* ────────────── Règles par défaut ────────────── */
+.svc-defaults-card {
+  border: 1px solid var(--dk-accent-border, rgba(99,102,241,0.25));
+  border-radius: 0.625rem;
+  background: var(--dk-accent-soft, rgba(99,102,241,0.04));
+  padding: 1rem 1.125rem;
+}
+
+.svc-defaults-card__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--dk-text);
+  margin-bottom: 0.25rem;
+}
+
+.svc-defaults-card__desc {
+  font-size: 0.8rem;
+  color: var(--dk-text-soft);
+  margin-bottom: 1rem;
+}
+
+.svc-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dk-text-muted);
+  border-bottom: 1px solid var(--dk-border);
+  padding-bottom: 0.4rem;
+}
+
 /* ────────────── Cartes service ────────────── */
 .svc-cards {
   display: flex;

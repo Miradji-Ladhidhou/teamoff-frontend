@@ -8,7 +8,6 @@ import leavePoliciesAPI from '../../services/leavePoliciesAPI';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 import SectionTabs from './components/SectionTabs';
-import ValidationRulesSection from './components/ValidationRulesSection';
 import ReportReservationsSection from './components/ReportReservationsSection';
 import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
@@ -195,10 +194,9 @@ const PolitiqueCongesPage = () => {
   const SECTION_MAP = {
     types:         ['types'],
     acquisition:   ['acquisition'],
-    validation:    ['validation'],
+    services:      ['services'],
     report:        ['report'],
     annulation:    ['cancellation'],
-    services:      ['services'],
     notifications: ['notifications'],
     timezone:      ['timezone'],
   };
@@ -553,11 +551,6 @@ const PolitiqueCongesPage = () => {
           </>
         )}
 
-        {/* Onglet : Règles de validation */}
-        {isSectionVisible('validation') && (
-          <ValidationRulesSection policy={policy} setField={setField} />
-        )}
-
         {/* Onglet : Report & Réservations */}
         {isSectionVisible('report') && (
           <ReportReservationsSection policy={policy} setField={setField} />
@@ -590,6 +583,8 @@ const PolitiqueCongesPage = () => {
 
         {isSectionVisible('services') && (
           <ServicePoliciesSection
+            policy={policy}
+            setField={setField}
             newServiceName={newServiceName}
             setNewServiceName={setNewServiceName}
             addServicePolicy={addServicePolicy}
