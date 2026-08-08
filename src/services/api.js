@@ -320,7 +320,8 @@ export const exportsService = {
     params,
     responseType: 'blob'
   }),
-  exportUtilisateursCSV: () => api.get('/exports/utilisateurs/csv', {
+  exportUtilisateursCSV: (params = {}) => api.get('/exports/utilisateurs/csv', {
+    params,
     responseType: 'blob'
   }),
   exportEntreprisesCSV: () => api.get('/exports/entreprises/csv', {

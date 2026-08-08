@@ -270,7 +270,9 @@ const UsersManagement = () => {
   const handleExportCsv = async () => {
     await exportAction.run(async () => {
       try {
-        const response = await api.exportsService.exportUtilisateursCSV();
+        const params = {};
+        if (isSuperAdmin && companyFilter) params.entrepriseId = companyFilter;
+        const response = await api.exportsService.exportUtilisateursCSV(params);
         const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
