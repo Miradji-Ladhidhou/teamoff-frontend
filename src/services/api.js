@@ -287,59 +287,66 @@ export const congeTypesService = {
   delete: (id) => api.delete(`/conge-types/${id}`),
 };
 
+const _tz = () => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }
+  catch { return 'UTC'; }
+};
+const _p = (params = {}) => ({ timezone: _tz(), ...params });
+
 export const exportsService = {
   preview: (params = {}) => api.get('/exports/preview', { params }),
   exportData: (params = {}) => {
     const { type, format, ...queryParams } = params;
     return api.get(`/exports/${type}/${format}`, {
-      params: queryParams,
+      params: _p(queryParams),
       responseType: 'blob'
     });
   },
   exportCongesCSV: (params = {}) => api.get('/exports/conges/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportCongesPDF: (params = {}) => api.get('/exports/conges/pdf', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportAbsencesCSV: (params = {}) => api.get('/exports/absences/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportAbsencesPDF: (params = {}) => api.get('/exports/absences/pdf', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportArretsMaladieCSV: (params = {}) => api.get('/exports/arrets-maladie/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportArretsMaladiePDF: (params = {}) => api.get('/exports/arrets-maladie/pdf', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportToutCSV: (params = {}) => api.get('/exports/tout/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportUtilisateursCSV: (params = {}) => api.get('/exports/utilisateurs/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportEntreprisesCSV: () => api.get('/exports/entreprises/csv', {
+    params: _p(),
     responseType: 'blob'
   }),
   exportAuditCSV: (params = {}) => api.get('/exports/audit/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
   exportUsagePDF: () => api.get('/exports/usage/pdf', {
     responseType: 'blob'
   }),
   exportStatistiquesCSV: (params = {}) => api.get('/exports/statistiques/csv', {
-    params,
+    params: _p(params),
     responseType: 'blob'
   }),
 };
@@ -355,7 +362,7 @@ export const auditService = {
 export const settingsService = {
   getAll: () => api.get('/settings'),
   getHistory: (params = {}) => api.get('/settings/history', { params }),
-  exportHistoryCSV: () => api.get('/settings/history/csv', { responseType: 'blob', timeout: 30000 }),
+  exportHistoryCSV: () => api.get('/settings/history/csv', { params: _p(), responseType: 'blob', timeout: 30000 }),
   updateAll: (data) => api.put('/settings', data),
   updateSection: (section, data) => api.put(`/settings/sections/${section}`, data),
   getSystemInfo: () => api.get('/settings/system-info'),
