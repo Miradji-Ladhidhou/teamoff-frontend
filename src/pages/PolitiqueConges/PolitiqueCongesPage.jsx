@@ -583,8 +583,6 @@ const PolitiqueCongesPage = () => {
 
         {isSectionVisible('services') && (
           <ServicePoliciesSection
-            policy={policy}
-            setField={setField}
             newServiceName={newServiceName}
             setNewServiceName={setNewServiceName}
             addServicePolicy={addServicePolicy}
