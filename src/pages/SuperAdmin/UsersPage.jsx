@@ -591,7 +591,7 @@ const UsersManagement = () => {
                     disabled={submitAction.isRunning || (!!editingUser && editingUser.role === 'admin_entreprise' && !isSuperAdmin)}
                   >
                     {isSuperAdmin && <option value="super_admin">Super Admin</option>}
-                    {isSuperAdmin && <option value="admin_entreprise">Admin entreprise</option>}
+                    {(isSuperAdmin || user?.role === 'admin_entreprise') && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
                     <option value="employe">Employé</option>
                   </Form.Select>
