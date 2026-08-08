@@ -287,11 +287,21 @@ export const congeTypesService = {
   delete: (id) => api.delete(`/conge-types/${id}`),
 };
 
-const _tz = () => {
-  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }
-  catch { return 'UTC'; }
+const _generatedAt = () => {
+  try {
+    const now = new Date();
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).formatToParts(now).map(({ type, value }) => [type, value])
+    );
+    return `${p.day}-${p.month}-${p.year} ${p.hour}:${p.minute}`;
+  } catch {
+    return new Date().toISOString().slice(0, 16).replace('T', ' ');
+  }
 };
-const _p = (params = {}) => ({ timezone: _tz(), ...params });
+const _p = (params = {}) => ({ generatedAt: _generatedAt(), ...params });
 
 export const exportsService = {
   preview: (params = {}) => api.get('/exports/preview', { params }),
