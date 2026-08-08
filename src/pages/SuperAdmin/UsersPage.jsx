@@ -700,21 +700,25 @@ const UsersManagement = () => {
               <FaEnvelope className="me-1" />Renvoyer invitation
             </AsyncButton>
           )}
-          <AsyncButton
-            variant={selectedUserDetails?.statut === 'actif' ? 'outline-warning' : 'outline-success'}
-            size="sm"
-            onClick={() => { closeDetailsModal(); toggleUserStatus(selectedUserDetails); }}
-            isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
-            loadingText="">
-            {selectedUserDetails?.statut === 'actif' ? <><FaUserTimes className="me-1" />Désactiver</> : <><FaUserCheck className="me-1" />Activer</>}
-          </AsyncButton>
-          <AsyncButton variant="outline-danger" size="sm"
-            onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
-            disabled={selectedUserDetails?.id === user?.id}
-            isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
-            loadingText="">
-            <FaTrash className="me-1" />Supprimer
-          </AsyncButton>
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
+            <AsyncButton
+              variant={selectedUserDetails?.statut === 'actif' ? 'outline-warning' : 'outline-success'}
+              size="sm"
+              onClick={() => { closeDetailsModal(); toggleUserStatus(selectedUserDetails); }}
+              isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+              loadingText="">
+              {selectedUserDetails?.statut === 'actif' ? <><FaUserTimes className="me-1" />Désactiver</> : <><FaUserCheck className="me-1" />Activer</>}
+            </AsyncButton>
+          )}
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
+            <AsyncButton variant="outline-danger" size="sm"
+              onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
+              disabled={selectedUserDetails?.id === user?.id}
+              isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+              loadingText="">
+              <FaTrash className="me-1" />Supprimer
+            </AsyncButton>
+          )}
           <Button variant="secondary" size="sm" className="ms-auto" onClick={closeDetailsModal}>Fermer</Button>
         </Modal.Footer>
       </Modal>
