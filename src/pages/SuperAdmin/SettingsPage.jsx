@@ -123,7 +123,12 @@ const SystemSettings = () => {
         sortBy: nextSortBy,
         sortOrder: nextSortOrder,
       });
-      setSettingsHistory(response.data?.logs || []);
+      setSettingsHistory(
+        (response.data?.logs || []).map((log) => ({
+          ...log,
+          createdAt: log.createdAt ?? log.created_at,
+        }))
+      );
 
       const pagination = response.data?.pagination;
       if (pagination) {
