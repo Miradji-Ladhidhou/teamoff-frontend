@@ -115,6 +115,7 @@ const ServicePoliciesSection = ({
                     <option value="manager_only">Manager uniquement</option>
                     <option value="admin_only">Admin uniquement</option>
                   </Form.Select>
+                  <span className="svc-card__hint">Qui doit approuver les demandes de ce service</span>
                 </div>
 
                 <div className="svc-card__field">
@@ -127,6 +128,7 @@ const ServicePoliciesSection = ({
                     <option value="block">Bloquer la demande</option>
                     <option value="warning">Autoriser avec alerte</option>
                   </Form.Select>
+                  <span className="svc-card__hint">Comportement quand le max d'absences simultanées est atteint</span>
                 </div>
               </div>
 
@@ -140,6 +142,7 @@ const ServicePoliciesSection = ({
                     value={servicePolicy.minimum_notice_days ?? 0}
                     onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)}
                   />
+                  <span className="svc-card__hint">Jours à l'avance requis avant la date de début (0 = aucun)</span>
                 </div>
 
                 <div className="svc-card__field">
@@ -151,6 +154,7 @@ const ServicePoliciesSection = ({
                     value={servicePolicy.max_consecutive_days ?? 365}
                     onChange={(e) => setServiceField(serviceName, 'max_consecutive_days', e.target.value)}
                   />
+                  <span className="svc-card__hint">Durée maximale autorisée pour un seul congé</span>
                 </div>
 
                 <div className="svc-card__field">
@@ -162,6 +166,7 @@ const ServicePoliciesSection = ({
                     value={servicePolicy.max_employees_on_leave ?? 0}
                     onChange={(e) => setServiceField(serviceName, 'max_employees_on_leave', e.target.value)}
                   />
+                  <span className="svc-card__hint">Nb max d'employés absents en même temps (0 = illimité)</span>
                 </div>
               </div>
 

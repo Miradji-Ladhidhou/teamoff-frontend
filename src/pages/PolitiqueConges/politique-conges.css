@@ -224,6 +224,12 @@
   letter-spacing: 0.03em;
 }
 
+.svc-card__hint {
+  font-size: 0.7rem;
+  color: var(--dk-text-muted);
+  line-height: 1.3;
+}
+
 /* ────────────── Responsive ────────────── */
 @media (max-width: 575.98px) {
   .svc-card__row,
