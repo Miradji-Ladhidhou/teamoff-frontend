@@ -8,7 +8,8 @@ import leavePoliciesAPI from '../../services/leavePoliciesAPI';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 import SectionTabs from './components/SectionTabs';
-import GeneralRulesSection from './components/GeneralRulesSection';
+import ValidationRulesSection from './components/ValidationRulesSection';
+import ReportReservationsSection from './components/ReportReservationsSection';
 import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
 import NotificationsSection from './components/NotificationsSection';
@@ -110,7 +111,7 @@ const PolitiqueCongesPage = () => {
   const [typeForm, setTypeForm] = useState(DEFAULT_CONGE_TYPE_FORM);
   const [timezone, setTimezone] = useState('Europe/Paris');
   const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
-  const [activeSection, setActiveSection] = useState('conges');
+  const [activeSection, setActiveSection] = useState('types');
   const [expandedServices, setExpandedServices] = useState({});
 
   const entrepriseId = user?.entreprise_id;
@@ -191,10 +192,14 @@ const PolitiqueCongesPage = () => {
   };
 
   const SECTION_MAP = {
-    conges:        ['types', 'acquisition'],
-    regles:        ['general', 'cancellation'],
+    types:         ['types'],
+    acquisition:   ['acquisition'],
+    validation:    ['validation'],
+    report:        ['report'],
+    annulation:    ['cancellation'],
     services:      ['services'],
-    notifications: ['notifications', 'timezone'],
+    notifications: ['notifications'],
+    timezone:      ['timezone'],
   };
   const isSectionVisible = (section) => Boolean(SECTION_MAP[activeSection]?.includes(section));
 
@@ -455,7 +460,7 @@ const PolitiqueCongesPage = () => {
 
       <SectionTabs activeSection={activeSection} setActiveSection={setActiveSection} />
 
-      {/* ── Types de congé ── */}
+      {/* ── Onglet : Types de congé ── */}
       {isSectionVisible('types') && (
         <div id="section-types-conge" className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -514,12 +519,50 @@ const PolitiqueCongesPage = () => {
         </div>
       )}
 
-      {/* ── Règles + Annulation + Services ── */}
+      {/* ── Tous les onglets avec sauvegarde ── */}
       <Form onSubmit={handleSave}>
-        {isSectionVisible('general') && (
-          <GeneralRulesSection policy={policy} setField={setField} setPolicy={setPolicy} />
+
+        {/* Onglet : Soldes & Acquisition */}
+        {isSectionVisible('acquisition') && (
+          <>
+            <div className="mb-4">
+              <div className="section-label-title mb-3">Quotas par défaut</div>
+              <div className="settings-fields-grid">
+                <div className="settings-field">
+                  <label className="settings-field__label">Congés payés annuels (jours)</label>
+                  <Form.Control
+                    type="number"
+                    min="0"
+                    value={policy.conges_payes_annuels}
+                    onChange={(e) => setField('conges_payes_annuels', e.target.value)}
+                  />
+                </div>
+                <div className="settings-field">
+                  <label className="settings-field__label">RTT annuels (jours)</label>
+                  <Form.Control
+                    type="number"
+                    min="0"
+                    value={policy.rtt_annuels}
+                    onChange={(e) => setField('rtt_annuels', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
+          </>
         )}
 
+        {/* Onglet : Règles de validation */}
+        {isSectionVisible('validation') && (
+          <ValidationRulesSection policy={policy} setField={setField} />
+        )}
+
+        {/* Onglet : Report & Réservations */}
+        {isSectionVisible('report') && (
+          <ReportReservationsSection policy={policy} setField={setField} />
+        )}
+
+        {/* Onglet : Annulation & Modification */}
         {isSectionVisible('cancellation') && (
           <CancellationSection
             policy={policy}
@@ -529,40 +572,12 @@ const PolitiqueCongesPage = () => {
           />
         )}
 
+        {/* Onglet : Notifications email */}
         {isSectionVisible('notifications') && (
           <NotificationsSection policy={policy} setPolicy={setPolicy} />
         )}
 
-        {isSectionVisible('acquisition') && (
-          <div className="mb-4">
-            <div className="section-label-title mb-3">Quotas par défaut</div>
-            <div className="settings-fields-grid">
-              <div className="settings-field">
-                <label className="settings-field__label">Congés payés annuels (jours)</label>
-                <Form.Control
-                  type="number"
-                  min="0"
-                  value={policy.conges_payes_annuels}
-                  onChange={(e) => setField('conges_payes_annuels', e.target.value)}
-                />
-              </div>
-              <div className="settings-field">
-                <label className="settings-field__label">RTT annuels (jours)</label>
-                <Form.Control
-                  type="number"
-                  min="0"
-                  value={policy.rtt_annuels}
-                  onChange={(e) => setField('rtt_annuels', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isSectionVisible('acquisition') && (
-          <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
-        )}
-
+        {/* Onglet : Fuseau horaire */}
         {isSectionVisible('timezone') && (
           <TimezoneSection
             timezone={timezone}
@@ -666,11 +681,13 @@ const PolitiqueCongesPage = () => {
           </div>
         )}
 
-        <div className="d-flex justify-content-end border-top pt-3 mt-4">
-          <AsyncButton type="submit" isLoading={saving} showSpinner={saving} loadingText="Enregistrement…">
-            Enregistrer les modifications
-          </AsyncButton>
-        </div>
+        {activeSection !== 'types' && (
+          <div className="d-flex justify-content-end border-top pt-3 mt-4">
+            <AsyncButton type="submit" isLoading={saving} showSpinner={saving} loadingText="Enregistrement…">
+              Enregistrer les modifications
+            </AsyncButton>
+          </div>
+        )}
       </Form>
 
       <Modal show={showTypeModal} onHide={closeTypeModal} centered>
