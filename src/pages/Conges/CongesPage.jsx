@@ -4,7 +4,7 @@ import { Container, Button, Table, Form, InputGroup, Spinner, Alert, Pagination,
 import { Link, useLocation } from 'react-router-dom';
 import { FaPlus, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { congesService } from '../../services/api';
+import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -41,7 +41,10 @@ const accentToBadgeClass = (accent) => {
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
   const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const isManager = user?.role === 'manager';
   const location = useLocation();
+  const [viewMode, setViewMode] = useState('all'); // 'own' | 'all'
+  const [canViewAllEmployees, setCanViewAllEmployees] = useState(false);
   const [conges, setConges] = useState([]);
   const [loading, setLoading] = useState(true);
   const alert = useAlert();
@@ -67,28 +70,32 @@ const CongesPage = () => {
   const validateAction = useAsyncAction();
   const rejectAction = useAsyncAction();
 
+  useEffect(() => {
+    if (!isManager || !user?.entreprise_id) return;
+    entreprisesService.getPolitique(user.entreprise_id)
+      .then((res) => {
+        const politique = res.data?.politique_conges || {};
+        setCanViewAllEmployees(politique.manager_can_view_employee_history !== false);
+      })
+      .catch(() => {});
+  }, [isManager, user?.entreprise_id]);
+
   const loadConges = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
 
-      if (filters.statut) {
-        params.statut = filters.statut;
-      }
-
-      if (filters.conge_type_id) {
-        params.conge_type_id = filters.conge_type_id;
-      }
+      if (filters.statut) params.statut = filters.statut;
+      if (filters.conge_type_id) params.conge_type_id = filters.conge_type_id;
 
       if (user?.role === 'employe') {
         params.utilisateur_id = user.id;
-      } else if (user?.role === 'manager') {
-        params.equipe_manager = user.id;
+      } else if (isManager) {
+        if (viewMode === 'own') params.utilisateur_id = user.id;
+        // viewMode 'all': no user filter — backend returns all company employees
       }
 
-      Object.keys(params).forEach(key => {
-        if (!params[key]) delete params[key];
-      });
+      Object.keys(params).forEach(key => { if (!params[key]) delete params[key]; });
 
       const response = await congesService.getAll(params);
       const items = Array.isArray(response.data?.items) ? response.data.items : (Array.isArray(response.data) ? response.data : []);
@@ -98,7 +105,7 @@ const CongesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role]);
+  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role, isManager, viewMode]);
 
   useEffect(() => {
     loadConges();
@@ -366,7 +373,7 @@ const CongesPage = () => {
   };
 
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
-  const showEmployeeColumn = isAdmin() || user?.role === 'manager';
+  const showEmployeeColumn = isAdmin() || (isManager && viewMode === 'all');
   const statusChips = [
     { value: '', label: 'Tous' },
     { value: 'en_attente_manager', label: 'En attente' },
@@ -380,7 +387,19 @@ const CongesPage = () => {
     <Container fluid="sm" className="conges-page">
       {/* En-tête */}
       <div className="page-title-bar">
-        <span className="section-title-bar__text">{isAdmin() ? 'Congés' : 'Mes congés'}</span>
+        {isManager && canViewAllEmployees ? (
+          <Form.Select
+            size="sm"
+            value={viewMode}
+            onChange={(e) => { setViewMode(e.target.value); setCurrentPage(1); }}
+            style={{ width: 'auto', fontWeight: 700, fontSize: '1.1rem', border: 'none', background: 'transparent', padding: '0 1.5rem 0 0', boxShadow: 'none', color: 'inherit', cursor: 'pointer' }}
+          >
+            <option value="all">Congés équipe</option>
+            <option value="own">Mes congés</option>
+          </Form.Select>
+        ) : (
+          <span className="section-title-bar__text">{isAdmin() ? 'Congés' : 'Mes congés'}</span>
+        )}
         {canCreateLeave && (
           <Button as={Link} to="/conges/nouveau" variant="primary" size="sm" className="d-flex align-items-center">
             <FaPlus className="me-2" />
@@ -395,7 +414,7 @@ const CongesPage = () => {
           <InputGroup.Text><FaSearch /></InputGroup.Text>
           <Form.Control
             type="text"
-            placeholder={isAdmin() ? 'Employé, type de congé…' : 'Type de congé…'}
+            placeholder={isAdmin() || (isManager && viewMode === 'all') ? 'Employé, type de congé…' : 'Type de congé…'}
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
           />
