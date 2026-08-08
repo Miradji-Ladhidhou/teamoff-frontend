@@ -22,9 +22,9 @@ const ServicePoliciesSection = ({
 
       {/* ── Règles par défaut ── */}
       <div className="svc-defaults-card mb-4">
-        <div className="svc-defaults-card__title">Règles par défaut</div>
+        <div className="svc-defaults-card__title">Règles générales</div>
         <p className="svc-defaults-card__desc">
-          Ces règles s'appliquent à tous les services qui n'ont pas de configuration spécifique.
+          Ces règles s'appliquent aux employés non affectés à un service. Les règles définies par service ci-dessous priment sur celles-ci.
         </p>
 
         <div className="settings-fields-grid mb-3">
