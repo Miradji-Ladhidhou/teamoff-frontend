@@ -20,22 +20,6 @@ const ServicePoliciesSection = ({
   return (
     <div id="section-politiques-services" className="mb-4">
 
-      {/* ── Permission manager ── */}
-      <div className="settings-row mb-4">
-        <div className="settings-row__info">
-          <div className="settings-row__label">Managers — accès à l'historique des employés</div>
-          <div className="settings-row__desc">Les managers peuvent consulter l'historique de congés de tous les employés de leur service.</div>
-        </div>
-        <div className="settings-row__control">
-          <Form.Check
-            type="switch"
-            checked={Boolean(policy.manager_can_view_employee_history ?? true)}
-            onChange={(e) => setField('manager_can_view_employee_history', e.target.checked)}
-            label=""
-          />
-        </div>
-      </div>
-
       {/* ── Ajout d'un service ── */}
       <Row className="g-2 mb-3">
         <Col xs={9} md={6}>
