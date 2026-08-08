@@ -41,11 +41,14 @@ const getEntityIcon = (entity) => {
   }
 };
 
-const formatDateTime = (ts) =>
-  new Date(ts).toLocaleString('fr-FR', {
+const formatDateTime = (ts) => {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('fr-FR', {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
+};
 
 const getUserLabel = (log) => {
   if (log.utilisateur) {
@@ -255,7 +258,7 @@ const AuditLogs = () => {
 
                         {/* Ligne 2 : date · entité */}
                         <div className="audit-log-meta">
-                          <span className="audit-date">{formatDateTime(log.createdAt)}</span>
+                          <span className="audit-date">{formatDateTime(log.createdAt ?? log.created_at)}</span>
                           <span className="audit-entity">
                             {getEntityIcon(log.entity)}
                             {log.entity || '—'}
@@ -299,7 +302,7 @@ const AuditLogs = () => {
                       </thead>
                       <tbody>
                         {logs.map((log) => {
-                          const { date, time } = splitDateTime(log.createdAt);
+                          const { date, time } = splitDateTime(log.createdAt ?? log.created_at);
                           return (
                             <tr key={log.id}>
                               <td>
@@ -391,7 +394,7 @@ const AuditLogs = () => {
               <Row className="mb-3">
                 <Col xs={12} md={6}>
                   <strong>Date / Heure</strong>
-                  <div>{formatDateTime(selectedLog.createdAt)}</div>
+                  <div>{formatDateTime(selectedLog.createdAt ?? selectedLog.created_at)}</div>
                 </Col>
                 <Col xs={12} md={6}>
                   <strong>Action</strong>
