@@ -1,12 +1,13 @@
+import './historique-solde.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Form, InputGroup, Spinner, Table } from 'react-bootstrap';
-import { FaSearch } from 'react-icons/fa';
+import { Container, Form, Spinner, Table } from 'react-bootstrap';
 import { quotasService, usersService, congeTypesService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
 
 const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
 
 const toNum = (v, fb = 0) => { const n = Number(v); return Number.isFinite(n) ? n : fb; };
 
@@ -69,19 +70,18 @@ const HistoriqueSoldePage = () => {
 
   const isAdmin = ['admin_entreprise', 'super_admin'].includes(user?.role);
 
-  const [users, setUsers]           = useState([]);
+  const [users,      setUsers]      = useState([]);
   const [congeTypes, setCongeTypes] = useState([]);
   const [loadingInit, setLoadingInit] = useState(true);
 
-  const [selectedUserId,    setSelectedUserId]    = useState(searchParams.get('userId') || (isAdmin ? '' : user?.id || ''));
-  const [selectedYear,      setSelectedYear]      = useState(CURRENT_YEAR);
-  const [selectedTypeId,    setSelectedTypeId]    = useState('');
+  const [selectedUserId, setSelectedUserId] = useState(searchParams.get('userId') || (isAdmin ? '' : user?.id || ''));
+  const [selectedYear,   setSelectedYear]   = useState(CURRENT_YEAR);
+  const [selectedTypeId, setSelectedTypeId] = useState('');
 
-  const [historique,        setHistorique]        = useState([]);
-  const [loadingHist,       setLoadingHist]       = useState(false);
-  const [search,            setSearch]            = useState('');
+  const [historique,   setHistorique]   = useState([]);
+  const [loadingHist,  setLoadingHist]  = useState(false);
 
-  /* ── Chargement initial (users + types) ── */
+  /* ── Chargement initial ── */
   useEffect(() => {
     if (!user?.entreprise_id) return;
     const load = async () => {
@@ -93,14 +93,14 @@ const HistoriqueSoldePage = () => {
         setCongeTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
         if (isAdmin) {
           const list = (Array.isArray(usersRes.data) ? usersRes.data : [])
-            .filter((u) => u.role !== 'super_admin');
+            .filter((u) => u.role !== 'super_admin')
+            .sort((a, b) => `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`, 'fr'));
           setUsers(list);
           setSelectedUserId((prev) => {
             if (prev) return prev;
             const urlUser = searchParams.get('userId');
             const match = list.find((u) => String(u.id) === String(urlUser));
-            if (match) return match.id;
-            return list[0]?.id || '';
+            return match?.id || list[0]?.id || '';
           });
         }
       } catch {
@@ -120,13 +120,13 @@ const HistoriqueSoldePage = () => {
     const load = async () => {
       setLoadingHist(true);
       try {
-        const params = { annee: selectedYear, limit: 200 };
+        const params = { annee: selectedYear, limit: 500 };
         if (selectedTypeId) params.conge_type_id = selectedTypeId;
         const res = await quotasService.getHistorique(userId, params);
         if (!cancelled) setHistorique(Array.isArray(res.data?.items) ? res.data.items : []);
       } catch {
         if (!cancelled) {
-          alert.error('Impossible de charger l\'historique.');
+          alert.error("Impossible de charger l'historique.");
           setHistorique([]);
         }
       } finally {
@@ -142,17 +142,6 @@ const HistoriqueSoldePage = () => {
     [users, selectedUserId]
   );
 
-  const filteredHistorique = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return historique;
-    return historique.filter((m) => {
-      const typeLabel = (MOUVEMENT_META[m.type]?.label || m.type || '').toLowerCase();
-      const desc = (m.description || '').toLowerCase();
-      const congeLib = (m.conge_type?.libelle || '').toLowerCase();
-      return typeLabel.includes(q) || desc.includes(q) || congeLib.includes(q);
-    });
-  }, [historique, search]);
-
   if (loadingInit) {
     return <Container><div className="text-center py-5"><Spinner animation="border" variant="primary" /></div></Container>;
   }
@@ -163,55 +152,49 @@ const HistoriqueSoldePage = () => {
         <span className="section-title-bar__text">Historique de solde</span>
       </div>
 
-      {/* Filtres */}
-      <div className="users-filter-bar mb-3">
-        <InputGroup className="users-filter-bar__search">
-          <InputGroup.Text><FaSearch /></InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder="Type, description, congé…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </InputGroup>
-        {isAdmin && (
+      {/* ── Filtres ── */}
+      <div className="hist-filter-bar mb-3">
+        <div className="hist-filter-bar__selects">
+          {isAdmin && (
+            <Form.Select
+              className="hist-filter-bar__employee"
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+            >
+              {users.length === 0 && <option value="">Aucun utilisateur</option>}
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
+                </option>
+              ))}
+            </Form.Select>
+          )}
           <Form.Select
-            className="users-filter-bar__select"
-            style={{ flex: '1 1 180px', maxWidth: 240 }}
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="hist-filter-bar__year"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value) || CURRENT_YEAR)}
           >
-            {users.length === 0 && <option value="">Aucun utilisateur</option>}
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
-              </option>
-            ))}
+            {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
           </Form.Select>
-        )}
-        <Form.Select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value) || CURRENT_YEAR)}
-          style={{ flex: '0 0 85px' }}
-        >
-          {Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i).map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </Form.Select>
-        <Form.Select
-          className="users-filter-bar__select"
-          value={selectedTypeId}
-          onChange={(e) => setSelectedTypeId(e.target.value)}
-        >
-          <option value="">Tous les types</option>
-          {congeTypes.map((t) => <option key={t.id} value={t.id}>{t.libelle}</option>)}
-        </Form.Select>
-        <span className="badge info users-filter-bar__count">
-          {filteredHistorique.length}{historique.length !== filteredHistorique.length ? `/${historique.length}` : ''}
-        </span>
+          <Form.Select
+            className="hist-filter-bar__type"
+            value={selectedTypeId}
+            onChange={(e) => setSelectedTypeId(e.target.value)}
+          >
+            <option value="">Tous les types</option>
+            {congeTypes.map((t) => <option key={t.id} value={t.id}>{t.libelle}</option>)}
+          </Form.Select>
+        </div>
+        <span className="badge info hist-filter-bar__count">{historique.length}</span>
       </div>
 
-      {/* Contenu */}
+      {isAdmin && selectedUser && (
+        <p className="small text-muted mb-3">
+          Historique de <strong>{selectedUser.prenom} {selectedUser.nom}</strong> · {selectedYear}
+        </p>
+      )}
+
+      {/* ── Contenu ── */}
       {loadingHist ? (
         <div className="text-center py-5"><Spinner animation="border" size="sm" /></div>
       ) : historique.length === 0 ? (
@@ -220,48 +203,39 @@ const HistoriqueSoldePage = () => {
           Aucun mouvement enregistré pour cette période.
           <div className="small mt-2">Les mouvements sont enregistrés à partir du déploiement de cette fonctionnalité.</div>
         </div>
-      ) : filteredHistorique.length === 0 ? (
-        <div className="text-center py-5 text-muted">Aucun résultat pour « {search} ».</div>
       ) : (
         <>
-          {/* Mobile */}
+          {/* ── Cartes mobile ── */}
           <div className="d-md-none">
-            {filteredHistorique.map((m) => (
-              <div key={m.id} style={{
-                background: 'var(--dk-elevated)',
-                border: '1px solid var(--dk-border)',
-                borderRadius: 'var(--card-radius)',
-                padding: '0.75rem 1rem',
-                marginBottom: '0.5rem',
-              }}>
-                <div className="d-flex justify-content-between align-items-start mb-1">
-                  <TypeBadge type={m.type} />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--dk-text-muted)' }}>{fmtDate(m.date)}</span>
-                </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--dk-text-soft)', margin: '4px 0' }}>
-                  {m.description || '—'}
+            {historique.map((m) => {
+              const meta = MOUVEMENT_META[m.type] || { color: '#94a3b8' };
+              return (
+                <div key={m.id} className="hist-card" style={{ borderLeftColor: meta.color }}>
+                  <div className="hist-card__top">
+                    <TypeBadge type={m.type} />
+                    <span className="hist-card__date">{fmtDate(m.date)}</span>
+                  </div>
+                  {m.description && <div className="hist-card__desc">{m.description}</div>}
                   {m.conge_type?.libelle && (
-                    <span style={{ marginLeft: 6, color: 'var(--dk-text-muted)', fontSize: '0.72rem' }}>
-                      · {m.conge_type.libelle}
-                    </span>
+                    <div className="hist-card__conge-type">{m.conge_type.libelle}</div>
                   )}
-                </div>
-                <div className="d-flex justify-content-between align-items-center mt-2">
-                  <div style={{ fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--dk-text-muted)', marginRight: 4 }}>Mouvement :</span>
-                    <QtyBadge value={m.quantite} />
+                  <div className="hist-card__bottom">
+                    <div>
+                      <span className="hist-card__label">Mouvement</span>
+                      <QtyBadge value={m.quantite} />
+                    </div>
+                    <div>
+                      <span className="hist-card__label">Solde</span>
+                      <SoldeCell value={m.solde_apres} />
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--dk-text-muted)', marginRight: 4 }}>Solde :</span>
-                    <SoldeCell value={m.solde_apres} />
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Desktop */}
-          <div className="conges-list-wrap d-none d-md-block">
+          {/* ── Tableau desktop ── */}
+          <div className="hist-table-wrap d-none d-md-block">
             <Table hover className="users-dense-table mb-0">
               <thead>
                 <tr>
@@ -274,7 +248,7 @@ const HistoriqueSoldePage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredHistorique.map((m) => (
+                {historique.map((m) => (
                   <tr key={m.id}>
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--dk-text-soft)', fontSize: '0.82rem' }}>
                       {fmtDate(m.date)}
