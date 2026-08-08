@@ -1,7 +1,7 @@
 import './exports.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal } from 'react-bootstrap';
-import { FaDownload, FaFileExcel, FaCalendarAlt, FaCalendarCheck, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
+import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -9,7 +9,6 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
 const ALLOWED_FORMATS_BY_TYPE = {
-  conges: ['csv'],
   tout: ['csv'],
   utilisateurs: ['csv'],
   audit: ['csv'],
@@ -31,9 +30,10 @@ const ExportsPage = () => {
   const [entreprises, setEntreprises] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
+  const [managerCanExportTeam, setManagerCanExportTeam] = useState(true);
 
   const [exportParams, setExportParams] = useState({
-    type: 'conges',
+    type: 'tout',
     format: 'csv',
     dateDebut: '',
     dateFin: '',
@@ -48,7 +48,6 @@ const ExportsPage = () => {
 
   const exportOptions = user?.role === 'super_admin'
     ? [
-      { value: 'conges', label: 'Congés équipe' },
       { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       { value: 'utilisateurs', label: 'Utilisateurs' },
       { value: 'audit', label: 'Logs d\'audit' },
@@ -56,11 +55,9 @@ const ExportsPage = () => {
     ]
     : user?.role === 'manager'
       ? [
-        { value: 'conges', label: 'Congés équipe' },
         { value: 'tout', label: 'Congés, absences & arrêts maladie' },
       ]
       : [
-        { value: 'conges', label: 'Congés équipe' },
         { value: 'tout', label: 'Congés, absences & arrêts maladie' },
         { value: 'utilisateurs', label: 'Utilisateurs' },
         { value: 'statistiques', label: 'Statistiques' }
@@ -71,6 +68,16 @@ const ExportsPage = () => {
     alert.showSuccessModal(success, { autoCloseMs: 4000 });
     setSuccess('');
   }, [success, alert]);
+
+  useEffect(() => {
+    if (user?.role !== 'manager' || !user?.entreprise_id) return;
+    entreprisesService.getPolitique(user.entreprise_id)
+      .then((res) => {
+        const pol = res.data?.politique_conges || {};
+        setManagerCanExportTeam(pol.manager_can_export_team_leaves !== false);
+      })
+      .catch(() => setManagerCanExportTeam(false));
+  }, [user?.role, user?.entreprise_id]);
 
   useEffect(() => {
     if (user?.role !== 'super_admin') return;
@@ -183,6 +190,11 @@ const ExportsPage = () => {
         if (!queryParams.sortBy) delete queryParams.sortBy;
         if (!queryParams.sortOrder) delete queryParams.sortOrder;
         if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
+
+        // Si le manager n'est pas autorisé à exporter toute l'équipe, on limite à ses propres données
+        if (user?.role === 'manager' && !managerCanExportTeam) {
+          queryParams.salarie = user.email;
+        }
         if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
 
         const allowedFormats = ALLOWED_FORMATS_BY_TYPE[type] || ['csv'];
@@ -191,9 +203,7 @@ const ExportsPage = () => {
         }
 
         // Utiliser les bonnes fonctions selon le type et le format
-        if (type === 'conges') {
-          response = await exportsService.exportCongesCSV(queryParams);
-        } else if (type === 'tout') {
+        if (type === 'tout') {
           response = await exportsService.exportToutCSV(queryParams);
         } else if (type === 'utilisateurs') {
           if (format === 'csv') {
@@ -260,6 +270,10 @@ const ExportsPage = () => {
     if (queryParams.utilisateur === 'all') delete queryParams.utilisateur;
     if (queryParams.utilisateur === 'me') queryParams.utilisateur = user.id;
 
+    if (user?.role === 'manager' && !managerCanExportTeam) {
+      queryParams.salarie = user.email;
+    }
+
     return queryParams;
   };
 
@@ -293,7 +307,6 @@ const ExportsPage = () => {
 
   const getExportTypeIcon = (type) => {
     const icons = {
-      conges: FaCalendarCheck,
       tout: FaCalendarAlt,
       utilisateurs: FaUsers,
       statistiques: FaChartBar,
@@ -306,7 +319,6 @@ const ExportsPage = () => {
 
   const getExportTypeLabel = (type) => {
     const labels = {
-      conges: 'Congés équipe',
       tout: 'Congés, absences & arrêts maladie',
       utilisateurs: 'Utilisateurs',
       statistiques: 'Statistiques',
@@ -523,6 +535,12 @@ const ExportsPage = () => {
                       <option value="me">Mes données uniquement</option>
                     </Form.Select>
                   </Form.Group>
+                )}
+
+                {user?.role === 'manager' && !managerCanExportTeam && (
+                  <div className="alert alert-info py-2 small mb-3">
+                    L'export est limité à vos propres données. L'administrateur peut modifier cette option dans les règles de l'entreprise.
+                  </div>
                 )}
 
                 {/* Bouton d'export */}

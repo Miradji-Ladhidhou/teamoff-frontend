@@ -32,6 +32,7 @@ const DEFAULT_POLICY = {
   },
   service_policies: {},
   manager_can_view_employee_history: true,
+  manager_can_export_team_leaves: true,
   blocked_days: {
     exclude_weekends: true,
     exclude_holidays: true,

@@ -118,6 +118,21 @@ const GeneralRulesSection = ({ policy, setField, setPolicy }) => {
         </div>
       </div>
 
+      <div className="settings-row">
+        <div className="settings-row__info">
+          <div className="settings-row__label">Managers — export CSV des congés de l'équipe</div>
+          <div className="settings-row__desc">Les managers peuvent exporter les congés de tous les employés en CSV. Désactiver pour limiter l'export à leurs propres données.</div>
+        </div>
+        <div className="settings-row__control">
+          <Form.Check
+            type="switch"
+            checked={Boolean(policy.manager_can_export_team_leaves ?? true)}
+            onChange={(e) => setField('manager_can_export_team_leaves', e.target.checked)}
+            label=""
+          />
+        </div>
+      </div>
+
     </div>
   );
 };
