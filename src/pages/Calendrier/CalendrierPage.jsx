@@ -279,7 +279,6 @@ const CalendrierPage = () => {
       valide_final: 'approved',
       refuse_manager: 'refused',
       refuse_final: 'refused',
-      annule: 'cancelled',
     };
     return classes[statut] || 'info';
   };
@@ -292,7 +291,6 @@ const CalendrierPage = () => {
       valide_final: 'success',
       refuse_manager: 'danger',
       refuse_final: 'danger',
-      annule: 'secondary',
     };
     return colors[statut] || 'secondary';
   };
@@ -478,7 +476,6 @@ const CalendrierPage = () => {
                     <option value="valide_final">Validé final</option>
                     <option value="refuse_manager">Refusé manager</option>
                     <option value="refuse_final">Refusé final</option>
-                    <option value="annule">Annulé</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -646,8 +643,7 @@ const CalendrierPage = () => {
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-info"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-annule"></span>Annulé (vos congés)</span>
-        <span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence exceptionnelle</span>
+<span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence exceptionnelle</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-maladie"></span>Maladie</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
         {blockedSpecificDates.length > 0 && (
