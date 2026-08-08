@@ -1,8 +1,8 @@
 import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Container, Row, Col, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Container, Button, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaFilter, FaSearch, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -49,13 +49,10 @@ const CongesPage = () => {
     statut: '',
     conge_type_id: '',
     search: '',
-    dateDemandeDebut: '',
-    dateDemandeFin: '',
     sortBy: 'date_demande',
     sortOrder: 'desc',
     limit: 10
   });
-  const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showValidateModal, setShowValidateModal] = useState(false);
   const [selectedCongeToValidate, setSelectedCongeToValidate] = useState(null);
@@ -149,12 +146,7 @@ const CongesPage = () => {
 
       const matchesCongeType = !filters.conge_type_id || conge.conge_type_id === filters.conge_type_id;
 
-      const dateDemande = conge.date_demande || conge.created_at || conge.createdAt;
-      const dateDemandeKey = dateDemande ? new Date(dateDemande).toISOString().slice(0, 10) : null;
-      const matchesDateDemande = (!filters.dateDemandeDebut || (dateDemandeKey && dateDemandeKey >= filters.dateDemandeDebut))
-        && (!filters.dateDemandeFin || (dateDemandeKey && dateDemandeKey <= filters.dateDemandeFin));
-
-      return matchesSearch && matchesCongeType && matchesDateDemande;
+      return matchesSearch && matchesCongeType;
     });
   }, [conges, filters]);
 
@@ -397,7 +389,7 @@ const CongesPage = () => {
         )}
       </div>
 
-      {/* Recherche + chips statut */}
+      {/* Barre de recherche + chips statut + tri */}
       <div className="conges-filter-bar mb-3">
         <InputGroup className="conges-filter-bar__search">
           <InputGroup.Text><FaSearch /></InputGroup.Text>
@@ -420,75 +412,20 @@ const CongesPage = () => {
             </button>
           ))}
         </div>
-        <Button
-          variant={showFilters ? 'secondary' : 'outline-secondary'}
+        <Form.Select
           size="sm"
-          onClick={() => setShowFilters(s => !s)}
-          className="flex-shrink-0"
-          title="Filtres avancés"
+          className="conges-filter-bar__sort"
+          value={`${filters.sortBy}__${filters.sortOrder}`}
+          onChange={(e) => {
+            const [by, order] = e.target.value.split('__');
+            handleFilterChange('sortBy', by);
+            handleFilterChange('sortOrder', order);
+          }}
         >
-          <FaFilter />
-        </Button>
+          <option value="date_demande__desc">Plus récent</option>
+          <option value="date_demande__asc">Plus ancien</option>
+        </Form.Select>
       </div>
-
-      {showFilters && (
-        <div className="filters-panel mb-3">
-          <Row className="g-2 align-items-end">
-            <Col xs={6} md={3}>
-              <Form.Group>
-                <Form.Label className="small mb-1">Demandé du</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="date"
-                  value={filters.dateDemandeDebut}
-                  onChange={(e) => handleFilterChange('dateDemandeDebut', e.target.value)}
-                />
-              </Form.Group>
-            </Col>
-            <Col xs={6} md={3}>
-              <Form.Group>
-                <Form.Label className="small mb-1">au</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="date"
-                  value={filters.dateDemandeFin}
-                  onChange={(e) => handleFilterChange('dateDemandeFin', e.target.value)}
-                />
-              </Form.Group>
-            </Col>
-            <Col xs={8} md={3}>
-              <Form.Group>
-                <Form.Label className="small mb-1">Trier</Form.Label>
-                <Form.Select
-                  size="sm"
-                  value={`${filters.sortBy}__${filters.sortOrder}`}
-                  onChange={(e) => {
-                    const [by, order] = e.target.value.split('__');
-                    handleFilterChange('sortBy', by);
-                    handleFilterChange('sortOrder', order);
-                  }}
-                >
-                  <option value="date_demande__desc">Plus récent en premier</option>
-                  <option value="date_demande__asc">Plus ancien en premier</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col xs={4} md={3} className="d-flex align-items-end">
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                className="w-100"
-                onClick={() => {
-                  setFilters(prev => ({ ...prev, dateDemandeDebut: '', dateDemandeFin: '', sortBy: 'date_demande', sortOrder: 'desc' }));
-                  setCurrentPage(1);
-                }}
-              >
-                Réinitialiser
-              </Button>
-            </Col>
-          </Row>
-        </div>
-      )}
 
       <div className="conges-list-wrap">
           {loading ? (
