@@ -288,18 +288,9 @@ export const congeTypesService = {
 };
 
 export const formatGeneratedAt = () => {
-  try {
-    const now = new Date();
-    const p = Object.fromEntries(
-      new Intl.DateTimeFormat('fr-FR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', hour12: false,
-      }).formatToParts(now).map(({ type, value }) => [type, value])
-    );
-    return `${p.day}-${p.month}-${p.year} ${p.hour}:${p.minute}`;
-  } catch {
-    return new Date().toISOString().slice(0, 16).replace('T', ' ');
-  }
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 const _p = (params = {}) => ({ generatedAt: formatGeneratedAt(), ...params });
 
