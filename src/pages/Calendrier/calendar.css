@@ -169,6 +169,28 @@
   white-space: nowrap;
   font-size: 0.78rem;
   padding: 0.3rem 0.65rem;
+  border-color: var(--dk-accent, #6366f1) !important;
+  color: var(--dk-accent, #6366f1) !important;
+}
+
+.cal-today-btn:hover {
+  background: var(--dk-accent-soft, rgba(99,102,241,0.1)) !important;
+  border-color: var(--dk-accent-dark, #4f46e5) !important;
+}
+
+.cal-nav-arrow {
+  border-color: var(--dk-accent, #6366f1) !important;
+  color: var(--dk-accent, #6366f1) !important;
+  background: transparent !important;
+  font-size: 1rem;
+  min-width: 2.5rem;
+  transition: background 0.15s, box-shadow 0.15s !important;
+}
+
+.cal-nav-arrow:hover {
+  background: var(--dk-accent-soft, rgba(99,102,241,0.1)) !important;
+  border-color: var(--dk-accent-dark, #4f46e5) !important;
+  box-shadow: 0 0 0 3px var(--dk-accent-border, rgba(99,102,241,0.2)) !important;
 }
 
 /* ---------------- WRAPPER ---------------- */

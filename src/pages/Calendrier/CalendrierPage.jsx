@@ -505,7 +505,7 @@ const CalendrierPage = () => {
       {/* Navigation du calendrier */}
       <Card className="mb-4 calendar-shell-card">
         <Card.Header className="calendar-nav-header">
-          <Button variant="outline-secondary" onClick={() => navigateMonth(-1)}>
+          <Button variant="outline-secondary" className="cal-nav-arrow" onClick={() => navigateMonth(-1)}>
             <FaChevronLeft />
           </Button>
           {showMonthInput ? (
@@ -527,7 +527,7 @@ const CalendrierPage = () => {
               <FaChevronDown className="cal-nav-title-icon" />
             </button>
           )}
-          <Button variant="outline-secondary" onClick={() => navigateMonth(1)}>
+          <Button variant="outline-secondary" className="cal-nav-arrow" onClick={() => navigateMonth(1)}>
             <FaChevronRight />
           </Button>
           <Button
