@@ -98,8 +98,11 @@ const HistoriqueSoldePage = () => {
           setUsers(list);
           setSelectedUserId((prev) => {
             const urlUser = searchParams.get('userId');
-            const match = list.find((u) => String(u.id) === String(urlUser || prev));
-            return match?.id || list[0]?.id || '';
+            if (urlUser) {
+              const match = list.find((u) => String(u.id) === String(urlUser));
+              if (match) return match.id;
+            }
+            return prev;
           });
         }
       } catch {
@@ -114,14 +117,17 @@ const HistoriqueSoldePage = () => {
   /* ── Chargement historique ── */
   useEffect(() => {
     const userId = isAdmin ? selectedUserId : user?.id;
-    if (!userId) return;
+    const allEmployees = isAdmin && !selectedUserId;
+    if (!userId && !allEmployees) return;
     let cancelled = false;
     const load = async () => {
       setLoadingHist(true);
       try {
         const params = { annee: selectedYear, limit: 500 };
         if (selectedTypeId) params.conge_type_id = selectedTypeId;
-        const res = await quotasService.getHistorique(userId, params);
+        const res = allEmployees
+          ? await quotasService.getHistoriqueEntreprise(params)
+          : await quotasService.getHistorique(userId, params);
         if (!cancelled) setHistorique(Array.isArray(res.data?.items) ? res.data.items : []);
       } catch {
         if (!cancelled) {
@@ -160,6 +166,7 @@ const HistoriqueSoldePage = () => {
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
             >
+              <option value="">Tous les employés</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
@@ -191,6 +198,9 @@ const HistoriqueSoldePage = () => {
           Historique de <strong>{selectedUser.prenom} {selectedUser.nom}</strong> · {selectedYear}
         </p>
       )}
+      {isAdmin && !selectedUserId && historique.length > 0 && (
+        <p className="small text-muted mb-3">Tous les employés · {selectedYear}</p>
+      )}
 
       {/* ── Contenu ── */}
       {loadingHist ? (
@@ -213,6 +223,12 @@ const HistoriqueSoldePage = () => {
                     <TypeBadge type={m.type} />
                     <span className="hist-card__date">{fmtDate(m.date)}</span>
                   </div>
+                  {!selectedUserId && m.utilisateur && (
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--dk-text)', marginBottom: '0.15rem' }}>
+                      {m.utilisateur.prenom} {m.utilisateur.nom}
+                      {m.utilisateur.service && <span style={{ fontWeight: 400, color: 'var(--dk-text-muted)', marginLeft: 4 }}>· {m.utilisateur.service}</span>}
+                    </div>
+                  )}
                   {m.description && <div className="hist-card__desc">{m.description}</div>}
                   {m.conge_type?.libelle && (
                     <div className="hist-card__conge-type">{m.conge_type.libelle}</div>
@@ -238,6 +254,7 @@ const HistoriqueSoldePage = () => {
               <thead>
                 <tr>
                   <th>Date</th>
+                  {!selectedUserId && <th>Employé</th>}
                   <th>Type</th>
                   <th>Détail</th>
                   <th>Type de congé</th>
@@ -251,6 +268,16 @@ const HistoriqueSoldePage = () => {
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--dk-text-soft)', fontSize: '0.82rem' }}>
                       {fmtDate(m.date)}
                     </td>
+                    {!selectedUserId && (
+                      <td style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                        {m.utilisateur ? `${m.utilisateur.prenom} ${m.utilisateur.nom}` : '—'}
+                        {m.utilisateur?.service && (
+                          <span style={{ fontSize: '0.72rem', color: 'var(--dk-text-muted)', marginLeft: 4 }}>
+                            · {m.utilisateur.service}
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td><TypeBadge type={m.type} /></td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--dk-text-soft)' }}>
                       {m.description || '—'}

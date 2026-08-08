@@ -243,6 +243,7 @@ export const quotasService = {
   getUsage: () => api.get('/quotas/usage'),
   init: (data) => api.post('/quotas/init', data),
   getHistorique: (userId, params = {}) => api.get(`/quotas/historique/${userId}`, { params }),
+  getHistoriqueEntreprise: (params = {}) => api.get('/quotas/historique-entreprise', { params }),
 };
 
 export const calendrierService = {
