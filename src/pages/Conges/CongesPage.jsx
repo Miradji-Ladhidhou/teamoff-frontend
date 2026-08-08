@@ -49,8 +49,6 @@ const CongesPage = () => {
     statut: '',
     conge_type_id: '',
     search: '',
-    joursRestantsMin: '',
-    joursRestantsMax: '',
     dateDemandeDebut: '',
     dateDemandeFin: '',
     sortBy: 'date_demande',
@@ -151,18 +149,12 @@ const CongesPage = () => {
 
       const matchesCongeType = !filters.conge_type_id || conge.conge_type_id === filters.conge_type_id;
 
-      const joursRestants = Number(conge.jours_restants);
-      const joursRestantsMin = filters.joursRestantsMin === '' ? null : Number(filters.joursRestantsMin);
-      const joursRestantsMax = filters.joursRestantsMax === '' ? null : Number(filters.joursRestantsMax);
-      const matchesJoursRestants = (!Number.isFinite(joursRestantsMin) || joursRestants >= joursRestantsMin)
-        && (!Number.isFinite(joursRestantsMax) || joursRestants <= joursRestantsMax);
-
       const dateDemande = conge.date_demande || conge.created_at || conge.createdAt;
       const dateDemandeKey = dateDemande ? new Date(dateDemande).toISOString().slice(0, 10) : null;
       const matchesDateDemande = (!filters.dateDemandeDebut || (dateDemandeKey && dateDemandeKey >= filters.dateDemandeDebut))
         && (!filters.dateDemandeFin || (dateDemandeKey && dateDemandeKey <= filters.dateDemandeFin));
 
-      return matchesSearch && matchesCongeType && matchesJoursRestants && matchesDateDemande;
+      return matchesSearch && matchesCongeType && matchesDateDemande;
     });
   }, [conges, filters]);
 
@@ -405,9 +397,18 @@ const CongesPage = () => {
         )}
       </div>
 
-      {/* Filter chips + advanced filters toggle */}
-      <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <div className="chips-row flex-grow-1 pb-0 mb-0">
+      {/* Recherche + chips statut */}
+      <div className="conges-filter-bar mb-3">
+        <InputGroup className="conges-filter-bar__search">
+          <InputGroup.Text><FaSearch /></InputGroup.Text>
+          <Form.Control
+            type="text"
+            placeholder={isAdmin() ? 'Employé, type de congé…' : 'Type de congé…'}
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+          />
+        </InputGroup>
+        <div className="chips-row conges-filter-bar__chips">
           {statusChips.map((chip) => (
             <button
               key={chip.value}
@@ -423,107 +424,69 @@ const CongesPage = () => {
           variant={showFilters ? 'secondary' : 'outline-secondary'}
           size="sm"
           onClick={() => setShowFilters(s => !s)}
-          className="d-flex align-items-center flex-shrink-0"
+          className="flex-shrink-0"
+          title="Filtres avancés"
         >
-          <FaFilter className="me-2" />
-          {showFilters ? 'Masquer filtres' : 'Filtres avancés'}
+          <FaFilter />
         </Button>
       </div>
 
       {showFilters && (
         <div className="filters-panel mb-3">
-            <Row className="g-3">
-              <Col md={5}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Recherche</Form.Label>
-                  <InputGroup>
-                    <InputGroup.Text>
-                      <FaSearch />
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="text"
-                      placeholder={isAdmin() ? "Rechercher par employé ou type de congé..." : "Rechercher par type de congé..."}
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                    />
-                  </InputGroup>
-                </Form.Group>
-              </Col>
-              <Col md={2}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Jours restant min</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={filters.joursRestantsMin}
-                    onChange={(e) => handleFilterChange('joursRestantsMin', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={2}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Jours restant max</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={filters.joursRestantsMax}
-                    onChange={(e) => handleFilterChange('joursRestantsMax', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="g-3">
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Date demande du</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={filters.dateDemandeDebut}
-                    onChange={(e) => handleFilterChange('dateDemandeDebut', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Date demande au</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={filters.dateDemandeFin}
-                    onChange={(e) => handleFilterChange('dateDemandeFin', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Trier par</Form.Label>
-                  <Form.Select
-                    value={filters.sortBy}
-                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                  >
-                    <option value="date_demande">Date demande</option>
-                    <option value="jours_restants">Jours restant</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Ordre</Form.Label>
-                  <Form.Select
-                    value={filters.sortOrder}
-                    onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                  >
-                    <option value="desc">Décroissant</option>
-                    <option value="asc">Croissant</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-            <div className="d-flex justify-content-end">
-              <Button variant="outline-secondary" size="sm" onClick={() => {
-                setFilters(prev => ({ ...prev, search: '', joursRestantsMin: '', joursRestantsMax: '', dateDemandeDebut: '', dateDemandeFin: '' }));
-                setCurrentPage(1);
-              }}>
+          <Row className="g-2 align-items-end">
+            <Col xs={6} md={3}>
+              <Form.Group>
+                <Form.Label className="small mb-1">Demandé du</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="date"
+                  value={filters.dateDemandeDebut}
+                  onChange={(e) => handleFilterChange('dateDemandeDebut', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col xs={6} md={3}>
+              <Form.Group>
+                <Form.Label className="small mb-1">au</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="date"
+                  value={filters.dateDemandeFin}
+                  onChange={(e) => handleFilterChange('dateDemandeFin', e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col xs={8} md={3}>
+              <Form.Group>
+                <Form.Label className="small mb-1">Trier</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={`${filters.sortBy}__${filters.sortOrder}`}
+                  onChange={(e) => {
+                    const [by, order] = e.target.value.split('__');
+                    handleFilterChange('sortBy', by);
+                    handleFilterChange('sortOrder', order);
+                  }}
+                >
+                  <option value="date_demande__desc">Plus récent en premier</option>
+                  <option value="date_demande__asc">Plus ancien en premier</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col xs={4} md={3} className="d-flex align-items-end">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                className="w-100"
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, dateDemandeDebut: '', dateDemandeFin: '', sortBy: 'date_demande', sortOrder: 'desc' }));
+                  setCurrentPage(1);
+                }}
+              >
                 Réinitialiser
               </Button>
-            </div>
+            </Col>
+          </Row>
         </div>
       )}
 

@@ -2,6 +2,38 @@
 	overflow-x: hidden;
 }
 
+/* ── Barre de filtre ── */
+.conges-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.conges-filter-bar__search {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.conges-filter-bar__chips {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 575.98px) {
+  .conges-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .conges-filter-bar__search {
+    width: 100%;
+  }
+}
+
 .conges-filters-card,
 .conges-page .card {
 	min-width: 0;
