@@ -98,11 +98,8 @@ const HistoriqueSoldePage = () => {
           setUsers(list);
           setSelectedUserId((prev) => {
             const urlUser = searchParams.get('userId');
-            if (urlUser) {
-              const match = list.find((u) => String(u.id) === String(urlUser));
-              if (match) return match.id;
-            }
-            return prev || '';
+            const match = list.find((u) => String(u.id) === String(urlUser || prev));
+            return match?.id || list[0]?.id || '';
           });
         }
       } catch {
@@ -163,7 +160,6 @@ const HistoriqueSoldePage = () => {
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
             >
-              <option value="">Tous les employés</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
@@ -197,12 +193,7 @@ const HistoriqueSoldePage = () => {
       )}
 
       {/* ── Contenu ── */}
-      {isAdmin && !selectedUserId ? (
-        <div className="text-center py-5 text-muted">
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👤</div>
-          Sélectionnez un employé pour afficher son historique.
-        </div>
-      ) : loadingHist ? (
+      {loadingHist ? (
         <div className="text-center py-5"><Spinner animation="border" size="sm" /></div>
       ) : historique.length === 0 ? (
         <div className="text-center py-5 text-muted">
