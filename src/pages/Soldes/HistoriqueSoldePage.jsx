@@ -164,12 +164,21 @@ const HistoriqueSoldePage = () => {
       </div>
 
       {/* Filtres */}
-      <div className="users-filter-bar mb-4" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+      <div className="users-filter-bar mb-3">
+        <InputGroup className="users-filter-bar__search">
+          <InputGroup.Text><FaSearch /></InputGroup.Text>
+          <Form.Control
+            type="text"
+            placeholder="Type, description, congé…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </InputGroup>
         {isAdmin && (
           <Form.Select
+            className="users-filter-bar__select"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            style={{ minWidth: 200, flexShrink: 0 }}
           >
             {users.length === 0 && <option value="">Aucun utilisateur</option>}
             {users.map((u) => (
@@ -179,39 +188,28 @@ const HistoriqueSoldePage = () => {
             ))}
           </Form.Select>
         )}
-        <Form.Control
-          type="number"
-          min="2020"
-          max="2100"
+        <Form.Select
+          className="users-filter-bar__select"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value) || CURRENT_YEAR)}
-          style={{ width: 90, flexShrink: 0 }}
-          title="Année"
-        />
+          style={{ maxWidth: 90 }}
+        >
+          {Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i).map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </Form.Select>
         <Form.Select
+          className="users-filter-bar__select"
           value={selectedTypeId}
           onChange={(e) => setSelectedTypeId(e.target.value)}
-          style={{ maxWidth: 220, flexShrink: 0 }}
         >
           <option value="">Tous les types</option>
           {congeTypes.map((t) => <option key={t.id} value={t.id}>{t.libelle}</option>)}
         </Form.Select>
-        <InputGroup style={{ maxWidth: 220, flexShrink: 0 }}>
-          <InputGroup.Text><FaSearch size={12} /></InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder="Rechercher…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </InputGroup>
+        <span className="badge info users-filter-bar__count">
+          {filteredHistorique.length}{historique.length !== filteredHistorique.length ? `/${historique.length}` : ''}
+        </span>
       </div>
-
-      {isAdmin && selectedUser && (
-        <div className="small text-muted mb-3">
-          Historique de <strong>{selectedUser.prenom} {selectedUser.nom}</strong> · {selectedYear}
-        </div>
-      )}
 
       {/* Contenu */}
       {loadingHist ? (
