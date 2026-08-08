@@ -177,6 +177,7 @@ const HistoriqueSoldePage = () => {
         {isAdmin && (
           <Form.Select
             className="users-filter-bar__select"
+            style={{ flex: '1 1 180px', maxWidth: 240 }}
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
           >
@@ -189,10 +190,9 @@ const HistoriqueSoldePage = () => {
           </Form.Select>
         )}
         <Form.Select
-          className="users-filter-bar__select"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value) || CURRENT_YEAR)}
-          style={{ maxWidth: 90 }}
+          style={{ flex: '0 0 85px' }}
         >
           {Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i).map((y) => (
             <option key={y} value={y}>{y}</option>
