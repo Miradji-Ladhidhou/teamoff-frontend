@@ -1,4 +1,6 @@
 import './companies.css';
+
+const PROTECTED_COMPANY_NAME = 'TeamOff';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie } from 'react-icons/fa';
@@ -475,18 +477,20 @@ const CompaniesManagement = () => {
                   <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(company)}>
                     <FaEdit className="me-1" /> Modifier
                   </Button>
-                  <AsyncButton
-                    variant="outline-danger"
-                    size="sm"
-                    className="flex-grow-1 justify-content-center"
-                    onClick={() => handleDelete(company.id)}
-                    isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
-                    showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
-                    loadingText="..."
-                    disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
-                  >
-                    <FaTrash className="me-1" /> Supprimer
-                  </AsyncButton>
+                  {company.nom !== PROTECTED_COMPANY_NAME && (
+                    <AsyncButton
+                      variant="outline-danger"
+                      size="sm"
+                      className="flex-grow-1 justify-content-center"
+                      onClick={() => handleDelete(company.id)}
+                      isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
+                      showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
+                      loadingText="..."
+                      disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
+                    >
+                      <FaTrash className="me-1" /> Supprimer
+                    </AsyncButton>
+                  )}
                 </div>
               </div>
             ))}
@@ -520,18 +524,20 @@ const CompaniesManagement = () => {
                         <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
                           <FaEdit />
                         </Button>
-                        <AsyncButton
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDelete(company.id)}
-                          title="Supprimer"
-                          isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
-                          showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
-                          loadingText=""
-                          disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
-                        >
-                          <FaTrash />
-                        </AsyncButton>
+                        {company.nom !== PROTECTED_COMPANY_NAME && (
+                          <AsyncButton
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleDelete(company.id)}
+                            title="Supprimer"
+                            isLoading={deleteAction.isRunning && activeCompanyActionId === company.id}
+                            showSpinner={deleteAction.showSpinner && activeCompanyActionId === company.id}
+                            loadingText=""
+                            disabled={deleteAction.isRunning && activeCompanyActionId !== company.id}
+                          >
+                            <FaTrash />
+                          </AsyncButton>
+                        )}
                       </div>
                     </td>
                   </tr>

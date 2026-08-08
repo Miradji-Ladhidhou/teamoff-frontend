@@ -1,4 +1,6 @@
 import './users.css';
+
+const PROTECTED_EMAIL = 'ladhidhoum@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaDownload, FaEnvelope, FaCoins } from 'react-icons/fa';
@@ -522,16 +524,18 @@ const UsersManagement = () => {
                             <FaEnvelope />
                           </AsyncButton>
                         )}
-                        <AsyncButton
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDelete(targetUser.id)}
-                          title="Supprimer"
-                          disabled={targetUser.id === user?.id}
-                          isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                          loadingText="">
-                          <FaTrash />
-                        </AsyncButton>
+                        {targetUser.email !== PROTECTED_EMAIL && (
+                          <AsyncButton
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleDelete(targetUser.id)}
+                            title="Supprimer"
+                            disabled={targetUser.id === user?.id}
+                            isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                            loadingText="">
+                            <FaTrash />
+                          </AsyncButton>
+                        )}
                       </div>
                     </td>
                   </tr>
