@@ -11,7 +11,6 @@ export const roleNavigation = {
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/mes-conges', label: 'Mes congés', icon: 'leave', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
-    { path: '/historique-conges', label: 'Historique congés', icon: 'history', section: 'secondary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
@@ -20,7 +19,6 @@ export const roleNavigation = {
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/conges-equipe', label: 'Congés équipe', icon: 'leave', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
-    { path: '/historique-conges', label: 'Historique congés', icon: 'history', section: 'secondary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
@@ -33,7 +31,6 @@ export const roleNavigation = {
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/politique-conges', label: 'Règles & services', icon: 'settings', section: 'secondary' },
     { path: '/soldes', label: 'Soldes', icon: 'balance', section: 'secondary' },
-    { path: '/historique-conges', label: 'Historique congés', icon: 'history', section: 'secondary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/jours-feries', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
