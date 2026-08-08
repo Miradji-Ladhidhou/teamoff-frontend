@@ -507,17 +507,19 @@ const UsersManagement = () => {
                         {!isSuperAdmin && (
                           <Button variant="outline-info" size="sm" onClick={() => navigate(`/soldes?userId=${targetUser.id}`)} title="Soldes"><FaCoins /></Button>
                         )}
-                        <AsyncButton
-                          variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
-                          size="sm"
-                          onClick={() => toggleUserStatus(targetUser)}
-                          title={targetUser.statut === 'actif' ? 'Désactiver' : 'Activer'}
-                          isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
-                          loadingText=""
-                          disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
-                        >
-                          {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
-                        </AsyncButton>
+                        {targetUser.email !== PROTECTED_EMAIL && (
+                          <AsyncButton
+                            variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
+                            size="sm"
+                            onClick={() => toggleUserStatus(targetUser)}
+                            title={targetUser.statut === 'actif' ? 'Désactiver' : 'Activer'}
+                            isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                            loadingText=""
+                            disabled={mutateUserAction.isRunning && activeUserActionId !== targetUser.id}
+                          >
+                            {targetUser.statut === 'actif' ? <FaUserTimes /> : <FaUserCheck />}
+                          </AsyncButton>
+                        )}
                         {targetUser.statut === 'en_attente' && (
                           <AsyncButton variant="outline-info" size="sm" onClick={() => handleResendInvitation(targetUser)} title="Renvoyer invitation"
                             isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id} loadingText="">
