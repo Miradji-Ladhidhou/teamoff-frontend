@@ -1,9 +1,10 @@
 import React from 'react';
 
 const TABS = [
-  { id: 'conges',  label: 'Types & Quotas', emoji: '📋' },
-  { id: 'regles',  label: 'Règles',         emoji: '⚙️' },
-  { id: 'equipe',  label: 'Notifications',  emoji: '🔔' },
+  { id: 'conges',        label: 'Types & Quotas', emoji: '📋' },
+  { id: 'regles',        label: 'Règles',          emoji: '⚙️' },
+  { id: 'services',      label: 'Services',        emoji: '🏢' },
+  { id: 'notifications', label: 'Notifications',   emoji: '🔔' },
 ];
 
 const SectionTabs = ({ activeSection, setActiveSection }) => {

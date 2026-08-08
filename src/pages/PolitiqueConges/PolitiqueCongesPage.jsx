@@ -191,9 +191,10 @@ const PolitiqueCongesPage = () => {
   };
 
   const SECTION_MAP = {
-    conges: ['types', 'acquisition'],
-    regles: ['general', 'cancellation', 'timezone'],
-    equipe: ['notifications', 'services'],
+    conges:        ['types', 'acquisition'],
+    regles:        ['general', 'cancellation'],
+    services:      ['services'],
+    notifications: ['notifications', 'timezone'],
   };
   const isSectionVisible = (section) => Boolean(SECTION_MAP[activeSection]?.includes(section));
 
