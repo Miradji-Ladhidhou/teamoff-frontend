@@ -237,7 +237,7 @@ const DashboardPage = () => {
     const s = String(dateString).split('T')[0];
     const parts = s.split('-');
     if (parts.length !== 3) return '-';
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
   const getSoldeTypeLabel = (solde) => {

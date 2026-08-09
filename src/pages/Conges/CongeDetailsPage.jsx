@@ -287,7 +287,7 @@ const CongeDetailsPage = () => {
     if (!dateString) return '-';
     const parsedDate = new Date(dateString);
     if (Number.isNaN(parsedDate.getTime())) return '-';
-    return parsedDate.toLocaleDateString('fr-FR').replace(/\//g, '-');
+    return parsedDate.toLocaleDateString('fr-FR');
   };
 
   const formatDays = (value) => {
