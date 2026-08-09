@@ -6,9 +6,8 @@ import {
   Container,
   Form,
   Spinner,
-  Table,
 } from 'react-bootstrap';
-import { entreprisesService, congeTypesService } from '../../services/api';
+import { entreprisesService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
@@ -34,11 +33,6 @@ const WEEKDAY_OPTIONS = [
   { value: 6, label: 'Sam' },
   { value: 0, label: 'Dim' },
 ];
-
-const toNumber = (value, fallback = 0) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
 
 const normalizeBlockedWeekdays = (days) => (
   Array.isArray(days)
@@ -68,18 +62,13 @@ const JoursBloquesPage = () => {
   const [saving, setSaving] = useState(false);
 
   const [blockedDays, setBlockedDays] = useState(DEFAULT_BLOCKED_DAYS);
-  const [accrualByType, setAccrualByType] = useState({});
-  const [congeTypes, setCongeTypes] = useState([]);
 
   useEffect(() => {
     if (!entrepriseId) return;
     const load = async () => {
       try {
         setLoading(true);
-        const [policyRes, typesRes] = await Promise.all([
-          entreprisesService.getPolitique(entrepriseId),
-          congeTypesService.getAll({ entreprise_id: entrepriseId }),
-        ]);
+        const policyRes = await entreprisesService.getPolitique(entrepriseId);
         const policy = policyRes.data?.politique_conges || {};
         const next = { ...DEFAULT_BLOCKED_DAYS, ...(policy.blocked_days || {}) };
         setBlockedDays({
@@ -87,8 +76,6 @@ const JoursBloquesPage = () => {
           weekdays: normalizeBlockedWeekdays(next.weekdays),
           specific_dates: Array.isArray(next.specific_dates) ? next.specific_dates : [],
         });
-        setAccrualByType(policy.accrual_by_type || {});
-        setCongeTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
       } catch {
         alert.error('Impossible de charger les paramètres.');
       } finally {
@@ -145,11 +132,6 @@ const JoursBloquesPage = () => {
           weekdays: normalizeBlockedWeekdays(blockedDays.weekdays),
           specific_dates: Array.isArray(blockedDays.specific_dates) ? blockedDays.specific_dates : [],
         },
-        accrual_by_type: congeTypes.reduce((acc, type) => {
-          const v = toNumber(accrualByType[type.id], NaN);
-          if (Number.isFinite(v) && v >= 0) acc[type.id] = v;
-          return acc;
-        }, {}),
       };
       await entreprisesService.updatePolitique(entrepriseId, payload);
       alert.success('Paramètres enregistrés.');
@@ -282,41 +264,6 @@ const JoursBloquesPage = () => {
             )}
           </Form.Group>
         </div>
-
-        {/* ── Acquisition mensuelle ── */}
-        {congeTypes.length > 0 && (
-          <>
-            <div className="section-label-title mb-2">Acquisition mensuelle automatique</div>
-            <div className="conges-list-wrap mb-4">
-              <Table size="sm" responsive className="users-dense-table mb-0">
-                <thead>
-                  <tr>
-                    <th>Type de congé</th>
-                    <th>Jours / mois</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {congeTypes.map((type) => (
-                    <tr key={type.id}>
-                      <td>{type.libelle}</td>
-                      <td style={{ width: '40%' }}>
-                        <Form.Control
-                          type="number"
-                          size="sm"
-                          min="0"
-                          step="0.25"
-                          value={accrualByType[type.id] ?? ''}
-                          placeholder={`Auto (${toNumber(type.quota_annuel, 0) / 12})`}
-                          onChange={(e) => setAccrualByType((prev) => ({ ...prev, [type.id]: e.target.value }))}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          </>
-        )}
 
         {/* ── Enregistrer ── */}
         <div className="d-flex justify-content-end">
