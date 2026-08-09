@@ -264,8 +264,17 @@ const CongeDetailsPage = () => {
 
   const canApprove = () => {
     if (!conge) return false;
-    if (user?.role === 'manager') return conge.statut === 'en_attente_manager';
+    const workflow = conge.effective_approval_workflow;
+    if (workflow === 'auto') return false;
+    if (user?.role === 'manager') {
+      if (conge.utilisateur_id === user?.id) return false;
+      if (workflow === 'admin_only') return false;
+      return conge.statut === 'en_attente_manager';
+    }
     if (isSuperAdmin || user?.role === 'admin_entreprise') {
+      if (workflow === 'manager' || workflow === 'manager_only') return false;
+      if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
+      if (workflow === 'manager_admin') return conge.statut === 'valide_manager';
       return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
     }
     return false;
