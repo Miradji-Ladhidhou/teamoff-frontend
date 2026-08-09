@@ -109,6 +109,24 @@ const CalendrierPage = () => {
 
   const isPrivileged = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
 
+  const [approvalWorkflow, setApprovalWorkflow] = useState('manager_admin');
+
+  useEffect(() => {
+    if (!entrepriseId) return;
+    entreprisesService.getPolitique(entrepriseId)
+      .then(res => {
+        const wf = res.data?.politique_conges?.approval_workflow;
+        if (wf) setApprovalWorkflow(wf);
+      })
+      .catch(() => {});
+  }, [entrepriseId]);
+
+  const labelEnAttente = approvalWorkflow === 'admin_only'
+    ? "En attente de l'admin"
+    : 'En attente du manager';
+
+  const labelValideManager = 'Validé par le manager';
+
   // Commentaires visibles seulement par les rôles privilégiés ou l'employé sur ses propres événements
   const canSeeEventComments = (event) => {
     if (isPrivileged) return true;
@@ -296,7 +314,7 @@ const CalendrierPage = () => {
     const colors = {
       reserve: 'purple',
       en_attente_manager: 'warning',
-      valide_manager: 'info',
+      valide_manager: 'valide-manager',
       valide_final: 'success',
       refuse_manager: 'danger',
       refuse_final: 'danger',
@@ -612,8 +630,7 @@ const CalendrierPage = () => {
                             </div>
                           );
                         } else if (event._eventType === 'absence') {
-                          // Couleur : maladie = vert, exceptionnelle = bleu
-                          const absColor = event.type_absence === 'maladie' ? 'maladie' : 'primary';
+                          const absColor = event.type_absence === 'maladie' ? 'maladie' : 'absence-except';
                           return (
                             <div
                               key={idx}
@@ -623,7 +640,7 @@ const CalendrierPage = () => {
                               role="button"
                             >
                               <small className="text-white">
-                                {event.type_absence === 'maladie' ? 'Maladie' : 'Absence'}
+                                {event.type_absence === 'maladie' ? 'Maladie' : 'Abs. except.'}
                                 {event.utilisateur?.prenom ? ` · ${event.utilisateur.prenom}` : ''}
                               </small>
                             </div>
@@ -648,12 +665,14 @@ const CalendrierPage = () => {
       {/* Légende */}
       <div className="calendar-legend-bar">
         <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Congé approuvé</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>En attente</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-info"></span>Validé manager</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>{labelEnAttente}</span>
+        {approvalWorkflow === 'manager_admin' && (
+          <span className="calendar-legend-item"><span className="legend-dot legend-dot-valide-manager"></span>{labelValideManager}</span>
+        )}
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
-        <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé</span>
-<span className="calendar-legend-item"><span className="legend-dot bg-primary"></span>Absence exceptionnelle</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-maladie"></span>Maladie</span>
+        <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé (année N+1)</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-absence-except"></span>Absence exceptionnelle</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-maladie"></span>Arrêt maladie</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-ferie"></span>Jour férié</span>
         {blockedSpecificDates.length > 0 && (
           <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
@@ -670,8 +689,8 @@ const CalendrierPage = () => {
         };
 
         const statusLabel = {
-          en_attente_manager: 'En attente',
-          valide_manager: 'Validé',
+          en_attente_manager: labelEnAttente,
+          valide_manager: labelValideManager,
           valide_final: 'Validé',
           refuse_manager: 'Refusé',
           refuse_final: 'Refusé',
@@ -702,7 +721,7 @@ const CalendrierPage = () => {
             nom: a.utilisateur?.nom || '',
             type: absenceLabel[a.type_absence] || a.type_absence,
             statut: null,
-            color: a.type_absence === 'maladie' ? 'maladie' : 'primary',
+            color: a.type_absence === 'maladie' ? 'maladie' : 'absence-except',
             debut: a.date_debut,
             fin: a.date_fin,
             commentaire: canSeeAbsenceComment(a) ? (a.commentaire || '') : '',
