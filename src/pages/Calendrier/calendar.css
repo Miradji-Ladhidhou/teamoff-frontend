@@ -293,6 +293,20 @@
   color: var(--dk-text);
 }
 
+.calendar-day-today-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--dk-accent, #6366f1);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* ---------------- HOLIDAY ---------------- */
 .calendar-ferie {
   margin-bottom: 6px;

@@ -596,7 +596,9 @@ const CalendrierPage = () => {
                       className="calendar-day-number"
                       data-weekday={normalizeLocalDate(dayInfo.date)?.toLocaleDateString('fr-FR', { weekday: 'short' }) || ''}
                     >
-                      {dayInfo.dayNumber}
+                      {isToday
+                        ? <span className="calendar-day-today-badge">{dayInfo.dayNumber}</span>
+                        : dayInfo.dayNumber}
                     </div>
 
                     {/* Jour férié */}
