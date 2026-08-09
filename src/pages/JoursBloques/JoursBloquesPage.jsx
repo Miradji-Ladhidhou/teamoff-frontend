@@ -313,7 +313,7 @@ const JoursBloquesPage = () => {
                     {date}
                     <button
                       type="button"
-                      className="btn-close btn-close-white"
+                      className="btn-close"
                       style={{ fontSize: '0.55rem' }}
                       onClick={() => removeSpecificDate(date)}
                       aria-label={`Supprimer ${date}`}
