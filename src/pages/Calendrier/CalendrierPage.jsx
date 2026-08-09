@@ -677,7 +677,6 @@ const CalendrierPage = () => {
         {blockedSpecificDates.length > 0 && (
           <span className="calendar-legend-item"><span className="legend-dot legend-dot-blocked"></span>Jour bloqué</span>
         )}
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-today"></span>Aujourd'hui</span>
       </div>
 
       {/* Liste récap du mois */}
