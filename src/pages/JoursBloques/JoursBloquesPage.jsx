@@ -3,10 +3,8 @@ import '../../styles/settings.css';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
-  Col,
   Container,
   Form,
-  Row,
   Spinner,
   Table,
 } from 'react-bootstrap';
@@ -14,6 +12,7 @@ import { entreprisesService, congeTypesService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
+import BlockedDaysPicker from './BlockedDaysPicker';
 
 const DEFAULT_BLOCKED_DAYS = {
   exclude_weekends: true,
@@ -72,12 +71,6 @@ const JoursBloquesPage = () => {
   const [accrualByType, setAccrualByType] = useState({});
   const [congeTypes, setCongeTypes] = useState([]);
 
-  const [specificDateInput, setSpecificDateInput] = useState('');
-  const [specificDateRangeStart, setSpecificDateRangeStart] = useState('');
-  const [specificDateRangeEnd, setSpecificDateRangeEnd] = useState('');
-  const [removeRangeStart, setRemoveRangeStart] = useState('');
-  const [removeRangeEnd, setRemoveRangeEnd] = useState('');
-
   useEffect(() => {
     if (!entrepriseId) return;
     const load = async () => {
@@ -113,31 +106,6 @@ const JoursBloquesPage = () => {
     });
   };
 
-  const addSpecificDate = () => {
-    const v = String(specificDateInput || '').trim();
-    if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-    setBlockedDays((prev) => ({
-      ...prev,
-      specific_dates: [...new Set([...(prev.specific_dates || []), v])].sort(),
-    }));
-    setSpecificDateInput('');
-  };
-
-  const addSpecificDateRange = () => {
-    const start = specificDateRangeStart.trim();
-    const end = specificDateRangeEnd.trim();
-    if (!start || !end) { alert.error('Renseignez les deux dates.'); return; }
-    const range = enumerateDateRange(start, end);
-    if (!range.length) { alert.error('Plage invalide.'); return; }
-    if (range.length >= 366) { alert.error('Plage trop grande (max 366 j).'); return; }
-    setBlockedDays((prev) => ({
-      ...prev,
-      specific_dates: [...new Set([...(prev.specific_dates || []), ...range])].sort(),
-    }));
-    setSpecificDateRangeStart('');
-    setSpecificDateRangeEnd('');
-  };
-
   const removeSpecificDate = (date) => {
     setBlockedDays((prev) => ({
       ...prev,
@@ -145,18 +113,21 @@ const JoursBloquesPage = () => {
     }));
   };
 
-  const removeSpecificDateRange = () => {
-    const start = removeRangeStart.trim();
-    const end = removeRangeEnd.trim();
-    if (!start || !end) { alert.error('Renseignez les deux dates.'); return; }
+  const handlePickerAdd = (start, end) => {
+    const range = enumerateDateRange(start, end);
+    if (!range.length) return;
+    setBlockedDays((prev) => ({
+      ...prev,
+      specific_dates: [...new Set([...(prev.specific_dates || []), ...range])].sort(),
+    }));
+  };
+
+  const handlePickerRemove = (start, end) => {
     const toRemove = new Set(enumerateDateRange(start, end));
-    if (!toRemove.size) { alert.error('Plage invalide.'); return; }
     setBlockedDays((prev) => ({
       ...prev,
       specific_dates: (prev.specific_dates || []).filter((d) => !toRemove.has(d)),
     }));
-    setRemoveRangeStart('');
-    setRemoveRangeEnd('');
   };
 
   const handleSave = async (e) => {
@@ -284,100 +255,27 @@ const JoursBloquesPage = () => {
 
           <Form.Group>
             <Form.Label className="small text-muted">Dates spécifiques bloquées</Form.Label>
-            <Row className="g-2 mb-2">
-              <Col xs={9} md={4}>
-                <Form.Control
-                  type="date"
-                  value={specificDateInput}
-                  onChange={(e) => setSpecificDateInput(e.target.value)}
-                  placeholder="Date unique"
-                />
-              </Col>
-              <Col xs={3} md="auto">
-                <Button type="button" variant="outline-primary" onClick={addSpecificDate} className="w-100">
-                  Ajouter
-                </Button>
-              </Col>
-            </Row>
-            <Row className="g-2 mb-2">
-              <Col xs={5} md={3}>
-                <Form.Control
-                  type="date"
-                  value={specificDateRangeStart}
-                  onChange={(e) => setSpecificDateRangeStart(e.target.value)}
-                  placeholder="Du"
-                />
-              </Col>
-              <Col xs={5} md={3}>
-                <Form.Control
-                  type="date"
-                  value={specificDateRangeEnd}
-                  onChange={(e) => setSpecificDateRangeEnd(e.target.value)}
-                  placeholder="Au"
-                />
-              </Col>
-              <Col xs={2} md="auto">
-                <Button type="button" variant="outline-secondary" onClick={addSpecificDateRange} className="w-100">
-                  + Plage
-                </Button>
-              </Col>
-            </Row>
-            <Row className="g-2 mb-2">
-              <Col xs={5} md={3}>
-                <Form.Control
-                  type="date"
-                  value={removeRangeStart}
-                  onChange={(e) => setRemoveRangeStart(e.target.value)}
-                  placeholder="Du"
-                />
-              </Col>
-              <Col xs={5} md={3}>
-                <Form.Control
-                  type="date"
-                  value={removeRangeEnd}
-                  onChange={(e) => setRemoveRangeEnd(e.target.value)}
-                  placeholder="Au"
-                />
-              </Col>
-              <Col xs={2} md="auto">
-                <Button type="button" variant="outline-danger" onClick={removeSpecificDateRange} className="w-100">
-                  − Plage
-                </Button>
-              </Col>
-            </Row>
-            {(() => {
-              if (!removeRangeStart || !removeRangeEnd) return null;
-              const inRange = enumerateDateRange(removeRangeStart, removeRangeEnd);
-              const blocked = new Set(blockedDays.specific_dates || []);
-              const toRemove = inRange.filter((d) => blocked.has(d));
-              if (!inRange.length) return (
-                <p className="small text-danger mb-2">Plage invalide.</p>
-              );
-              if (!toRemove.length) return (
-                <p className="small text-muted mb-2">Aucune date bloquée dans cette plage — rien ne sera supprimé.</p>
-              );
-              return (
-                <p className="small text-danger mb-2">
-                  {toRemove.length} date{toRemove.length > 1 ? 's' : ''} bloquée{toRemove.length > 1 ? 's' : ''} seront supprimées dans cette plage.
-                </p>
-              );
-            })()}
+            <BlockedDaysPicker
+              blockedDates={blockedDays.specific_dates || []}
+              onAdd={handlePickerAdd}
+              onRemove={handlePickerRemove}
+            />
             {(blockedDays.specific_dates || []).length > 0 && (
-              <div className="d-flex flex-wrap gap-2 mt-2">
+              <div className="d-flex flex-wrap gap-2 mt-3">
                 {(blockedDays.specific_dates || []).map((date) => {
                   const [y, m, d] = date.split('-');
                   const label = y && m && d ? `${d}/${m}/${y}` : date;
                   return (
-                  <span key={date} className="badge info d-inline-flex align-items-center gap-2">
-                    {label}
-                    <button
-                      type="button"
-                      className="btn-close"
-                      style={{ fontSize: '0.55rem' }}
-                      onClick={() => removeSpecificDate(date)}
-                      aria-label={`Supprimer ${date}`}
-                    />
-                  </span>
+                    <span key={date} className="badge info d-inline-flex align-items-center gap-2">
+                      {label}
+                      <button
+                        type="button"
+                        className="btn-close"
+                        style={{ fontSize: '0.55rem' }}
+                        onClick={() => removeSpecificDate(date)}
+                        aria-label={`Supprimer ${date}`}
+                      />
+                    </span>
                   );
                 })}
               </div>
