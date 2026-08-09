@@ -25,11 +25,6 @@ const JoursFeriesPage = () => {
   const [selectedEntrepriseId, setSelectedEntrepriseId] = useState('');
   const [importYear, setImportYear] = useState(new Date().getFullYear());
   const [importCountry, setImportCountry] = useState('FR');
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [templateName, setTemplateName] = useState('');
-  const [templateRegion, setTemplateRegion] = useState('');
-  const [templateCsvContent, setTemplateCsvContent] = useState('');
   const [formData, setFormData] = useState({
     date: '',
     libelle: '',
@@ -38,10 +33,6 @@ const JoursFeriesPage = () => {
   });
   const saveAction = useAsyncAction();
   const importNationalAction = useAsyncAction();
-  const createTemplateAction = useAsyncAction();
-  const importTemplateAction = useAsyncAction();
-  const exportTemplateAction = useAsyncAction();
-  const applyTemplateAction = useAsyncAction();
   const deleteAction = useAsyncAction();
 
   useEffect(() => {
@@ -72,10 +63,6 @@ const JoursFeriesPage = () => {
   }, [selectedEntrepriseId, user?.role]);
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  useEffect(() => {
     if (!success) return;
     alert.showSuccessModal(success, { autoCloseMs: 4000 });
     setSuccess('');
@@ -98,20 +85,6 @@ const JoursFeriesPage = () => {
       console.error('Erreur chargement entreprises:', err);
       alert.error('Erreur lors du chargement des entreprises');
       setLoading(false);
-    }
-  };
-
-  const loadTemplates = async () => {
-    try {
-      const response = await joursFeriesService.getTemplates();
-      const list = Array.isArray(response.data) ? response.data : [];
-      setTemplates(list);
-      if (list.length > 0) {
-        setSelectedTemplateId((prev) => prev || list[0].id);
-      }
-    } catch (err) {
-      console.error('Erreur chargement modèles:', err);
-      alert.error('Erreur lors du chargement des modèles de jours fériés');
     }
   };
 
@@ -237,118 +210,8 @@ const JoursFeriesPage = () => {
     });
   };
 
-  const handleCreateTemplateFromCurrent = async () => {
-    await createTemplateAction.run(async () => {
-      try {
-        setSuccess('');
-
-        if (!templateName.trim()) {
-          alert.error('Nom du modèle requis.');
-          return;
-        }
-
-        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-        const payload = {
-          name: templateName.trim(),
-          region: templateRegion.trim() || null,
-          sourceEntrepriseId: user?.role === 'super_admin' ? selectedEntrepriseId : undefined,
-        };
-
-        await joursFeriesService.createTemplate(payload, params);
-        await loadTemplates();
-        setSuccess('Modèle créé depuis les jours fériés de l\'entreprise sélectionnée.');
-      } catch (err) {
-        console.error('Erreur création modèle:', err);
-        alert.error(err.response?.data?.message || 'Erreur lors de la création du modèle');
-      }
-    });
-  };
-
-  const handleExportTemplateCsv = async () => {
-    await exportTemplateAction.run(async () => {
-      try {
-        setSuccess('');
-        if (!selectedTemplateId) {
-          alert.error('Sélectionnez un modèle à exporter.');
-          return;
-        }
-
-        const response = await joursFeriesService.exportTemplateCSV(selectedTemplateId);
-        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `modele_jours_feries_${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error('Erreur export modèle CSV:', err);
-        alert.error(err.response?.data?.message || 'Erreur lors de l\'export du modèle CSV');
-      }
-    });
-  };
-
-  const handleImportTemplateCsv = async () => {
-    await importTemplateAction.run(async () => {
-      try {
-        setSuccess('');
-
-        if (!templateName.trim()) {
-          alert.error('Nom du modèle requis pour l\'import CSV.');
-          return;
-        }
-        if (!templateCsvContent.trim()) {
-          alert.error('Collez le contenu CSV avant import.');
-          return;
-        }
-
-        await joursFeriesService.importTemplateCSV({
-          name: templateName.trim(),
-          region: templateRegion.trim() || null,
-          csvContent: templateCsvContent,
-        });
-
-        await loadTemplates();
-        setSuccess('Modèle importé depuis CSV avec succès.');
-      } catch (err) {
-        console.error('Erreur import modèle CSV:', err);
-        alert.error(err.response?.data?.message || 'Erreur lors de l\'import du modèle CSV');
-      }
-    });
-  };
-
-  const handleApplyTemplate = async () => {
-    await applyTemplateAction.run(async () => {
-      try {
-        setSuccess('');
-
-        if (!selectedTemplateId) {
-          alert.error('Sélectionnez un modèle à appliquer.');
-          return;
-        }
-
-        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
-        const response = await joursFeriesService.applyTemplate(
-          selectedTemplateId,
-          { replaceExisting: false },
-          params
-        );
-
-        await loadJoursFeries(params);
-        setSuccess(response.data?.message || 'Modèle appliqué.');
-      } catch (err) {
-        console.error('Erreur application modèle:', err);
-        alert.error(err.response?.data?.message || 'Erreur lors de l\'application du modèle');
-      }
-    });
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    // new Date("YYYY-MM-DD") est interprété en minuit UTC ; toLocaleDateString
-    // peut décaler d'un jour en UTC-N. On construit le Date en minuit LOCAL.
     const parts = String(dateString).slice(0, 10).split('-').map(Number);
     if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return '-';
     const [year, month, day] = parts;
@@ -398,214 +261,118 @@ const JoursFeriesPage = () => {
         <div className="filters-panel mb-3">
           <Row className="g-3 align-items-end">
             {user?.role === 'super_admin' && (
-                <Col xs={12} md={5}>
-                  <Form.Label>Entreprise</Form.Label>
-                  <Form.Select
-                    value={selectedEntrepriseId}
-                    onChange={(e) => setSelectedEntrepriseId(e.target.value)}
-                  >
-                    {entreprises.map((e) => (
-                      <option key={e.id} value={e.id}>{e.nom}</option>
-                    ))}
-                  </Form.Select>
-                </Col>
-              )}
-              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
-                <Form.Label>Année</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={importYear}
-                  onChange={(e) => setImportYear(Number(e.target.value))}
-                />
-              </Col>
-              <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
-                <Form.Label>Pays</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={importCountry}
-                  onChange={(e) => setImportCountry(e.target.value.toUpperCase())}
-                  maxLength={2}
-                />
-              </Col>
-              <Col xs={12} md={user?.role === 'super_admin' ? 3 : 6}>
-                <AsyncButton
-                  variant="outline-primary"
-                  onClick={handleImportNational}
-                  disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
-                  className="w-100"
-                  action={importNationalAction}
-                  loadingText="Import en cours..."
-                >
-                  Importer les jours fériés via API
-                </AsyncButton>
-              </Col>
-            </Row>
-            <div className="text-muted small mt-3">
-              L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
-              puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
-            </div>
-        </div>
-      )}
-
-      {canManage && (
-        <div className="filters-panel mb-3">
-          <div className="section-label-title mb-3">Modèles régionaux</div>
-            <Row className="g-3 align-items-end">
-              <Col xs={12} md={4}>
-                <Form.Label>Nom du modèle</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Ex: FR - Réunion"
-                />
-              </Col>
-              <Col xs={12} md={3}>
-                <Form.Label>Région</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={templateRegion}
-                  onChange={(e) => setTemplateRegion(e.target.value)}
-                  placeholder="Ex: Reunion"
-                />
-              </Col>
-              <Col xs={12} md={5} className="d-flex flex-column flex-md-row gap-2">
-                <AsyncButton
-                  variant="outline-primary"
-                  onClick={handleCreateTemplateFromCurrent}
-                  className="w-100"
-                  action={createTemplateAction}
-                  loadingText="Création du modèle..."
-                >
-                  Créer depuis l'entreprise
-                </AsyncButton>
-                <AsyncButton
-                  variant="outline-success"
-                  onClick={handleImportTemplateCsv}
-                  className="w-100"
-                  action={importTemplateAction}
-                  loadingText="Import du modèle..."
-                >
-                  Importer CSV en modèle
-                </AsyncButton>
-              </Col>
-            </Row>
-
-            <Row className="g-3 align-items-end mt-1">
-              <Col xs={12} md={6}>
-                <Form.Label>Modèles disponibles</Form.Label>
+              <Col xs={12} md={5}>
+                <Form.Label>Entreprise</Form.Label>
                 <Form.Select
-                  value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
+                  value={selectedEntrepriseId}
+                  onChange={(e) => setSelectedEntrepriseId(e.target.value)}
                 >
-                  <option value="">Sélectionnez un modèle</option>
-                  {templates.map((tpl) => (
-                    <option key={tpl.id} value={tpl.id}>
-                      {tpl.name} {tpl.region ? `(${tpl.region})` : ''} - {tpl.itemsCount || 0} jour(s)
-                    </option>
+                  {entreprises.map((e) => (
+                    <option key={e.id} value={e.id}>{e.nom}</option>
                   ))}
                 </Form.Select>
               </Col>
-              <Col xs={12} md={6} className="d-flex flex-column flex-md-row gap-2">
-                <AsyncButton
-                  variant="outline-secondary"
-                  onClick={handleExportTemplateCsv}
-                  disabled={!selectedTemplateId}
-                  className="w-100"
-                  action={exportTemplateAction}
-                  loadingText="Export du modèle..."
-                >
-                  Exporter modèle CSV
-                </AsyncButton>
-                <AsyncButton
-                  variant="primary"
-                  onClick={handleApplyTemplate}
-                  disabled={!selectedTemplateId}
-                  className="w-100"
-                  action={applyTemplateAction}
-                  loadingText="Application..."
-                >
-                  Appliquer à l'entreprise
-                </AsyncButton>
-              </Col>
-            </Row>
-
-            <Form.Group className="mt-3">
-              <Form.Label>Coller un CSV (colonnes: date,libelle,recurrent,est_travail)</Form.Label>
+            )}
+            <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
+              <Form.Label>Année</Form.Label>
               <Form.Control
-                as="textarea"
-                rows={5}
-                value={templateCsvContent}
-                onChange={(e) => setTemplateCsvContent(e.target.value)}
-                placeholder={"date,libelle,recurrent,est_travail\n2026-01-01,Jour de l'An,true,false"}
+                type="number"
+                value={importYear}
+                onChange={(e) => setImportYear(Number(e.target.value))}
               />
-            </Form.Group>
+            </Col>
+            <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
+              <Form.Label>Pays</Form.Label>
+              <Form.Control
+                type="text"
+                value={importCountry}
+                onChange={(e) => setImportCountry(e.target.value.toUpperCase())}
+                maxLength={2}
+              />
+            </Col>
+            <Col xs={12} md={user?.role === 'super_admin' ? 3 : 6}>
+              <AsyncButton
+                variant="outline-primary"
+                onClick={handleImportNational}
+                disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
+                className="w-100"
+                action={importNationalAction}
+                loadingText="Import en cours..."
+              >
+                Importer les jours fériés via API
+              </AsyncButton>
+            </Col>
+          </Row>
+          <div className="text-muted small mt-3">
+            L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
+            puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
+          </div>
         </div>
       )}
 
       <div className="conges-list-wrap">
-          {joursFeries.length === 0 ? (
-            <div className="text-center py-5">
-              <FaCalendarTimes size={48} className="text-muted mb-3" />
-              <h5 className="text-muted">Aucun jour férié</h5>
-              <p className="text-muted">Aucun jour férié n'est configuré</p>
-              {canManage && (
-                <Button variant="primary" onClick={handleNew} className="w-100 w-sm-auto">
-                  <FaPlus className="me-2" />
-                  Ajouter le premier jour férié
-                </Button>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="d-md-none mobile-card-list px-3 py-2">
-                {joursFeries.map((jourFerie) => (
-                  <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
-                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-                      <div>
-                        <div className="fw-semibold">{jourFerie.libelle}</div>
-                        <div className="small text-muted">{formatDate(jourFerie.date)}</div>
-                      </div>
-                    </div>
-                    <div className="d-flex gap-2">
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        className="flex-fill justify-content-center"
-                        onClick={() => openDetailsModal(jourFerie)}
-                      >
-                        Detail
-                      </Button>
-                      {canManage && (
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          className="flex-fill justify-content-center"
-                          onClick={() => handleEdit(jourFerie)}
-                        >
-                          <FaEdit className="me-1" />
-                          Modifier
-                        </Button>
-                      )}
-                      {canManage && (
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          className="flex-fill justify-content-center"
-                          onClick={() => handleDelete(jourFerie.id)}
-                          disabled={deleteAction.isRunning}
-                        >
-                          <FaTrash className="me-1" />
-                          Supprimer
-                        </Button>
-                      )}
+        {joursFeries.length === 0 ? (
+          <div className="text-center py-5">
+            <FaCalendarTimes size={48} className="text-muted mb-3" />
+            <h5 className="text-muted">Aucun jour férié</h5>
+            <p className="text-muted">Aucun jour férié n'est configuré</p>
+            {canManage && (
+              <Button variant="primary" onClick={handleNew} className="w-100 w-sm-auto">
+                <FaPlus className="me-2" />
+                Ajouter le premier jour férié
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="d-md-none mobile-card-list px-3 py-2">
+              {joursFeries.map((jourFerie) => (
+                <div key={`mobile-${jourFerie.id}`} className="mobile-card-list__item">
+                  <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                      <div className="fw-semibold">{jourFerie.libelle}</div>
+                      <div className="small text-muted">{formatDate(jourFerie.date)}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="d-flex gap-2">
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="flex-fill justify-content-center"
+                      onClick={() => openDetailsModal(jourFerie)}
+                    >
+                      Detail
+                    </Button>
+                    {canManage && (
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="flex-fill justify-content-center"
+                        onClick={() => handleEdit(jourFerie)}
+                      >
+                        <FaEdit className="me-1" />
+                        Modifier
+                      </Button>
+                    )}
+                    {canManage && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        className="flex-fill justify-content-center"
+                        onClick={() => handleDelete(jourFerie.id)}
+                        disabled={deleteAction.isRunning}
+                      >
+                        <FaTrash className="me-1" />
+                        Supprimer
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-              <div className="table-responsive d-none d-md-block">
-                <Table hover className="mb-0">
+            <div className="table-responsive d-none d-md-block">
+              <Table hover className="mb-0">
                 <thead className="table-light">
                   <tr>
                     <th>Date</th>
@@ -651,10 +418,10 @@ const JoursFeriesPage = () => {
                     </tr>
                   ))}
                 </tbody>
-                </Table>
-              </div>
-            </>
-          )}
+              </Table>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modal d'édition/ajout */}
@@ -736,9 +503,9 @@ const JoursFeriesPage = () => {
         </Modal.Header>
         <Modal.Body>
           <ul className="mb-0">
-            <li>La liste reste minimale: date et libellé.</li>
-            <li>Utilisez Detail pour voir type et récurrence.</li>
-            <li>Import API et modèles sont disponibles en dessous.</li>
+            <li>Utilisez l'import API pour récupérer automatiquement les jours fériés officiels par pays et par année.</li>
+            <li>Vous pouvez aussi ajouter ou modifier un jour manuellement via le bouton "Nouveau".</li>
+            <li>Consultez le détail d'un jour pour voir son type et sa récurrence.</li>
           </ul>
         </Modal.Body>
         <Modal.Footer>
@@ -748,23 +515,23 @@ const JoursFeriesPage = () => {
 
       <Modal show={showDetailsModal} onHide={closeDetailsModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Detail jour ferie</Modal.Title>
+          <Modal.Title>Détail jour férié</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedJourFerieDetails && (
             <div className="d-grid gap-2 small">
-              <div><strong>Date:</strong> {formatDate(selectedJourFerieDetails.date)}</div>
-              <div><strong>Libelle:</strong> {selectedJourFerieDetails.libelle}</div>
+              <div><strong>Date :</strong> {formatDate(selectedJourFerieDetails.date)}</div>
+              <div><strong>Libellé :</strong> {selectedJourFerieDetails.libelle}</div>
               <div>
-                <strong>Type:</strong>{' '}
+                <strong>Type :</strong>{' '}
                 <span className={`badge ${selectedJourFerieDetails.est_travail ? 'approved' : 'info'}`}>
-                  {selectedJourFerieDetails.est_travail ? 'Travaille' : 'Ferie'}
+                  {selectedJourFerieDetails.est_travail ? 'Travaillé' : 'Férié'}
                 </span>
               </div>
               <div>
-                <strong>Recurrence:</strong>{' '}
+                <strong>Récurrence :</strong>{' '}
                 <span className={`badge ${selectedJourFerieDetails.recurrent ? 'info' : 'pending'}`}>
-                  {selectedJourFerieDetails.recurrent ? 'Recurrent' : 'Ponctuel'}
+                  {selectedJourFerieDetails.recurrent ? 'Récurrent' : 'Ponctuel'}
                 </span>
               </div>
             </div>
