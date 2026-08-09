@@ -28,7 +28,7 @@ const HolidaysBlockedPage = () => {
   return (
     <Container fluid="sm">
       <div className="page-title-bar">
-        <span className="section-title-bar__text">Jours spéciaux</span>
+        <span className="section-title-bar__text">Jours fériés & bloqués</span>
       </div>
 
       <div className="mb-3">

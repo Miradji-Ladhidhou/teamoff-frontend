@@ -308,9 +308,12 @@ const JoursBloquesPage = () => {
             </Row>
             {(blockedDays.specific_dates || []).length > 0 && (
               <div className="d-flex flex-wrap gap-2 mt-2">
-                {(blockedDays.specific_dates || []).map((date) => (
+                {(blockedDays.specific_dates || []).map((date) => {
+                  const [y, m, d] = date.split('-');
+                  const label = y && m && d ? `${d}/${m}/${y}` : date;
+                  return (
                   <span key={date} className="badge info d-inline-flex align-items-center gap-2">
-                    {date}
+                    {label}
                     <button
                       type="button"
                       className="btn-close"
@@ -319,7 +322,8 @@ const JoursBloquesPage = () => {
                       aria-label={`Supprimer ${date}`}
                     />
                   </span>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Form.Group>

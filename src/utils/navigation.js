@@ -32,7 +32,7 @@ export const roleNavigation = {
     { path: '/politique-conges', label: 'Règles & services', icon: 'settings', section: 'secondary' },
     { path: '/soldes', label: 'Soldes', icon: 'balance', section: 'secondary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
-    { path: '/jours-feries', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
+    { path: '/jours-feries', label: 'Jours fériés & bloqués', icon: 'holiday', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
     { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
@@ -46,7 +46,7 @@ export const roleNavigation = {
     { path: '/superadmin/absences', label: 'Absences', icon: 'calendar', section: 'primary' },
     { path: '/superadmin/metrics', label: 'Stats', icon: 'chart', section: 'secondary' },
     { path: '/superadmin/exports', label: 'Exports', icon: 'download', section: 'secondary' },
-    { path: '/superadmin/holidays', label: 'Jours fériés', icon: 'holiday', section: 'secondary' },
+    { path: '/superadmin/holidays', label: 'Jours fériés & bloqués', icon: 'holiday', section: 'secondary' },
     { path: '/superadmin/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' },
     { path: '/superadmin/audit', label: 'Audit', icon: 'audit', section: 'secondary' },
     { path: '/superadmin/settings', label: 'Réglages', icon: 'settings', section: 'secondary' },
