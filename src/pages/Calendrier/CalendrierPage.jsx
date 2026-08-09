@@ -210,7 +210,8 @@ const CalendrierPage = () => {
     if (y && m) {
       setCurrentDate(new Date(y, m - 1, 1));
     }
-    setShowMonthInput(false);
+    // Ne pas fermer ici : sur mobile onChange se déclenche à chaque molette (mois/année séparément).
+    // On ferme uniquement sur onBlur, quand l'utilisateur confirme son choix.
   };
 
   const getDaysInMonth = (date) => {
