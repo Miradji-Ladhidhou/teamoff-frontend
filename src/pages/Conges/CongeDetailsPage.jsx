@@ -24,6 +24,7 @@ const CongeDetailsPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isSuperAdmin = user?.role === 'super_admin';
+  const canSeeAllComments = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
 
   const [conge, setConge] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -442,7 +443,7 @@ const CongeDetailsPage = () => {
           </div>
 
           {/* Commentaires */}
-          {(conge.commentaire_employe || conge.commentaire_manager || conge.commentaire_admin) && (
+          {(canSeeAllComments || conge.utilisateur_id === user?.id) && (conge.commentaire_employe || conge.commentaire_manager || conge.commentaire_admin) && (
             <div className="mb-3">
               {conge.commentaire_employe && (
                 <div className="comment-block mb-2">
