@@ -40,14 +40,23 @@ const normalizeBlockedWeekdays = (days) => (
     : []
 );
 
+const isoLocal = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 const enumerateDateRange = (startDate, endDate, maxDays = 366) => {
-  const start = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${endDate}T00:00:00`);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return [];
+  const [sy, sm, sd] = startDate.split('-').map(Number);
+  const [ey, em, ed] = endDate.split('-').map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return [];
   const dates = [];
   const cursor = new Date(start);
   while (cursor <= end && dates.length < maxDays) {
-    dates.push(cursor.toISOString().slice(0, 10));
+    dates.push(isoLocal(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
   return dates;

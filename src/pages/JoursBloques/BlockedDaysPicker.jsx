@@ -5,7 +5,12 @@ import './blocked-days-picker.css';
 
 const WEEK_DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
-const toISO = (d) => d.toISOString().slice(0, 10);
+const toISO = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 const buildGrid = (year, month) => {
   const firstDay = new Date(year, month, 1);
@@ -31,8 +36,10 @@ const normalize = (a, b) => (a <= b ? [a, b] : [b, a]);
 
 const enumerateRange = (start, end) => {
   const out = [];
-  const cur = new Date(`${start}T00:00:00`);
-  const stop = new Date(`${end}T00:00:00`);
+  const [sy, sm, sd] = start.split('-').map(Number);
+  const [ey, em, ed] = end.split('-').map(Number);
+  const cur = new Date(sy, sm - 1, sd);
+  const stop = new Date(ey, em - 1, ed);
   while (cur <= stop) { out.push(toISO(cur)); cur.setDate(cur.getDate() + 1); }
   return out;
 };
