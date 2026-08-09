@@ -107,11 +107,20 @@ const CalendrierPage = () => {
   const canDeclareAbsence = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
   const canCreateLeave = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
 
+  const isPrivileged = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
+
+  // Commentaires visibles seulement par les rôles privilégiés ou l'employé sur ses propres événements
+  const canSeeEventComments = (event) => {
+    if (isPrivileged) return true;
+    const ownerId = event?.utilisateur_id ?? event?.utilisateur?.id;
+    return ownerId === user?.id;
+  };
+
   // RGPD Art. 9 — le commentaire d'un arrêt maladie est une donnée de santé.
   // Visible uniquement par : l'employé lui-même, le manager, l'admin.
   const canSeeAbsenceComment = (absence) => {
-    if (!absence || absence.type_absence !== 'maladie') return true;
-    if (['manager', 'admin_entreprise', 'super_admin'].includes(user?.role)) return true;
+    if (!absence || absence.type_absence !== 'maladie') return canSeeEventComments(absence);
+    if (isPrivileged) return true;
     const ownerId = absence.utilisateur_id ?? absence.utilisateur?.id;
     return ownerId === user?.id;
   };
@@ -684,7 +693,7 @@ const CalendrierPage = () => {
             color: getStatusColor(c.statut),
             debut: c.date_debut,
             fin: c.date_fin,
-            commentaire: c.commentaire_employe || '',
+            commentaire: canSeeEventComments(c) ? (c.commentaire_employe || '') : '',
             sort: c.date_debut,
           })),
           ...absences.map(a => ({
@@ -785,7 +794,7 @@ const CalendrierPage = () => {
                   <div><strong>Catégorie:</strong> {getCongeTypeLabel(selectedEventDetails)}</div>
                   <div><strong>Période:</strong> {formatDateLabel(selectedEventDetails.date_debut)} au {formatDateLabel(selectedEventDetails.date_fin)}</div>
                   <div><strong>Statut:</strong> <span className={`badge ${getStatusBadgeClass(selectedEventDetails.statut)}`}>{(selectedEventDetails.statut || 'Inconnu').toUpperCase()}</span></div>
-                  {selectedEventDetails.commentaire_employe && (
+                  {canSeeEventComments(selectedEventDetails) && selectedEventDetails.commentaire_employe && (
                     <div><strong>Commentaire:</strong> {selectedEventDetails.commentaire_employe}</div>
                   )}
                 </>
@@ -795,7 +804,7 @@ const CalendrierPage = () => {
                   <div><strong>Employé:</strong> {`${selectedEventDetails.utilisateur?.prenom || ''} ${selectedEventDetails.utilisateur?.nom || ''}`.trim() || 'Non défini'}</div>
                   <div><strong>Motif:</strong> {selectedEventDetails.type_absence || 'Non défini'}</div>
                   <div><strong>Période:</strong> {formatDateLabel(selectedEventDetails.date_debut)} au {formatDateLabel(selectedEventDetails.date_fin)}</div>
-                  {selectedEventDetails.commentaire && (
+                  {canSeeAbsenceComment(selectedEventDetails) && selectedEventDetails.commentaire && (
                     <div><strong>Commentaire:</strong> {selectedEventDetails.commentaire}</div>
                   )}
                 </>
