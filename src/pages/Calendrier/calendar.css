@@ -355,6 +355,10 @@
   border: 1px solid #0e7490;
 }
 
+.text-valide-manager {
+  color: #0891b2 !important;
+}
+
 /* Absence exceptionnelle : orange */
 .bg-absence-except,
 .calendar-event.bg-absence-except,
