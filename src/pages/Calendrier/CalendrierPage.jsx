@@ -91,6 +91,8 @@ const CalendrierPage = () => {
   const alert = useAlert();
   const [showFilters, setShowFilters] = useState(false);
   const [showMonthInput, setShowMonthInput] = useState(false);
+  const [pendingMonth, setPendingMonth] = useState(1);
+  const [pendingYear, setPendingYear]   = useState(new Date().getFullYear());
   const [showAbsenceModal, setShowAbsenceModal] = useState(false);
   const [absenceForm, setAbsenceForm] = useState({ type_absence: '', date_debut: '', date_fin: '', commentaire: '' });
   const [absenceSending, setAbsenceSending] = useState(false);
@@ -199,19 +201,15 @@ const CalendrierPage = () => {
 
   const navigateToToday = () => setCurrentDate(new Date());
 
-  const getMonthInputValue = () => {
-    const y = currentDate.getFullYear();
-    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
+  const openMonthPicker = () => {
+    setPendingMonth(currentDate.getMonth() + 1);
+    setPendingYear(currentDate.getFullYear());
+    setShowMonthInput(true);
   };
 
-  const handleMonthInputChange = (e) => {
-    const [y, m] = e.target.value.split('-').map(Number);
-    if (y && m) {
-      setCurrentDate(new Date(y, m - 1, 1));
-    }
-    // Ne pas fermer ici : sur mobile onChange se déclenche à chaque molette (mois/année séparément).
-    // On ferme uniquement sur onBlur, quand l'utilisateur confirme son choix.
+  const confirmMonthPicker = () => {
+    setCurrentDate(new Date(pendingYear, pendingMonth - 1, 1));
+    setShowMonthInput(false);
   };
 
   const getDaysInMonth = (date) => {
@@ -534,18 +532,32 @@ const CalendrierPage = () => {
             <FaChevronLeft />
           </Button>
           {showMonthInput ? (
-            <input
-              type="month"
-              className="cal-month-picker-input"
-              value={getMonthInputValue()}
-              onChange={handleMonthInputChange}
-              onBlur={() => setShowMonthInput(false)}
-              autoFocus
-            />
+            <div className="cal-month-picker-row">
+              <select
+                className="cal-month-picker-select"
+                value={pendingMonth}
+                onChange={e => setPendingMonth(Number(e.target.value))}
+              >
+                {['Janv','Févr','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'].map((lbl, i) => (
+                  <option key={i} value={i + 1}>{lbl}</option>
+                ))}
+              </select>
+              <select
+                className="cal-month-picker-select"
+                value={pendingYear}
+                onChange={e => setPendingYear(Number(e.target.value))}
+              >
+                {Array.from({ length: 9 }, (_, i) => currentDate.getFullYear() - 3 + i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <button className="cal-month-picker-ok" onClick={confirmMonthPicker} title="Valider">✓</button>
+              <button className="cal-month-picker-cancel" onClick={() => setShowMonthInput(false)} title="Annuler">✕</button>
+            </div>
           ) : (
             <button
               className="cal-nav-title-btn"
-              onClick={() => setShowMonthInput(true)}
+              onClick={openMonthPicker}
               title="Choisir un mois"
             >
               <span className="cal-nav-title-text">{formatMonthYear(currentDate)}</span>

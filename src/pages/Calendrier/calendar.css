@@ -151,18 +151,58 @@
   opacity: 0.9;
 }
 
-.cal-month-picker-input {
+.cal-month-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   width: 100%;
+}
+
+.cal-month-picker-select {
+  flex: 1;
+  min-width: 0;
   border: 1px solid var(--dk-primary, #6366f1);
   border-radius: 8px;
-  padding: 0.3rem 0.4rem;
-  font-size: 0.88rem;
+  padding: 0.3rem 0.25rem;
+  font-size: 0.85rem;
   font-weight: 600;
   background: var(--dk-bg-card, #fff);
   color: var(--dk-text);
-  text-align: center;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
   outline: none;
+  cursor: pointer;
+}
+
+.cal-month-picker-ok,
+.cal-month-picker-cancel {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.cal-month-picker-ok {
+  background: var(--dk-primary, #6366f1);
+  color: #fff;
+}
+
+.cal-month-picker-ok:hover {
+  background: var(--dk-accent-dark, #4f46e5);
+}
+
+.cal-month-picker-cancel {
+  border: 1px solid var(--dk-border, #cbd5e1);
+  color: var(--dk-text-soft);
+}
+
+.cal-month-picker-cancel:hover {
+  background: var(--dk-hover);
 }
 
 .cal-today-btn {
