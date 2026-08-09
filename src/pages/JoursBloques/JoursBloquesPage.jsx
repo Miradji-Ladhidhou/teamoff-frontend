@@ -75,6 +75,8 @@ const JoursBloquesPage = () => {
   const [specificDateInput, setSpecificDateInput] = useState('');
   const [specificDateRangeStart, setSpecificDateRangeStart] = useState('');
   const [specificDateRangeEnd, setSpecificDateRangeEnd] = useState('');
+  const [removeRangeStart, setRemoveRangeStart] = useState('');
+  const [removeRangeEnd, setRemoveRangeEnd] = useState('');
 
   useEffect(() => {
     if (!entrepriseId) return;
@@ -141,6 +143,20 @@ const JoursBloquesPage = () => {
       ...prev,
       specific_dates: (prev.specific_dates || []).filter((d) => d !== date),
     }));
+  };
+
+  const removeSpecificDateRange = () => {
+    const start = removeRangeStart.trim();
+    const end = removeRangeEnd.trim();
+    if (!start || !end) { alert.error('Renseignez les deux dates.'); return; }
+    const toRemove = new Set(enumerateDateRange(start, end));
+    if (!toRemove.size) { alert.error('Plage invalide.'); return; }
+    setBlockedDays((prev) => ({
+      ...prev,
+      specific_dates: (prev.specific_dates || []).filter((d) => !toRemove.has(d)),
+    }));
+    setRemoveRangeStart('');
+    setRemoveRangeEnd('');
   };
 
   const handleSave = async (e) => {
@@ -303,6 +319,29 @@ const JoursBloquesPage = () => {
               <Col xs={2} md="auto">
                 <Button type="button" variant="outline-secondary" onClick={addSpecificDateRange} className="w-100">
                   + Plage
+                </Button>
+              </Col>
+            </Row>
+            <Row className="g-2 mb-2">
+              <Col xs={5} md={3}>
+                <Form.Control
+                  type="date"
+                  value={removeRangeStart}
+                  onChange={(e) => setRemoveRangeStart(e.target.value)}
+                  placeholder="Du"
+                />
+              </Col>
+              <Col xs={5} md={3}>
+                <Form.Control
+                  type="date"
+                  value={removeRangeEnd}
+                  onChange={(e) => setRemoveRangeEnd(e.target.value)}
+                  placeholder="Au"
+                />
+              </Col>
+              <Col xs={2} md="auto">
+                <Button type="button" variant="outline-danger" onClick={removeSpecificDateRange} className="w-100">
+                  − Plage
                 </Button>
               </Col>
             </Row>
