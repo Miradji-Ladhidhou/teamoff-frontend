@@ -345,6 +345,23 @@ const JoursBloquesPage = () => {
                 </Button>
               </Col>
             </Row>
+            {(() => {
+              if (!removeRangeStart || !removeRangeEnd) return null;
+              const inRange = enumerateDateRange(removeRangeStart, removeRangeEnd);
+              const blocked = new Set(blockedDays.specific_dates || []);
+              const toRemove = inRange.filter((d) => blocked.has(d));
+              if (!inRange.length) return (
+                <p className="small text-danger mb-2">Plage invalide.</p>
+              );
+              if (!toRemove.length) return (
+                <p className="small text-muted mb-2">Aucune date bloquée dans cette plage — rien ne sera supprimé.</p>
+              );
+              return (
+                <p className="small text-danger mb-2">
+                  {toRemove.length} date{toRemove.length > 1 ? 's' : ''} bloquée{toRemove.length > 1 ? 's' : ''} seront supprimées dans cette plage.
+                </p>
+              );
+            })()}
             {(blockedDays.specific_dates || []).length > 0 && (
               <div className="d-flex flex-wrap gap-2 mt-2">
                 {(blockedDays.specific_dates || []).map((date) => {
