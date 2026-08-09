@@ -204,11 +204,14 @@ export const usersService = {
   updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
   delete: (id) => api.delete(`/users/${id}`),
   getById: (id) => api.get(`/users/${id}`),
-  importCSV: (file) => {
+  importCSV: (file, entreprise_id) => {
     const form = new FormData();
     form.append('file', file);
+    if (entreprise_id) form.append('entreprise_id', entreprise_id);
     return api.post('/users/import/csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
+  importCSVTemplate: (entreprise_id) =>
+    api.get('/users/import/csv/template', { params: { entreprise_id }, responseType: 'blob' }),
   resendInvitation: (id) => api.post(`/users/${id}/resend-invitation`),
   setDelegate: (id, delegue_id) => api.put(`/users/${id}/delegate`, { delegue_id }),
 };

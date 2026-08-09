@@ -3,7 +3,7 @@ import './companies.css';
 const PROTECTED_COMPANY_NAME = 'TeamOff';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie } from 'react-icons/fa';
+import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie, FaUpload, FaCheckCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
@@ -89,6 +89,11 @@ const CompaniesManagement = () => {
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
   const [showReportValidation, setShowReportValidation] = useState(false);
   const [activeCompanyActionId, setActiveCompanyActionId] = useState(null);
+  const [importTarget, setImportTarget] = useState(null);
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [importError, setImportError] = useState(null);
   const submitAction = useAsyncAction();
   const exportAction = useAsyncAction();
   const deleteAction = useAsyncAction();
@@ -389,6 +394,57 @@ const CompaniesManagement = () => {
     });
   };
 
+  const openImportModal = (company) => {
+    setImportTarget(company);
+    setImportFile(null);
+    setImportResult(null);
+    setImportError(null);
+  };
+
+  const closeImportModal = () => {
+    if (importLoading) return;
+    setImportTarget(null);
+    setImportFile(null);
+    setImportResult(null);
+    setImportError(null);
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await api.usersService.importCSVTemplate(importTarget.id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `modele_import_${importTarget.nom}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert.error('Impossible de télécharger le modèle.');
+    }
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile || !importTarget) return;
+    setImportLoading(true);
+    setImportResult(null);
+    setImportError(null);
+    try {
+      const res = await api.usersService.importCSV(importFile, importTarget.id);
+      setImportResult(res.data);
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.errors) {
+        setImportError(data);
+      } else {
+        setImportError({ message: data?.message || 'Erreur lors de l\'import.' });
+      }
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const exportLoading = exportAction.isRunning;
 
   const filteredCompanies = companies.filter((company) => {
@@ -477,6 +533,9 @@ const CompaniesManagement = () => {
                   <Button variant="outline-primary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => handleEdit(company)}>
                     <FaEdit className="me-1" /> Modifier
                   </Button>
+                  <Button variant="outline-secondary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openImportModal(company)} title="Importer des employés">
+                    <FaUpload className="me-1" /> Importer
+                  </Button>
                   {company.nom !== PROTECTED_COMPANY_NAME && (
                     <AsyncButton
                       variant="outline-danger"
@@ -523,6 +582,9 @@ const CompaniesManagement = () => {
                       <div className="d-flex gap-1">
                         <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
                           <FaEdit />
+                        </Button>
+                        <Button variant="outline-secondary" size="sm" onClick={() => openImportModal(company)} title="Importer des employés">
+                          <FaUpload />
                         </Button>
                         {company.nom !== PROTECTED_COMPANY_NAME && (
                           <AsyncButton
@@ -949,6 +1011,118 @@ const CompaniesManagement = () => {
             </AsyncButton>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* ── Modal import employés CSV ── */}
+      <Modal show={Boolean(importTarget)} onHide={closeImportModal} centered backdrop="static" keyboard={!importLoading}>
+        <Modal.Header closeButton={!importLoading}>
+          <Modal.Title>
+            <FaUpload className="me-2 text-secondary" />
+            Importer des employés — {importTarget?.nom}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {!importResult && (
+            <>
+              <p className="small text-muted mb-3">
+                Importez les employés de cette entreprise via un fichier CSV.
+                Les soldes de congés sont mis à jour même si le compte existe déjà.
+              </p>
+
+              <div className="mb-3">
+                <Button variant="outline-secondary" size="sm" onClick={handleDownloadTemplate}>
+                  <FaDownload className="me-1" /> Télécharger le modèle CSV
+                </Button>
+                <div className="small text-muted mt-1">
+                  Le modèle contient déjà les types de congé de cette entreprise.
+                </div>
+              </div>
+
+              <div className="mb-2">
+                <div className="small fw-semibold mb-1">Colonnes attendues :</div>
+                <code className="small d-block bg-light p-2 rounded" style={{ wordBreak: 'break-all' }}>
+                  nom, prenom, email, role, service, date_embauche, type_conge, jours_acquis, jours_pris
+                </code>
+                <div className="small text-muted mt-1">
+                  Roles : <code>employe</code> / <code>manager</code> / <code>admin_entreprise</code> &nbsp;|&nbsp;
+                  Plusieurs lignes par employé si plusieurs types de congé.
+                </div>
+              </div>
+
+              <Form.Group className="mt-3">
+                <Form.Label className="small fw-semibold">Fichier CSV</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept=".csv,text/csv"
+                  disabled={importLoading}
+                  onChange={(e) => { setImportFile(e.target.files[0] || null); setImportError(null); }}
+                />
+              </Form.Group>
+
+              {importError && (
+                <div className="mt-3">
+                  <div className="text-danger small fw-semibold mb-1">{importError.message}</div>
+                  {importError.errors && (
+                    <ul className="small text-danger mb-0" style={{ maxHeight: '140px', overflowY: 'auto' }}>
+                      {importError.errors.map((e, i) => (
+                        <li key={i}>Ligne {e.line} : {e.errors.join(', ')}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {importResult && (
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-3 text-success fw-semibold">
+                <FaCheckCircle /> Import terminé
+              </div>
+              <ul className="small mb-0">
+                <li><strong>{importResult.created?.length ?? 0}</strong> employé(s) créé(s)</li>
+                {importResult.skipped?.length > 0 && (
+                  <li className="text-muted">
+                    {importResult.skipped.length} ignoré(s) :
+                    <ul>
+                      {importResult.skipped.map((s, i) => (
+                        <li key={i}>{s.email} — {s.reason}</li>
+                      ))}
+                    </ul>
+                  </li>
+                )}
+                {importResult.balancesSet?.length > 0 && (
+                  <li className="mt-1">
+                    <strong>{importResult.balancesSet.length}</strong> solde(s) mis à jour :
+                    <ul style={{ maxHeight: '120px', overflowY: 'auto' }}>
+                      {importResult.balancesSet.map((b, i) => (
+                        <li key={i}>{b.email} — {b.type_conge} : acquis {b.jours_acquis}j, pris {b.jours_pris}j</li>
+                      ))}
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeImportModal} disabled={importLoading}>
+            {importResult ? 'Fermer' : 'Annuler'}
+          </Button>
+          {!importResult && (
+            <Button
+              variant="primary"
+              onClick={handleImportSubmit}
+              disabled={!importFile || importLoading}
+            >
+              {importLoading ? (
+                <><span className="spinner-border spinner-border-sm me-1" /> Import en cours…</>
+              ) : (
+                <><FaUpload className="me-1" /> Lancer l'import</>
+              )}
+            </Button>
+          )}
+        </Modal.Footer>
       </Modal>
 
       {/* Fix #57 — Confirmation forte : re-saisie du nom avant suppression */}
