@@ -67,8 +67,8 @@
 }
 
 .legend-dot-ferie {
-  background: #d97706;
-  border: 1px solid #b45309;
+  background: #65a30d;
+  border: 1px solid #4d7c0f;
 }
 
 .legend-dot-blocked {
@@ -267,7 +267,7 @@
 }
 
 .calendar-day-ferie {
-  background: rgba(245, 158, 11, 0.09);
+  background: rgba(101, 163, 13, 0.09);
 }
 
 .calendar-day-blocked-specific {
@@ -298,9 +298,9 @@
   margin-bottom: 6px;
   padding: 2px 6px;
   border-radius: 4px;
-  background-color: rgba(245, 158, 11, 0.18);
-  color: #92400e;
-  border: 1px solid rgba(245, 158, 11, 0.45);
+  background-color: rgba(101, 163, 13, 0.18);
+  color: #3f6212;
+  border: 1px solid rgba(101, 163, 13, 0.45);
   display: inline-block;
   max-width: 100%;
   font-size: 10px;
@@ -359,16 +359,16 @@
   color: #0891b2 !important;
 }
 
-/* Absence exceptionnelle : orange */
+/* Absence exceptionnelle : bleu */
 .bg-absence-except,
 .calendar-event.bg-absence-except,
 .cal-recap-dot.bg-absence-except {
-  background-color: #ea580c !important;
+  background-color: #1d4ed8 !important;
 }
 
 .legend-dot-absence-except {
-  background: #ea580c;
-  border: 1px solid #c2410c;
+  background: #1d4ed8;
+  border: 1px solid #1e40af;
 }
 
 /* Arrêt maladie : rose distinct du vert et de l'orange */
@@ -522,7 +522,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: rgba(245, 158, 11, 0.85);
+    background: rgba(101, 163, 13, 0.85);
     font-size: 0;
     color: transparent;
     overflow: hidden;
