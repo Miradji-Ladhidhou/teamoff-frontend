@@ -71,16 +71,19 @@ const ServicePoliciesSection = ({
         </Col>
       </Row>
 
-      {/* ── Recherche (si > 5 services) ── */}
+      {/* ── Filtre service (si > 5 services) ── */}
       {serviceEntries.length > 5 && (
         <div className="users-filter-bar mb-3">
-          <Form.Control
-            type="text"
+          <Form.Select
             value={serviceSearch}
             onChange={(e) => { setServiceSearch(e.target.value); setVisibleServicesCount(8); }}
-            placeholder="Rechercher un service…"
-            className="users-filter-bar__search"
-          />
+            className="users-filter-bar__select"
+          >
+            <option value="">Tous les services</option>
+            {serviceEntries.map(([name]) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </Form.Select>
           <span className="badge info users-filter-bar__count">
             {filteredServiceEntries.length}/{serviceEntries.length}
           </span>

@@ -2,8 +2,8 @@ import './users.css';
 
 const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Container, Row, Col, Table, Button, Modal, Form, InputGroup } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaSearch, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins } from 'react-icons/fa';
+import { Container, Row, Col, Table, Button, Modal, Form } from 'react-bootstrap';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
@@ -45,7 +45,7 @@ const UsersManagement = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [serviceFilter, setServiceFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +53,7 @@ const UsersManagement = () => {
   const ITEMS_PER_PAGE = 50;
 
   // Réinitialise la page quand les filtres changent
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, companyFilter, roleFilter, statusFilter]);
+  useEffect(() => { setCurrentPage(1); }, [serviceFilter, companyFilter, roleFilter, statusFilter]);
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [servicesByCompany, setServicesByCompany] = useState({});
   const [activeUserActionId, setActiveUserActionId] = useState(null);
@@ -266,14 +266,18 @@ const UsersManagement = () => {
     });
   };
 
+  const serviceOptions = useMemo(() => {
+    const services = [...new Set(users.map((u) => u.service).filter(Boolean))].sort();
+    return services;
+  }, [users]);
+
   const filteredUsers = useMemo(() => users.filter((targetUser) => {
-    const searchableText = `${targetUser.prenom || ''} ${targetUser.nom || ''} ${targetUser.email || ''} ${targetUser.service || ''}`.toLowerCase();
-    const matchesSearch = !searchTerm || searchableText.includes(searchTerm.toLowerCase());
+    const matchesService = !serviceFilter || targetUser.service === serviceFilter;
     const matchesCompany = !companyFilter || targetUser.entreprise_id === companyFilter;
     const matchesRole = !roleFilter || targetUser.role === roleFilter;
     const matchesStatus = !statusFilter || targetUser.statut === statusFilter;
-    return matchesSearch && matchesCompany && matchesRole && matchesStatus;
-  }), [users, searchTerm, companyFilter, roleFilter, statusFilter]);
+    return matchesService && matchesCompany && matchesRole && matchesStatus;
+  }), [users, serviceFilter, companyFilter, roleFilter, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
@@ -353,10 +357,12 @@ const UsersManagement = () => {
 
       {/* Filtres */}
       <div className="users-filter-bar mb-3">
-        <InputGroup className="users-filter-bar__search">
-          <InputGroup.Text><FaSearch /></InputGroup.Text>
-          <Form.Control type="text" placeholder="Nom, email, service…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-        </InputGroup>
+        {serviceOptions.length > 0 && (
+          <Form.Select className="users-filter-bar__select" value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
+            <option value="">Tous les services</option>
+            {serviceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+          </Form.Select>
+        )}
         {isSuperAdmin && (
           <Form.Select className="users-filter-bar__select" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
             <option value="">Toutes entreprises</option>
@@ -385,7 +391,7 @@ const UsersManagement = () => {
         <div className="text-center py-5">
           <FaUsers size={36} className="text-muted mb-3" />
           <p className="text-muted mb-0">
-            {searchTerm || companyFilter || roleFilter || statusFilter
+            {serviceFilter || companyFilter || roleFilter || statusFilter
               ? 'Aucun utilisateur ne correspond aux filtres.'
               : 'Créez votre premier utilisateur.'}
           </p>

@@ -1,14 +1,14 @@
 import './audit-logs.css';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Container, Row, Col, Card, Table, Button, Form,
-  InputGroup, Modal, Spinner
+  Modal, Spinner
 } from 'react-bootstrap';
 import {
-  FaHistory, FaSearch, FaDownload, FaEye, FaUser, FaBuilding,
+  FaHistory, FaDownload, FaEye, FaUser, FaBuilding,
   FaCalendarCheck, FaTimes
 } from 'react-icons/fa';
-import { auditService, exportsService, formatGeneratedAt } from '../../services/api';
+import { auditService, usersService, exportsService, formatGeneratedAt } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 
 // ---------- Helpers purs (hors composant — stables entre renders) ----------
@@ -75,7 +75,8 @@ const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [allUsers, setAllUsers] = useState([]);
+  const [userFilter, setUserFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -84,6 +85,15 @@ const AuditLogs = () => {
   const alert = useAlert();
   const [selectedLog, setSelectedLog] = useState(null);
   const LIMIT = 20;
+
+  const userOptions = useMemo(() => {
+    return [...allUsers]
+      .sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`));
+  }, [allUsers]);
+
+  useEffect(() => {
+    usersService.getAll().then(({ data }) => setAllUsers(data || [])).catch(() => {});
+  }, []);
 
   // Logique métier inchangée
   const loadLogs = useCallback(async (overrides = {}) => {
@@ -94,14 +104,14 @@ const AuditLogs = () => {
         limit: LIMIT,
       };
       const nextActionFilter = overrides.actionFilter ?? actionFilter;
-      const nextSearchTerm   = overrides.searchTerm  ?? searchTerm;
-      const nextDateDebut    = overrides.dateDebut   ?? dateDebut;
-      const nextDateFin      = overrides.dateFin     ?? dateFin;
+      const nextUserFilter   = overrides.userFilter   ?? userFilter;
+      const nextDateDebut    = overrides.dateDebut    ?? dateDebut;
+      const nextDateFin      = overrides.dateFin      ?? dateFin;
 
-      if (nextActionFilter) params.action    = nextActionFilter;
-      if (nextSearchTerm)   params.search    = nextSearchTerm;
-      if (nextDateDebut)    params.dateDebut = nextDateDebut;
-      if (nextDateFin)      params.dateFin   = nextDateFin;
+      if (nextActionFilter) params.action        = nextActionFilter;
+      if (nextUserFilter)   params.utilisateur_id = nextUserFilter;
+      if (nextDateDebut)    params.dateDebut      = nextDateDebut;
+      if (nextDateFin)      params.dateFin        = nextDateFin;
 
       const { data } = await auditService.getAll(params);
       setLogs(data.logs || []);
@@ -113,7 +123,7 @@ const AuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, actionFilter, dateDebut, dateFin]);
+  }, [currentPage, userFilter, actionFilter, dateDebut, dateFin]);
 
   useEffect(() => {
     loadLogs();
@@ -123,26 +133,26 @@ const AuditLogs = () => {
   // NOTE : double passe voulue — ne pas modifier.
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, actionFilter, dateDebut, dateFin]);
+  }, [userFilter, actionFilter, dateDebut, dateFin]);
 
   const handleReset = () => {
-    setSearchTerm('');
+    setUserFilter('');
     setActionFilter('');
     setDateDebut('');
     setDateFin('');
     setCurrentPage(1);
-    loadLogs({ page: 1, searchTerm: '', actionFilter: '', dateDebut: '', dateFin: '' });
+    loadLogs({ page: 1, userFilter: '', actionFilter: '', dateDebut: '', dateFin: '' });
   };
 
   // Fix Firefox : appendChild/removeChild autour du click
   const exportLogs = async () => {
     try {
       const response = await exportsService.exportAuditCSV({
-        generatedAt: formatGeneratedAt(),
-        action:    actionFilter || undefined,
-        search:    searchTerm  || undefined,
-        dateDebut: dateDebut   || undefined,
-        dateFin:   dateFin     || undefined,
+        generatedAt:    formatGeneratedAt(),
+        action:         actionFilter || undefined,
+        utilisateur_id: userFilter   || undefined,
+        dateDebut:      dateDebut    || undefined,
+        dateFin:        dateFin      || undefined,
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
@@ -176,18 +186,17 @@ const AuditLogs = () => {
         <Card.Body>
           <Row className="g-2 align-items-end">
 
-            {/* Recherche : pleine largeur sur mobile */}
+            {/* Utilisateur : pleine largeur sur mobile */}
             <Col xs={12} md={3}>
-              <FilterLabel>Recherche</FilterLabel>
-              <InputGroup>
-                <InputGroup.Text><FaSearch /></InputGroup.Text>
-                <Form.Control
-                  type="text"
-                  placeholder="Utilisateur, action, IP…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </InputGroup>
+              <FilterLabel>Utilisateur</FilterLabel>
+              <Form.Select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
+                <option value="">Tous les utilisateurs</option>
+                {userOptions.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.prenom} {u.nom}
+                  </option>
+                ))}
+              </Form.Select>
             </Col>
 
             {/* Action : demi-largeur sur xs, propre sur sm+ */}

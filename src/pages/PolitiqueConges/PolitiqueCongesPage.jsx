@@ -372,9 +372,8 @@ const PolitiqueCongesPage = () => {
   );
 
   const filteredServiceEntries = useMemo(() => {
-    const term = String(serviceSearch || '').trim().toLowerCase();
-    if (!term) return serviceEntries;
-    return serviceEntries.filter(([name]) => name.toLowerCase().includes(term));
+    if (!serviceSearch) return serviceEntries;
+    return serviceEntries.filter(([name]) => name === serviceSearch);
   }, [serviceEntries, serviceSearch]);
 
   const visibleServiceEntries = filteredServiceEntries.slice(0, visibleServicesCount);

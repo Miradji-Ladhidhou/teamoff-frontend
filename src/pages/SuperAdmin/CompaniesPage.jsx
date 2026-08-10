@@ -3,7 +3,7 @@ import './companies.css';
 const PROTECTED_COMPANY_NAME = 'TeamOff';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaInfoCircle, FaUserTie, FaUpload, FaCheckCircle } from 'react-icons/fa';
+import { FaBuilding, FaPlus, FaEdit, FaTrash, FaDownload, FaInfoCircle, FaUserTie, FaUpload, FaCheckCircle } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
@@ -447,10 +447,9 @@ const CompaniesManagement = () => {
 
   const exportLoading = exportAction.isRunning;
 
-  const filteredCompanies = companies.filter((company) => {
-    const searchableText = `${company.nom || ''} ${company.statut || ''}`.toLowerCase();
-    return !searchTerm || searchableText.includes(searchTerm.toLowerCase());
-  });
+  const filteredCompanies = companies.filter((company) =>
+    !searchTerm || company.nom === searchTerm
+  );
 
   if (loading) {
     return (
@@ -498,15 +497,16 @@ const CompaniesManagement = () => {
       <Card className="mb-4">
         <Card.Body>
           <div className="users-filter-bar">
-            <InputGroup className="users-filter-bar__search">
-              <InputGroup.Text><FaSearch /></InputGroup.Text>
-              <Form.Control
-                type="text"
-                placeholder="Rechercher une entreprise..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-            </InputGroup>
+            <Form.Select
+              className="users-filter-bar__search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            >
+              <option value="">Toutes les entreprises</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.nom}>{c.nom}</option>
+              ))}
+            </Form.Select>
             <span className="badge info users-filter-bar__count">
               {filteredCompanies.length} entreprise{filteredCompanies.length > 1 ? 's' : ''}
             </span>

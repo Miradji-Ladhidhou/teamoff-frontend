@@ -1,8 +1,8 @@
 import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Container, Button, ButtonGroup, Table, Form, InputGroup, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
+import { Container, Button, ButtonGroup, Table, Form, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaSearch, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -51,7 +51,7 @@ const CongesPage = () => {
   const [filters, setFilters] = useState({
     statut: '',
     conge_type_id: '',
-    search: '',
+    utilisateur_id: '',
     sortBy: 'date_demande',
     sortOrder: 'desc',
     limit: 10
@@ -142,18 +142,21 @@ const CongesPage = () => {
     return 'Entreprise inconnue';
   };
 
+  const employeeOptions = useMemo(() => {
+    const seen = new Map();
+    conges.forEach((conge) => {
+      const uid = conge.utilisateur_id || conge.utilisateur?.id;
+      if (uid && !seen.has(uid)) seen.set(uid, getEmployeLabel(conge));
+    });
+    return Array.from(seen.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [conges]);
+
   const filteredConges = useMemo(() => {
     return conges.filter((conge) => {
-      const query = (filters.search || '').toLowerCase();
-      const matchesSearch = !query
-        || getCongeTypeLabel(conge).toLowerCase().includes(query)
-        || getEmployeLabel(conge).toLowerCase().includes(query)
-        || getEntrepriseLabel(conge).toLowerCase().includes(query)
-        || conge.commentaire_employe?.toLowerCase().includes(query);
-
+      const matchesEmployee = !filters.utilisateur_id
+        || (conge.utilisateur_id || conge.utilisateur?.id) === filters.utilisateur_id;
       const matchesCongeType = !filters.conge_type_id || conge.conge_type_id === filters.conge_type_id;
-
-      return matchesSearch && matchesCongeType;
+      return matchesEmployee && matchesCongeType;
     });
   }, [conges, filters]);
 
@@ -421,17 +424,20 @@ const CongesPage = () => {
         </div>
       </div>
 
-      {/* Barre de recherche + chips statut + tri */}
+      {/* Filtres statut + tri */}
       <div className="conges-filter-bar mb-3">
-        <InputGroup className="conges-filter-bar__search">
-          <InputGroup.Text><FaSearch /></InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder={isAdmin() || (isManager && viewMode === 'all') ? 'Employé, type de congé…' : 'Type de congé…'}
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-          />
-        </InputGroup>
+        {(isAdmin() || (isManager && viewMode === 'all')) && employeeOptions.length > 0 && (
+          <Form.Select
+            className="conges-filter-bar__search"
+            value={filters.utilisateur_id}
+            onChange={(e) => handleFilterChange('utilisateur_id', e.target.value)}
+          >
+            <option value="">Tous les employés</option>
+            {employeeOptions.map(([uid, label]) => (
+              <option key={uid} value={uid}>{label}</option>
+            ))}
+          </Form.Select>
+        )}
         <div className="chips-row conges-filter-bar__chips">
           {statusChips.map((chip) => (
             <button
@@ -470,7 +476,7 @@ const CongesPage = () => {
               <FaSearch size={48} className="text-muted mb-3" />
               <h5 className="text-muted">Aucun congé trouvé</h5>
               <p className="text-muted small">
-                {filters.search || filters.statut ?
+                {filters.utilisateur_id || filters.statut ?
                   'Essayez de modifier vos filtres' :
                   (canCreateLeave ? 'Créez votre première demande de congé' : 'Aucune demande trouvée')
                 }
