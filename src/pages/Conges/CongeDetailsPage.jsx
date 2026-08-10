@@ -12,6 +12,9 @@ import AsyncButton from '../../components/AsyncButton';
 const DEFAULT_SELF_CANCELLATION_POLICY = {
   allow_employee_cancel_own_pending: true,
   allow_manager_cancel_own_pending: true,
+  allow_modify_validated: false,
+  allow_cancel_validated: false,
+  min_notice_days: 0,
 };
 
 const accentToBadgeClass = (accent) => {
@@ -24,6 +27,7 @@ const CongeDetailsPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isSuperAdmin = user?.role === 'super_admin';
+  const isAdminLevel = isSuperAdmin || user?.role === 'admin_entreprise';
   const canSeeAllComments = ['admin_entreprise', 'super_admin', 'manager'].includes(user?.role);
 
   const [conge, setConge] = useState(null);
@@ -102,6 +106,9 @@ const CongeDetailsPage = () => {
             ? Boolean(pub.allow_employee_cancel_own_pending) : true,
           allow_manager_cancel_own_pending: pub.allow_manager_cancel_own_pending !== undefined
             ? Boolean(pub.allow_manager_cancel_own_pending) : true,
+          allow_modify_validated: Boolean(pub.allow_modify_validated),
+          allow_cancel_validated: Boolean(pub.allow_cancel_validated),
+          min_notice_days: Number(pub.min_notice_days || 0),
         });
       } catch (_err) {
         if (!cancelled) setSelfCancellationPolicy(DEFAULT_SELF_CANCELLATION_POLICY);
@@ -134,8 +141,8 @@ const CongeDetailsPage = () => {
   const handleDelete = async () => {
     await action.run(async () => {
       try {
-        const isFinalValidated = ['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager');
-        await congesService.delete(id, isFinalValidated ? { commentaire: cancelComment.trim() } : {});
+        const isValidatedLeaveCancel = conge?.statut === 'valide_final' || conge?.statut === 'valide_manager';
+        await congesService.delete(id, isValidatedLeaveCancel ? { commentaire: cancelComment.trim() } : {});
         alert.success('Demande de congé supprimée.');
         navigate('/conges', { replace: true });
       } catch (err) {
@@ -239,12 +246,16 @@ const CongeDetailsPage = () => {
     if (isSuperAdmin || user?.role === 'admin_entreprise') {
       return conge.statut === 'valide_final' || conge.statut === 'en_attente_manager';
     }
-    return conge.utilisateur_id === user?.id && conge.statut === 'en_attente_manager';
+    if (conge.utilisateur_id !== user?.id) return false;
+    if (conge.statut === 'en_attente_manager') return true;
+    if ((conge.statut === 'valide_final' || conge.statut === 'valide_manager') && selfCancellationPolicy.allow_modify_validated) return true;
+    return false;
   };
 
   const canDelete = () => {
     if (!conge) return false;
     const isOwnLeave = conge.utilisateur_id === user?.id;
+    const isValidatedLeave = conge.statut === 'valide_final' || conge.statut === 'valide_manager';
 
     if (isOwnLeave && conge.statut === 'reserve') return true;
 
@@ -254,8 +265,11 @@ const CongeDetailsPage = () => {
       return true;
     }
 
-    if ((isSuperAdmin || user?.role === 'admin_entreprise') &&
-        (conge.statut === 'valide_final' || conge.statut === 'valide_manager')) {
+    if (isOwnLeave && isValidatedLeave && !isAdminLevel) {
+      return selfCancellationPolicy.allow_cancel_validated;
+    }
+
+    if ((isSuperAdmin || user?.role === 'admin_entreprise') && isValidatedLeave) {
       return true;
     }
 
@@ -761,7 +775,7 @@ const CongeDetailsPage = () => {
               className="btn-ghost-danger"
               onClick={() => { setCancelComment(''); setShowDeleteModal(true); }}
             >
-              {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? (
+              {(conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? (
                 <><FaTimes size={11} className="me-2" />Annuler le congé</>
               ) : (
                 <><FaTimes size={11} className="me-2" />Annuler la demande</>
@@ -807,20 +821,16 @@ const CongeDetailsPage = () => {
       {/* Modal suppression */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} backdrop="static" keyboard={!actionLoading} centered>
         <Modal.Header closeButton={!actionLoading}>
-          <Modal.Title>
-            {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager')
-              ? "Confirmer l'annulation"
-              : "Confirmer l'annulation"}
-          </Modal.Title>
+          <Modal.Title>Confirmer l&apos;annulation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager')
-            ? "Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde de l'employé sera recalculé automatiquement et il sera notifié."
+          {(conge?.statut === 'valide_final' || conge?.statut === 'valide_manager')
+            ? "Êtes-vous sûr de vouloir annuler ce congé validé ? Le solde sera recalculé automatiquement."
             : "Êtes-vous sûr de vouloir annuler cette demande de congé ? Le manager sera notifié par email."}
 
-          {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') && (
+          {(conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') && (
             <Form.Group className="mt-3">
-              <Form.Label>Commentaire d'annulation (requis)</Form.Label>
+              <Form.Label>Commentaire d&apos;annulation (requis)</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -844,11 +854,11 @@ const CongeDetailsPage = () => {
           <AsyncButton
             variant="danger"
             onClick={handleDelete}
-            disabled={actionLoading || (['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') && !cancelComment.trim())}
+            disabled={actionLoading || ((conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') && !cancelComment.trim())}
             action={action}
-            loadingText={['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? 'Annulation...' : 'Suppression...'}
+            loadingText={(conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? 'Annulation...' : 'Suppression...'}
           >
-            {['admin_entreprise', 'super_admin'].includes(user?.role) && (conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? 'Annuler le congé' : 'Supprimer'}
+            {(conge?.statut === 'valide_final' || conge?.statut === 'valide_manager') ? 'Annuler le congé' : 'Supprimer'}
           </AsyncButton>
         </Modal.Footer>
       </Modal>
