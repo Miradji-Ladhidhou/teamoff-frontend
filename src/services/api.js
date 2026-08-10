@@ -195,6 +195,14 @@ export const congesService = {
   calculateDays: (data) => api.post('/conges/calculate-days', data),
   getAttestationData: (id) => api.get(`/conges/${id}/attestation`),
   sendAttestationEmail: (id) => api.post(`/conges/${id}/attestation/email`),
+  importCSV: (file, entreprise_id) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (entreprise_id) form.append('entreprise_id', entreprise_id);
+    return api.post('/conges/import/csv', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  importCSVTemplate: (entreprise_id) =>
+    api.get('/conges/import/csv/template', { params: { entreprise_id }, responseType: 'blob' }),
 };
 
 export const usersService = {
