@@ -286,7 +286,7 @@ const UsersManagement = () => {
   const getRoleBadge = (role) => {
     const classes = { super_admin: 'refused', admin_entreprise: 'info', manager: 'pending', employe: 'approved' };
     const labels = { super_admin: 'Super Admin', admin_entreprise: 'Admin', manager: 'Manager', employe: 'Employé' };
-    return <span className={`badge ${classes[role] || 'info'}`}>{labels[role] || role}</span>;
+    return <span className={`badge badge-role ${classes[role] || 'info'}`}>{labels[role] || role}</span>;
   };
 
   const getStatusBadge = (status) => {

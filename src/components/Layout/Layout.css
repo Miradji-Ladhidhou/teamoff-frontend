@@ -184,9 +184,9 @@
 
 /* Role badge */
 .role-badge {
-  background: var(--role-accent-soft) !important;
-  color: var(--role-accent) !important;
-  border: 1px solid color-mix(in srgb, var(--role-accent) 25%, transparent);
+  background: var(--role-accent) !important;
+  color: #fff !important;
+  border: none !important;
 }
 
 /* Sidebar separator */

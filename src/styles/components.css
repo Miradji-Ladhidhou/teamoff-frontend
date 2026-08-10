@@ -71,6 +71,14 @@
   padding: 2px 7px !important;
 }
 
+/* ────────────── Role badges (fond plein + texte blanc) ────────────── */
+.badge.badge-role { color: #fff !important; }
+
+.badge.badge-role.refused  { background: #dc2626 !important; border-color: #dc2626 !important; }
+.badge.badge-role.info     { background: #4338ca !important; border-color: #4338ca !important; }
+.badge.badge-role.pending  { background: #d97706 !important; border-color: #d97706 !important; }
+.badge.badge-role.approved { background: #059669 !important; border-color: #059669 !important; }
+
 /* ────────────── Filter chips ────────────── */
 .chips-row {
   display: flex;
