@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <!-- Fond carré arrondi -->
+  <rect width="32" height="32" rx="7" fill="url(#bg)"/>
+  <!-- T blanc -->
+  <rect x="8" y="8" width="16" height="3" rx="1.5" fill="white"/>
+  <rect x="13.5" y="11" width="5" height="13" rx="1.5" fill="white"/>
+  <!-- Point ambre -->
+  <circle cx="23" cy="23" r="3" fill="#F59E0B"/>
+</svg>
