@@ -2,7 +2,7 @@ import './conges.css';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Container, Button, ButtonGroup, Table, Form, Spinner, Alert, Pagination, Modal } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FaPlus, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaChevronRight, FaCalendar } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { congesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -473,7 +473,7 @@ const CongesPage = () => {
             </div>
           ) : paginatedConges.length === 0 ? (
             <div className="text-center py-5">
-              <FaSearch size={48} className="text-muted mb-3" />
+              <FaCalendar size={48} className="text-muted mb-3" />
               <h5 className="text-muted">Aucun congé trouvé</h5>
               <p className="text-muted small">
                 {filters.utilisateur_id || filters.statut ?
