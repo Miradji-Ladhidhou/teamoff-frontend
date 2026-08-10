@@ -118,14 +118,8 @@
 .settings-tabs {
   display: flex;
   gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: 2px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
-
-.settings-tabs::-webkit-scrollbar { display: none; }
 
 .settings-tab {
   padding: 7px 14px;
