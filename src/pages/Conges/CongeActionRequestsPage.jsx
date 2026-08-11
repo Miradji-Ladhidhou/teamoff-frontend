@@ -102,9 +102,9 @@ const CongeActionRequestsPage = () => {
   };
 
   const congeLink = (req) => {
-    const congeId = req.conge_id;
-    if (isSuperAdmin) return `/superadmin/leaves/${congeId}`;
-    return `/conges/${congeId}`;
+    if (!req.conge_id) return null;
+    if (isSuperAdmin) return `/superadmin/leaves/${req.conge_id}`;
+    return `/conges/${req.conge_id}`;
   };
 
   const statutBadge = (statut) => {
@@ -172,7 +172,7 @@ const CongeActionRequestsPage = () => {
                 const congeType = req.conge?.conge_type_libelle || req.conge?.conge_type?.libelle || 'Congé';
                 const congePeriode = req.conge
                   ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}`
-                  : '-';
+                  : req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-';
                 const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
                   ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
                   : null;
@@ -222,9 +222,11 @@ const CongeActionRequestsPage = () => {
                             </Button>
                           </>
                         )}
-                        <Link to={congeLink(req)} style={{ fontSize: '11px', color: 'var(--accent-blue, #5b8dee)' }}>
-                          <FaChevronRight size={10} />
-                        </Link>
+                        {congeLink(req) && (
+                          <Link to={congeLink(req)} style={{ fontSize: '11px', color: 'var(--accent-blue, #5b8dee)' }}>
+                            <FaChevronRight size={10} />
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
