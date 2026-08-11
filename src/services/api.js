@@ -203,6 +203,12 @@ export const congesService = {
   },
   importCSVTemplate: (entreprise_id) =>
     api.get('/conges/import/csv/template', { params: { entreprise_id }, responseType: 'blob' }),
+  // Demandes de modification/annulation de congé validé
+  submitActionRequest: (congeId, data) => api.post(`/conges/${congeId}/action-request`, data),
+  getActionRequests: (params = {}) => api.get('/conges/action-requests', { params }),
+  getActionRequest: (requestId) => api.get(`/conges/action-requests/${requestId}`),
+  approveActionRequest: (requestId, data = {}) => api.post(`/conges/action-requests/${requestId}/approve`, data),
+  rejectActionRequest: (requestId, data) => api.post(`/conges/action-requests/${requestId}/reject`, data),
 };
 
 export const usersService = {

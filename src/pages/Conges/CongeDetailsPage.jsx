@@ -46,6 +46,13 @@ const CongeDetailsPage = () => {
   const [jourDetail, setJourDetail] = useState(null);
   const action = useAsyncAction();
 
+  const [showCancelRequestModal, setShowCancelRequestModal] = useState(false);
+  const [showModifyRequestModal, setShowModifyRequestModal] = useState(false);
+  const [cancelRequestComment, setCancelRequestComment] = useState('');
+  const [modifyRequestComment, setModifyRequestComment] = useState('');
+  const [modifyRequestDateDebut, setModifyRequestDateDebut] = useState('');
+  const [modifyRequestDateFin, setModifyRequestDateFin] = useState('');
+
   useEffect(() => {
     loadCongeDetails();
     congesService.getHistory(id)
@@ -178,6 +185,42 @@ const CongeDetailsPage = () => {
     });
   };
 
+  const handleSubmitCancelRequest = async () => {
+    await action.run(async () => {
+      try {
+        await congesService.submitActionRequest(id, {
+          type: 'cancel',
+          commentaire: cancelRequestComment.trim(),
+        });
+        alert.success('Demande d\'annulation envoyée à l\'administrateur.');
+        setShowCancelRequestModal(false);
+        setCancelRequestComment('');
+      } catch (err) {
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'envoi de la demande');
+      }
+    });
+  };
+
+  const handleSubmitModifyRequest = async () => {
+    await action.run(async () => {
+      try {
+        await congesService.submitActionRequest(id, {
+          type: 'modify',
+          commentaire: modifyRequestComment.trim(),
+          date_debut_demandee: modifyRequestDateDebut,
+          date_fin_demandee: modifyRequestDateFin,
+        });
+        alert.success('Demande de modification envoyée à l\'administrateur.');
+        setShowModifyRequestModal(false);
+        setModifyRequestComment('');
+        setModifyRequestDateDebut('');
+        setModifyRequestDateFin('');
+      } catch (err) {
+        alert.error(err.response?.data?.message || 'Erreur lors de l\'envoi de la demande');
+      }
+    });
+  };
+
   const actionLoading = action.isRunning;
 
   const getStatusAccent = (statut) => {
@@ -248,8 +291,22 @@ const CongeDetailsPage = () => {
     }
     if (conge.utilisateur_id !== user?.id) return false;
     if (conge.statut === 'en_attente_manager') return true;
-    if ((conge.statut === 'valide_final' || conge.statut === 'valide_manager') && selfCancellationPolicy.allow_modify_validated) return true;
+    // Validated leaves: employees use the request flow (canRequestModify), not direct edit
     return false;
+  };
+
+  const canRequestModify = () => {
+    if (!conge || isAdminLevel) return false;
+    if (conge.utilisateur_id !== user?.id) return false;
+    const isValidated = conge.statut === 'valide_final' || conge.statut === 'valide_manager';
+    return isValidated && selfCancellationPolicy.allow_modify_validated;
+  };
+
+  const canRequestCancel = () => {
+    if (!conge || isAdminLevel) return false;
+    if (conge.utilisateur_id !== user?.id) return false;
+    const isValidated = conge.statut === 'valide_final' || conge.statut === 'valide_manager';
+    return isValidated && selfCancellationPolicy.allow_cancel_validated;
   };
 
   const canDelete = () => {
@@ -265,10 +322,7 @@ const CongeDetailsPage = () => {
       return true;
     }
 
-    if (isOwnLeave && isValidatedLeave && !isAdminLevel) {
-      return selfCancellationPolicy.allow_cancel_validated;
-    }
-
+    // Employees/managers use the request flow (canRequestCancel) for validated leaves
     if ((isSuperAdmin || user?.role === 'admin_entreprise') && isValidatedLeave) {
       return true;
     }
@@ -390,6 +444,21 @@ const CongeDetailsPage = () => {
         {canEdit() && (
           <Button as={Link} to={`/conges/${id}/edit`} variant="outline-primary" size="sm">
             <FaEdit className="me-1" /> Modifier
+          </Button>
+        )}
+        {canRequestModify() && (
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={() => {
+              const toInputDate = (s) => s ? s.split('T')[0] : '';
+              setModifyRequestDateDebut(toInputDate(conge?.date_debut));
+              setModifyRequestDateFin(toInputDate(conge?.date_fin));
+              setModifyRequestComment('');
+              setShowModifyRequestModal(true);
+            }}
+          >
+            <FaEdit className="me-1" /> Demander la modification
           </Button>
         )}
       </div>
@@ -782,6 +851,14 @@ const CongeDetailsPage = () => {
               )}
             </button>
           )}
+          {canRequestCancel() && (
+            <button
+              className="btn-ghost-danger"
+              onClick={() => { setCancelRequestComment(''); setShowCancelRequestModal(true); }}
+            >
+              <FaTimes size={11} className="me-2" />Demander l&apos;annulation
+            </button>
+          )}
         </Col>
       </Row>
 
@@ -945,6 +1022,97 @@ const CongeDetailsPage = () => {
             loadingText="Validation..."
           >
             Valider
+          </AsyncButton>
+        </Modal.Footer>
+      </Modal>
+      {/* Modal demande d'annulation (employé → congé validé) */}
+      <Modal show={showCancelRequestModal} onHide={() => setShowCancelRequestModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+        <Modal.Header closeButton={!actionLoading}>
+          <Modal.Title>Demander l&apos;annulation du congé</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="small text-muted mb-3">
+            Votre demande d&apos;annulation sera transmise à l&apos;administrateur pour validation. Votre congé reste inchangé jusqu&apos;à la décision.
+          </p>
+          <Form.Group>
+            <Form.Label>Motif de la demande (requis)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={cancelRequestComment}
+              onChange={(e) => setCancelRequestComment(e.target.value)}
+              placeholder="Expliquez la raison de votre demande d'annulation..."
+              disabled={actionLoading}
+              required
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelRequestModal(false)} disabled={actionLoading}>Fermer</Button>
+          <AsyncButton
+            variant="danger"
+            onClick={handleSubmitCancelRequest}
+            disabled={actionLoading || !cancelRequestComment.trim()}
+            action={action}
+            loadingText="Envoi..."
+          >
+            Envoyer la demande
+          </AsyncButton>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal demande de modification (employé → congé validé) */}
+      <Modal show={showModifyRequestModal} onHide={() => setShowModifyRequestModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+        <Modal.Header closeButton={!actionLoading}>
+          <Modal.Title>Demander la modification du congé</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="small text-muted mb-3">
+            Votre demande de modification sera transmise à l&apos;administrateur pour validation. Votre congé actuel reste inchangé jusqu&apos;à la décision.
+          </p>
+          <Form.Group className="mb-3">
+            <Form.Label>Nouvelle date de début</Form.Label>
+            <Form.Control
+              type="date"
+              value={modifyRequestDateDebut}
+              onChange={(e) => setModifyRequestDateDebut(e.target.value)}
+              disabled={actionLoading}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nouvelle date de fin</Form.Label>
+            <Form.Control
+              type="date"
+              value={modifyRequestDateFin}
+              onChange={(e) => setModifyRequestDateFin(e.target.value)}
+              disabled={actionLoading}
+              required
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Motif de la demande (requis)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={modifyRequestComment}
+              onChange={(e) => setModifyRequestComment(e.target.value)}
+              placeholder="Expliquez la raison de votre demande de modification..."
+              disabled={actionLoading}
+              required
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModifyRequestModal(false)} disabled={actionLoading}>Fermer</Button>
+          <AsyncButton
+            variant="primary"
+            onClick={handleSubmitModifyRequest}
+            disabled={actionLoading || !modifyRequestComment.trim() || !modifyRequestDateDebut || !modifyRequestDateFin}
+            action={action}
+            loadingText="Envoi..."
+          >
+            Envoyer la demande
           </AsyncButton>
         </Modal.Footer>
       </Modal>
