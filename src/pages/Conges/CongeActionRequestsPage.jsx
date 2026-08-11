@@ -170,9 +170,12 @@ const CongeActionRequestsPage = () => {
                   ? `${req.utilisateur.prenom || ''} ${req.utilisateur.nom || ''}`.trim()
                   : '-';
                 const congeType = req.conge?.conge_type_libelle || req.conge?.conge_type?.libelle || 'Congé';
-                const congePeriode = req.conge
-                  ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}`
-                  : req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-';
+                const periodeOrigine = req.conge_date_debut_origine
+                  ? `${formatDate(req.conge_date_debut_origine)} → ${formatDate(req.conge_date_fin_origine)}`
+                  : null;
+                const congePeriode = periodeOrigine
+                  || (req.conge ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}` : null)
+                  || (req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-');
                 const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
                   ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
                   : null;
