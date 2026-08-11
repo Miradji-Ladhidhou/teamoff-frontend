@@ -79,7 +79,8 @@ const CongeActionRequestsPage = () => {
         await congesService.approveActionRequest(selectedRequest.id, { commentaire: adminComment.trim() || undefined });
         alert.success('Demande approuvée.');
         setShowApproveModal(false);
-        load();
+        setStatutFilter('approved');
+        setPage(1);
       } catch (err) {
         alert.error(err.response?.data?.message || 'Erreur lors de l\'approbation');
       }
@@ -92,7 +93,8 @@ const CongeActionRequestsPage = () => {
         await congesService.rejectActionRequest(selectedRequest.id, { commentaire: adminComment.trim() });
         alert.success('Demande refusée.');
         setShowRejectModal(false);
-        load();
+        setStatutFilter('rejected');
+        setPage(1);
       } catch (err) {
         alert.error(err.response?.data?.message || 'Erreur lors du refus');
       }
@@ -157,6 +159,8 @@ const CongeActionRequestsPage = () => {
                 <th>Période demandée</th>
                 <th>Soumis le</th>
                 <th>Statut</th>
+                {statutFilter !== 'pending' && <th>Décision admin</th>}
+                {statutFilter !== 'pending' && <th>Traité le</th>}
                 <th></th>
               </tr>
             </thead>
@@ -194,6 +198,18 @@ const CongeActionRequestsPage = () => {
                     </td>
                     <td style={{ fontSize: '12px' }}>{formatDate(req.created_at)}</td>
                     <td>{statutBadge(req.statut)}</td>
+                    {statutFilter !== 'pending' && (
+                      <td style={{ fontSize: '12px', maxWidth: 180 }}>
+                        {req.commentaire_admin
+                          ? <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{req.commentaire_admin}</span>
+                          : <span className="text-muted">—</span>}
+                      </td>
+                    )}
+                    {statutFilter !== 'pending' && (
+                      <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                        {req.updated_at ? formatDate(req.updated_at) : '—'}
+                      </td>
+                    )}
                     <td>
                       <div className="d-flex gap-2 align-items-center">
                         {req.statut === 'pending' && (
