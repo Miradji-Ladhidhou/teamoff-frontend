@@ -28,6 +28,7 @@ export const roleNavigation = {
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/users', label: 'Utilisateurs', icon: 'users', section: 'primary' },
     { path: '/conges', label: 'Congés', icon: 'leave', section: 'primary' },
+    { path: '/conges/demandes', label: 'Demandes modif/annul', icon: 'inbox', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/politique-conges', label: 'Règles & services', icon: 'settings', section: 'secondary' },
     { path: '/soldes', label: 'Soldes', icon: 'balance', section: 'secondary' },

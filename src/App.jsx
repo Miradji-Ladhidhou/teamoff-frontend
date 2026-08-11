@@ -25,6 +25,7 @@ const CongesPage = lazy(() => import('./pages/Conges/CongesPage'));
 const CongeDetailsPage = lazy(() => import('./pages/Conges/CongeDetailsPage'));
 const NouveauCongePage = lazy(() => import('./pages/Conges/NouveauCongePage'));
 const AttestationPage = lazy(() => import('./pages/Conges/AttestationPage'));
+const CongeActionRequestsPage = lazy(() => import('./pages/Conges/CongeActionRequestsPage'));
 const UsersPage = lazy(() => import('./pages/Users/UsersPage'));
 const CalendrierPage = lazy(() => import('./pages/Calendrier/CalendrierPage'));
 const ExportsPage = lazy(() => import('./pages/Exports/ExportsPage'));
@@ -284,6 +285,7 @@ function App() {
             <Route path="/mes-conges" element={<CongesPage />} />
             <Route path="/conges" element={<CongesPage />} />
             <Route path="/conges/nouveau" element={<NouveauCongePage />} />
+            <Route path="/conges/demandes" element={<CongeActionRequestsPage />} />
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
             <Route path="/historique-conges" element={<Navigate to="/conges" replace />} />
