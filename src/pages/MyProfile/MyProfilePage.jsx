@@ -1,6 +1,6 @@
 import './my-profile.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/api';
@@ -50,7 +50,8 @@ const MyProfilePage = () => {
       setProfileData({ prenom: user.prenom || '', nom: user.nom || '', email: user.email || '' });
       setTwoFAEnabled(user.totp_enabled ?? false);
     }
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (!success) return;
@@ -70,6 +71,10 @@ const MyProfilePage = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+    if (!profileData.prenom.trim() || !profileData.nom.trim()) {
+      alert.error('Le prénom et le nom sont obligatoires.');
+      return;
+    }
     await profileAction.run(async () => {
       setSuccess('');
       try {
@@ -224,8 +229,8 @@ const MyProfilePage = () => {
               <Card.Header className="d-flex align-items-center justify-content-between">
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaShieldAlt className="me-2" />Double authentification (2FA)</span>
                 {twoFAEnabled
-                  ? <Badge bg="success">Activé</Badge>
-                  : <Badge bg="secondary">Désactivé</Badge>}
+                  ? <span className="badge approved">Activé</span>
+                  : <span className="badge secondary">Désactivé</span>}
               </Card.Header>
               <Card.Body>
                 {!twoFAEnabled && !twoFASetup && (
