@@ -194,7 +194,15 @@ const CompaniesManagement = () => {
           const created = await api.entreprisesService.create(payload);
           const entrepriseId = created.data?.id;
 
-          const hasAdmin = adminData.email.trim() && adminData.prenom.trim() && adminData.nom.trim();
+          const hasAdminEmail = adminData.email.trim();
+          const hasAdminPrenom = adminData.prenom.trim();
+          const hasAdminNom = adminData.nom.trim();
+          const hasAdmin = hasAdminEmail && hasAdminPrenom && hasAdminNom;
+
+          if (hasAdminEmail && !hasAdmin) {
+            throw new Error('Le formulaire administrateur est incomplet. Renseignez le prénom, le nom et l\'email, ou laissez tous les champs vides.');
+          }
+
           if (hasAdmin && entrepriseId) {
             await api.usersService.create({
               prenom: adminData.prenom.trim(),
@@ -382,7 +390,7 @@ const CompaniesManagement = () => {
     await exportAction.run(async () => {
       try {
         const response = await api.exportsService.exportEntreprisesCSV();
-        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([response.data], { type: 'text/csv; charset=utf-16le' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         const date = new Date().toISOString().slice(0, 10);
@@ -591,7 +599,10 @@ const CompaniesManagement = () => {
                     <FaEdit className="me-1" /> Modifier
                   </Button>
                   <Button variant="outline-secondary" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openImportModal(company)} title="Importer des employés">
-                    <FaUpload className="me-1" /> Importer
+                    <FaUpload className="me-1" /> Employés
+                  </Button>
+                  <Button variant="outline-info" size="sm" className="flex-grow-1 justify-content-center" onClick={() => openImportCongesModal(company)} title="Importer des congés">
+                    <FaCalendar className="me-1" /> Congés
                   </Button>
                   {company.nom !== PROTECTED_COMPANY_NAME && (
                     <AsyncButton
@@ -619,8 +630,8 @@ const CompaniesManagement = () => {
                 <tr>
                   <th>Entreprise</th>
                   <th>Statut</th>
-                  <th>Politique</th>
-                  <th>Paramètres</th>
+                  <th>Workflow</th>
+                  <th>Timezone</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -633,8 +644,12 @@ const CompaniesManagement = () => {
                         {(company.statut || 'inactive').toUpperCase()}
                       </span>
                     </td>
-                    <td><small className="text-muted">{Object.keys(company.politique_conges || {}).length} clé(s)</small></td>
-                    <td><small className="text-muted">{Object.keys(company.parametres || {}).length} clé(s)</small></td>
+                    <td>
+                      <small className="text-muted d-block">{
+                        { manager_admin: 'Manager + Admin', manager_only: 'Manager seul', admin_only: 'Admin seul', auto: 'Auto' }[company.politique_conges?.approval_workflow] || company.politique_conges?.approval_workflow || '—'
+                      }</small>
+                    </td>
+                    <td><small className="text-muted">{company.parametres?.timezone || '—'}</small></td>
                     <td>
                       <div className="d-flex gap-1">
                         <Button variant="outline-primary" size="sm" onClick={() => handleEdit(company)} title="Modifier">
@@ -775,9 +790,9 @@ const CompaniesManagement = () => {
                             onChange={(event) => handlePolitiqueChange('approval_workflow', event.target.value)}
                             disabled={submitAction.isRunning}
                           >
-                            <option value="auto">Auto</option>
-                            <option value="manager">Manager</option>
-                            <option value="manager_admin">Manager + Admin</option>
+                            <option value="manager_admin">Manager + Admin (2 étapes)</option>
+                            <option value="manager_only">Manager seul</option>
+                            <option value="admin_only">Admin seul</option>
                           </Form.Select>
                         </Form.Group>
                       </Col>
