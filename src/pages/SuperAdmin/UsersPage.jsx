@@ -1,6 +1,4 @@
 import './users.css';
-
-const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Table, Button, Modal, Form } from 'react-bootstrap';
 import { FaUsers, FaPlus, FaEdit, FaTrash, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins, FaShieldAlt } from 'react-icons/fa';
@@ -10,6 +8,8 @@ import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import * as api from '../../services/api';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
+
+const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 
 const getInitials = (u) =>
   `${(u?.prenom || '').charAt(0)}${(u?.nom || '').charAt(0)}`.toUpperCase() || '?';
@@ -339,7 +339,7 @@ const UsersManagement = () => {
     const s = String(value).split('T')[0];
     const parts = s.split('-');
     if (parts.length !== 3) return 'Non definie';
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
   if (loading) {
@@ -436,7 +436,11 @@ const UsersManagement = () => {
                 </div>
                 <div className="user-row-info">
                   <div className="user-row-name">{targetUser.prenom} {targetUser.nom}</div>
-                  <div className="user-row-sub">{targetUser.service || targetUser.email}</div>
+                  <div className="user-row-sub">
+                    {isSuperAdmin
+                      ? companiesById[targetUser.entreprise_id] || targetUser.email
+                      : targetUser.service || targetUser.email}
+                  </div>
                 </div>
                 <div className="user-row-right">
                   {getRoleBadge(targetUser.role)}
@@ -454,6 +458,7 @@ const UsersManagement = () => {
               <thead>
                 <tr>
                   <th>Utilisateur</th>
+                  {isSuperAdmin && <th>Entreprise</th>}
                   <th>Service</th>
                   <th>Rôle</th>
                   <th>Statut</th>
@@ -474,6 +479,7 @@ const UsersManagement = () => {
                         </div>
                       </div>
                     </td>
+                    {isSuperAdmin && <td><span className="text-muted" style={{ fontSize: '12px' }}>{companiesById[targetUser.entreprise_id] || '—'}</span></td>}
                     <td><span className="text-muted" style={{ fontSize: '12px' }}>{targetUser.service || '—'}</span></td>
                     <td>{getRoleBadge(targetUser.role)}</td>
                     <td>{getStatusBadge(targetUser.statut)}</td>
