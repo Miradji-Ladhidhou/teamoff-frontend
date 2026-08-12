@@ -4,7 +4,7 @@ import { Container, Card, Button } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const DEFAULT_MESSAGE = 'Application en maintenance. Veuillez reessayer plus tard.';
+const DEFAULT_MESSAGE = 'Application en maintenance. Veuillez réessayer plus tard.';
 
 function useMaintenanceMessage() {
   const location = useLocation();
@@ -36,7 +36,7 @@ export default function MaintenancePage() {
           <h1 className="h4 mb-3">Service temporairement indisponible</h1>
           <p className="text-muted mb-4">{message}</p>
           <Button variant="outline-primary" onClick={handleRetour}>
-            Retour a la connexion
+            Retour à la connexion
           </Button>
         </Card.Body>
       </Card>
