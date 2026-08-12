@@ -96,7 +96,7 @@ const HelpPage = () => {
   const roleTips = tips[role] || tips.employe;
 
   return (
-    <Container>
+    <Container fluid="sm">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Centre d'aide</span>
         {user && (
