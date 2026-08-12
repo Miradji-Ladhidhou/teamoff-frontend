@@ -228,7 +228,10 @@ const ExportsPage = () => {
         setExportProgress(100);
 
         // Télécharger le fichier
-        const url = window.URL.createObjectURL(new Blob([response.data]));
+        // CSV → arraybuffer (binaire brut) + type explicite : le BOM UTF-8 du serveur est préservé
+        // PDF → blob natif renvoyé tel quel par Axios
+        const mimeType = format === 'pdf' ? 'application/pdf' : 'text/csv; charset=utf-8';
+        const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
         const link = document.createElement('a');
         link.href = url;
 

@@ -318,12 +318,12 @@ export const exportsService = {
     const { type, format, ...queryParams } = params;
     return api.get(`/exports/${type}/${format}`, {
       params: _p(queryParams),
-      responseType: 'blob'
+      responseType: format === 'pdf' ? 'blob' : 'arraybuffer',
     });
   },
   exportCongesCSV: (params = {}) => api.get('/exports/conges/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportCongesPDF: (params = {}) => api.get('/exports/conges/pdf', {
     params: _p(params),
@@ -331,7 +331,7 @@ export const exportsService = {
   }),
   exportAbsencesCSV: (params = {}) => api.get('/exports/absences/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportAbsencesPDF: (params = {}) => api.get('/exports/absences/pdf', {
     params: _p(params),
@@ -339,7 +339,7 @@ export const exportsService = {
   }),
   exportArretsMaladieCSV: (params = {}) => api.get('/exports/arrets-maladie/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportArretsMaladiePDF: (params = {}) => api.get('/exports/arrets-maladie/pdf', {
     params: _p(params),
@@ -347,26 +347,26 @@ export const exportsService = {
   }),
   exportToutCSV: (params = {}) => api.get('/exports/tout/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportUtilisateursCSV: (params = {}) => api.get('/exports/utilisateurs/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportEntreprisesCSV: () => api.get('/exports/entreprises/csv', {
     params: _p(),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportAuditCSV: (params = {}) => api.get('/exports/audit/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
   exportUsagePDF: () => api.get('/exports/usage/pdf', {
     responseType: 'blob'
   }),
   exportStatistiquesCSV: (params = {}) => api.get('/exports/statistiques/csv', {
     params: _p(params),
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   }),
 };
 
