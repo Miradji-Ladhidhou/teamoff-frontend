@@ -84,6 +84,7 @@ const AuditLogs = () => {
   const [totalPages, setTotalPages] = useState(1);
   const alert = useAlert();
   const [selectedLog, setSelectedLog] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const LIMIT = 20;
 
   const userOptions = useMemo(() => {
@@ -129,12 +130,6 @@ const AuditLogs = () => {
     loadLogs();
   }, [loadLogs]);
 
-  // Remet la page à 1 quand un filtre change.
-  // NOTE : double passe voulue — ne pas modifier.
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [userFilter, actionFilter, dateDebut, dateFin]);
-
   const handleReset = () => {
     setUserFilter('');
     setActionFilter('');
@@ -144,8 +139,9 @@ const AuditLogs = () => {
     loadLogs({ page: 1, userFilter: '', actionFilter: '', dateDebut: '', dateFin: '' });
   };
 
-  // Fix Firefox : appendChild/removeChild autour du click
   const exportLogs = async () => {
+    if (exporting) return;
+    setExporting(true);
     try {
       const response = await exportsService.exportAuditCSV({
         generatedAt:    formatGeneratedAt(),
@@ -164,6 +160,8 @@ const AuditLogs = () => {
       window.URL.revokeObjectURL(url);
     } catch {
       alert.error("Erreur lors de l'export CSV.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -174,9 +172,9 @@ const AuditLogs = () => {
       <div className="page-title-bar">
         <span className="section-title-bar__text">Logs d'Audit</span>
         <div className="d-flex gap-2">
-          <Button variant="outline-success" onClick={exportLogs}>
+          <Button variant="outline-success" onClick={exportLogs} disabled={exporting}>
             <FaDownload className="me-2" />
-            Exporter CSV
+            {exporting ? 'Export…' : 'Exporter CSV'}
           </Button>
         </div>
       </div>
@@ -189,7 +187,7 @@ const AuditLogs = () => {
             {/* Utilisateur : pleine largeur sur mobile */}
             <Col xs={12} md={3}>
               <FilterLabel>Utilisateur</FilterLabel>
-              <Form.Select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
+              <Form.Select value={userFilter} onChange={(e) => { setUserFilter(e.target.value); setCurrentPage(1); }}>
                 <option value="">Tous les utilisateurs</option>
                 {userOptions.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -202,7 +200,7 @@ const AuditLogs = () => {
             {/* Action : demi-largeur sur xs, propre sur sm+ */}
             <Col xs={12} sm={6} md={2}>
               <FilterLabel>Action</FilterLabel>
-              <Form.Select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+              <Form.Select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}>
                 <option value="">Toutes les actions</option>
                 <option value="LOGIN_SUCCESS">Connexion réussie</option>
                 <option value="LOGIN_FAILED">Connexion échouée</option>
@@ -217,11 +215,11 @@ const AuditLogs = () => {
             {/* Dates : côte à côte sur mobile (xs=6) */}
             <Col xs={6} sm={3} md={2}>
               <FilterLabel>Du</FilterLabel>
-              <Form.Control type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
+              <Form.Control type="date" value={dateDebut} onChange={(e) => { setDateDebut(e.target.value); setCurrentPage(1); }} />
             </Col>
             <Col xs={6} sm={3} md={2}>
               <FilterLabel>Au</FilterLabel>
-              <Form.Control type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
+              <Form.Control type="date" value={dateFin} onChange={(e) => { setDateFin(e.target.value); setCurrentPage(1); }} />
             </Col>
 
             {/* Compteur + reset — séparé visuellement sur mobile via CSS */}
@@ -445,7 +443,7 @@ const AuditLogs = () => {
               {selectedLog.metadata && (
                 <div>
                   <strong>Métadonnées</strong>
-                  <pre className="bg-light border rounded p-3 mt-1 small scroll-modal-content">
+                  <pre className="border rounded p-3 mt-1 small scroll-modal-content" style={{ background: 'var(--dk-card, #f8f9fa)' }}>
                     {JSON.stringify(selectedLog.metadata, null, 2)}
                   </pre>
                 </div>
