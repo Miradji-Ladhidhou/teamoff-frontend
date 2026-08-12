@@ -1,5 +1,5 @@
 /* ────────────── Base Layout ────────────── */
-.container-fluid {
+.dashboard-page.container-sm {
   min-height: 100vh;
   padding: 16px;
 }
@@ -230,11 +230,11 @@
 
 /* ────────────── Responsive ────────────── */
 @media (min-width: 576px) {
-  .container-fluid { padding: 20px; }
+  .dashboard-page.container-sm { padding: 20px; }
 }
 
 @media (min-width: 992px) {
-  .container-fluid { padding: 24px 32px; }
+  .dashboard-page.container-sm { padding: 24px 32px; }
 
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);

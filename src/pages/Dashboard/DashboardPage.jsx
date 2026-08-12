@@ -66,7 +66,7 @@ const DashboardPage = () => {
       try {
         setLoading(true);
 
-        let congesParams = {};
+        let congesParams = { limit: 500 };
         if (user?.role === 'employe') {
           congesParams.utilisateur_id = user.id;
         }
@@ -248,7 +248,7 @@ const DashboardPage = () => {
   };
 
   const getSoldeJours = (solde) => {
-    const raw = solde?.solde_restant ?? solde?.solde_disponible ?? solde?.solde ?? 0;
+    const raw = solde?.solde_disponible ?? solde?.solde_restant ?? solde?.solde ?? 0;
     const value = Number(raw);
     return Number.isFinite(value) ? value : 0;
   };
@@ -267,7 +267,7 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <Container fluid="sm" className="page-loading">
+      <Container fluid="sm" className="dashboard-page page-loading">
         <div className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
           <p className="ui-text-soft">Chargement du tableau de bord...</p>
@@ -277,14 +277,14 @@ const DashboardPage = () => {
   }
 
   return (
-    <Container fluid="sm">
+    <Container fluid="sm" className="dashboard-page">
       {showOnboarding && (
         <OnboardingWizard userId={user.id} onDismiss={handleDismissOnboarding} />
       )}
       {/* Hero greeting */}
       <div className="dashboard-hero">
         <div>
-          <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} 👋</div>
+          <div className="dashboard-hero__greeting">Bonjour, {user?.prenom} <span aria-hidden="true">👋</span></div>
           <div className="dashboard-hero__date">
             {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
