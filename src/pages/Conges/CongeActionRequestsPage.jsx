@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Table, Badge, Spinner, Button, Modal, Form, ButtonGroup } from 'react-bootstrap';
+import { Container, Table, Spinner, Button, Modal, Form, ButtonGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaCheck, FaTimes, FaChevronRight, FaInbox } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -108,8 +108,8 @@ const CongeActionRequestsPage = () => {
   };
 
   const statutBadge = (statut) => {
-    const variantMap = { pending: 'warning', approved: 'success', rejected: 'danger' };
-    return <Badge bg={variantMap[statut] || 'secondary'}>{STATUT_LABELS[statut] || statut}</Badge>;
+    const classMap = { pending: 'pending', approved: 'approved', rejected: 'refused' };
+    return <span className={`badge ${classMap[statut] || 'secondary'}`}>{STATUT_LABELS[statut] || statut}</span>;
   };
 
   return (
@@ -184,9 +184,9 @@ const CongeActionRequestsPage = () => {
                   <tr key={req.id}>
                     <td style={{ fontWeight: 600, fontSize: '13px' }}>{employeNom}</td>
                     <td>
-                      <Badge bg={req.type === 'cancel' ? 'danger' : 'primary'} style={{ fontSize: '11px' }}>
+                      <span className={`badge ${req.type === 'cancel' ? 'refused' : 'info'}`} style={{ fontSize: '11px' }}>
                         {TYPE_LABELS[req.type] || req.type}
-                      </Badge>
+                      </span>
                     </td>
                     <td style={{ fontSize: '12px' }}>
                       <div>{congeType}</div>
@@ -272,7 +272,7 @@ const CongeActionRequestsPage = () => {
               )}
             </p>
           )}
-          <div className="p-2 mb-3 rounded" style={{ background: 'var(--bs-light, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
+          <div className="p-2 mb-3 rounded" style={{ background: 'var(--dk-card, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
             {selectedRequest?.commentaire_employe || '—'}
           </div>
           <Form.Group>
@@ -311,7 +311,7 @@ const CongeActionRequestsPage = () => {
               </strong>.
             </p>
           )}
-          <div className="p-2 mb-3 rounded" style={{ background: 'var(--bs-light, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
+          <div className="p-2 mb-3 rounded" style={{ background: 'var(--dk-card, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
             {selectedRequest?.commentaire_employe || '—'}
           </div>
           <Form.Group>
