@@ -342,6 +342,7 @@ function App() {
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="audit" element={<AuditLogs />} />
             <Route path="settings" element={<SystemSettings />} />
+            <Route path="profile" element={<MyProfilePage />} />
             <Route path="legal" element={<LegalPage />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="privacy" element={<PrivacyPage />} />

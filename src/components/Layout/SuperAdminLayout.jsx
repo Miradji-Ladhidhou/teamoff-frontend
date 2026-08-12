@@ -5,7 +5,7 @@ import { Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
   FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers,
   FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes,
-  FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt
+  FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt, FaUser
 } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
@@ -35,6 +35,7 @@ const superadminTopbarNotes = {
   '/superadmin/notifications': 'Supervisez les notifications systeme',
   '/superadmin/audit': 'Tracez les actions sensibles',
   '/superadmin/settings': 'Ajustez les reglages plateforme',
+  '/superadmin/profile': 'Gerez votre compte et votre securite',
   '/help': 'Accedez a la documentation',
 };
 
@@ -80,13 +81,20 @@ const SuperAdminLayout = () => {
 
   const renderSidebarContent = (closeSidebar = false) => (
     <>
-      <div className="mb-3">
-        <div className="fw-bold" style={{ color: 'var(--dk-text)' }}>{user?.prenom} {user?.nom}</div>
+      <button
+        className="d-block w-100 text-start mb-3 p-0 border-0 bg-transparent sidebar-profile-btn"
+        onClick={() => { navigate('/superadmin/profile'); closeSidebar && setShowSidebar(false); }}
+        title="Mon profil"
+      >
+        <div className="fw-bold d-flex align-items-center gap-2" style={{ color: 'var(--dk-text)' }}>
+          {user?.prenom} {user?.nom}
+          <FaUser size={11} style={{ color: 'var(--dk-text-muted)', flexShrink: 0 }} />
+        </div>
         <small style={{ color: 'var(--dk-text-muted)' }}>SuperAdmin</small>
         <div className="mt-2">
           <span className="status-badge status-badge--info" style={{ fontSize: '0.7rem' }}>SuperAdmin</span>
         </div>
-      </div>
+      </button>
 
       <div className="sidebar-section-label">Essentiel</div>
       <Nav className="flex-column mb-2">
