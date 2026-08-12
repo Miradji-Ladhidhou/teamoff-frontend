@@ -1,7 +1,7 @@
 import './metrics.css';
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, ProgressBar } from 'react-bootstrap';
-import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer } from 'react-icons/fa';
+import { Container, Row, Col, Card, Spinner, ProgressBar, Button } from 'react-bootstrap';
+import { FaChartLine, FaClock, FaExclamationTriangle, FaUsers, FaServer, FaSync } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { metricsService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -62,7 +62,7 @@ const MetricsPage = () => {
     if (user.role === 'super_admin') {
       loadMetrics();
     }
-  }, [user]);
+  }, [user?.role]);
 
   const loadMetrics = async () => {
     try {
@@ -73,7 +73,6 @@ const MetricsPage = () => {
     } catch (err) {
       console.error('Erreur lors du chargement des métriques:', err);
       setError('Erreur lors du chargement des métriques');
-      alert.error('Erreur lors du chargement des métriques');
     } finally {
       setLoading(false);
     }
@@ -131,9 +130,12 @@ const MetricsPage = () => {
   }
 
   return (
-    <Container fluid="sm">
+    <Container fluid="sm" className="metrics-page">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Métriques Système</span>
+        <Button variant="outline-secondary" size="sm" onClick={loadMetrics} disabled={loading}>
+          <FaSync className={loading ? 'fa-spin' : ''} />
+        </Button>
       </div>
 
       {metrics && (
