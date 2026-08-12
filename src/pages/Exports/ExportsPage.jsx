@@ -2,7 +2,7 @@ import './exports.css';
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Form, ProgressBar, Table, Modal, Spinner } from 'react-bootstrap';
 import { Navigate } from 'react-router-dom';
-import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar, FaHeartbeat } from 'react-icons/fa';
+import { FaDownload, FaFileExcel, FaCalendarAlt, FaUsers, FaChartBar } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { entreprisesService, exportsService, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
@@ -240,6 +240,7 @@ const ExportsPage = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
+        window.URL.revokeObjectURL(url);
 
         setSuccess('Export terminé avec succès !');
         setExportProgress(0);
@@ -374,6 +375,7 @@ const ExportsPage = () => {
           <div className="exports-page__card">
             <h5 className="section-label-title mb-3">Paramètres d'export</h5>
               <Form>
+                <fieldset disabled={loading || previewLoading} style={{ border: 'none', padding: 0, margin: 0 }}>
                 {/* Type d'export */}
                 <Form.Group className="mb-3">
                   <Form.Label>Type d'export *</Form.Label>
@@ -543,6 +545,7 @@ const ExportsPage = () => {
                   </Form.Group>
                 )}
 
+                </fieldset>
                 {/* Bouton d'export */}
                 <div className="d-flex flex-column flex-sm-row gap-2 exports-page__actions">
                   <AsyncButton
