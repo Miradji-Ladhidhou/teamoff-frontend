@@ -237,6 +237,7 @@ const JoursBloquesPage = () => {
                   size="sm"
                   variant={(blockedDays.weekdays || []).includes(opt.value) ? 'primary' : 'outline-secondary'}
                   onClick={() => toggleWeekday(opt.value)}
+                  disabled={saving}
                 >
                   {opt.label}
                 </Button>

@@ -377,6 +377,8 @@ const JoursFeriesPage = () => {
                   <tr>
                     <th>Date</th>
                     <th>Libellé</th>
+                    <th>Type</th>
+                    <th>Récurrent</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -385,6 +387,16 @@ const JoursFeriesPage = () => {
                     <tr key={jourFerie.id}>
                       <td>{formatDate(jourFerie.date)}</td>
                       <td>{jourFerie.libelle}</td>
+                      <td>
+                        <span className={`badge ${jourFerie.est_travail ? 'info' : 'secondary'}`}>
+                          {jourFerie.est_travail ? 'Travaillé' : 'Chômé'}
+                        </span>
+                      </td>
+                      <td>
+                        {jourFerie.recurrent
+                          ? <span className="badge approved">Oui</span>
+                          : <span className="badge secondary">Non</span>}
+                      </td>
                       <td>
                         <div className="d-flex gap-1">
                           <Button

@@ -3,7 +3,7 @@ import { Button } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import './blocked-days-picker.css';
 
-const WEEK_DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+const WEEK_DAYS = ['L', 'Ma', 'Me', 'J', 'V', 'S', 'D'];
 
 const toISO = (d) => {
   const y = d.getFullYear();

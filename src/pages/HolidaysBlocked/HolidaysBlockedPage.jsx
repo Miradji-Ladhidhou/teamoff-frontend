@@ -43,7 +43,7 @@ const HolidaysBlockedPage = () => {
       </div>
 
       <style>{`
-        .days-merged .section-title-bar:first-of-type,
+        .days-merged .page-title-bar .section-title-bar__text,
         .days-merged .alert[role="note"] {
           display: none;
         }
