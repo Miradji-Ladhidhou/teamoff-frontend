@@ -6,6 +6,12 @@ import * as api from '../../services/api';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 
+const WORKFLOW_LABELS = {
+  manager_admin: 'Manager + Admin',
+  manager_only: 'Manager seul',
+  admin_only: 'Admin seul',
+};
+
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
   minimum_notice_days: 0,
@@ -184,7 +190,7 @@ const ServicesPage = () => {
 
       {selectedCompanyId && (
         <Card>
-          <Card.Header className="bg-white">
+          <Card.Header>
             <strong>{selectedCompany?.nom || ''}</strong>
             {' — '}
             <span className="text-muted">{services.length} service(s)</span>
@@ -203,9 +209,9 @@ const ServicesPage = () => {
                       <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                         <div>
                           <div className="fw-semibold">{service.name}</div>
-                          <small className="text-muted">Workflow: {service.policy?.approval_workflow || 'manager_admin'}</small>
+                          <small className="text-muted">Workflow: {WORKFLOW_LABELS[service.policy?.approval_workflow] || 'Manager + Admin'}</small>
                         </div>
-                        <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
+                        <span className={`badge ${service.employeesCount > 0 ? 'info' : 'secondary'}`}>
                           {service.employeesCount || 0}
                         </span>
                       </div>
@@ -242,11 +248,11 @@ const ServicesPage = () => {
                         <tr key={service.name}>
                           <td><strong>{service.name}</strong></td>
                           <td>
-                            <span className={`badge ${service.employeesCount > 0 ? 'info' : 'pending'}`}>
+                            <span className={`badge ${service.employeesCount > 0 ? 'info' : 'secondary'}`}>
                               {service.employeesCount || 0}
                             </span>
                           </td>
-                          <td>{service.policy?.approval_workflow || 'manager_admin'}</td>
+                          <td>{WORKFLOW_LABELS[service.policy?.approval_workflow] || 'Manager + Admin'}</td>
                           <td>{service.policy?.minimum_notice_days || 0} j</td>
                           <td>{service.policy?.max_employees_on_leave || 0}</td>
                           <td>
@@ -290,6 +296,7 @@ const ServicesPage = () => {
                 type="text"
                 value={formData.name}
                 onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+                disabled={submitting}
                 required
               />
             </Form.Group>
@@ -301,6 +308,7 @@ const ServicesPage = () => {
                   <Form.Select
                     value={formData.policy.overlap_behavior || 'block'}
                     onChange={(event) => setFormData({ ...formData, policy: { ...formData.policy, overlap_behavior: event.target.value } })}
+                    disabled={submitting}
                   >
                     <option value="block">Bloquer</option>
                     <option value="warning">Alerter</option>
@@ -313,6 +321,7 @@ const ServicesPage = () => {
                   <Form.Select
                     value={formData.policy.approval_workflow}
                     onChange={(event) => setFormData({ ...formData, policy: { ...formData.policy, approval_workflow: event.target.value } })}
+                    disabled={submitting}
                   >
                     <option value="manager_admin">Manager puis Admin</option>
                     <option value="manager_only">Manager uniquement</option>
@@ -331,6 +340,7 @@ const ServicesPage = () => {
                     min="0"
                     value={formData.policy.minimum_notice_days}
                     onChange={(event) => setFormData({ ...formData, policy: { ...formData.policy, minimum_notice_days: event.target.value } })}
+                    disabled={submitting}
                   />
                 </Form.Group>
               </Col>
@@ -342,6 +352,7 @@ const ServicesPage = () => {
                     min="1"
                     value={formData.policy.max_consecutive_days}
                     onChange={(event) => setFormData({ ...formData, policy: { ...formData.policy, max_consecutive_days: event.target.value } })}
+                    disabled={submitting}
                   />
                 </Form.Group>
               </Col>
@@ -353,6 +364,7 @@ const ServicesPage = () => {
                     min="0"
                     value={formData.policy.max_employees_on_leave}
                     onChange={(event) => setFormData({ ...formData, policy: { ...formData.policy, max_employees_on_leave: event.target.value } })}
+                    disabled={submitting}
                   />
                 </Form.Group>
               </Col>
