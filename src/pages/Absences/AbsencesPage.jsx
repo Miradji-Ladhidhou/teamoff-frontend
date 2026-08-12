@@ -12,7 +12,7 @@ const AbsencesPage = () => {
   const canDeclareAbsence = user && ['employe', 'manager', 'admin_entreprise'].includes(user.role);
 
   return (
-    <Container fluid="sm">
+    <Container fluid="sm" className="absences-page">
       <div className="page-title-bar">
         <span className="section-title-bar__text">Gestion des absences</span>
         <div className="d-flex gap-2">
@@ -43,7 +43,7 @@ const AbsencesPage = () => {
               </div>
             )}
           >
-            <CalendrierPage />
+            <CalendrierPage embedded />
           </React.Suspense>
         </Card.Body>
       </Card>

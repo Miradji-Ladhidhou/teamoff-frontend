@@ -40,9 +40,7 @@ const AbsenceForm = ({ onSuccess }) => {
       if (onSuccess) onSuccess();
 
     } catch (err) {
-      const msg = err.response?.data?.message || 'Erreur lors de la déclaration';
-      setError(msg);
-      alert.error(msg);
+      alert.error(err.response?.data?.message || 'Erreur lors de la déclaration');
     } finally {
       setSending(false);
     }
@@ -57,6 +55,7 @@ const AbsenceForm = ({ onSuccess }) => {
             className="absence-form-select"
             value={typeAbsence}
             onChange={(e) => setTypeAbsence(e.target.value)}
+            disabled={sending}
             required
           >
             <option value="">Sélectionner</option>
@@ -72,6 +71,7 @@ const AbsenceForm = ({ onSuccess }) => {
             type="date"
             value={dateDebut}
             onChange={(e) => setDateDebut(e.target.value)}
+            disabled={sending}
             required
           />
         </div>
@@ -83,6 +83,7 @@ const AbsenceForm = ({ onSuccess }) => {
             type="date"
             value={dateFin}
             onChange={(e) => setDateFin(e.target.value)}
+            disabled={sending}
             required
           />
         </div>
@@ -94,6 +95,7 @@ const AbsenceForm = ({ onSuccess }) => {
           className="absence-form-textarea"
           value={commentaire}
           onChange={(e) => setCommentaire(e.target.value)}
+          disabled={sending}
           required
         />
       </div>

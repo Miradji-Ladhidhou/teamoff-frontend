@@ -80,7 +80,7 @@ const getCongeTypeLabel = (conge) => {
   return conge?.conge_type_libelle || 'Congé';
 };
 
-const CalendrierPage = () => {
+const CalendrierPage = ({ embedded = false }) => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [conges, setConges] = useState([]);
@@ -435,24 +435,26 @@ const CalendrierPage = () => {
 
   return (
     <Container fluid className="calendar-page">
-      <div className="page-title-bar">
-        <span className="section-title-bar__text">Calendrier</span>
-        <div className="d-flex gap-2 cal-header-actions">
-          {canDeclareAbsence && (
-            <Button variant="outline-secondary" size="sm" onClick={() => setShowAbsenceModal(true)} className="cal-btn-absence">
-              <span className="cal-btn-label">Absence</span>
+      {!embedded && (
+        <div className="page-title-bar">
+          <span className="section-title-bar__text">Calendrier</span>
+          <div className="d-flex gap-2 cal-header-actions">
+            {canDeclareAbsence && (
+              <Button variant="outline-secondary" size="sm" onClick={() => setShowAbsenceModal(true)} className="cal-btn-absence">
+                <span className="cal-btn-label">Absence</span>
+              </Button>
+            )}
+            {canCreateLeave && (
+              <Button as={Link} to="/conges/nouveau" size="sm" className="cal-btn-conge">
+                <FaPlus /><span className="cal-btn-label ms-1">Congé</span>
+              </Button>
+            )}
+            <Button variant="outline-secondary" size="sm" onClick={() => setShowFilters(v => !v)}>
+              <FaFilter />
             </Button>
-          )}
-          {canCreateLeave && (
-            <Button as={Link} to="/conges/nouveau" size="sm" className="cal-btn-conge">
-              <FaPlus /><span className="cal-btn-label ms-1">Congé</span>
-            </Button>
-          )}
-          <Button variant="outline-secondary" size="sm" onClick={() => setShowFilters(v => !v)}>
-            <FaFilter />
-          </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {selectionStart && (
         <div className="alert alert-info calendar-selection-alert" role="status">
