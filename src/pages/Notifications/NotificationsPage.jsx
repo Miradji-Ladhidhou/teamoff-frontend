@@ -34,6 +34,7 @@ const NotificationsPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [filterChip, setFilterChip] = useState('all');
+  const [markingAll, setMarkingAll] = useState(false);
 
   useEffect(() => {
     loadNotifications();
@@ -80,12 +81,16 @@ const NotificationsPage = () => {
   };
 
   const handleMarkAllAsRead = async () => {
+    if (markingAll) return;
+    setMarkingAll(true);
     try {
       await notificationsService.markAllAsRead();
       await loadNotifications();
     } catch (err) {
       console.error('Erreur marquage toutes notifications:', err);
       alert.error('Erreur lors du marquage de toutes les notifications');
+    } finally {
+      setMarkingAll(false);
     }
   };
 
@@ -147,17 +152,15 @@ const NotificationsPage = () => {
     return rawUrl;
   };
 
-  const handleOpenNotification = async (notification) => {
+  const handleOpenNotification = (notification) => {
     const targetUrl = getNotificationTargetUrl(notification);
     if (!targetUrl) return;
-    try {
-      if (!notification.lu) await notificationsService.markAsRead(notification.id);
-    } catch (err) {
-      console.error('Erreur marquage notification au clic:', err);
-    } finally {
-      await loadNotifications();
-      navigate(targetUrl);
+    if (!notification.lu) {
+      notificationsService.markAsRead(notification.id).catch(console.error);
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, lu: true } : n));
+      syncUnreadCount().catch(console.error);
     }
+    navigate(targetUrl);
   };
 
   const getDemandeurFromMessage = (message) => {
@@ -204,7 +207,7 @@ const NotificationsPage = () => {
       <div className="page-title-bar">
         <span className="section-title-bar__text">Notifications</span>
         {notifications.some(n => !n.lu) && (
-          <Button variant="link" size="sm" onClick={handleMarkAllAsRead} className="section-title-bar__action p-0 d-flex align-items-center gap-1">
+          <Button variant="link" size="sm" onClick={handleMarkAllAsRead} disabled={markingAll} className="section-title-bar__action p-0 d-flex align-items-center gap-1">
             <FaCheckDouble size={12} /> Tout lire
           </Button>
         )}
@@ -217,7 +220,7 @@ const NotificationsPage = () => {
             key={chip.value}
             type="button"
             className={`chip${filterChip === chip.value ? ' active' : ''}`}
-            onClick={() => setFilterChip(chip.value)}
+            onClick={() => { setFilterChip(chip.value); setCurrentPage(1); }}
           >
             {chip.label}
           </button>
@@ -253,7 +256,8 @@ const NotificationsPage = () => {
                 return (
                   <div
                     key={notification.id}
-                    className={`list-group-item${!notification.lu ? ' bg-light' : ''}${isClickable ? ' cursor-pointer' : ''}`}
+                    className={`list-group-item${isClickable ? ' cursor-pointer' : ''}`}
+                    style={!notification.lu ? { background: 'var(--notif-unread-bg, rgba(13,110,253,0.06))' } : undefined}
                     onClick={() => isClickable && handleOpenNotification(notification)}
                     role={isClickable ? 'button' : undefined}
                     tabIndex={isClickable ? 0 : undefined}
