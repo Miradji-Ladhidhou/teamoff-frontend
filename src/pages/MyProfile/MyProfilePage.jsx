@@ -31,8 +31,8 @@ const MyProfilePage = () => {
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
-  // 2FA state
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  // 2FA state — initialisé depuis le contexte utilisateur (totp_enabled fourni par /me)
+  const [twoFAEnabled, setTwoFAEnabled] = useState(user?.totp_enabled ?? false);
   const [twoFASetup, setTwoFASetup] = useState(null); // { qrCode, secret }
   const [twoFACode, setTwoFACode] = useState('');
   const [disablePassword, setDisablePassword] = useState('');
@@ -48,6 +48,7 @@ const MyProfilePage = () => {
   useEffect(() => {
     if (user?.id) {
       setProfileData({ prenom: user.prenom || '', nom: user.nom || '', email: user.email || '' });
+      setTwoFAEnabled(user.totp_enabled ?? false);
     }
   }, [user]);
 
@@ -150,14 +151,12 @@ const MyProfilePage = () => {
                 >
                   <FaLock size={12} /> Sécurité
                 </button>
-                {user?.role === 'admin_entreprise' && (
-                  <button
-                    className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === '2fa' ? ' btn-primary' : ' btn-outline-secondary'}`}
-                    onClick={() => setActiveTab('2fa')}
-                  >
-                    <FaShieldAlt size={12} /> Double authentification
-                  </button>
-                )}
+                <button
+                  className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === '2fa' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                  onClick={() => setActiveTab('2fa')}
+                >
+                  <FaShieldAlt size={12} /> Double authentification
+                </button>
               </div>
             </Card.Body>
           </Card>
@@ -220,7 +219,7 @@ const MyProfilePage = () => {
             </Card>
           )}
 
-          {activeTab === '2fa' && user?.role === 'admin_entreprise' && (
+          {activeTab === '2fa' && (
             <Card>
               <Card.Header className="d-flex align-items-center justify-content-between">
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaShieldAlt className="me-2" />Double authentification (2FA)</span>
@@ -283,9 +282,9 @@ const MyProfilePage = () => {
                             try {
                               await authService.enable2FA({ code: twoFACode });
                               setTwoFAEnabled(true);
+                              updateUser({ totp_enabled: true });
                               setTwoFASetup(null);
                               setTwoFACode('');
-                              alert.success && alert.success('2FA activé avec succès');
                               setSuccess('2FA activé avec succès.');
                             } catch (err) {
                               alert.error(err.response?.data?.message || 'Code invalide');
@@ -322,6 +321,7 @@ const MyProfilePage = () => {
                           try {
                             await authService.disable2FA({ password: disablePassword });
                             setTwoFAEnabled(false);
+                            updateUser({ totp_enabled: false });
                             setDisablePassword('');
                             setSuccess('2FA désactivé.');
                           } catch (err) {

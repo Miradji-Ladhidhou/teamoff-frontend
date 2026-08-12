@@ -3,7 +3,7 @@ import './users.css';
 const PROTECTED_EMAIL = 'saas.teamoff@gmail.com';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Table, Button, Modal, Form } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaUserCheck, FaUserTimes, FaEnvelope, FaCoins, FaShieldAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert, useConfirmation } from '../../hooks/useAlert';
@@ -266,6 +266,30 @@ const UsersManagement = () => {
     });
   };
 
+  const handleAdminDisable2FA = async (targetUser) => {
+    confirm({
+      title: 'Désactiver le 2FA ?',
+      description: `Désactiver l'authentification à deux facteurs de ${targetUser.prenom} ${targetUser.nom} ? L'utilisateur pourra se reconnecter avec son mot de passe uniquement.`,
+      confirmLabel: 'Désactiver le 2FA',
+      cancelLabel: 'Annuler',
+      danger: true,
+      onConfirm: async () => {
+        await mutateUserAction.run(async () => {
+          setActiveUserActionId(targetUser.id);
+          try {
+            await api.authService.adminDisable2FA(targetUser.id);
+            alert.success(`2FA désactivé pour ${targetUser.prenom} ${targetUser.nom}`);
+            loadUsers();
+          } catch (err) {
+            alert.error(err.response?.data?.message || 'Erreur lors de la désactivation du 2FA');
+          } finally {
+            setActiveUserActionId(null);
+          }
+        });
+      }
+    });
+  };
+
   const serviceOptions = useMemo(() => {
     const services = [...new Set(users.map((u) => u.service).filter(Boolean))].sort();
     return services;
@@ -478,6 +502,17 @@ const UsersManagement = () => {
                             <FaEnvelope />
                           </AsyncButton>
                         )}
+                        {isSuperAdmin && targetUser.totp_enabled && (
+                          <AsyncButton
+                            variant="outline-warning"
+                            size="sm"
+                            onClick={() => handleAdminDisable2FA(targetUser)}
+                            title="Désactiver le 2FA"
+                            isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
+                            loadingText="">
+                            <FaShieldAlt />
+                          </AsyncButton>
+                        )}
                         {targetUser.email !== PROTECTED_EMAIL && (isSuperAdmin || targetUser.role !== 'admin_entreprise') && (
                           <AsyncButton
                             variant="outline-danger"
@@ -668,6 +703,16 @@ const UsersManagement = () => {
               isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
               loadingText="">
               {selectedUserDetails?.statut === 'actif' ? <><FaUserTimes className="me-1" />Désactiver</> : <><FaUserCheck className="me-1" />Activer</>}
+            </AsyncButton>
+          )}
+          {isSuperAdmin && selectedUserDetails?.totp_enabled && (
+            <AsyncButton
+              variant="outline-warning"
+              size="sm"
+              onClick={() => { closeDetailsModal(); handleAdminDisable2FA(selectedUserDetails); }}
+              isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
+              loadingText="Désactivation…">
+              <FaShieldAlt className="me-1" />Désactiver 2FA
             </AsyncButton>
           )}
           {selectedUserDetails?.email !== PROTECTED_EMAIL && (isSuperAdmin || selectedUserDetails?.role !== 'admin_entreprise') && (

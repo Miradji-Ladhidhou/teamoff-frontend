@@ -174,6 +174,7 @@ export const authService = {
   setup2FA: () => api.get('/auth/2fa/setup'),
   enable2FA: (data) => api.post('/auth/2fa/enable', data),
   disable2FA: (data) => api.post('/auth/2fa/disable', data),
+  adminDisable2FA: (userId) => api.post(`/auth/2fa/admin-disable/${userId}`),
 };
 
 export const systemService = {
