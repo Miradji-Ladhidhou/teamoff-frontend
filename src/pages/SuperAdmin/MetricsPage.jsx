@@ -48,6 +48,7 @@ const normalizeMetrics = (raw = {}) => {
     dbConnections: Number(raw.dbConnections ?? 0),
     dbQueries: Number(raw.dbQueries ?? 0),
     cacheHitRate: Number(raw.cacheHitRate ?? 0),
+    recentErrors: Array.isArray(raw.recentErrors) ? raw.recentErrors : [],
   };
 };
 
@@ -347,6 +348,53 @@ const MetricsPage = () => {
                     </div>
                   </Col>
                 </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+          {/* Erreurs récentes */}
+          <Col lg={12} className="mb-4">
+            <Card>
+              <Card.Header>
+                <FaExclamationTriangle className="me-2" />
+                Erreurs récentes {metrics.recentErrors.length > 0 && <span className="badge refused ms-2">{metrics.recentErrors.length}</span>}
+              </Card.Header>
+              <Card.Body className="p-0">
+                {metrics.recentErrors.length === 0 ? (
+                  <p className="text-muted mb-0 p-3">Aucune erreur depuis le dernier démarrage du serveur.</p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-sm mb-0">
+                      <thead>
+                        <tr>
+                          <th>Date / Heure</th>
+                          <th>Méthode</th>
+                          <th>URL</th>
+                          <th>Code</th>
+                          <th>Durée</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {metrics.recentErrors.map((err, i) => {
+                          const d = new Date(err.timestamp);
+                          const dateStr = isNaN(d) ? err.timestamp : d.toLocaleString('fr-FR');
+                          return (
+                            <tr key={i}>
+                              <td><small className="text-muted">{dateStr}</small></td>
+                              <td><code className="small">{err.method}</code></td>
+                              <td style={{ maxWidth: 320, wordBreak: 'break-all' }}><small>{err.url}</small></td>
+                              <td>
+                                <span className={`badge ${err.statusCode >= 500 ? 'refused' : 'pending'}`}>
+                                  {err.statusCode}
+                                </span>
+                              </td>
+                              <td><small>{err.durationMs} ms</small></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
