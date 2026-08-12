@@ -62,7 +62,6 @@ const SystemSettings = () => {
   useEffect(() => {
     loadSettings();
     loadSystemInfo();
-    loadHistory({ page: 1 });
   }, []);
 
   useEffect(() => {
@@ -456,7 +455,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.maxFileSize}
-                      onChange={(e) => handleInputChange('maxFileSize', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('maxFileSize', parseInt(e.target.value, 10) || 0)}
                     />
                   </Form.Group>
                 </Col>
@@ -511,7 +510,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.sessionTimeout}
-                      onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value, 10) || 0)}
                     />
                     <Form.Text className="text-muted">Exemple: 60 = déconnexion automatique après 1h d'inactivité.</Form.Text>
                   </Form.Group>
@@ -522,7 +521,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.maxLoginAttempts}
-                      onChange={(e) => handleInputChange('maxLoginAttempts', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('maxLoginAttempts', parseInt(e.target.value, 10) || 0)}
                     />
                     <Form.Text className="text-muted">Exemple: 5 = blocage temporaire après 5 échecs.</Form.Text>
                   </Form.Group>
@@ -536,7 +535,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.passwordMinLength}
-                      onChange={(e) => handleInputChange('passwordMinLength', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('passwordMinLength', parseInt(e.target.value, 10) || 0)}
                     />
                   </Form.Group>
                 </Col>
@@ -584,7 +583,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.smtpPort}
-                      onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value, 10) || 0)}
                     />
                   </Form.Group>
                 </Col>
@@ -692,7 +691,7 @@ const SystemSettings = () => {
                     <Form.Control
                       type="number"
                       value={settings.dbRetentionDays}
-                      onChange={(e) => handleInputChange('dbRetentionDays', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('dbRetentionDays', parseInt(e.target.value, 10) || 0)}
                     />
                     <Form.Text className="text-muted">Exemple: 30 = conservation des sauvegardes pendant 1 mois.</Form.Text>
                   </Form.Group>
