@@ -105,7 +105,7 @@ const CongesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters.conge_type_id, filters.limit, filters.statut, user?.id, user?.role, isManager, viewMode, canViewAllEmployees]);
+  }, [filters.conge_type_id, filters.statut, user?.id, user?.role, isManager, viewMode, canViewAllEmployees]);
 
   useEffect(() => {
     loadConges();
@@ -295,7 +295,7 @@ const CongesPage = () => {
     }
 
     if (isAdmin()) {
-      if (workflow === 'manager' || workflow === 'manager_only') return false;
+      if (workflow === 'manager_only') return false;
       if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
       if (workflow === 'manager_admin') return conge.statut === 'valide_manager';
       return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
@@ -321,6 +321,13 @@ const CongesPage = () => {
 
   const handleValidateConge = async () => {
     if (!selectedCongeToValidate) return;
+
+    const overlapData = validationOverlapByCongeId[selectedCongeToValidate];
+    if (overlapData?.has_overlap && !validateComment.trim()) {
+      alert.error('Un commentaire est obligatoire lorsqu\'il y a un chevauchement.');
+      return;
+    }
+
     await validateAction.run(async () => {
       try {
         await congesService.validate(selectedCongeToValidate, {
@@ -456,8 +463,8 @@ const CongesPage = () => {
           value={`${filters.sortBy}__${filters.sortOrder}`}
           onChange={(e) => {
             const [by, order] = e.target.value.split('__');
-            handleFilterChange('sortBy', by);
-            handleFilterChange('sortOrder', order);
+            setCurrentPage(1);
+            setFilters(prev => ({ ...prev, sortBy: by, sortOrder: order }));
           }}
         >
           <option value="date_demande__desc">Plus récent</option>
