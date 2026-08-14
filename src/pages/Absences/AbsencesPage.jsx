@@ -9,7 +9,7 @@ const CalendrierPage = React.lazy(() => import('../Calendrier/CalendrierPage'));
 const AbsencesPage = () => {
   const { user } = useAuth();
 
-  const canDeclareAbsence = user && ['employe', 'manager', 'admin_entreprise'].includes(user.role);
+  const canDeclareAbsence = user && ['employe', 'apprenti', 'manager', 'admin_entreprise'].includes(user.role);
 
   return (
     <Container fluid="sm" className="absences-page">

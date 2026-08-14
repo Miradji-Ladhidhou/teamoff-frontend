@@ -317,7 +317,7 @@ const CongeDetailsPage = () => {
     if (isOwnLeave && conge.statut === 'reserve') return true;
 
     if (isOwnLeave && conge.statut === 'en_attente_manager') {
-      if (user?.role === 'employe') return selfCancellationPolicy.allow_employee_cancel_own_pending;
+      if (['employe', 'apprenti'].includes(user?.role)) return selfCancellationPolicy.allow_employee_cancel_own_pending;
       if (user?.role === 'manager') return selfCancellationPolicy.allow_manager_cancel_own_pending;
       return true;
     }

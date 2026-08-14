@@ -67,7 +67,7 @@ const DashboardPage = () => {
         setLoading(true);
 
         let congesParams = { limit: 500 };
-        if (user?.role === 'employe') {
+        if (['employe', 'apprenti'].includes(user?.role)) {
           congesParams.utilisateur_id = user.id;
         }
 
@@ -123,7 +123,7 @@ const DashboardPage = () => {
         setRecentConges(sorted.slice(0, 5));
         setNotifications(notifs);
 
-        if (['employe', 'manager'].includes(user?.role) && user.id) {
+        if (['employe', 'apprenti', 'manager'].includes(user?.role) && user.id) {
           try {
             const [soldesResponse, congeTypesResponse] = await Promise.all([
               quotasService.getSoldes(user.id),
@@ -289,7 +289,7 @@ const DashboardPage = () => {
             {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
-        {['employe', 'manager'].includes(user?.role) && (
+        {['employe', 'apprenti', 'manager'].includes(user?.role) && (
           <Button as={Link} to="/conges/nouveau" variant="primary" size="sm"
             className="d-none d-md-flex align-items-center gap-2 dashboard-hero__cta">
             <FaPlus size={12} /> Nouveau congé
@@ -310,7 +310,7 @@ const DashboardPage = () => {
       {/* Stat cards — adaptées au rôle et au workflow */}
       <div className="stats-grid">
         {/* Employé : ses propres congés */}
-        {user?.role === 'employe' && [
+        {['employe', 'apprenti'].includes(user?.role) && [
           { label: 'Total',         value: stats.totalConges,    color: 'blue' },
           { label: 'En att. manager', value: stats.enAttente,    color: 'amber', hide: stats.enAttente === 0 && stats.enAttenteAdmin === 0 },
           { label: 'En att. admin', value: stats.enAttenteAdmin, color: 'amber', hide: stats.enAttenteAdmin === 0 },
@@ -460,7 +460,7 @@ const DashboardPage = () => {
                 <p style={{ color: 'var(--text-soft, var(--dk-text-soft))', fontSize: '0.875rem', marginBottom: '1rem' }}>
                   Aucun congé trouvé
                 </p>
-                {user?.role === 'employe' && (
+                {['employe', 'apprenti'].includes(user?.role) && (
                   <Button as={Link} to="/conges/nouveau" variant="primary" size="sm">
                     <FaPlus className="me-1" /> Créer votre premier congé
                   </Button>
@@ -511,7 +511,7 @@ const DashboardPage = () => {
       </Row>
 
       {/* Mobile FAB — Nouveau congé */}
-      {['employe', 'manager', 'admin_entreprise'].includes(user?.role) && (
+      {['employe', 'apprenti', 'manager', 'admin_entreprise'].includes(user?.role) && (
         <Link to="/conges/nouveau" className="dashboard-fab d-md-none" aria-label="Nouveau congé">
           <FaPlus size={20} />
         </Link>

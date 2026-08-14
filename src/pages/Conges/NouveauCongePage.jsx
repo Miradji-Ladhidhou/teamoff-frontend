@@ -17,9 +17,9 @@ const NouveauCongePage = () => {
   const location = useLocation();
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const canCreateLeave = ['employe', 'manager', 'super_admin'].includes(user?.role);
+  const canCreateLeave = ['employe', 'apprenti', 'manager', 'super_admin'].includes(user?.role);
   const canAccessPage = isEditMode
-    ? ['employe', 'manager', 'admin_entreprise', 'super_admin'].includes(user?.role)
+    ? ['employe', 'apprenti', 'manager', 'admin_entreprise', 'super_admin'].includes(user?.role)
     : canCreateLeave;
   const returnPath = user?.role === 'super_admin' ? '/superadmin/leaves' : '/conges';
 

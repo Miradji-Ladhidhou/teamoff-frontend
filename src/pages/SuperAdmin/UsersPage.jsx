@@ -15,7 +15,7 @@ const getInitials = (u) =>
   `${(u?.prenom || '').charAt(0)}${(u?.nom || '').charAt(0)}`.toUpperCase() || '?';
 
 const roleToAvatarColor = (role) => {
-  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue' };
+  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue', apprenti: 'blue' };
   return map[role] || 'blue';
 };
 
@@ -139,7 +139,7 @@ const UsersManagement = () => {
   };
 
   const selectableServices = getSelectableServices();
-  const isServiceRole = ['employe', 'manager'].includes(formData.role);
+  const isServiceRole = ['employe', 'apprenti', 'manager'].includes(formData.role);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -308,8 +308,8 @@ const UsersManagement = () => {
   const pagedUsers = filteredUsers.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   const getRoleBadge = (role) => {
-    const classes = { super_admin: 'refused', admin_entreprise: 'info', manager: 'pending', employe: 'approved' };
-    const labels = { super_admin: 'Super Admin', admin_entreprise: 'Admin', manager: 'Manager', employe: 'Employé' };
+    const classes = { super_admin: 'refused', admin_entreprise: 'info', manager: 'pending', employe: 'approved', apprenti: 'approved' };
+    const labels = { super_admin: 'Super Admin', admin_entreprise: 'Admin', manager: 'Manager', employe: 'Employé', apprenti: 'Apprenti' };
     return <span className={`badge badge-role ${classes[role] || 'info'}`}>{labels[role] || role}</span>;
   };
 
@@ -399,6 +399,7 @@ const UsersManagement = () => {
           {isSuperAdmin && <option value="admin_entreprise">Admin</option>}
           <option value="manager">Manager</option>
           <option value="employe">Employé</option>
+          <option value="apprenti">Apprenti</option>
         </Form.Select>
         <Form.Select className="users-filter-bar__select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">Tous statuts</option>
@@ -577,7 +578,7 @@ const UsersManagement = () => {
                   <Form.Label>Rôle *</Form.Label>
                   <Form.Select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value, service: ['employe', 'manager'].includes(e.target.value) ? formData.service : '' })}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value, service: ['employe', 'apprenti', 'manager'].includes(e.target.value) ? formData.service : '' })}
                     required
                     disabled={submitAction.isRunning || (!!editingUser && editingUser.role === 'admin_entreprise' && !isSuperAdmin)}
                   >
@@ -585,6 +586,7 @@ const UsersManagement = () => {
                     {(isSuperAdmin || user?.role === 'admin_entreprise') && <option value="admin_entreprise">Admin entreprise</option>}
                     <option value="manager">Manager</option>
                     <option value="employe">Employé</option>
+                    <option value="apprenti">Apprenti</option>
                   </Form.Select>
                   {!!editingUser && editingUser.role === 'admin_entreprise' && !isSuperAdmin && (
                     <div className="small text-muted mt-1">Le rôle Admin ne peut être modifié que par un super administrateur.</div>

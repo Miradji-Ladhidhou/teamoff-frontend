@@ -14,7 +14,7 @@ const getRoleLabel = (role) => {
 };
 
 const roleToAvatarColor = (role) => {
-  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue' };
+  const map = { super_admin: 'red', admin_entreprise: 'purple', manager: 'amber', employe: 'blue', apprenti: 'blue' };
   return map[role] || 'blue';
 };
 

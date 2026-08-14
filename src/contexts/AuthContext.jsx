@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }) => {
 
   // Vérifier si l'utilisateur est employé
   const isEmploye = () => {
-    return hasRole(['employe']);
+    return hasRole(['employe', 'apprenti']);
   };
 
   // Vérifier si l'utilisateur peut valider des congés

@@ -40,7 +40,7 @@ const accentToBadgeClass = (accent) => {
 
 const CongesPage = () => {
   const { user, isAdmin } = useAuth();
-  const canCreateLeave = ['employe', 'manager'].includes(user?.role);
+  const canCreateLeave = ['employe', 'apprenti', 'manager'].includes(user?.role);
   const isManager = user?.role === 'manager';
   const location = useLocation();
   const [viewMode, setViewMode] = useState('all'); // 'own' | 'all'
@@ -88,7 +88,7 @@ const CongesPage = () => {
       if (filters.statut) params.statut = filters.statut;
       if (filters.conge_type_id) params.conge_type_id = filters.conge_type_id;
 
-      if (user?.role === 'employe') {
+      if (['employe', 'apprenti'].includes(user?.role)) {
         params.utilisateur_id = user.id;
       } else if (isManager) {
         if (!canViewAllEmployees || viewMode === 'own') params.utilisateur_id = user.id;

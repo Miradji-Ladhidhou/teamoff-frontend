@@ -1119,7 +1119,7 @@ const CompaniesManagement = () => {
                   nom, prenom, email, role, service, date_embauche, type_conge, jours_acquis, jours_pris
                 </code>
                 <div className="small text-muted mt-1">
-                  Roles : <code>employe</code> / <code>manager</code> / <code>admin_entreprise</code> &nbsp;|&nbsp;
+                  Roles : <code>employe</code> / <code>apprenti</code> / <code>manager</code> / <code>admin_entreprise</code> &nbsp;|&nbsp;
                   Plusieurs lignes par employé si plusieurs types de congé.
                 </div>
               </div>

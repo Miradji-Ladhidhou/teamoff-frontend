@@ -14,27 +14,27 @@ const HelpPage = () => {
     {
       header: "Comment se connecter à la plateforme ?",
       body: "Rendez-vous sur l'URL de votre organisation, saisissez votre adresse email professionnelle et votre mot de passe. Si vous avez oublié votre mot de passe, utilisez le lien « Mot de passe oublié » sur la page de connexion.",
-      roles: ['employe', 'manager', 'admin_entreprise', 'super_admin']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise', 'super_admin']
     },
     {
       header: "Comment poser une demande de congé ?",
       body: "Cliquez sur « Mes congés » dans le menu, puis sur « + Nouvelle demande ». Sélectionnez le type de congé, les dates de début et de fin, ajoutez un commentaire si nécessaire, et soumettez. Vous pouvez suivre l'état de votre demande (en attente, validé, refusé) en temps réel.",
-      roles: ['employe', 'manager', 'admin_entreprise']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise']
     },
     {
       header: "Comment consulter mon historique de congés ?",
       body: "Accédez à la page « Historique » dans le menu. Vous pouvez filtrer par année et par statut (approuvé, refusé, en attente). Chaque ligne affiche le type de congé, la période, le nombre de jours et le statut. Vos soldes annuels (acquis, pris, réservés, disponibles) sont affichés en haut de la page.",
-      roles: ['employe', 'manager', 'admin_entreprise']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise']
     },
     {
       header: "Où voir mon solde de congés ?",
       body: "Votre solde est visible sur la page « Historique » (cartes de soldes par type en haut de page) ou directement dans le détail d'une demande de congé. Les administrateurs peuvent consulter les soldes de tous les employés depuis la page « Soldes ».",
-      roles: ['employe', 'manager', 'admin_entreprise']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise']
     },
     {
       header: "Comment déclarer une absence maladie ?",
       body: "Allez dans « Absences » et cliquez sur « + Nouvelle absence ». Sélectionnez « Arrêt maladie », renseignez les dates et un commentaire. N'oubliez pas de remettre votre avis d'arrêt de travail directement à votre entreprise dans les meilleurs délais — la transmission en ligne n'est pas disponible.",
-      roles: ['employe', 'manager', 'admin_entreprise']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise']
     },
     {
       header: "Comment valider ou refuser une demande de congé ?",
@@ -64,7 +64,7 @@ const HelpPage = () => {
     {
       header: "Comment contacter le support TeamOff ?",
       body: "Envoyez un email à saas.teamoff@gmail.com. Pour un incident technique, précisez « INCIDENT » dans l'objet pour un traitement prioritaire. Pour une question RGPD, précisez « RGPD ». Les réponses sont assurées sous 1 à 3 jours ouvrés.",
-      roles: ['employe', 'manager', 'admin_entreprise', 'super_admin']
+      roles: ['employe', 'apprenti', 'manager', 'admin_entreprise', 'super_admin']
     },
   ];
 

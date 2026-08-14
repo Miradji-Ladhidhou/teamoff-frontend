@@ -55,7 +55,7 @@ const SoldesPage = () => {
         ]);
 
         const filteredUsers = (Array.isArray(usersRes.data) ? usersRes.data : [])
-          .filter((u) => u.role === 'employe' || u.role === 'manager');
+          .filter((u) => ['employe', 'apprenti', 'manager'].includes(u.role));
 
         const policy = policyRes.data?.politique_conges || {};
         setReportAutorise(Boolean(policy.report_autorise));

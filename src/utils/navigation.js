@@ -7,6 +7,14 @@ export const getDefaultRoute = (role) => {
 };
 
 export const roleNavigation = {
+  apprenti: [
+    { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
+    { path: '/mes-conges', label: 'Mes congés', icon: 'leave', section: 'primary' },
+    { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
+    { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
+    { path: '/help', label: 'Aide', icon: 'info', section: 'secondary' },
+    { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
+  ],
   employe: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/mes-conges', label: 'Mes congés', icon: 'leave', section: 'primary' },
