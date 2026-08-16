@@ -50,14 +50,31 @@
 
 .guide-page section { padding: 64px 0; }
 
-/* ── Nav interne ── */
+/* ── Nav interne flottante ── */
 .guide-page nav {
-  position: sticky;
-  top: 0; /* sticky dans le contexte du scroll de .page-content */
-  z-index: 100;
+  position: fixed;
+  top: 52px;   /* sous la topbar de l'app */
+  left: 0;
+  right: 0;
+  z-index: 90;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 992px) {
+  .guide-page nav {
+    left: 220px; /* sidebar desktop */
+  }
+}
+
+/* Compense la hauteur de la nav fixe */
+.guide-page {
+  padding-top: 52px;
+}
+
+.guide-page section[id] {
+  scroll-margin-top: 52px;
 }
 
 .guide-page .nav-inner {
