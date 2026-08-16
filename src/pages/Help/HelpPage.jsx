@@ -152,10 +152,11 @@ export default function HelpPage() {
               <ul className="role-list">
                 <li>Tout ce que fait un employé</li>
                 <li>Valider ou refuser les demandes de l'équipe</li>
-                <li>Voir les congés de toute l'entreprise</li>
+                <li>Voir les congés de son équipe</li>
                 <li>Détecter les chevauchements à la validation</li>
                 <li>Activer une anticipation de congé pour l'année suivante</li>
-                <li>Consulter les soldes de l'équipe</li>
+                <li>Consulter les soldes de son équipe</li>
+                <li>Exporter les données (CSV, PDF)</li>
               </ul>
             </div>
 
@@ -171,6 +172,7 @@ export default function HelpPage() {
                 <li>Configurer la politique de congés</li>
                 <li>Gérer les types de congé et jours fériés</li>
                 <li>Ajuster manuellement les soldes</li>
+                <li>Traiter les demandes de modification et d'annulation</li>
                 <li>Exporter les données (CSV, PDF)</li>
               </ul>
             </div>
@@ -215,7 +217,7 @@ export default function HelpPage() {
                 <div className="step-track"><div className="step-num">2</div><div className="step-line"></div></div>
                 <div className="step-body">
                   <div className="step-title">Validation manager (1er niveau)</div>
-                  <div className="step-desc">Le manager reçoit une notification. Il vérifie les chevauchements d'équipe et valide ou refuse avec un commentaire. <strong>Un commentaire est recommandé en cas de chevauchement détecté.</strong></div>
+                  <div className="step-desc">Le manager reçoit une notification. Il vérifie les chevauchements d'équipe et valide ou refuse. <strong>En cas de refus, le commentaire est obligatoire.</strong> Un commentaire est également recommandé lorsqu'un chevauchement est détecté.</div>
                   <div className="step-who" style={{ background: 'rgba(217,119,6,.10)', color: '#92400e' }}>Manager</div>
                 </div>
               </div>
@@ -253,6 +255,9 @@ export default function HelpPage() {
               </div>
               <div className="ftip">
                 <strong>Circuits disponibles :</strong> <em>Automatique</em> (validé sans action), <em>Manager seul</em> (1 étape), <em>Manager puis Admin</em> (2 étapes), <em>Admin seul</em>. À configurer par l'administrateur dans les paramètres de congés.
+              </div>
+              <div className="ftip" style={{ marginTop: '10px' }}>
+                <strong>Modifier ou annuler un congé approuvé :</strong> L'employé ou le manager soumet une demande de modification ou d'annulation. Seul l'<em>Admin entreprise</em> peut l'approuver ou la rejeter via la section <em>Demandes modif/annul</em>.
               </div>
             </div>
           </div>
