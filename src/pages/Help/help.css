@@ -1,7 +1,7 @@
 /* Wrapper qui efface les marges du content-container pour que l'iframe prenne toute la zone */
 .guide-iframe-wrap {
   margin: -1rem;
-  /* Sur mobile, compense aussi le padding-bottom de page-content (72px = bottom nav) */
+  /* Compense le padding-bottom de page-content sur mobile (72px) */
   margin-bottom: calc(-72px - env(safe-area-inset-bottom, 0px) - 1rem);
   flex: 1;
   display: flex;
@@ -10,8 +10,8 @@
 
 .guide-iframe {
   width: 100%;
-  /* Topbar = 52px — l'iframe prend le reste de la hauteur disponible */
-  height: calc(100dvh - 52px);
+  /* Mobile : topbar 52px + bottom nav 56px + safe-area */
+  height: calc(100dvh - 52px - 56px - env(safe-area-inset-bottom, 0px));
   border: none;
   display: block;
   flex: 1;
@@ -22,6 +22,7 @@
     margin: -1.5rem -2rem -1.5rem;
   }
   .guide-iframe {
+    /* Desktop : pas de bottom nav */
     height: calc(100dvh - 52px);
   }
 }
