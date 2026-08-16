@@ -1,12 +1,27 @@
-.help-page { overflow-x: hidden; }
-.help-card {
-  background: var(--dk-card);
-  border: 1px solid var(--dk-border);
-  border-radius: var(--card-radius-lg);
-  box-shadow: var(--dk-shadow-sm);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+/* Wrapper qui efface les marges du content-container pour que l'iframe prenne toute la zone */
+.guide-iframe-wrap {
+  margin: -1rem;
+  /* Sur mobile, compense aussi le padding-bottom de page-content (72px = bottom nav) */
+  margin-bottom: calc(-72px - env(safe-area-inset-bottom, 0px) - 1rem);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-.help-card:hover {
-  box-shadow: var(--dk-shadow-md);
-  transform: translateY(-1px);
+
+.guide-iframe {
+  width: 100%;
+  /* Topbar = 52px — l'iframe prend le reste de la hauteur disponible */
+  height: calc(100dvh - 52px);
+  border: none;
+  display: block;
+  flex: 1;
+}
+
+@media (min-width: 992px) {
+  .guide-iframe-wrap {
+    margin: -1.5rem -2rem -1.5rem;
+  }
+  .guide-iframe {
+    height: calc(100dvh - 52px);
+  }
 }

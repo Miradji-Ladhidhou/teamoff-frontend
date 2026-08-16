@@ -1,0 +1,1029 @@
+<title>Guide de prise en main — TeamOff</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+/* Masque la barre de navigation interne quand la page est chargée en iframe depuis l'app */
+if(location.search.includes('embed=1')){
+  var _s=document.createElement('style');
+  _s.textContent='nav{display:none!important}#hero{padding-top:48px}';
+  document.head.appendChild(_s);
+  document.addEventListener('DOMContentLoaded',function(){
+    var fab=document.getElementById('fab-dash');
+    if(fab){
+      fab.style.display='flex';
+      fab.addEventListener('click',function(){window.parent.location.href='/dashboard';});
+    }
+  });
+}
+</script>
+<style>
+/* ─── Design tokens — calqués sur le vrai theme.css TeamOff ── */
+:root {
+  --bg:          #f0f2f5;
+  --surface:     #ffffff;
+  --elevated:    #f5f6f8;
+  --text:        #111827;
+  --text-soft:   #6b7280;
+  --text-muted:  #9ca3af;
+  --border:      rgba(0,0,0,0.09);
+  --border-soft: rgba(0,0,0,0.05);
+  --accent:      #6366f1;
+  --accent-dark: #4f46e5;
+  --accent-soft: rgba(99,102,241,0.10);
+  /* Couleurs de rôle réelles */
+  --employe:     #4f74f2;
+  --employe-soft:rgba(79,116,242,0.10);
+  --manager:     #d97706;
+  --manager-soft:rgba(217,119,6,0.10);
+  --admin:       #059669;
+  --admin-soft:  rgba(5,150,105,0.10);
+  --superadmin:  #7c3aed;
+  --superadmin-soft:rgba(124,58,237,0.10);
+  /* Sémantique */
+  --success:     #059669;
+  --success-bg:  rgba(5,150,105,0.10);
+  --warning:     #d97706;
+  --warning-bg:  rgba(217,119,6,0.10);
+  --danger:      #dc2626;
+  --danger-bg:   rgba(220,38,38,0.08);
+  --purple:      #7c3aed;
+  --purple-bg:   rgba(124,58,237,0.10);
+  /* Shadows */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 14px rgba(0,0,0,0.09),0 2px 6px rgba(0,0,0,0.05);
+  --shadow-lg:   0 10px 32px rgba(0,0,0,0.11),0 4px 12px rgba(0,0,0,0.06);
+  --r-card:      14px;
+  --r-btn:       8px;
+  --r-input:     8px;
+}
+/* Dark theme */
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f172a;--surface:#1e293b;--elevated:#1a2744;
+  --text:#f1f5f9;--text-soft:#94a3b8;--text-muted:#64748b;
+  --border:rgba(255,255,255,0.08);--border-soft:rgba(255,255,255,0.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:0 4px 14px rgba(0,0,0,0.35);
+  --shadow-lg:0 10px 32px rgba(0,0,0,0.4);
+}}
+:root[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--elevated:#1a2744;
+  --text:#f1f5f9;--text-soft:#94a3b8;--text-muted:#64748b;
+  --border:rgba(255,255,255,0.08);--border-soft:rgba(255,255,255,0.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:0 4px 14px rgba(0,0,0,0.35);
+  --shadow-lg:0 10px 32px rgba(0,0,0,0.4);
+}
+
+/* ─── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6}
+ul{list-style:none}
+
+/* ─── Layout ── */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+section{padding:64px 0}
+
+/* ─── Nav ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+}
+.nav-inner{
+  display:flex;align-items:center;gap:28px;height:58px;
+  max-width:1080px;margin:0 auto;padding:0 24px;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:9px;flex-shrink:0;
+  font-weight:800;font-size:.92rem;color:var(--text);letter-spacing:-.3px;
+}
+.nav-logo strong{color:var(--accent)}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{
+  white-space:nowrap;padding:6px 11px;border-radius:8px;
+  font-size:.82rem;font-weight:500;color:var(--text-soft);
+  transition:background .15s,color .15s;text-decoration:none;
+}
+.nav-links a:hover{background:var(--elevated);color:var(--text)}
+.nav-links a.active{background:var(--elevated);color:var(--text);font-weight:600}
+
+/* ─── Logo ── */
+.logo-svg{width:30px;height:30px;border-radius:8px;flex-shrink:0}
+
+/* ─── Hero ── */
+#hero{
+  /* Vrai gradient du dashboard TeamOff */
+  background:linear-gradient(135deg,#1e3a6e 0%,#2d5bb9 50%,#3d72e0 100%);
+  color:#fff;padding:72px 0 60px;
+  position:relative;overflow:hidden;
+}
+#hero::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:200px;height:200px;
+  background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;
+}
+#hero::after{
+  content:'';position:absolute;right:80px;bottom:-60px;
+  width:140px;height:140px;
+  background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;
+}
+.hero-inner{display:grid;grid-template-columns:1fr 420px;gap:56px;align-items:center;position:relative;z-index:1}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);
+  padding:4px 13px;border-radius:999px;font-size:.75rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.9);margin-bottom:18px;
+}
+.hero-title{font-size:2.5rem;font-weight:800;line-height:1.15;margin-bottom:14px;text-wrap:balance}
+.hero-title span{opacity:.85}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:28px;max-width:440px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:9px}
+.hbadge{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);
+  padding:6px 13px;border-radius:8px;font-size:.8rem;font-weight:600;
+}
+
+/* ─── Section titles ── */
+.s-head{margin-bottom:44px}
+.s-eye{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.s-title{font-size:1.8rem;font-weight:800;line-height:1.2;margin-bottom:10px;text-wrap:balance}
+.s-sub{font-size:.95rem;color:var(--text-soft);max-width:540px;line-height:1.65}
+
+/* ─── Rôles ── */
+.roles-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.role-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);box-shadow:var(--shadow-sm);
+  padding:22px 22px 22px 20px;
+  border-left:4px solid var(--rc);
+  transition:box-shadow .2s,transform .2s;
+}
+.role-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.role-hd{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.role-ico{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:var(--rc-soft);display:flex;align-items:center;justify-content:center;
+}
+.role-name{font-size:1rem;font-weight:700;margin-bottom:2px}
+.role-badge{
+  display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:2px 8px;border-radius:4px;
+  background:var(--rc-soft);color:var(--rc);
+}
+.role-list li{
+  font-size:.83rem;color:var(--text-soft);padding:4px 0;
+  display:flex;align-items:flex-start;gap:8px;
+  border-bottom:1px solid var(--border-soft);
+}
+.role-list li:last-child{border-bottom:none}
+.role-list li::before{
+  content:'';width:5px;height:5px;border-radius:50%;
+  background:var(--rc);flex-shrink:0;margin-top:8px;
+}
+
+/* ─── Workflow ── */
+.wf-layout{display:grid;grid-template-columns:1fr 360px;gap:48px;align-items:start}
+.steps{display:flex;flex-direction:column}
+.step{display:flex;gap:18px;padding-bottom:28px}
+.step:last-child{padding-bottom:0}
+.step-track{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.step-num{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--accent);color:#fff;font-weight:800;font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;
+  box-shadow:0 0 0 5px rgba(99,102,241,.12);
+}
+.step-line{width:2px;flex:1;background:var(--border);margin:5px 0;min-height:20px}
+.step:last-child .step-line{display:none}
+.step-body{padding-top:5px}
+.step-title{font-size:.92rem;font-weight:700;margin-bottom:4px}
+.step-desc{font-size:.83rem;color:var(--text-soft);line-height:1.55}
+.step-who{
+  display:inline-flex;align-items:center;gap:5px;margin-top:8px;
+  font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:5px;
+  background:var(--accent-soft);color:var(--accent);letter-spacing:.04em;text-transform:uppercase;
+}
+
+/* Diagramme statuts */
+.flow-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:22px;box-shadow:var(--shadow-sm);
+}
+.flow-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:18px}
+.fn{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 13px;border-radius:8px;border:1px solid var(--border);
+  font-size:.8rem;font-weight:600;background:var(--surface);
+}
+.fdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.farrow{text-align:center;color:var(--text-muted);font-size:.82rem;padding:3px 0 3px 16px}
+.fsplit{display:flex;gap:8px;margin-left:16px}
+.fsplit .fn{flex:1;font-size:.76rem}
+.ftip{
+  margin-top:14px;padding:13px;border-radius:9px;font-size:.8rem;line-height:1.6;
+  background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);color:var(--text-soft);
+}
+.ftip strong{color:#92400e}
+
+/* ─── Calendrier ── */
+.cal-layout{display:grid;grid-template-columns:1fr 320px;gap:48px;align-items:start}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.leg-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 12px;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;font-size:.8rem;font-weight:500;color:var(--text-soft);
+}
+.leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.cal-note{
+  margin-top:18px;padding:14px;border-radius:9px;font-size:.83rem;line-height:1.65;
+  background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);color:var(--text-soft);
+}
+.cal-note strong{color:var(--text)}
+
+/* Mini-calendrier -- look identique à l'app */
+.mini-cal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-md);
+}
+.mcal-head{
+  /* Vrai gradient du dashboard */
+  background:linear-gradient(135deg,#1e3a6e,#2d5bb9,#3d72e0);
+  color:#fff;padding:13px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.mcal-month{font-weight:700;font-size:.9rem}
+.mcal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  padding:10px;gap:3px;text-align:center;
+}
+.mday-name{font-size:.64rem;font-weight:700;color:var(--text-muted);padding:4px 0;text-transform:uppercase}
+.mday{
+  font-size:.75rem;font-weight:500;padding:5px 3px;border-radius:5px;
+  color:var(--text-soft);min-height:26px;display:flex;align-items:center;justify-content:center;
+}
+.mday.empty{color:transparent}
+/* Vraies couleurs de badge */
+.mday.today{background:var(--accent);color:#fff;font-weight:700}
+.mday.approved{background:rgba(52,211,153,.14);color:#047857;font-weight:600}
+.mday.pending{background:rgba(240,168,85,.14);color:#92400e;font-weight:600}
+.mday.reserved{background:rgba(124,58,237,.14);color:#6d28d9;font-weight:600}
+.mday.refused{background:rgba(248,113,113,.13);color:#991b1b;text-decoration:line-through}
+.mday.sick{background:rgba(251,146,60,.13);color:#c2410c;font-weight:500}
+.mday.holiday{background:rgba(156,163,175,.12);color:var(--text-muted)}
+
+/* ─── Soldes ── */
+.bal-layout{display:grid;grid-template-columns:320px 1fr;gap:48px;align-items:start}
+.bal-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-md);
+}
+.bal-head{
+  background:linear-gradient(135deg,#1e3a6e,#2d5bb9,#3d72e0);
+  color:#fff;padding:18px 20px;
+}
+.bal-type{font-size:.72rem;opacity:.75;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.bal-val{font-size:2rem;font-weight:800;line-height:1;margin:4px 0 2px}
+.bal-sub{font-size:.76rem;opacity:.7}
+.bal-rows{padding:14px 16px}
+.brow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:.83rem;
+}
+.brow:last-child{border-bottom:none}
+.blabel{color:var(--text-soft)}
+.bval{font-weight:700;font-variant-numeric:tabular-nums}
+.bbar-wrap{flex:1;height:7px;background:var(--elevated);border-radius:4px;margin:0 10px;overflow:hidden}
+.bbar{height:100%;border-radius:4px}
+
+.qf-grid{display:flex;flex-direction:column;gap:13px}
+.qf-item{
+  display:flex;gap:13px;padding:16px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);box-shadow:var(--shadow-sm);
+}
+.qf-ico{width:38px;height:38px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.qf-title{font-weight:700;font-size:.88rem;margin-bottom:3px}
+.qf-desc{font-size:.8rem;color:var(--text-soft);line-height:1.5}
+
+/* ─── Admin grid ── */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:20px;box-shadow:var(--shadow-sm);
+}
+.feat-ico{
+  width:40px;height:40px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+}
+.feat-title{font-size:.9rem;font-weight:700;margin-bottom:5px}
+.feat-desc{font-size:.8rem;color:var(--text-soft);line-height:1.55}
+
+/* ─── Sécurité ── */
+.sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sec-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);padding:22px;box-shadow:var(--shadow-sm);
+}
+.sec-card.top-accent{border-top:3px solid var(--accent)}
+.sec-title{font-size:.92rem;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:9px}
+.sec-desc{font-size:.83rem;color:var(--text-soft);line-height:1.6}
+.sec-steps{margin-top:13px;display:flex;flex-direction:column;gap:8px}
+.sec-step{display:flex;gap:9px;align-items:flex-start;font-size:.81rem;color:var(--text-soft)}
+.sec-num{
+  width:19px;height:19px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:.65rem;font-weight:800;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.sec-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:16px}
+.sec-pill{
+  padding:14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);font-size:.8rem;color:var(--text-soft);line-height:1.55;
+}
+.sec-pill strong{display:block;color:var(--text);margin-bottom:3px}
+
+/* ─── Bouton flottant retour dashboard ── */
+#fab-dash{
+  display:none;
+  position:fixed;bottom:24px;right:24px;z-index:200;
+  align-items:center;gap:8px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:999px;
+  padding:11px 20px;
+  font-family:inherit;font-size:.82rem;font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(99,102,241,.45);
+  transition:background .15s,box-shadow .15s,transform .15s;
+}
+#fab-dash:hover{background:var(--accent-dark);box-shadow:0 6px 22px rgba(99,102,241,.55);transform:translateY(-1px)}
+#fab-dash:active{transform:translateY(0)}
+
+/* ─── Footer ── */
+footer{
+  background:var(--surface);border-top:1px solid var(--border);padding:28px 0;
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  max-width:1080px;margin:0 auto;padding:0 24px;
+}
+.footer-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.88rem}
+.footer-copy{font-size:.78rem;color:var(--text-muted)}
+
+/* ─── Responsive ── */
+@media(max-width:800px){
+  .hero-inner{grid-template-columns:1fr}
+  .hero-visual{display:none}
+  .hero-title{font-size:1.9rem}
+  .roles-grid,.wf-layout,.cal-layout,.bal-layout,.sec-grid{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .legend{grid-template-columns:1fr}
+  .sec-pills{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .feat-grid{grid-template-columns:1fr}
+  section{padding:44px 0}
+}
+</style>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <svg class="logo-svg" viewBox="0 0 30 30" fill="none">
+        <rect width="30" height="30" rx="8" fill="url(#lg-nav)"/>
+        <text x="7.5" y="21" font-family="Arial Black,sans-serif" font-weight="900" font-size="15" fill="white">T</text>
+        <circle cx="23" cy="21" r="2.8" fill="#f59e0b"/>
+        <defs><linearGradient id="lg-nav" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+        </linearGradient></defs>
+      </svg>
+      team<strong>Off</strong>
+    </div>
+    <div class="nav-links">
+      <a href="#roles">Rôles</a>
+      <a href="#workflow">Congés</a>
+      <a href="#calendrier">Calendrier</a>
+      <a href="#soldes">Soldes</a>
+      <a href="#admin">Administration</a>
+      <a href="#securite">Sécurité</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-eyebrow">
+          <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#34d399"/></svg>
+          Guide de prise en main
+        </div>
+        <h1 class="hero-title">Gérez vos congés<br>simplement avec <span>TeamOff</span></h1>
+        <p class="hero-sub">Plateforme multi-entreprises de gestion des absences. Demandes, validations, soldes et calendrier partagé — tout en un seul endroit.</p>
+        <div class="hero-badges">
+          <div class="hbadge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            5 rôles
+          </div>
+          <div class="hbadge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendrier partagé
+          </div>
+          <div class="hbadge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Circuit personnalisable
+          </div>
+          <div class="hbadge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Double authentification
+          </div>
+        </div>
+      </div>
+
+      <!-- Mockup fidèle à l'app réelle -->
+      <div class="hero-visual">
+        <svg width="400" height="295" viewBox="0 0 400 295" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Fenêtre -->
+          <rect x="6" y="6" width="388" height="283" rx="12" fill="#f0f2f5" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <!-- Titlebar -->
+          <rect x="6" y="6" width="388" height="32" rx="12" fill="rgba(0,0,0,.18)"/>
+          <rect x="6" y="26" width="388" height="12" fill="rgba(0,0,0,.18)"/>
+          <circle cx="24" cy="22" r="4.5" fill="#ef4444" opacity=".8"/>
+          <circle cx="38" cy="22" r="4.5" fill="#f59e0b" opacity=".8"/>
+          <circle cx="52" cy="22" r="4.5" fill="#10b981" opacity=".8"/>
+          <text x="90" y="27" font-family="Arial,sans-serif" font-size="10" fill="rgba(255,255,255,.6)">TeamOff</text>
+
+          <!-- Sidebar blanche -->
+          <rect x="6" y="38" width="78" height="251" fill="white" rx="0"/>
+          <rect x="83" y="38" width="1" height="251" fill="rgba(0,0,0,.08)"/>
+
+          <!-- Logo sidebar -->
+          <rect x="14" y="48" width="20" height="20" rx="5" fill="url(#lg-mock)"/>
+          <text x="17.5" y="63" font-family="Arial Black,sans-serif" font-weight="900" font-size="11" fill="white">T</text>
+          <circle cx="31" cy="63" r="2" fill="#f59e0b"/>
+          <text x="38" y="63" font-family="Arial,sans-serif" font-weight="800" font-size="10" fill="#111827">team</text>
+
+          <!-- Nav links sidebar -->
+          <rect x="12" y="80" width="62" height="24" rx="7" fill="#eef2ff"/>
+          <text x="20" y="96" font-family="Arial,sans-serif" font-size="9.5" font-weight="600" fill="#4f46e5">Tableau de bord</text>
+          <text x="20" y="118" font-family="Arial,sans-serif" font-size="8.8" fill="rgba(0,0,0,.5)">Mes congés</text>
+          <text x="20" y="136" font-family="Arial,sans-serif" font-size="9.5" fill="rgba(0,0,0,.5)">Calendrier</text>
+          <text x="20" y="154" font-family="Arial,sans-serif" font-size="8.5" fill="rgba(0,0,0,.5)">Historique solde</text>
+          <text x="20" y="172" font-family="Arial,sans-serif" font-size="8.8" fill="rgba(0,0,0,.5)">Prise en main</text>
+          <text x="20" y="190" font-family="Arial,sans-serif" font-size="9.5" fill="rgba(0,0,0,.5)">Notifications</text>
+
+          <!-- Main content area — fond gris comme l'app -->
+          <rect x="84" y="38" width="310" height="251" fill="#f0f2f5"/>
+
+          <!-- Topbar -->
+          <rect x="84" y="38" width="310" height="34" fill="white"/>
+          <rect x="84" y="71" width="310" height="1" fill="rgba(0,0,0,.08)"/>
+          <text x="98" y="58" font-family="Arial,sans-serif" font-weight="700" font-size="11" fill="#111827">Tableau de bord</text>
+          <!-- Avatar topbar -->
+          <circle cx="374" cy="55" r="9" fill="#eef2ff"/>
+          <text x="370" y="59" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#4f46e5">ET</text>
+
+          <!-- Hero card blue gradient (même que l'app) -->
+          <rect x="96" y="82" width="286" height="52" rx="12" fill="url(#lg-hero-card)"/>
+          <rect x="96" y="82" width="286" height="52" rx="12" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+          <!-- Cercles décoratifs comme dans le CSS -->
+          <circle cx="366" cy="72" r="30" fill="rgba(255,255,255,.05)"/>
+          <circle cx="352" cy="115" r="22" fill="rgba(255,255,255,.04)"/>
+          <text x="110" y="104" font-family="Arial,sans-serif" font-weight="700" font-size="11" fill="white">Bonjour, Emma 👋</text>
+          <text x="110" y="118" font-family="Arial,sans-serif" font-size="9" fill="rgba(255,255,255,.6)">Vendredi 14 août 2026</text>
+          <!-- CTA -->
+          <rect x="316" y="93" width="58" height="22" rx="7" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <text x="325" y="108" font-family="Arial,sans-serif" font-size="9" font-weight="600" fill="white">+ Demande</text>
+
+          <!-- Stats grid -->
+          <rect x="96" y="143" width="67" height="40" rx="8" fill="white" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+          <text x="104" y="157" font-family="Arial,sans-serif" font-size="8" fill="#6b7280">En attente</text>
+          <text x="104" y="174" font-family="Arial,sans-serif" font-weight="800" font-size="14" fill="#d97706">2</text>
+
+          <rect x="170" y="143" width="67" height="40" rx="8" fill="white" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+          <text x="178" y="157" font-family="Arial,sans-serif" font-size="8" fill="#6b7280">Validés</text>
+          <text x="178" y="174" font-family="Arial,sans-serif" font-weight="800" font-size="14" fill="#059669">5</text>
+
+          <rect x="244" y="143" width="67" height="40" rx="8" fill="white" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+          <text x="252" y="157" font-family="Arial,sans-serif" font-size="8" fill="#6b7280">Solde CP</text>
+          <text x="252" y="174" font-family="Arial,sans-serif" font-weight="800" font-size="14" fill="#4f46e5">18,5j</text>
+
+          <rect x="318" y="143" width="62" height="40" rx="8" fill="white" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+          <text x="326" y="157" font-family="Arial,sans-serif" font-size="8" fill="#6b7280">Refusés</text>
+          <text x="326" y="174" font-family="Arial,sans-serif" font-weight="800" font-size="14" fill="#dc2626">0</text>
+
+          <!-- Recent conges -->
+          <rect x="96" y="192" width="286" height="18" rx="5" fill="white" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+          <circle cx="108" cy="201" r="4" fill="rgba(52,211,153,.14)" stroke="#059669" stroke-width="1"/>
+          <circle cx="108" cy="201" r="2" fill="#059669"/>
+          <text x="118" y="205" font-family="Arial,sans-serif" font-size="9" fill="#111827">Vacances été</text>
+          <text x="232" y="205" font-family="Arial,sans-serif" font-size="9" fill="#9ca3af">7 – 11 sept.</text>
+          <rect x="334" y="196" width="40" height="12" rx="10" fill="rgba(52,211,153,.12)"/>
+          <text x="341" y="206" font-family="Arial,sans-serif" font-size="8" font-weight="600" fill="#047857">Validé</text>
+
+          <rect x="96" y="215" width="286" height="18" rx="5" fill="white" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+          <circle cx="108" cy="224" r="4" fill="rgba(240,168,85,.14)" stroke="#d97706" stroke-width="1"/>
+          <circle cx="108" cy="224" r="2" fill="#d97706"/>
+          <text x="118" y="228" font-family="Arial,sans-serif" font-size="9" fill="#111827">Pont novembre</text>
+          <text x="232" y="228" font-family="Arial,sans-serif" font-size="9" fill="#9ca3af">11 nov.</text>
+          <rect x="316" y="219" width="62" height="12" rx="10" fill="rgba(240,168,85,.14)"/>
+          <text x="322" y="229" font-family="Arial,sans-serif" font-size="8" font-weight="600" fill="#92400e">En attente</text>
+
+          <rect x="96" y="238" width="286" height="18" rx="5" fill="white" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+          <circle cx="108" cy="247" r="4" fill="rgba(124,58,237,.14)" stroke="#7c3aed" stroke-width="1"/>
+          <circle cx="108" cy="247" r="2" fill="#7c3aed"/>
+          <text x="118" y="251" font-family="Arial,sans-serif" font-size="9" fill="#111827">Noël 2027</text>
+          <text x="232" y="251" font-family="Arial,sans-serif" font-size="9" fill="#9ca3af">24–26 déc.</text>
+          <rect x="316" y="243" width="64" height="12" rx="10" fill="rgba(124,58,237,.12)"/>
+          <text x="317" y="253" font-family="Arial,sans-serif" font-size="7.5" font-weight="600" fill="#6d28d9">Réservé 2027</text>
+
+          <defs>
+            <linearGradient id="lg-mock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+            <linearGradient id="lg-hero-card" x1="96" y1="82" x2="382" y2="134" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#1e3a6e"/><stop offset=".5" stop-color="#2d5bb9"/><stop offset="1" stop-color="#3d72e0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RÔLES -->
+<section id="roles">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Rôles</div>
+      <h2 class="s-title">Qui fait quoi dans TeamOff ?</h2>
+      <p class="s-sub">Votre rôle est attribué par l'administrateur de votre entreprise et détermine vos droits d'accès.</p>
+    </div>
+    <div class="roles-grid">
+
+      <div class="role-card" style="--rc:#4f74f2;--rc-soft:rgba(79,116,242,.10)">
+        <div class="role-hd">
+          <div class="role-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f74f2" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-name">Employé · Apprenti</div>
+            <div class="role-badge">Accès de base</div>
+          </div>
+        </div>
+        <ul class="role-list">
+          <li>Soumettre une demande de congé</li>
+          <li>Voir et modifier ses propres demandes</li>
+          <li>Consulter ses soldes par type de congé</li>
+          <li>Accéder au calendrier partagé</li>
+          <li>Déclarer une absence (maladie, exceptionnelle)</li>
+          <li>Télécharger une attestation PDF</li>
+          <li>Anticiper des congés pour l'année suivante</li>
+        </ul>
+      </div>
+
+      <div class="role-card" style="--rc:#d97706;--rc-soft:rgba(217,119,6,.10)">
+        <div class="role-hd">
+          <div class="role-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round">
+              <circle cx="8" cy="7" r="3"/><path d="M2 20c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5"/>
+              <circle cx="17" cy="9" r="2.5"/><path d="M13.5 20c0-2.5 1.6-4.5 3.5-4.5s3.5 2 3.5 4.5" stroke-dasharray="3 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-name">Manager</div>
+            <div class="role-badge">Validation équipe</div>
+          </div>
+        </div>
+        <ul class="role-list">
+          <li>Tout ce que fait un employé</li>
+          <li>Valider ou refuser les demandes de l'équipe</li>
+          <li>Voir les congés de toute l'entreprise</li>
+          <li>Détecter les chevauchements à la validation</li>
+          <li>Activer une anticipation de congé pour l'année suivante</li>
+          <li>Consulter les soldes de l'équipe</li>
+        </ul>
+      </div>
+
+      <div class="role-card" style="--rc:#059669;--rc-soft:rgba(5,150,105,.10)">
+        <div class="role-hd">
+          <div class="role-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-name">Admin entreprise</div>
+            <div class="role-badge">Gestion complète</div>
+          </div>
+        </div>
+        <ul class="role-list">
+          <li>Tout ce que fait un manager</li>
+          <li>Validation finale des congés (2ème niveau)</li>
+          <li>Inviter, activer/désactiver des utilisateurs</li>
+          <li>Configurer la politique de congés</li>
+          <li>Gérer les types de congé et jours fériés</li>
+          <li>Ajuster manuellement les soldes</li>
+          <li>Exporter les données (CSV, PDF)</li>
+        </ul>
+      </div>
+
+      <div class="role-card" style="--rc:#7c3aed;--rc-soft:rgba(124,58,237,.10)">
+        <div class="role-hd">
+          <div class="role-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-name">Super Admin</div>
+            <div class="role-badge">Multi-entreprises</div>
+          </div>
+        </div>
+        <ul class="role-list">
+          <li>Créer, gérer et désactiver des entreprises</li>
+          <li>Accès à toutes les entreprises de la plateforme</li>
+          <li>Suivi du bon fonctionnement de la plateforme</li>
+          <li>Historique complet de toutes les actions</li>
+          <li>Réinitialiser la double authentification d'un utilisateur</li>
+          <li>Paramètres généraux de la plateforme</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow" style="background:var(--surface)">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Congés</div>
+      <h2 class="s-title">Circuit de demande et validation</h2>
+      <p class="s-sub">De la demande initiale à la validation finale, le parcours complet selon le circuit configuré par votre entreprise.</p>
+    </div>
+    <div class="wf-layout">
+      <div class="steps">
+        <div class="step">
+          <div class="step-track"><div class="step-num">1</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Créer une demande</div>
+            <div class="step-desc">Rendez-vous dans <strong>Mes congés → Nouvelle demande</strong> (employés et apprentis) ou <strong>Congés équipe</strong> (managers). Choisissez le type, les dates (demi-journée disponible) et ajoutez un commentaire si besoin. Le nombre de jours ouvrés est calculé automatiquement.</div>
+            <div class="step-who">Employé · Apprenti · Manager</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-track"><div class="step-num">2</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Validation manager (1er niveau)</div>
+            <div class="step-desc">Le manager reçoit une notification. Il vérifie les chevauchements d'équipe et valide ou refuse avec un commentaire. <strong>Un commentaire est recommandé en cas de chevauchement détecté.</strong></div>
+            <div class="step-who" style="background:rgba(217,119,6,.10);color:#92400e">Manager</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-track"><div class="step-num">3</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Validation admin (2ème niveau)</div>
+            <div class="step-desc">Uniquement si le circuit <strong>manager + admin</strong> est activé. L'administrateur approuve ou refuse en dernier ressort. Le nombre maximum de personnes absentes en même temps est vérifié à cette étape.</div>
+            <div class="step-who" style="background:rgba(5,150,105,.10);color:#047857">Admin entreprise</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-track"><div class="step-num">4</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Notification &amp; mise à jour du solde</div>
+            <div class="step-desc">Un email et une notification dans l'application sont envoyés à l'employé. Le solde est mis à jour automatiquement. En cas de refus, les jours sont restitués sans action de votre part.</div>
+            <div class="step-who" style="background:rgba(124,58,237,.10);color:#6d28d9">Automatique</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="flow-card">
+          <div class="flow-label">Statuts d'un congé</div>
+          <div>
+            <div class="fn"><div class="fdot" style="background:#7c3aed"></div><span style="color:#6d28d9;font-weight:700">Réservé</span> — anticipé pour l'année suivante</div>
+            <div class="farrow">↓ activation manager / admin</div>
+            <div class="fn"><div class="fdot" style="background:#d97706"></div><span style="color:#92400e;font-weight:700">En attente manager</span></div>
+            <div class="farrow">↓</div>
+            <div class="fsplit">
+              <div class="fn" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.25)">
+                <div class="fdot" style="background:#059669"></div>
+                <span style="color:#047857;font-weight:700">Validé manager</span>
+              </div>
+              <div class="fn" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25)">
+                <div class="fdot" style="background:#dc2626"></div>
+                <span style="color:#991b1b;font-weight:700">Refusé</span>
+              </div>
+            </div>
+            <div class="farrow">↓ (si circuit manager + admin)</div>
+            <div class="fn" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.25)">
+              <div class="fdot" style="background:#059669"></div>
+              <span style="color:#047857;font-weight:700">Validé final ✓</span>
+            </div>
+          </div>
+        </div>
+        <div class="ftip">
+          <strong>Circuits disponibles :</strong> <em>Automatique</em> (validé sans action), <em>Manager seul</em> (1 étape), <em>Manager puis Admin</em> (2 étapes), <em>Admin seul</em>. À configurer par l'administrateur dans les paramètres de congés.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALENDRIER -->
+<section id="calendrier">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Calendrier</div>
+      <h2 class="s-title">Calendrier partagé de l'équipe</h2>
+      <p class="s-sub">Vue mensuelle de toutes les absences et congés. Filtrez par employé, service ou statut.</p>
+    </div>
+    <div class="cal-layout">
+      <div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(52,211,153,.7);outline:1px solid #059669"></div>Validé final</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#6366f1"></div>Validé manager</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#d97706"></div>En attente</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>Réservé (année suivante)</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#dc2626"></div>Refusé</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#f97316"></div>Arrêt maladie</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#9ca3af"></div>Absence exceptionnelle</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#e5e7eb;border:1px solid #d1d5db"></div>Férié / Bloqué</div>
+        </div>
+        <div class="cal-note">
+          <strong>Confidentialité médicale</strong><br>
+          Le motif d'un arrêt maladie reste privé : vos collègues voient l'absence sur le calendrier, mais pas le commentaire. Seuls les managers et admins y ont accès.
+        </div>
+      </div>
+
+      <!-- Mini-calendrier avec les vraies couleurs de l'app -->
+      <div class="mini-cal">
+        <div class="mcal-head">
+          <span class="mcal-month">Septembre 2026</span>
+          <span style="font-size:.78rem;opacity:.7">Vue équipe</span>
+        </div>
+        <div class="mcal-grid">
+          <div class="mday-name">L</div><div class="mday-name">M</div><div class="mday-name">M</div>
+          <div class="mday-name">J</div><div class="mday-name">V</div><div class="mday-name">S</div><div class="mday-name">D</div>
+          <div class="mday empty"></div><div class="mday">1</div><div class="mday">2</div><div class="mday">3</div>
+          <div class="mday">4</div><div class="mday holiday">5</div><div class="mday holiday">6</div>
+          <div class="mday approved">7</div><div class="mday approved">8</div><div class="mday approved">9</div>
+          <div class="mday approved">10</div><div class="mday approved">11</div><div class="mday holiday">12</div><div class="mday holiday">13</div>
+          <div class="mday">14</div><div class="mday pending">15</div><div class="mday pending">16</div>
+          <div class="mday pending">17</div><div class="mday sick">18</div><div class="mday holiday">19</div><div class="mday holiday">20</div>
+          <div class="mday today">21</div><div class="mday">22</div><div class="mday">23</div>
+          <div class="mday reserved">24</div><div class="mday reserved">25</div><div class="mday holiday">26</div><div class="mday holiday">27</div>
+          <div class="mday refused">28</div><div class="mday">29</div><div class="mday">30</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLDES -->
+<section id="soldes" style="background:var(--surface)">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Soldes</div>
+      <h2 class="s-title">Comprendre son solde de congés</h2>
+      <p class="s-sub">Chaque type de congé a son propre compteur, mis à jour automatiquement à chaque demande ou validation.</p>
+    </div>
+    <div class="bal-layout">
+      <div class="bal-card">
+        <div class="bal-head">
+          <div class="bal-type">Congés Payés — 2026</div>
+          <div class="bal-val">18,5 j</div>
+          <div class="bal-sub">jours restants cette année</div>
+        </div>
+        <div class="bal-rows">
+          <div class="brow">
+            <span class="blabel">Acquis</span>
+            <div class="bbar-wrap"><div class="bbar" style="width:100%;background:#4f74f2"></div></div>
+            <span class="bval" style="color:#4f46e5">25,0</span>
+          </div>
+          <div class="brow">
+            <span class="blabel">Pris</span>
+            <div class="bbar-wrap"><div class="bbar" style="width:26%;background:#dc2626"></div></div>
+            <span class="bval" style="color:#dc2626">6,5</span>
+          </div>
+          <div class="brow">
+            <span class="blabel">Réservés</span>
+            <div class="bbar-wrap"><div class="bbar" style="width:0%;background:#d97706"></div></div>
+            <span class="bval" style="color:#d97706">0,0</span>
+          </div>
+          <div class="brow" style="padding-top:11px">
+            <span class="blabel" style="font-weight:700;color:var(--text)">Disponible</span>
+            <div class="bbar-wrap"><div class="bbar" style="width:74%;background:#059669"></div></div>
+            <span class="bval" style="color:#059669;font-size:.95rem">18,5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qf-grid">
+        <div class="qf-item">
+          <div class="qf-ico" style="background:rgba(79,116,242,.10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f74f2" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div><div class="qf-title">Jours crédités chaque mois</div>
+          <div class="qf-desc">Vos jours de congé sont ajoutés automatiquement chaque mois, selon les règles définies par votre entreprise. Aucune action de votre part n'est nécessaire.</div></div>
+        </div>
+        <div class="qf-item">
+          <div class="qf-ico" style="background:rgba(124,58,237,.10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div><div class="qf-title">Anticiper l'année suivante</div>
+          <div class="qf-desc">Posez des dates de congé pour l'année suivante même si vous n'avez pas encore assez de jours. Ces congés restent en attente jusqu'à ce qu'un manager les active.</div></div>
+        </div>
+        <div class="qf-item">
+          <div class="qf-ico" style="background:rgba(5,150,105,.10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          </div>
+          <div><div class="qf-title">Report d'une année à l'autre</div>
+          <div class="qf-desc">Si votre entreprise l'autorise, les jours non pris peuvent être reportés en début d'année suivante, dans la limite du plafond configuré.</div></div>
+        </div>
+        <div class="qf-item">
+          <div class="qf-ico" style="background:rgba(217,119,6,.10)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div><div class="qf-title">Alerte solde faible</div>
+          <div class="qf-desc">Un email est envoyé automatiquement quand il reste moins de 3 jours disponibles après une validation, pour vous permettre d'anticiper.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMINISTRATION -->
+<section id="admin">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Administration</div>
+      <h2 class="s-title">Outils pour les administrateurs</h2>
+      <p class="s-sub">L'admin entreprise dispose d'un panel complet pour configurer et piloter la plateforme au quotidien.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(79,116,242,.10)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f74f2" stroke-width="2" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+        </div>
+        <div class="feat-title">Gestion des utilisateurs</div>
+        <div class="feat-desc">Invitez des collaborateurs par email, changez leur rôle, activez ou désactivez leur compte. Les invités reçoivent un lien pour définir leur mot de passe.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(5,150,105,.10)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <div class="feat-title">Politique de congés</div>
+        <div class="feat-desc">Choisissez le circuit de validation, le nombre maximum de personnes absentes en même temps, le préavis minimum et les règles d'accumulation des jours.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(217,119,6,.10)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </div>
+        <div class="feat-title">Types de congé</div>
+        <div class="feat-desc">Créez autant de types que nécessaire (CP, RTT, sans solde, ancienneté…) avec quota annuel, accumulation et autorisation de demi-journée.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(124,58,237,.10)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+          </svg>
+        </div>
+        <div class="feat-title">Jours fériés &amp; bloqués</div>
+        <div class="feat-desc">Importez les jours fériés nationaux automatiquement ou ajoutez manuellement des jours bloqués. Ils sont exclus du calcul des jours ouvrés.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(45,91,185,.10)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d5bb9" stroke-width="2" stroke-linecap="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div class="feat-title">Exports</div>
+        <div class="feat-desc">Téléchargez les congés, absences, arrêts maladie, utilisateurs et rapports d'activité aux formats PDF et tableur (compatible Excel).</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico" style="background:rgba(220,38,38,.08)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="feat-title">Historique des actions</div>
+        <div class="feat-desc">Toutes les actions importantes sont enregistrées : validations, refus, changements de rôle, ajustements de jours. Recherchez par personne, action ou période.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SÉCURITÉ -->
+<section id="securite" style="background:var(--surface)">
+  <div class="wrap">
+    <div class="s-head">
+      <div class="s-eye">Sécurité</div>
+      <h2 class="s-title">Votre compte est protégé</h2>
+      <p class="s-sub">TeamOff applique des mesures de sécurité renforcées pour protéger vos données et l'accès à votre compte.</p>
+    </div>
+    <div class="sec-grid">
+      <div class="sec-card top-accent">
+        <div class="sec-title">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Authentification à deux facteurs (2FA)
+        </div>
+        <div class="sec-desc">La double authentification protège votre compte même si quelqu'un connaît votre mot de passe — il lui faudrait aussi votre téléphone pour se connecter.</div>
+        <div class="sec-steps">
+          <div class="sec-step"><div class="sec-num">1</div>Allez dans <strong>Mon profil → Sécurité</strong></div>
+          <div class="sec-step"><div class="sec-num">2</div>Scannez le QR code avec Google Authenticator, Authy ou une application similaire</div>
+          <div class="sec-step"><div class="sec-num">3</div>Saisissez le code à 6 chiffres affiché pour confirmer</div>
+          <div class="sec-step"><div class="sec-num">4</div>À chaque connexion, un nouveau code vous sera demandé en plus de votre mot de passe</div>
+        </div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Mot de passe &amp; sessions
+        </div>
+        <div class="sec-desc">Votre mot de passe est stocké de façon sécurisée — personne ne peut le lire, même en interne. En cas d'oubli, cliquez sur <em>Mot de passe oublié</em> : un lien valable 1 heure vous est envoyé par email.</div>
+        <div style="margin-top:14px">
+          <div class="sec-title" style="margin-top:0">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Sessions sécurisées
+          </div>
+          <div class="sec-desc">Votre session reste active en toute sécurité. Dès que vous vous déconnectez, l'accès est coupé immédiatement sur tous les appareils.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-pills">
+      <div class="sec-pill"><strong>🛡️ Protection anti-abus</strong>Les tentatives de connexion répétées sont automatiquement bloquées pour empêcher quelqu'un de deviner votre mot de passe.</div>
+      <div class="sec-pill"><strong>🏢 Données séparées par entreprise</strong>Les informations de votre entreprise sont totalement isolées. Aucun autre utilisateur ne peut y accéder.</div>
+      <div class="sec-pill"><strong>🔍 Historique complet</strong>Toutes les actions importantes sont enregistrées avec la date, l'heure et la personne concernée. Les administrateurs peuvent consulter cet historique à tout moment.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BOUTON FLOTTANT — visible uniquement en mode embed -->
+<button id="fab-dash" aria-label="Retour au tableau de bord">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+  Tableau de bord
+</button>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
+        <rect width="30" height="30" rx="8" fill="url(#lg-ft)"/>
+        <text x="7.5" y="21" font-family="Arial Black,sans-serif" font-weight="900" font-size="15" fill="white">T</text>
+        <circle cx="23" cy="21" r="2.8" fill="#f59e0b"/>
+        <defs><linearGradient id="lg-ft" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+        </linearGradient></defs>
+      </svg>
+      team<strong>Off</strong>
+    </div>
+    <div class="footer-copy">Guide de prise en main · v2026 · Toutes les données sont isolées par entreprise</div>
+  </div>
+</footer>
+<script>
+(function(){
+  var sections=document.querySelectorAll('section[id]');
+  var links=document.querySelectorAll('.nav-links a');
+  if(!sections.length||!links.length)return;
+  var active=null;
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var id=e.target.id;
+        links.forEach(function(a){
+          var on=a.getAttribute('href')==='#'+id;
+          if(on){a.classList.add('active');active=a;}
+          else a.classList.remove('active');
+        });
+      }
+    });
+  },{threshold:0.25,rootMargin:'-10% 0px -55% 0px'});
+  sections.forEach(function(s){obs.observe(s);});
+  /* Marque la première section par défaut */
+  if(links[0])links[0].classList.add('active');
+})();
+</script>
