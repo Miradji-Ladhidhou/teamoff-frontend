@@ -1,28 +1,243 @@
-/* Wrapper qui efface les marges du content-container pour que l'iframe prenne toute la zone */
-.guide-iframe-wrap {
-  margin: -1rem;
-  /* Compense le padding-bottom de page-content sur mobile (72px) */
-  margin-bottom: calc(-72px - env(safe-area-inset-bottom, 0px) - 1rem);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* ── Guide Prise en Main — toutes les règles scopées sous .guide-page ── */
+
+.guide-page {
+  --bg:          #f0f2f5;
+  --surface:     #ffffff;
+  --elevated:    #f5f6f8;
+  --text:        #111827;
+  --text-soft:   #6b7280;
+  --text-muted:  #9ca3af;
+  --border:      rgba(0,0,0,0.09);
+  --border-soft: rgba(0,0,0,0.05);
+  --accent:      #6366f1;
+  --accent-dark: #4f46e5;
+  --accent-soft: rgba(99,102,241,0.10);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 14px rgba(0,0,0,0.09),0 2px 6px rgba(0,0,0,0.05);
+  --r-card:      14px;
+
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  line-height: 1.6;
+
+  /* Annule le padding de page-content pour aller bord à bord */
+  margin: -1rem -1rem 0;
 }
 
-.guide-iframe {
-  width: 100%;
-  /* Mobile : topbar 52px + bottom nav 56px + safe-area */
-  height: calc(100dvh - 52px - 56px - env(safe-area-inset-bottom, 0px));
-  border: none;
-  display: block;
-  flex: 1;
+@media (prefers-color-scheme: dark) {
+  .guide-page {
+    --bg: #0f172a; --surface: #1e293b; --elevated: #1a2744;
+    --text: #f1f5f9; --text-soft: #94a3b8; --text-muted: #64748b;
+    --border: rgba(255,255,255,0.08); --border-soft: rgba(255,255,255,0.04);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 14px rgba(0,0,0,0.35);
+  }
 }
 
 @media (min-width: 992px) {
-  .guide-iframe-wrap {
-    margin: -1.5rem -2rem -1.5rem;
-  }
-  .guide-iframe {
-    /* Desktop : pas de bottom nav */
-    height: calc(100dvh - 52px);
-  }
+  .guide-page { margin: -1.5rem -2rem 0; }
+}
+
+.guide-page ul { list-style: none; margin: 0; padding: 0; }
+
+/* ── Conteneur centré ── */
+.guide-page .wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.guide-page section { padding: 64px 0; }
+
+/* ── Nav interne ── */
+.guide-page nav {
+  position: sticky;
+  top: 0; /* sticky dans le contexte du scroll de .page-content */
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.guide-page .nav-inner {
+  display: flex; align-items: center; gap: 28px; height: 52px;
+  max-width: 1080px; margin: 0 auto; padding: 0 24px;
+}
+
+.guide-page .nav-logo {
+  display: flex; align-items: center; gap: 9px; flex-shrink: 0;
+  font-weight: 800; font-size: .92rem; color: var(--text); letter-spacing: -.3px;
+  text-decoration: none;
+}
+.guide-page .nav-logo strong { color: var(--accent); }
+.guide-page .logo-svg { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+
+.guide-page .nav-links { display: flex; gap: 2px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+.guide-page .nav-links::-webkit-scrollbar { display: none; }
+.guide-page .nav-links a {
+  white-space: nowrap; padding: 6px 11px; border-radius: 8px;
+  font-size: .82rem; font-weight: 500; color: var(--text-soft);
+  transition: background .15s, color .15s; text-decoration: none;
+}
+.guide-page .nav-links a:hover { background: var(--elevated); color: var(--text); }
+.guide-page .nav-links a.active { background: var(--elevated); color: var(--text); font-weight: 600; }
+
+/* ── Hero ── */
+.guide-page #hero {
+  background: linear-gradient(135deg, #1e3a6e 0%, #2d5bb9 50%, #3d72e0 100%);
+  color: #fff; padding: 72px 0 60px; position: relative; overflow: hidden;
+}
+.guide-page #hero::before {
+  content: ''; position: absolute; right: -40px; top: -40px;
+  width: 200px; height: 200px; background: rgba(255,255,255,.05); border-radius: 50%; pointer-events: none;
+}
+.guide-page #hero::after {
+  content: ''; position: absolute; right: 80px; bottom: -60px;
+  width: 140px; height: 140px; background: rgba(255,255,255,.04); border-radius: 50%; pointer-events: none;
+}
+.guide-page .hero-inner {
+  display: grid; grid-template-columns: 1fr 420px; gap: 56px; align-items: center; position: relative; z-index: 1;
+}
+.guide-page .hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.22);
+  padding: 4px 13px; border-radius: 999px; font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.9); margin-bottom: 18px;
+}
+.guide-page .hero-title { font-size: 2.5rem; font-weight: 800; line-height: 1.15; margin-bottom: 14px; text-wrap: balance; }
+.guide-page .hero-title span { opacity: .85; }
+.guide-page .hero-sub { font-size: 1rem; color: rgba(255,255,255,.72); line-height: 1.65; margin-bottom: 28px; max-width: 440px; }
+.guide-page .hero-badges { display: flex; flex-wrap: wrap; gap: 9px; }
+.guide-page .hbadge {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.11); border: 1px solid rgba(255,255,255,.18);
+  padding: 6px 13px; border-radius: 8px; font-size: .8rem; font-weight: 600;
+}
+
+/* ── Section titles ── */
+.guide-page .s-head { margin-bottom: 44px; }
+.guide-page .s-eye { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.guide-page .s-title { font-size: 1.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 10px; text-wrap: balance; }
+.guide-page .s-sub { font-size: .95rem; color: var(--text-soft); max-width: 540px; line-height: 1.65; }
+
+/* ── Rôles ── */
+.guide-page .roles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.guide-page .role-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-card); box-shadow: var(--shadow-sm);
+  padding: 22px 22px 22px 20px; border-left: 4px solid var(--rc);
+  transition: box-shadow .2s, transform .2s;
+}
+.guide-page .role-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.guide-page .role-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.guide-page .role-ico { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; background: var(--rc-soft); display: flex; align-items: center; justify-content: center; }
+.guide-page .role-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+.guide-page .role-badge { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: var(--rc-soft); color: var(--rc); }
+.guide-page .role-list li { font-size: .83rem; color: var(--text-soft); padding: 4px 0; display: flex; align-items: flex-start; gap: 8px; border-bottom: 1px solid var(--border-soft); }
+.guide-page .role-list li:last-child { border-bottom: none; }
+.guide-page .role-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--rc); flex-shrink: 0; margin-top: 8px; }
+
+/* ── Workflow ── */
+.guide-page .wf-layout { display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: start; }
+.guide-page .steps { display: flex; flex-direction: column; }
+.guide-page .step { display: flex; gap: 18px; padding-bottom: 28px; }
+.guide-page .step:last-child { padding-bottom: 0; }
+.guide-page .step-track { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.guide-page .step-num { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; font-size: .82rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; box-shadow: 0 0 0 5px rgba(99,102,241,.12); }
+.guide-page .step-line { width: 2px; flex: 1; background: var(--border); margin: 5px 0; min-height: 20px; }
+.guide-page .step:last-child .step-line { display: none; }
+.guide-page .step-body { padding-top: 5px; }
+.guide-page .step-title { font-size: .92rem; font-weight: 700; margin-bottom: 4px; }
+.guide-page .step-desc { font-size: .83rem; color: var(--text-soft); line-height: 1.55; }
+.guide-page .step-who { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+.guide-page .flow-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 22px; box-shadow: var(--shadow-sm); }
+.guide-page .flow-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: 18px; }
+.guide-page .fn { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 8px; border: 1px solid var(--border); font-size: .8rem; font-weight: 600; background: var(--surface); }
+.guide-page .fdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.guide-page .farrow { text-align: center; color: var(--text-muted); font-size: .82rem; padding: 3px 0 3px 16px; }
+.guide-page .fsplit { display: flex; gap: 8px; margin-left: 16px; }
+.guide-page .fsplit .fn { flex: 1; font-size: .76rem; }
+.guide-page .ftip { margin-top: 14px; padding: 13px; border-radius: 9px; font-size: .8rem; line-height: 1.6; background: rgba(217,119,6,.08); border: 1px solid rgba(217,119,6,.2); color: var(--text-soft); }
+.guide-page .ftip strong { color: #92400e; }
+
+/* ── Calendrier ── */
+.guide-page .cal-layout { display: grid; grid-template-columns: 1fr 320px; gap: 48px; align-items: start; }
+.guide-page .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.guide-page .leg-item { display: flex; align-items: center; gap: 9px; padding: 9px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; font-size: .8rem; font-weight: 500; color: var(--text-soft); }
+.guide-page .leg-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.guide-page .cal-note { margin-top: 18px; padding: 14px; border-radius: 9px; font-size: .83rem; line-height: 1.65; background: rgba(99,102,241,.07); border: 1px solid rgba(99,102,241,.15); color: var(--text-soft); }
+.guide-page .cal-note strong { color: var(--text); }
+.guide-page .mini-cal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-md); }
+.guide-page .mcal-head { background: linear-gradient(135deg, #1e3a6e, #2d5bb9, #3d72e0); color: #fff; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; }
+.guide-page .mcal-month { font-weight: 700; font-size: .9rem; }
+.guide-page .mcal-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; gap: 3px; text-align: center; }
+.guide-page .mday-name { font-size: .64rem; font-weight: 700; color: var(--text-muted); padding: 4px 0; text-transform: uppercase; }
+.guide-page .mday { font-size: .75rem; font-weight: 500; padding: 5px 3px; border-radius: 5px; color: var(--text-soft); min-height: 26px; display: flex; align-items: center; justify-content: center; }
+.guide-page .mday.empty { color: transparent; }
+.guide-page .mday.today { background: var(--accent); color: #fff; font-weight: 700; }
+.guide-page .mday.approved { background: rgba(52,211,153,.14); color: #047857; font-weight: 600; }
+.guide-page .mday.pending { background: rgba(240,168,85,.14); color: #92400e; font-weight: 600; }
+.guide-page .mday.reserved { background: rgba(124,58,237,.14); color: #6d28d9; font-weight: 600; }
+.guide-page .mday.refused { background: rgba(248,113,113,.13); color: #991b1b; text-decoration: line-through; }
+.guide-page .mday.sick { background: rgba(251,146,60,.13); color: #c2410c; font-weight: 500; }
+.guide-page .mday.holiday { background: rgba(156,163,175,.12); color: var(--text-muted); }
+
+/* ── Soldes ── */
+.guide-page .bal-layout { display: grid; grid-template-columns: 320px 1fr; gap: 48px; align-items: start; }
+.guide-page .bal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-md); }
+.guide-page .bal-head { background: linear-gradient(135deg, #1e3a6e, #2d5bb9, #3d72e0); color: #fff; padding: 18px 20px; }
+.guide-page .bal-type { font-size: .72rem; opacity: .75; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.guide-page .bal-val { font-size: 2rem; font-weight: 800; line-height: 1; margin: 4px 0 2px; }
+.guide-page .bal-sub { font-size: .76rem; opacity: .7; }
+.guide-page .bal-rows { padding: 14px 16px; }
+.guide-page .brow { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-soft); font-size: .83rem; }
+.guide-page .brow:last-child { border-bottom: none; }
+.guide-page .blabel { color: var(--text-soft); }
+.guide-page .bval { font-weight: 700; font-variant-numeric: tabular-nums; }
+.guide-page .bbar-wrap { flex: 1; height: 7px; background: var(--elevated); border-radius: 4px; margin: 0 10px; overflow: hidden; }
+.guide-page .bbar { height: 100%; border-radius: 4px; }
+.guide-page .qf-grid { display: flex; flex-direction: column; gap: 13px; }
+.guide-page .qf-item { display: flex; gap: 13px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow-sm); }
+.guide-page .qf-ico { width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.guide-page .qf-title { font-weight: 700; font-size: .88rem; margin-bottom: 3px; }
+.guide-page .qf-desc { font-size: .8rem; color: var(--text-soft); line-height: 1.5; }
+
+/* ── Administration ── */
+.guide-page .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.guide-page .feat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; box-shadow: var(--shadow-sm); }
+.guide-page .feat-ico { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.guide-page .feat-title { font-size: .9rem; font-weight: 700; margin-bottom: 5px; }
+.guide-page .feat-desc { font-size: .8rem; color: var(--text-soft); line-height: 1.55; }
+
+/* ── Sécurité ── */
+.guide-page .sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.guide-page .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 22px; box-shadow: var(--shadow-sm); }
+.guide-page .sec-card.top-accent { border-top: 3px solid var(--accent); }
+.guide-page .sec-title { font-size: .92rem; font-weight: 700; margin-bottom: 9px; display: flex; align-items: center; gap: 9px; }
+.guide-page .sec-desc { font-size: .83rem; color: var(--text-soft); line-height: 1.6; }
+.guide-page .sec-steps { margin-top: 13px; display: flex; flex-direction: column; gap: 8px; }
+.guide-page .sec-step { display: flex; gap: 9px; align-items: flex-start; font-size: .81rem; color: var(--text-soft); }
+.guide-page .sec-num { width: 19px; height: 19px; border-radius: 50%; background: var(--accent); color: #fff; font-size: .65rem; font-weight: 800; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.guide-page .sec-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin-top: 16px; }
+.guide-page .sec-pill { padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); font-size: .8rem; color: var(--text-soft); line-height: 1.55; }
+.guide-page .sec-pill strong { display: block; color: var(--text); margin-bottom: 3px; }
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .guide-page .hero-inner,
+  .guide-page .wf-layout,
+  .guide-page .cal-layout,
+  .guide-page .bal-layout,
+  .guide-page .sec-grid { grid-template-columns: 1fr; }
+  .guide-page .hero-visual { display: none; }
+  .guide-page .hero-title { font-size: 1.9rem; }
+  .guide-page .roles-grid { grid-template-columns: 1fr; }
+  .guide-page .feat-grid { grid-template-columns: 1fr 1fr; }
+  .guide-page .legend { grid-template-columns: 1fr; }
+  .guide-page .sec-pills { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .guide-page .feat-grid { grid-template-columns: 1fr; }
+  .guide-page section { padding: 44px 0; }
 }
