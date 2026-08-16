@@ -254,7 +254,7 @@ export default function HelpPage() {
                 <div className="fn" style={{ background: 'rgba(52,211,153,.08)', borderColor: 'rgba(52,211,153,.25)' }}><div className="fdot" style={{ background: '#059669' }}></div><span style={{ color: '#047857', fontWeight: 700 }}>Validé final ✓</span></div>
               </div>
               <div className="ftip">
-                <strong>Circuits disponibles :</strong> <em>Automatique</em> (validé sans action), <em>Manager seul</em> (1 étape), <em>Manager puis Admin</em> (2 étapes), <em>Admin seul</em>. À configurer par l'administrateur dans les paramètres de congés.
+                <strong>Circuits disponibles :</strong> <em>Manager seul</em> (1 étape), <em>Manager puis Admin</em> (2 étapes), <em>Admin seul</em>. À configurer par l'administrateur dans les paramètres de congés.
               </div>
               <div className="ftip" style={{ marginTop: '10px' }}>
                 <strong>Modifier ou annuler un congé approuvé :</strong> L'employé ou le manager soumet une demande de modification ou d'annulation. Seul l'<em>Admin entreprise</em> peut l'approuver ou la rejeter via la section <em>Demandes modif/annul</em>.
@@ -270,7 +270,7 @@ export default function HelpPage() {
           <div className="s-head">
             <div className="s-eye">Calendrier</div>
             <h2 className="s-title">Calendrier partagé de l'équipe</h2>
-            <p className="s-sub">Vue mensuelle de toutes les absences et congés. Filtrez par employé, service ou statut.</p>
+            <p className="s-sub">Vue mensuelle de toutes les absences et congés. Filtrez par statut ou par utilisateur.</p>
           </div>
           <div className="cal-layout">
             <div>
@@ -383,7 +383,7 @@ export default function HelpPage() {
             <div className="feat-card">
               <div className="feat-ico" style={{ background: 'rgba(124,58,237,.10)' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></div>
               <div className="feat-title">Jours fériés & bloqués</div>
-              <div className="feat-desc">Importez les jours fériés nationaux automatiquement ou ajoutez manuellement des jours bloqués. Ils sont exclus du calcul des jours ouvrés.</div>
+              <div className="feat-desc">Importez les jours fériés nationaux en un clic via l'API officielle, ou ajoutez manuellement des jours bloqués. Ils sont exclus du calcul des jours ouvrés.</div>
             </div>
             <div className="feat-card">
               <div className="feat-ico" style={{ background: 'rgba(45,91,185,.10)' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d5bb9" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
@@ -432,7 +432,7 @@ export default function HelpPage() {
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   Sessions sécurisées
                 </div>
-                <div className="sec-desc">Votre session reste active en toute sécurité. Dès que vous vous déconnectez, l'accès est coupé immédiatement sur tous les appareils.</div>
+                <div className="sec-desc">Votre session reste active en toute sécurité. En vous déconnectant, votre session locale est clôturée immédiatement.</div>
               </div>
             </div>
           </div>
