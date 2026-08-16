@@ -110,13 +110,9 @@ const ScrollToTop = () => {
 };
 
 const PublicPageLayout = ({ children }) => {
-  const location = useLocation();
-  // On masque l'en-tête public sur la page /help
-  const hideHeader = location.pathname === '/help';
   return (
     <div className="min-vh-100 d-flex flex-column auth-bg-simple">
-      {!hideHeader && (
-        <header className="border-bottom glass-header">
+      <header className="border-bottom glass-header">
           <Container className="d-flex align-items-center justify-content-between py-3 gap-3">
             <Link to="/" className="text-decoration-none text-dark">
               <div>
@@ -130,7 +126,6 @@ const PublicPageLayout = ({ children }) => {
             </div>
           </Container>
         </header>
-      )}
       <main className="flex-grow-1 py-4 py-md-5">
         {children}
       </main>
@@ -249,16 +244,6 @@ function App() {
           }
         />
 
-        <Route
-          path="/help"
-          element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <PublicPageLayout>
-                <HelpPage />
-              </PublicPageLayout>
-            </Suspense>
-          }
-        />
 
         <Route
           path="/maintenance"
@@ -295,6 +280,7 @@ function App() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
             <Route path="/historique-solde" element={<HistoriqueSoldePage />} />
+            <Route path="/help" element={<HelpPage />} />
           </Route>
         </Route>
 
