@@ -67,13 +67,13 @@
 }
 
 .legend-dot-ferie {
-  background: #f59e0b;
-  border: 1px solid #d97706;
+  background: #607D8B;
+  border: 1px solid #546E7A;
 }
 
 .legend-dot-blocked {
-  background: #dc2626;
-  border: 1px solid #b91c1c;
+  background: #795548;
+  border: 1px solid #5D4037;
 }
 
 .legend-dot-today {
@@ -352,9 +352,9 @@
   margin-bottom: 6px;
   padding: 2px 6px;
   border-radius: 4px;
-  background-color: rgba(245, 158, 11, 0.18);
-  color: #92400e;
-  border: 1px solid rgba(245, 158, 11, 0.45);
+  background-color: rgba(96, 125, 139, 0.18);
+  color: #37474F;
+  border: 1px solid rgba(96, 125, 139, 0.45);
   display: inline-block;
   max-width: 100%;
   font-size: 10px;
@@ -368,9 +368,9 @@
   margin-bottom: 6px;
   padding: 2px 6px;
   border-radius: 999px;
-  background-color: rgba(220, 38, 38, 0.1);
-  color: #991b1b;
-  border: 1px solid rgba(220, 38, 38, 0.4);
+  background-color: rgba(121, 85, 72, 0.1);
+  color: #4E342E;
+  border: 1px solid rgba(121, 85, 72, 0.4);
   display: inline-block;
   max-width: 100%;
   font-size: 10px;
@@ -388,60 +388,76 @@
 }
 
 .bg-purple {
-  background-color: #7c3aed !important;
+  background-color: #9C27B0 !important;
 }
 
-/* Couleurs sombres pour contraste blanc sur fond clair Bootstrap */
+/* Override Bootstrap bg-success/bg-danger pour les badges calendrier */
+.calendar-event.bg-success,
+.legend-dot.bg-success,
+.cal-recap-dot.bg-success {
+  background-color: #4CAF50 !important;
+}
+
+.calendar-event.bg-danger,
+.legend-dot.bg-danger,
+.cal-recap-dot.bg-danger {
+  background-color: #F44336 !important;
+}
+
+.cal-recap-statut.text-success { color: #4CAF50 !important; }
+.cal-recap-statut.text-danger  { color: #F44336 !important; }
+.cal-recap-statut.text-warning { color: #FFC107 !important; }
+.cal-recap-statut.text-purple  { color: #9C27B0 !important; }
+
 .calendar-event.bg-warning,
 .legend-dot.bg-warning,
 .cal-recap-dot.bg-warning {
-  background-color: #b45309 !important; /* amber-700 : Bootstrap yellow #ffc107 illisible avec texte blanc */
+  background-color: #FFC107 !important;
 }
 
-/* Validé manager : cyan */
+/* Validé manager : bleu */
 .calendar-event.bg-valide-manager,
 .cal-recap-dot.bg-valide-manager {
-  background-color: #0891b2 !important;
+  background-color: #2196F3 !important;
 }
 
 .legend-dot-valide-manager {
-  background: #0891b2;
-  border: 1px solid #0e7490;
+  background: #2196F3;
+  border: 1px solid #1976D2;
 }
 
 .text-valide-manager {
-  color: #0891b2 !important;
+  color: #2196F3 !important;
 }
 
-/* Absence exceptionnelle : bleu */
+/* Absence exceptionnelle : orange */
 .bg-absence-except,
 .calendar-event.bg-absence-except,
 .cal-recap-dot.bg-absence-except {
-  background-color: #1d4ed8 !important;
+  background-color: #FF9800 !important;
 }
 
 .legend-dot-absence-except {
-  background: #1d4ed8;
-  border: 1px solid #1e40af;
+  background: #FF9800;
+  border: 1px solid #E68900;
 }
 
-/* Arrêt maladie : rose distinct du vert et de l'orange */
+/* Arrêt maladie : rose */
 .bg-maladie,
 .calendar-event.bg-maladie,
 .legend-dot.legend-dot-maladie,
 .cal-recap-dot.bg-maladie {
-  background-color: #be185d !important;
+  background-color: #E91E63 !important;
 }
 
 .legend-dot-maladie {
-  background: #be185d;
-  border: 1px solid #9d174d;
+  background: #E91E63;
+  border: 1px solid #C2185B;
 }
 
-/* Dots légende alignés avec les couleurs corrigées */
 .legend-dot-warning {
-  background: #b45309;
-  border: 1px solid #92400e;
+  background: #FFC107;
+  border: 1px solid #E6AC00;
 }
 
 /* EVENT */
@@ -576,7 +592,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: rgba(245, 158, 11, 0.85);
+    background: rgba(96, 125, 139, 0.85);
     font-size: 0;
     color: transparent;
     overflow: hidden;
@@ -593,7 +609,7 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background: rgba(220, 38, 38, 0.85);
+    background: rgba(121, 85, 72, 0.85);
     font-size: 0;
     color: transparent;
     overflow: hidden;
