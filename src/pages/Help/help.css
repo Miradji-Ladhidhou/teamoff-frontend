@@ -50,55 +50,6 @@
 
 .guide-page section { padding: 64px 0; }
 
-/* ── Nav interne flottante ── */
-.guide-page nav {
-  position: fixed;
-  top: 52px;   /* sous la topbar de l'app */
-  left: 0;
-  right: 0;
-  z-index: 90;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
-
-@media (min-width: 992px) {
-  .guide-page nav {
-    left: 220px; /* sidebar desktop */
-  }
-}
-
-/* Compense la hauteur de la nav fixe */
-.guide-page {
-  padding-top: 52px;
-}
-
-.guide-page section[id] {
-  scroll-margin-top: 52px;
-}
-
-.guide-page .nav-inner {
-  display: flex; align-items: center; gap: 28px; height: 52px;
-  max-width: 1080px; margin: 0 auto; padding: 0 24px;
-}
-
-.guide-page .nav-logo {
-  display: flex; align-items: center; gap: 9px; flex-shrink: 0;
-  font-weight: 800; font-size: .92rem; color: var(--text); letter-spacing: -.3px;
-  text-decoration: none;
-}
-.guide-page .nav-logo strong { color: var(--accent); }
-.guide-page .logo-svg { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
-
-.guide-page .nav-links { display: flex; gap: 2px; overflow-x: auto; flex: 1; scrollbar-width: none; }
-.guide-page .nav-links::-webkit-scrollbar { display: none; }
-.guide-page .nav-links a {
-  white-space: nowrap; padding: 6px 11px; border-radius: 8px;
-  font-size: .82rem; font-weight: 500; color: var(--text-soft);
-  transition: background .15s, color .15s; text-decoration: none;
-}
-.guide-page .nav-links a:hover { background: var(--elevated); color: var(--text); }
-.guide-page .nav-links a.active { background: var(--elevated); color: var(--text); font-weight: 600; }
 
 /* ── Hero ── */
 .guide-page #hero {

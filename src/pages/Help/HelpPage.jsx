@@ -1,63 +1,10 @@
 import './help.css';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 export default function HelpPage() {
-  useEffect(() => {
-    const container = document.querySelector('.page-content, .role-content');
-    if (container) container.style.scrollBehavior = 'smooth';
-
-    const sections = document.querySelectorAll('.guide-page section[id]');
-    const links = document.querySelectorAll('.guide-page .nav-links a');
-    if (!sections.length || !links.length) return;
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const id = e.target.id;
-            links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
-          }
-        });
-      },
-      { root: container || null, threshold: 0.25, rootMargin: '-10% 0px -55% 0px' }
-    );
-
-    sections.forEach((s) => obs.observe(s));
-    if (links[0]) links[0].classList.add('active');
-
-    return () => {
-      obs.disconnect();
-      if (container) container.style.scrollBehavior = '';
-    };
-  }, []);
 
   return (
     <div className="guide-page">
-
-      {/* ── NAV INTERNE ── */}
-      <nav>
-        <div className="nav-inner">
-          <div className="nav-logo">
-            <svg className="logo-svg" viewBox="0 0 30 30" fill="none">
-              <rect width="30" height="30" rx="8" fill="url(#lg-nav)"/>
-              <text x="7.5" y="21" fontFamily="Arial Black,sans-serif" fontWeight="900" fontSize="15" fill="white">T</text>
-              <circle cx="23" cy="21" r="2.8" fill="#f59e0b"/>
-              <defs><linearGradient id="lg-nav" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#6366f1"/><stop offset="1" stopColor="#8b5cf6"/>
-              </linearGradient></defs>
-            </svg>
-            team<strong>Off</strong>
-          </div>
-          <div className="nav-links">
-            <a href="#roles">Rôles</a>
-            <a href="#workflow">Congés</a>
-            <a href="#calendrier">Calendrier</a>
-            <a href="#soldes">Soldes</a>
-            <a href="#admin">Administration</a>
-            <a href="#securite">Sécurité</a>
-          </div>
-        </div>
-      </nav>
 
       {/* ── HERO ── */}
       <section id="hero">
