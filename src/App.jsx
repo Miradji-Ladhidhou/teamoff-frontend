@@ -63,9 +63,7 @@ const LoadingSpinner = () => (
 );
 
 // Déconnexion automatique après une heure sans interaction (souris, clavier, scroll, tactile).
-// TEMPORAIRE (debug) : 20s au lieu d'1h, pour vérifier rapidement que le mécanisme fonctionne
-// sans attendre une heure à chaque test. À remettre à 60 * 60 * 1000 une fois confirmé.
-const INACTIVITY_TIMEOUT_MS = 20 * 1000;
+const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
 
 // Protection des routes
 const ProtectedRoute = ({ roles }) => {
