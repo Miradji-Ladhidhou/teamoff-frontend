@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { AlertProvider } from './contexts/AlertContext';
 import { Container, Spinner, Button } from 'react-bootstrap';
 
@@ -61,9 +62,15 @@ const LoadingSpinner = () => (
   </Container>
 );
 
+// Déconnexion automatique après une heure sans interaction (souris, clavier, scroll, tactile).
+// TEMPORAIRE (debug) : 20s au lieu d'1h, pour vérifier rapidement que le mécanisme fonctionne
+// sans attendre une heure à chaque test. À remettre à 60 * 60 * 1000 une fois confirmé.
+const INACTIVITY_TIMEOUT_MS = 20 * 1000;
+
 // Protection des routes
 const ProtectedRoute = ({ roles }) => {
   const { isAuthenticated, hasRole, loading, user } = useAuth();
+  useInactivityLogout(INACTIVITY_TIMEOUT_MS);
 
   if (loading) return <LoadingSpinner />;
 
