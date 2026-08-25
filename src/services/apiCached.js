@@ -70,21 +70,23 @@ export const authService = {
   getProfile: () => cachedRequest('get', '/me'),
 };
 
+const bust = (fn) => (...args) => fn(...args).then((res) => { apiCache.clear(); return res; });
+
 export const congesService = {
   getAll: (params = {}) => cachedRequest('get', '/conges', { params }),
-  create: (data) => api.post('/conges/demande', data),
-  update: (id, data) => api.put(`/conges/${id}`, data),
-  delete: (id) => api.delete(`/conges/${id}`),
-  validate: (id, data) => api.post(`/conges/${id}/validate`, data),
-  reject: (id, data) => api.post(`/conges/${id}/reject`, data),
+  create: bust((data) => api.post('/conges/demande', data)),
+  update: bust((id, data) => api.put(`/conges/${id}`, data)),
+  delete: bust((id) => api.delete(`/conges/${id}`)),
+  validate: bust((id, data) => api.post(`/conges/${id}/validate`, data)),
+  reject: bust((id, data) => api.post(`/conges/${id}/reject`, data)),
   getById: (id) => cachedRequest('get', `/conges/${id}`),
 };
 
 export const usersService = {
   getAll: (params = {}) => cachedRequest('get', '/users', { params }),
-  create: (data) => api.post('/users', data),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  delete: (id) => api.delete(`/users/${id}`),
+  create: bust((data) => api.post('/users', data)),
+  update: bust((id, data) => api.put(`/users/${id}`, data)),
+  delete: bust((id) => api.delete(`/users/${id}`)),
   getById: (id) => cachedRequest('get', `/users/${id}`),
 };
 
@@ -110,9 +112,9 @@ export const calendrierService = {
 
 export const joursFeriesService = {
   getAll: (params = {}) => cachedRequest('get', '/jours-feries', { params }),
-  create: (data) => api.post('/jours-feries', data),
-  update: (id, data) => api.put(`/jours-feries/${id}`, data),
-  delete: (id) => api.delete(`/jours-feries/${id}`),
+  create: bust((data) => api.post('/jours-feries', data)),
+  update: bust((id, data) => api.put(`/jours-feries/${id}`, data)),
+  delete: bust((id) => api.delete(`/jours-feries/${id}`)),
 };
 
 export const notificationsService = {
@@ -123,7 +125,7 @@ export const notificationsService = {
 
 export const congeTypesService = {
   getAll: () => cachedRequest('get', '/conge-types'),
-  create: (data) => api.post('/conge-types', data),
-  update: (id, data) => api.put(`/conge-types/${id}`, data),
-  delete: (id) => api.delete(`/conge-types/${id}`),
+  create: bust((data) => api.post('/conge-types', data)),
+  update: bust((id, data) => api.put(`/conge-types/${id}`, data)),
+  delete: bust((id) => api.delete(`/conge-types/${id}`)),
 };
