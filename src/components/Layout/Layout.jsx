@@ -190,7 +190,12 @@ const Layout = () => {
     <div className={`app-shell role-shell role-${user?.role || 'employe'}`}>
       {/* Desktop sidebar (≥992px) */}
       <aside className="sidebar role-sidebar flex-column p-3">
-        <div className="sidebar-brand"><TeamOffLogo size="sm" variant="light" /></div>
+        <div className="sidebar-brand" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {companyLogo && (
+            <img src={companyLogo} alt={user?.entreprise_nom} style={{ height: 26, maxWidth: 80, objectFit: 'contain' }} />
+          )}
+          <TeamOffLogo size="sm" variant="light" />
+        </div>
         {renderSidebarContent(false)}
       </aside>
 
@@ -213,7 +218,12 @@ const Layout = () => {
       <div className="main-area">
         {/* Mobile topbar */}
         <div className="topbar d-lg-none">
-          <TeamOffLogo size="xs" variant="light" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {companyLogo && (
+              <img src={companyLogo} alt={user?.entreprise_nom} style={{ height: 22, maxWidth: 70, objectFit: 'contain' }} />
+            )}
+            <TeamOffLogo size="xs" variant="light" />
+          </div>
           <div className="d-flex align-items-center gap-2">
             <button className="topbar-icon-btn position-relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
               <FaBell size={14} style={{ color: 'var(--dk-text-soft)' }} />
