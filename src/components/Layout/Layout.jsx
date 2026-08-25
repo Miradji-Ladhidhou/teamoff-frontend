@@ -62,12 +62,20 @@ const Layout = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [managerCanViewAll, setManagerCanViewAll] = useState(true);
   const [managerCanExport, setManagerCanExport] = useState(true);
+  const [companyLogo, setCompanyLogo] = useState(null);
 
   const handleNewNotification = useCallback(() => {
     setUnreadCount((c) => c + 1);
   }, []);
 
   useNotificationStream(handleNewNotification);
+
+  useEffect(() => {
+    if (!user?.entreprise_id) return;
+    entreprisesService.getParametres(user.entreprise_id)
+      .then((res) => setCompanyLogo(res.data?.parametres?.logo || null))
+      .catch(() => {});
+  }, [user?.entreprise_id]);
 
   useEffect(() => {
     if (user?.role !== 'manager' || !user?.entreprise_id) return;
@@ -189,7 +197,15 @@ const Layout = () => {
       {/* Mobile offcanvas */}
       <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)}>
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title><TeamOffLogo size="sm" variant="light" /></Offcanvas.Title>
+          <Offcanvas.Title>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {companyLogo
+                ? <img src={companyLogo} alt={user?.entreprise_nom} style={{ height: 28, maxWidth: 90, objectFit: 'contain' }} />
+                : null
+              }
+              <TeamOffLogo size="sm" variant="light" />
+            </div>
+          </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>{renderSidebarContent(true)}</Offcanvas.Body>
       </Offcanvas>
