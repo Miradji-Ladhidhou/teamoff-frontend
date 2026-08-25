@@ -9,6 +9,7 @@ const TABS = [
   { id: 'annulation',    label: 'Annulation & Modification', emoji: '🔄' },
   { id: 'notifications', label: 'Notifications email',      emoji: '📧' },
   { id: 'timezone',      label: 'Fuseau horaire',           emoji: '🌐' },
+  { id: 'logo',          label: 'Logo',                     emoji: '🖼️' },
 ];
 
 const SectionTabs = ({ activeSection, setActiveSection }) => {

@@ -8,7 +8,7 @@ const fmt = (dateStr) => {
   return `${d}/${m}/${y}`;
 };
 
-const fmtEmbauche = (dateStr) => {
+const fmtLong = (dateStr) => {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
   if (isNaN(d)) return '—';
@@ -16,34 +16,308 @@ const fmtEmbauche = (dateStr) => {
 };
 
 const STATUT_LABELS = {
-  reserve: 'Réservé (prévisionnel)',
-  valide_final: 'Validé',
-  valide_manager: 'Validé (manager)',
-  en_attente_manager: 'En attente',
-  refuse_manager: 'Refusé (manager)',
-  refuse_final: 'Refusé',
+  reserve:              'Réservé (prévisionnel)',
+  valide_final:         'Validé',
+  valide_manager:       'Validé (manager)',
+  en_attente_manager:   'En attente',
+  refuse_manager:       'Refusé (manager)',
+  refuse_final:         'Refusé',
 };
 
 const DEMI_LABELS = {
-  matin: 'matin',
-  apres_midi: 'après-midi',
+  matin:       'matin',
+  apres_midi:  'après-midi',
 };
+
+const politiqueLabel = (p) => {
+  if (!p) return null;
+  if (p.count_saturday && p.count_sunday) return 'Jours calendaires';
+  if (p.count_saturday) return 'Jours ouvrables (lun. – sam.)';
+  return 'Jours ouvrés (lun. – ven.)';
+};
+
+const CSS = `
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #b8b4ae; }
+
+  .action-btns {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    display: flex; gap: 8px;
+  }
+  .att-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 3px;
+    font-family: Arial, sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid #555;
+    background: #fff; color: #222;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    transition: background .12s;
+  }
+  .att-btn:hover:not(:disabled) { background: #f0f0f0; }
+  .att-btn:disabled { opacity: .6; cursor: default; }
+  .att-btn.email-ok  { background: #15803d; color: #fff; border-color: #15803d; }
+  .att-btn.email-err { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+
+  .page-wrap {
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @media screen and (max-width: 840px) { .page-wrap { padding: 20px 0; } .doc { zoom: .82; } }
+  @media screen and (max-width: 640px) { .doc { zoom: .62; } }
+  @media screen and (max-width: 480px) { .page-wrap { padding: 10px 0; } .doc { zoom: .44; } }
+
+  /* ── Document ── */
+  .doc {
+    background: #fff;
+    width: 794px;
+    padding: 48px 60px 44px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+
+  /* ── Header ── */
+  .att-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #111;
+  }
+  .att-hd-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .att-logo {
+    max-height: 44px;
+    max-width: 130px;
+    object-fit: contain;
+  }
+  .att-co {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: .2px;
+  }
+  .att-ref-val {
+    font-family: 'Courier New', monospace;
+    font-size: 11px; color: #333;
+    letter-spacing: .3px; margin-bottom: 3px;
+    text-align: right;
+  }
+  .att-ref-date {
+    font-family: Arial, sans-serif;
+    font-size: 10px; color: #777; font-style: italic;
+    text-align: right;
+  }
+
+  /* ── Title ── */
+  .att-title-zone {
+    padding: 22px 0 0;
+    text-align: center;
+  }
+  .att-title {
+    font-size: 15px; font-weight: 700;
+    color: #111; letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .att-title-rule {
+    width: 44px; height: 1px;
+    background: #111; margin: 10px auto 0; opacity: .25;
+  }
+
+  /* ── Section label ── */
+  .att-sec {
+    font-family: Arial, sans-serif;
+    font-size: 7.5px; text-transform: uppercase;
+    letter-spacing: 2px; color: #999; font-weight: 700;
+    margin: 24px 0 8px;
+  }
+  .att-hr {
+    border: none; border-top: 1px solid #eee; margin: 0 0 10px;
+  }
+
+  /* ── Intro ── */
+  .att-intro {
+    font-size: 12.5px; line-height: 1.9;
+    color: #222; text-align: justify;
+  }
+  .att-intro strong { font-weight: 700; color: #111; }
+  .att-valoir {
+    font-family: Arial, sans-serif;
+    font-size: 10px; font-style: italic;
+    color: #aaa; text-align: center; margin-top: 9px;
+  }
+
+  /* ── Info tables ── */
+  .att-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  table.att-t {
+    width: 100%; border-collapse: collapse;
+    font-family: Arial, sans-serif; font-size: 11.5px;
+  }
+  table.att-t tr { border-bottom: 1px solid #f0f0f0; }
+  table.att-t tr:last-child { border-bottom: none; }
+  table.att-t td { padding: 6px 4px; vertical-align: top; line-height: 1.4; }
+  .tl { color: #888; font-style: italic; width: 38%; padding-right: 8px; }
+  .ts { color: #ccc; width: 8px; }
+  .tv { color: #111; font-weight: 700; }
+  .tv-ok {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9.5px; font-weight: 700;
+    color: #166534; background: #f0fdf4;
+    border: 1px solid #bbf7d0; border-radius: 2px;
+    padding: 1px 6px;
+  }
+  .tv-ok::before { content: '✓'; }
+
+  /* ── Décompte ── */
+  .att-dc-wrap {
+    border: 1px solid #ddd; border-radius: 2px;
+  }
+  .att-dc-head {
+    padding: 6px 14px;
+    border-bottom: 1px solid #ddd;
+    font-family: Arial, sans-serif;
+    background: #fafafa;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .att-dc-head-left {
+    font-size: 7.5px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #aaa; font-weight: 700;
+  }
+  .att-dc-head-right {
+    font-size: 7.5px; color: #888; font-style: italic;
+  }
+  .att-dc-body { display: flex; }
+  .att-dc-cell {
+    flex: 1; padding: 12px 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    border-right: 1px solid #eee;
+    position: relative;
+    font-family: Arial, sans-serif;
+  }
+  .att-dc-cell:last-child { border-right: none; background: #fafafa; }
+  .att-dc-num {
+    font-family: 'Courier New', monospace;
+    font-size: 20px; font-weight: 500;
+    color: #111; line-height: 1;
+  }
+  .att-dc-num.dim { color: #bbb; font-size: 17px; }
+  .att-dc-lbl {
+    font-size: 8px; text-transform: uppercase;
+    letter-spacing: .5px; color: #aaa;
+    text-align: center; line-height: 1.3;
+  }
+  .att-dc-tag {
+    font-size: 7px; font-style: italic;
+    color: #bbb; text-align: center; line-height: 1.3;
+  }
+  .att-dc-op {
+    position: absolute; right: -7px; top: 50%;
+    transform: translateY(-50%);
+    font-family: Arial, sans-serif;
+    font-size: 10px; color: #ccc;
+    background: #fff; padding: 1px 2px;
+    z-index: 2; line-height: 1;
+  }
+  .att-dc-cell:last-child .att-dc-op { display: none; }
+
+  /* ── Solde ── */
+  .att-solde-row {
+    margin-top: 12px;
+    border: 1px solid #ddd; border-radius: 2px;
+    display: flex; align-items: center;
+    padding: 13px 16px; gap: 10px;
+    font-family: Arial, sans-serif;
+  }
+  .att-solde-lbl {
+    font-size: 7.5px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #999; font-weight: 700;
+    flex: 1; line-height: 1.5;
+  }
+  .att-solde-val {
+    font-family: 'Courier New', monospace;
+    font-size: 24px; font-weight: 600; color: #111;
+  }
+  .att-solde-unit {
+    font-size: 10px; color: #999; font-weight: 500;
+    align-self: flex-end; margin-bottom: 3px;
+  }
+
+  /* ── Legal ── */
+  .att-legal {
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid #e8e8e8;
+    font-family: Arial, sans-serif;
+    font-size: 9px; color: #aaa;
+    font-style: italic; text-align: center; line-height: 1.7;
+  }
+
+  /* ── Signatures ── */
+  .att-sig-zone {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    font-family: Arial, sans-serif;
+  }
+  .att-sig-role {
+    font-size: 7.5px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #aaa; font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .att-sig-name { font-size: 13px; font-family: 'Georgia', serif; font-weight: 700; color: #111; margin-bottom: 1px; }
+  .att-sig-sub { font-size: 10px; font-style: italic; color: #aaa; margin-bottom: 18px; }
+  .att-sig-line-lbl {
+    font-size: 7px; text-transform: uppercase;
+    letter-spacing: 1px; color: #ccc; margin-bottom: 4px;
+  }
+  .att-sig-underline { border-bottom: 1px solid #ccc; height: 26px; }
+
+  /* ── Footer ── */
+  .att-footer {
+    margin-top: 28px;
+    padding-top: 9px;
+    border-top: 1px solid #111;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: Arial, sans-serif;
+  }
+  .att-foot-l { font-size: 8px; color: #aaa; }
+  .att-foot-r { font-family: 'Courier New', monospace; font-size: 8px; color: #bbb; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+    .action-btns { display: none !important; }
+    .page-wrap { padding: 0 !important; background: transparent !important; display: block !important; }
+    .doc { width: 210mm !important; box-shadow: none !important; padding: 16mm 18mm !important; zoom: 1 !important; }
+    @page { margin: 0; size: A4 portrait; }
+  }
+`;
 
 export default function AttestationPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [emailState, setEmailState] = useState('idle'); // idle | sending | success | error
+  const [emailState, setEmailState] = useState('idle');
   const printedRef = useRef(false);
 
   useEffect(() => {
     congesService.getAttestationData(id)
-      .then(res => {
-        setData(res.data);
-      })
-      .catch(err => {
-        setError(err.response?.data?.message || 'Erreur lors du chargement de l\'attestation.');
-      });
+      .then(res => setData(res.data))
+      .catch(err => setError(err.response?.data?.message || 'Erreur lors du chargement de l\'attestation.'));
   }, [id]);
 
   useEffect(() => {
@@ -54,700 +328,228 @@ export default function AttestationPage() {
     }
   }, [data]);
 
-  const periodLabel = () => {
-    if (!data) return '';
-    const start = data.conge.debut_demi_journee
-      ? `${fmt(data.conge.date_debut)} (${DEMI_LABELS[data.conge.debut_demi_journee] || data.conge.debut_demi_journee})`
-      : fmt(data.conge.date_debut);
-    const end = data.conge.fin_demi_journee
-      ? `${fmt(data.conge.date_fin)} (${DEMI_LABELS[data.conge.fin_demi_journee] || data.conge.fin_demi_journee})`
-      : fmt(data.conge.date_fin);
-    return `${start} → ${end}`;
-  };
-
-  const commentaires = () => {
-    if (!data) return [];
-    const c = [];
-    if (data.conge.commentaire_employe) c.push({ label: 'Employé', text: data.conge.commentaire_employe });
-    if (data.conge.commentaire_manager) c.push({ label: 'Manager', text: data.conge.commentaire_manager });
-    if (data.conge.commentaire_admin) c.push({ label: 'Administration', text: data.conge.commentaire_admin });
-    return c;
-  };
-
-  if (error) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-        <div style={{ textAlign: 'center', color: '#c0392b' }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>⚠</div>
-          <div>{error}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#6b7280' }}>
-        Chargement de l'attestation…
-      </div>
-    );
-  }
-
-  const nomComplet = `${data.employe.prenom} ${data.employe.nom}`.trim();
-  const jours = data.jours;
-  const coms = commentaires();
-
   const handleSendEmail = async () => {
     setEmailState('sending');
     try {
       await congesService.sendAttestationEmail(id);
       setEmailState('success');
       setTimeout(() => setEmailState('idle'), 4000);
-    } catch (err) {
+    } catch {
       setEmailState('error');
       setTimeout(() => setEmailState('idle'), 4000);
     }
   };
 
+  if (error) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
+      <div style={{ textAlign: 'center', color: '#c0392b' }}>
+        <div style={{ fontSize: 24, marginBottom: 8 }}>⚠</div>
+        <div>{error}</div>
+      </div>
+    </div>
+  );
+
+  if (!data) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#6b7280' }}>
+      Chargement de l'attestation…
+    </div>
+  );
+
+  const nomComplet = `${data.employe.prenom} ${data.employe.nom}`.trim();
+  const jours = data.jours;
+  const pol = jours.politique;
+
+  const nbSam    = jours.detail.filter(d => d.label === 'Samedi').length;
+  const nbDim    = jours.detail.filter(d => d.label === 'Dimanche').length;
+  const nbFeries = jours.detail.filter(d => d.type === 'ferie').length;
+
+  const periodLabel = () => {
+    const s = data.conge.debut_demi_journee
+      ? `${fmt(data.conge.date_debut)} (${DEMI_LABELS[data.conge.debut_demi_journee] || data.conge.debut_demi_journee})`
+      : fmt(data.conge.date_debut);
+    const e = data.conge.fin_demi_journee
+      ? `${fmt(data.conge.date_fin)} (${DEMI_LABELS[data.conge.fin_demi_journee] || data.conge.fin_demi_journee})`
+      : fmt(data.conge.date_fin);
+    return `${s} → ${e}`;
+  };
+
+  const emailBtnClass = `att-btn${emailState === 'success' ? ' email-ok' : emailState === 'error' ? ' email-err' : ''}`;
+  const emailBtnLabel = emailState === 'sending' ? 'Envoi…' : emailState === 'success' ? 'Envoyé !' : emailState === 'error' ? 'Erreur' : 'Envoyer par email';
+
   return (
     <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #e8edf2; }
-        .action-btns {
-          position: fixed; top: 16px; right: 16px; z-index: 1000;
-          display: flex; gap: 8px; align-items: center;
-        }
-        .print-btn {
-          background: #1e3a5f; color: #fff; border: none; border-radius: 6px;
-          padding: 9px 20px; font-size: 16px; font-weight: 600; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-          display: flex; align-items: center; gap: 8px;
-        }
-        .print-btn:hover { background: #16304f; }
-        .email-btn {
-          background: #0e7490; color: #fff; border: none; border-radius: 6px;
-          padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-          display: flex; align-items: center; gap: 8px;
-          white-space: nowrap;
-        }
-        .email-btn:hover:not(:disabled) { background: #0c6478; }
-        .email-btn:disabled { opacity: 0.7; cursor: default; }
-        .email-btn.success { background: #15803d; }
-        .email-btn.error { background: #b91c1c; }
-        .page-wrap { min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-
-        @media screen and (max-width: 840px) {
-          .page-wrap { padding: 20px 0; }
-          .doc { zoom: 0.9; }
-        }
-        @media screen and (max-width: 640px) {
-          .doc { zoom: 0.7; }
-        }
-        @media screen and (max-width: 480px) {
-          .page-wrap { padding: 10px 0; }
-          .doc { zoom: 0.48; }
-        }
-        .doc {
-          background: #fff;
-          width: 794px;
-          min-height: 1123px;
-          box-shadow: 0 4px 32px rgba(0,0,0,0.14);
-          display: flex;
-          flex-direction: column;
-          font-family: 'Georgia', 'Times New Roman', serif;
-          position: relative;
-          overflow: hidden;
-          padding: 20px;
-        }
-        .doc-header {
-          background: #1e3a5f;
-          padding: 20px 28px 12px;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-        .company-name {
-          color: #fff;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          font-family: 'Georgia', serif;
-        }
-        .company-sub {
-          color: rgba(255,255,255,0.55);
-          font-size: 12px;
-          margin-top: 2px;
-          font-family: Arial, sans-serif;
-          font-weight: 400;
-        }
-        .ref-block { text-align: right; }
-        .ref-label { color: rgba(255,255,255,0.55); font-size: 10px; font-family: Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
-        .ref-value { color: rgba(255,255,255,0.9); font-size: 12px; font-family: 'Courier New', monospace; margin-top: 1px; }
-        .doc-stripe {
-          height: 4px;
-          background: linear-gradient(90deg, #2563eb 0%, #4f9cf9 60%, #93c5fd 100%);
-        }
-        .doc-title-band {
-          padding: 9px 28px 8px;
-          border-bottom: 1px solid #e5e9ef;
-        }
-        .doc-title {
-          font-size: 15px;
-          font-weight: 700;
-          color: #1e3a5f;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          font-family: 'Georgia', serif;
-        }
-        .doc-subtitle {
-          font-size: 12px;
-          color: #6b7f96;
-          margin-top: 2px;
-          font-family: Arial, sans-serif;
-          font-weight: 400;
-        }
-        .doc-intro {
-          padding: 10px 28px 0;
-        }
-        .doc-intro p {
-          font-size: 13px;
-          font-family: Arial, sans-serif;
-          color: #2d3748;
-          line-height: 1.65;
-          margin: 0 0 5px 0;
-          text-align: justify;
-        }
-        .doc-intro p strong {
-          color: #1e3a5f;
-          font-weight: 700;
-        }
-        .doc-intro .valoir-droit {
-          font-size: 12px;
-          color: #6b7f96;
-          font-style: italic;
-          margin-top: 2px;
-        }
-        .doc-body { flex: 1; padding: 10px 28px 0; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .section-card {
-          border: 1px solid #e0e6ef;
-          border-radius: 5px;
-          overflow: hidden;
-        }
-        .section-head {
-          background: #f4f7fb;
-          padding: 5px 10px;
-          font-size: 10px;
-          font-weight: 700;
-          color: #4a6080;
-          letter-spacing: 1.2px;
-          text-transform: uppercase;
-          font-family: Arial, sans-serif;
-          border-bottom: 1px solid #e0e6ef;
-        }
-        .section-body { padding: 2px 0; }
-        .info-row-doc {
-          display: grid;
-          grid-template-columns: 80px 1fr;
-          padding: 4px 10px;
-          border-bottom: 1px solid #f0f3f8;
-          font-size: 12px;
-          line-height: 1.35;
-        }
-        .info-row-doc:last-child { border-bottom: none; }
-        .lbl { color: #6b7f96; font-family: Arial, sans-serif; font-weight: 400; }
-        .val { color: #1a2b40; font-family: Arial, sans-serif; font-weight: 600; word-break: break-word; }
-        .val.statut-ok { color: #15803d; }
-
-        .bottom-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-
-        .comments-block {
-          border-left: 3px solid #d97706;
-          background: #fffbeb;
-          padding: 8px 10px;
-          border-radius: 0 5px 5px 0;
-        }
-        .comments-head {
-          font-size: 10px; font-weight: 700; color: #92400e;
-          letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 5px;
-        }
-        .comment-item { margin-bottom: 5px; }
-        .comment-item:last-child { margin-bottom: 0; }
-        .comment-who { font-size: 10px; color: #a16207; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
-        .comment-text { font-size: 12px; color: #3b2e00; font-family: Arial, sans-serif; font-style: italic; line-height: 1.35; }
-        .no-comment { font-size: 12px; color: #a0aec0; font-family: Arial, sans-serif; font-style: italic; }
-
-        .calc-block {
-          background: #eff6ff;
-          border: 1px solid #bfdbfe;
-          border-radius: 5px;
-          padding: 8px 10px;
-        }
-        .calc-head {
-          font-size: 10px; font-weight: 700; color: #1d4ed8;
-          letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 3px;
-        }
-        .calc-period {
-          font-size: 10px; color: #6b7f96; font-family: Arial, sans-serif;
-          margin-bottom: 6px; font-style: italic;
-        }
-        .calc-row {
-          display: flex; justify-content: space-between; align-items: center;
-          padding: 3px 0;
-          border-bottom: 1px solid rgba(37,99,235,0.1);
-          font-size: 12px; font-family: Arial, sans-serif;
-        }
-        .calc-row:last-child { border-bottom: none; }
-        .calc-label { color: #4a6080; }
-        .calc-value { font-weight: 700; color: #1e3a5f; white-space: nowrap; }
-        .calc-divider { border: none; border-top: 2px solid #2563eb; margin: 4px 0; }
-        .calc-row.total .calc-label { color: #1e3a5f; font-weight: 700; }
-        .calc-row.total .calc-value { color: #2563eb; font-size: 14px; }
-        .detail-section { margin: 4px 0 2px; }
-        .detail-title {
-          font-size: 10px; font-weight: 700; color: #4a6080;
-          text-transform: uppercase; letter-spacing: 0.8px;
-          font-family: Arial, sans-serif; margin-bottom: 2px;
-        }
-        .detail-row {
-          display: flex; justify-content: space-between; align-items: center;
-          padding: 1px 0 1px 6px;
-          font-size: 10px; font-family: Arial, sans-serif; color: #4a6080;
-        }
-        .detail-date { flex: 1; }
-        .badge-inclus {
-          font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
-          background: #dcfce7; color: #15803d;
-        }
-        .badge-exclu {
-          font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px;
-          background: #fee2e2; color: #b91c1c;
-        }
-        .detail-none { font-size: 10px; color: #94a3b8; font-family: Arial, sans-serif; padding: 1px 0 1px 6px; font-style: italic; }
-        .calc-row.sub-row { padding: 2px 0 2px 10px; border-bottom: none; font-size: 11px; }
-        .calc-row.sub-row .calc-label { color: #6b7f96; }
-        .calc-row.sub-row .calc-value { font-size: 11px; }
-        .val-minus { color: #b91c1c !important; }
-        .val-plus  { color: #15803d !important; }
-        .tag-inclus { display: inline-block; font-size: 9px; font-weight: 700; padding: 0 4px; border-radius: 8px; background: #dcfce7; color: #15803d; margin-left: 4px; vertical-align: middle; }
-        .tag-exclu  { display: inline-block; font-size: 9px; font-weight: 700; padding: 0 4px; border-radius: 8px; background: #fee2e2; color: #b91c1c; margin-left: 4px; vertical-align: middle; }
-        .detail-row-sub { padding-left: 18px; }
-
-        .solde-block {
-          margin: 0 0 10px;
-          background: #f0fdf4;
-          border: 1px solid #86efac;
-          border-radius: 5px;
-          padding: 8px 12px;
-          display: flex;
-          align-items: center;
-          gap: 0;
-          flex-wrap: wrap;
-        }
-        .solde-block-head {
-          font-size: 10px; font-weight: 700; color: #15803d;
-          letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif;
-          flex: 0 0 100%;
-          margin-bottom: 5px;
-        }
-        .solde-items {
-          display: flex; align-items: center; gap: 0; flex: 1; flex-wrap: wrap;
-        }
-        .solde-item {
-          display: flex; flex-direction: column; align-items: center;
-          padding: 0 14px;
-          border-right: 1px solid #bbf7d0;
-        }
-        .solde-item:first-child { padding-left: 0; }
-        .solde-item:last-child { border-right: none; }
-        .solde-item__val {
-          font-size: 16px; font-weight: 800; font-family: Arial, sans-serif;
-          color: #15803d; font-variant-numeric: tabular-nums;
-        }
-        .solde-item__val.neutral { color: #4a6080; }
-        .solde-item__val.negative { color: #b91c1c; }
-        .solde-item__lbl {
-          font-size: 9px; color: #6b7f96; font-family: Arial, sans-serif;
-          text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; white-space: nowrap;
-        }
-        .solde-restant-chip {
-          margin-left: auto;
-          background: #15803d;
-          color: #fff;
-          border-radius: 4px;
-          padding: 4px 12px;
-          font-size: 13px; font-weight: 800; font-family: Arial, sans-serif;
-          white-space: nowrap;
-          font-variant-numeric: tabular-nums;
-        }
-        .solde-restant-chip.negative { background: #b91c1c; }
-        .solde-date {
-          font-size: 9px; color: #6b7280; font-family: Arial, sans-serif; margin-top: 1px; flex: 0 0 100%;
-        }
-
-        .legal-mention {
-          font-size: 10px;
-          color: #a0aec0;
-          font-family: Arial, sans-serif;
-          font-style: italic;
-          text-align: center;
-          padding: 0 28px 50px;
-          line-height: 1.4;
-        }
-
-        .signatures {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-          padding: 0 28px 100px;
-        }
-        .sig-block { padding: 10px 12px; border-radius: 5px; }
-        .sig-block.employee { background: #eff6ff; border: 1px solid #bfdbfe; }
-        .sig-block.direction { background: #f8f9fa; border: 1px solid #e0e6ef; }
-        .sig-role {
-          font-size: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-          font-family: Arial, sans-serif; margin-bottom: 1px;
-        }
-        .sig-block.employee .sig-role { color: #1d4ed8; }
-        .sig-block.direction .sig-role { color: #8a9ab0; }
-        .sig-name { font-size: 12px; font-family: 'Georgia', serif; color: #1a2b40; font-weight: 700; margin-bottom: 1px; }
-        .sig-block.direction .sig-name { color: #8a9ab0; font-size: 10px; font-weight: 400; font-style: italic; }
-        .sig-line { margin-top: 22px; border-top: 1px solid; padding-top: 3px; font-size: 8px; font-family: Arial, sans-serif; }
-        .sig-block.employee .sig-line { border-color: #bfdbfe; color: #93c5fd; }
-        .sig-block.direction .sig-line { border-color: #d1d9e6; color: #b0bec5; }
-
-        .doc-footer {
-          background: #1e3a5f;
-          padding: 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .footer-left { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; }
-        .footer-right { color: rgba(255,255,255,0.55); font-size: 8px; font-family: Arial, sans-serif; }
-
-        @media print {
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          html {
-            width: 210mm !important;
-            height: 297mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          body {
-            width: 210mm !important;
-            height: 297mm !important;
-            background: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-          .print-btn { display: none !important; }
-          .email-btn { display: none !important; }
-          .action-btns { display: none !important; }
-          .page-wrap {
-            width: 210mm !important;
-            height: 297mm !important;
-            padding: 0 !important;
-            background: transparent !important;
-            display: block !important;
-            overflow: hidden !important;
-          }
-          .doc {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: unset !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            overflow: hidden !important;
-            zoom: 1 !important;
-          }
-          .doc-header { padding: 10px 28px 8px !important; }
-          .doc-title-band { padding: 5px 28px !important; }
-          .doc-intro { padding: 6px 28px 0 !important; }
-          .doc-body { padding: 6px 28px 0 !important; }
-          .legal-mention { padding: 0 28px 4px !important; }
-          .sig-grid { padding: 0 28px 6px !important; }
-          .doc-footer { padding: 5px 28px !important; }
-          @page { margin: 0mm; size: A4 portrait; }
-        }
-      `}</style>
+      <style>{CSS}</style>
 
       <div className="action-btns">
-        <button className="print-btn" onClick={() => window.print()}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <polyline points="6 9 6 2 18 2 18 9"/>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-            <rect x="6" y="14" width="12" height="8"/>
-          </svg>
+        <button className="att-btn" onClick={() => window.print()}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Imprimer / PDF
         </button>
-        <button
-          className={`email-btn${emailState === 'success' ? ' success' : emailState === 'error' ? ' error' : ''}`}
-          onClick={handleSendEmail}
-          disabled={emailState === 'sending'}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-          </svg>
-          {emailState === 'sending' ? 'Envoi…'
-            : emailState === 'success' ? 'Envoyé !'
-            : emailState === 'error' ? 'Erreur'
-            : 'Envoyer par email'}
+        <button className={emailBtnClass} onClick={handleSendEmail} disabled={emailState === 'sending'}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          {emailBtnLabel}
         </button>
       </div>
 
       <div className="page-wrap">
         <div className="doc">
 
-          {/* En-tête */}
-          <div className="doc-header">
+          {/* Header */}
+          <div className="att-hd">
+            <div className="att-hd-left">
+              {data.entreprise.logo && (
+                <img className="att-logo" src={data.entreprise.logo} alt={`Logo ${data.entreprise.nom}`} />
+              )}
+              <div className="att-co">{data.entreprise.nom}</div>
+            </div>
             <div>
-              <div className="company-name">{data.entreprise.nom}</div>
-              <div className="company-sub">Document officiel — Usage interne</div>
-            </div>
-            <div className="ref-block">
-              <div className="ref-label">Référence</div>
-              <div className="ref-value">{data.reference}</div>
-              <div className="ref-label" style={{ marginTop: 6 }}>Émis le</div>
-              <div className="ref-value">{data.genere_le}</div>
+              <div className="att-ref-val">{data.reference}</div>
+              <div className="att-ref-date">Émis le {data.genere_le}</div>
             </div>
           </div>
 
-          <div className="doc-stripe" />
-
-          {/* Titre */}
-          <div className="doc-title-band">
-            <div className="doc-title">Attestation de congé</div>
-            <div className="doc-subtitle">
-              Délivrée par {data.entreprise.nom} · Généré automatiquement via TeamOff
-            </div>
+          {/* Title */}
+          <div className="att-title-zone">
+            <div className="att-title">Attestation de Congé</div>
+            <div className="att-title-rule"></div>
           </div>
 
-          {/* Paragraphe d'attestation */}
-          <div className="doc-intro">
-            <p>
-              La société <strong>{data.entreprise.nom}</strong> atteste par le présent document
-              que <strong>{nomComplet}</strong>
-              {data.employe.service ? <>, employé(e) au sein du service <strong>{data.employe.service}</strong>,</> : null}
-              {data.employe.date_embauche ? <> en poste depuis le <strong>{fmtEmbauche(data.employe.date_embauche)}</strong>,</> : null}
-              {data.conge.statut === 'reserve'
-                ? <>{' '}a soumis une <strong>réservation prévisionnelle</strong> de congé de type <strong>« {data.conge.type} »</strong> du{' '}
-                    <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
-                    pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>.
-                    Cette réservation est en attente de validation par la direction.</>
-                : <>{' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong> du{' '}
-                    <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
-                    pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>,
-                    conformément à la politique de congés de l'entreprise.</>
-              }
-            </p>
-            <p className="valoir-droit">
-              Ce document est établi à la demande de l'intéressé(e) pour servir et valoir ce que de droit.
-            </p>
-          </div>
+          {/* Attestation */}
+          <div className="att-sec">Attestation</div>
+          <hr className="att-hr" />
+          <p className="att-intro">
+            Nous soussignés, <strong>{data.entreprise.nom}</strong>, attestons que{' '}
+            <strong>{nomComplet}</strong>
+            {data.employe.service ? <>, employé(e) au sein du service <strong>{data.employe.service}</strong>,</> : null}
+            {data.employe.date_embauche ? <> en poste depuis le <strong>{fmtLong(data.employe.date_embauche)}</strong>,</> : null}
+            {data.conge.statut === 'reserve'
+              ? <>{' '}a soumis une <strong>réservation prévisionnelle</strong> de congé de type <strong>« {data.conge.type} »</strong>{' '}
+                  du <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
+                  pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>.
+                  Cette réservation est en attente de validation.</>
+              : <>{' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong>{' '}
+                  du <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
+                  pour une durée de <strong>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</strong>,
+                  conformément à la politique de congés de l'entreprise.</>
+            }
+          </p>
+          <p className="att-valoir">Ce document est établi à la demande de l'intéressé(e) pour servir et valoir ce que de droit.</p>
 
-          {/* Corps */}
-          <div className="doc-body">
-
-            {/* Salarié + Congé */}
-            <div className="two-col">
-
-              <div className="section-card">
-                <div className="section-head">Salarié</div>
-                <div className="section-body">
-                  <div className="info-row-doc">
-                    <span className="lbl">Nom</span>
-                    <span className="val">{nomComplet}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Email</span>
-                    <span className="val" style={{ fontSize: 10 }}>{data.employe.email || '—'}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Service</span>
-                    <span className="val">{data.employe.service || '—'}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Embauche</span>
-                    <span className="val">{fmtEmbauche(data.employe.date_embauche)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="section-card">
-                <div className="section-head">Congé</div>
-                <div className="section-body">
-                  <div className="info-row-doc">
-                    <span className="lbl">Type</span>
-                    <span className="val">{data.conge.type}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Demande</span>
-                    <span className="val">{data.conge.date_creation ? data.conge.date_creation.slice(0, 10).split('-').reverse().join('/') : '—'}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Période</span>
-                    <span className="val" style={{ fontSize: 10 }}>{periodLabel()}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Jours ouvrés</span>
-                    <span className="val">{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="info-row-doc">
-                    <span className="lbl">Statut</span>
-                    <span className={`val${data.conge.statut === 'valide_final' ? ' statut-ok' : ''}`}>
-                      {STATUT_LABELS[data.conge.statut] || data.conge.statut}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Commentaires + Décompte */}
-            <div className="bottom-zone">
-
-              <div className="comments-block">
-                <div className="comments-head">Commentaires</div>
-                {coms.length === 0
-                  ? <div className="no-comment">Aucun commentaire.</div>
-                  : coms.map((c, i) => (
-                    <div key={i} className="comment-item">
-                      <div className="comment-who">{c.label}</div>
-                      <div className="comment-text">« {c.text} »</div>
-                    </div>
-                  ))
-                }
-              </div>
-
-              <div className="calc-block">
-                <div className="calc-head">Décompte des jours</div>
-                {/* Période */}
-                <div className="calc-row">
-                  <span className="calc-label">Période</span>
-                  <span className="calc-value" style={{ fontSize: 11 }}>{fmt(data.conge.date_debut)} → {fmt(data.conge.date_fin)}</span>
-                </div>
-
-                {/* Samedis — politique entreprise */}
-                {jours.politique !== undefined && (
-                  <div className="calc-row sub-row">
-                    <span className="calc-label">
-                      Samedis
-                      <span className={jours.politique.count_saturday ? 'tag-inclus' : 'tag-exclu'}>
-                        {jours.politique.count_saturday ? 'comptés' : 'non comptés'}
-                      </span>
-                    </span>
-                  </div>
+          {/* Informations */}
+          <div className="att-sec" style={{ marginTop: 22 }}>Informations</div>
+          <hr className="att-hr" />
+          <div className="att-two-col">
+            <table className="att-t">
+              <tbody>
+                <tr><td className="tl">Nom</td><td className="ts">·</td><td className="tv">{nomComplet}</td></tr>
+                <tr><td className="tl">Email</td><td className="ts">·</td><td className="tv" style={{ fontSize: 10 }}>{data.employe.email || '—'}</td></tr>
+                <tr><td className="tl">Service</td><td className="ts">·</td><td className="tv">{data.employe.service || '—'}</td></tr>
+                {data.employe.date_embauche && (
+                  <tr><td className="tl">Embauche</td><td className="ts">·</td><td className="tv">{fmtLong(data.employe.date_embauche)}</td></tr>
                 )}
+              </tbody>
+            </table>
+            <table className="att-t">
+              <tbody>
+                <tr><td className="tl">Type</td><td className="ts">·</td><td className="tv">{data.conge.type}</td></tr>
+                <tr><td className="tl">Du</td><td className="ts">·</td><td className="tv">{fmt(data.conge.date_debut)}</td></tr>
+                <tr><td className="tl">Au</td><td className="ts">·</td><td className="tv">{fmt(data.conge.date_fin)}</td></tr>
+                <tr>
+                  <td className="tl">Statut</td><td className="ts">·</td>
+                  <td className="tv">
+                    {data.conge.statut === 'valide_final'
+                      ? <span className="tv-ok">Validé</span>
+                      : (STATUT_LABELS[data.conge.statut] || data.conge.statut)
+                    }
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-                {/* Dimanches — politique entreprise */}
-                {jours.politique !== undefined && (
-                  <div className="calc-row sub-row">
-                    <span className="calc-label">
-                      Dimanches
-                      <span className={jours.politique.count_sunday ? 'tag-inclus' : 'tag-exclu'}>
-                        {jours.politique.count_sunday ? 'comptés' : 'non comptés'}
-                      </span>
-                    </span>
-                  </div>
-                )}
+          {/* Décompte */}
+          <div className="att-sec" style={{ marginTop: 22 }}>Décompte des jours</div>
+          <hr className="att-hr" />
+          <div className="att-dc-wrap">
+            <div className="att-dc-head">
+              <span className="att-dc-head-left">{fmt(data.conge.date_debut)} → {fmt(data.conge.date_fin)}</span>
+              {pol && <span className="att-dc-head-right">Politique : {politiqueLabel(pol)}</span>}
+            </div>
+            <div className="att-dc-body">
 
-                {/* Jours fériés */}
-                {(() => {
-                  const feries = jours.detail.filter(d => d.type === 'ferie');
-                  return (
-                    <>
-                      <div className="calc-row sub-row">
-                        <span className="calc-label">
-                          dont {feries.length} jour{feries.length !== 1 ? 's' : ''} férié{feries.length !== 1 ? 's' : ''}
-                          {feries.length > 0 && <span className="tag-exclu">non compté</span>}
-                        </span>
-                        {feries.length > 0
-                          ? <span className="calc-value val-minus">−{feries.length} j</span>
-                          : <span className="calc-value" style={{ color: '#94a3b8', fontWeight: 400 }}>—</span>
-                        }
-                      </div>
-                      {feries.map((d, i) => (
-                        <div key={i} className="detail-row detail-row-sub">
-                          <span className="detail-date">{d.label} — {fmt(d.date)}</span>
-                        </div>
-                      ))}
-                    </>
-                  );
-                })()}
+              <div className="att-dc-cell">
+                <div className="att-dc-num">{jours.calendaires}</div>
+                <div className="att-dc-lbl">Calendaires</div>
+                <div className="att-dc-op">−</div>
+              </div>
 
-                <hr className="calc-divider" />
+              <div className="att-dc-cell">
+                <div className={`att-dc-num${pol && !pol.count_saturday ? ' dim' : ''}`}>{nbSam}</div>
+                <div className="att-dc-lbl">Samedis</div>
+                {pol && !pol.count_saturday && <div className="att-dc-tag">non décomptés</div>}
+                <div className="att-dc-op">−</div>
+              </div>
 
-                <div className="calc-row total">
-                  <span className="calc-label">= Jours comptabilisés</span>
-                  <span className="calc-value">{jours.ouvres} j</span>
-                </div>
+              <div className="att-dc-cell">
+                <div className={`att-dc-num${pol && !pol.count_sunday ? ' dim' : ''}`}>{nbDim}</div>
+                <div className="att-dc-lbl">Dimanches</div>
+                {pol && !pol.count_sunday && <div className="att-dc-tag">non décomptés</div>}
+                <div className="att-dc-op">−</div>
+              </div>
+
+              <div className="att-dc-cell">
+                <div className="att-dc-num dim">{nbFeries}</div>
+                <div className="att-dc-lbl">Fériés</div>
+                <div className="att-dc-tag">non décomptés</div>
+                <div className="att-dc-op">=</div>
+              </div>
+
+              <div className="att-dc-cell">
+                <div className="att-dc-num">{jours.ouvres}</div>
+                <div className="att-dc-lbl">Jours ouvrés</div>
               </div>
 
             </div>
-
           </div>
 
-          {/* Solde restant à la date d'émission */}
+          {/* Solde restant */}
           {data.solde && (
-            <div style={{ padding: '0 28px' }}>
-              <div className="solde-block">
-                <div className="solde-block-head">Solde restant à la date d'émission</div>
-                <div className="solde-items">
-                  <div className="solde-item">
-                    <span className="solde-item__val neutral">{data.solde.jours_acquis_initial} j</span>
-                    <span className="solde-item__lbl">Acquis (cumulé)</span>
-                  </div>
-                  {data.solde.jours_pris > 0 && (
-                    <div className="solde-item">
-                      <span className="solde-item__val neutral">− {data.solde.jours_pris} j</span>
-                      <span className="solde-item__lbl">Pris</span>
-                    </div>
-                  )}
-                  {data.solde.jours_reserves > 0 && (
-                    <div className="solde-item">
-                      <span className="solde-item__val neutral">− {data.solde.jours_reserves} j</span>
-                      <span className="solde-item__lbl">En attente</span>
-                    </div>
-                  )}
-                  <span className={`solde-restant-chip${data.solde.solde_restant < 0 ? ' negative' : ''}`}>
-                    = {data.solde.solde_restant >= 0 ? '' : '−'}{Math.abs(data.solde.solde_restant)} j restant{Math.abs(data.solde.solde_restant) > 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="solde-date">
-                  {data.solde.type} · Année {data.solde.annee} · Calculé au {data.genere_le}
-                </div>
-              </div>
+            <div className="att-solde-row">
+              <div className="att-solde-lbl">Solde restant<br />après ce congé · {data.solde.type} {data.solde.annee}</div>
+              <div className="att-solde-val">{data.solde.solde_restant}</div>
+              <div className="att-solde-unit">jours</div>
             </div>
           )}
 
-          {/* Mention légale */}
-          <div className="legal-mention">
-            Ce document est généré automatiquement et constitue une attestation officielle de congé.
-            Il ne requiert pas de signature manuscrite pour être valide.
+          {/* Legal */}
+          <div className="att-legal">
+            Document généré automatiquement par TeamOff · Réf. {data.reference}<br />
+            Toute falsification constitue un délit passible de poursuites.
           </div>
 
           {/* Signatures */}
-          <div className="signatures">
-            <div className="sig-block employee">
-              <div className="sig-role">Le salarié</div>
-              <div className="sig-name">{nomComplet}</div>
-              <div className="sig-line">Signature</div>
+          <div className="att-sig-zone">
+            <div>
+              <div className="att-sig-role">Le salarié</div>
+              <div className="att-sig-name">{nomComplet}</div>
+              <div className="att-sig-sub">{data.conge.type} · {fmt(data.conge.date_debut)} – {fmt(data.conge.date_fin)}</div>
+              <div className="att-sig-line-lbl">Signature</div>
+              <div className="att-sig-underline"></div>
             </div>
-            <div className="sig-block direction">
-              <div className="sig-role">Pour la direction</div>
-              <div className="sig-name">Direction de {data.entreprise.nom}</div>
-              <div className="sig-line">Cachet &amp; Signature</div>
+            <div>
+              <div className="att-sig-role">Le responsable</div>
+              <div className="att-sig-name">Direction / RH</div>
+              <div className="att-sig-sub">{data.entreprise.nom}</div>
+              <div className="att-sig-line-lbl">Signature &amp; cachet</div>
+              <div className="att-sig-underline"></div>
             </div>
           </div>
 
+          {/* Footer */}
+          <div className="att-footer">
+            <span className="att-foot-l">{data.entreprise.nom} · Document confidentiel</span>
+            <span className="att-foot-r">{data.reference} · TeamOff</span>
+          </div>
 
         </div>
       </div>

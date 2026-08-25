@@ -14,6 +14,7 @@ import TimezoneSection from './components/TimezoneSection';
 import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
+import LogoSection from './components/LogoSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -111,6 +112,7 @@ const PolitiqueCongesPage = () => {
   const [savingType, setSavingType] = useState(false);
   const [typeForm, setTypeForm] = useState(DEFAULT_CONGE_TYPE_FORM);
   const [timezone, setTimezone] = useState('Europe/Paris');
+  const [logo, setLogo] = useState('');
   const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
   const [activeSection, setActiveSection] = useState('types');
   const [expandedServices, setExpandedServices] = useState({});
@@ -171,6 +173,9 @@ const PolitiqueCongesPage = () => {
         if (parametresResponse?.data?.parametres?.timezone) {
           setTimezone(parametresResponse.data.parametres.timezone);
         }
+        if (parametresResponse?.data?.parametres?.logo !== undefined) {
+          setLogo(parametresResponse.data.parametres.logo || '');
+        }
       } catch (err) {
         console.error('Erreur chargement politique:', err);
         alert.error('Impossible de charger la politique de congé de votre entreprise.');
@@ -200,6 +205,7 @@ const PolitiqueCongesPage = () => {
     annulation:    ['cancellation'],
     notifications: ['notifications'],
     timezone:      ['timezone'],
+    logo:          ['logo'],
   };
   const isSectionVisible = (section) => Boolean(SECTION_MAP[activeSection]?.includes(section));
 
@@ -423,7 +429,7 @@ const PolitiqueCongesPage = () => {
         require_manager_approval: Boolean(leavePolicy.require_manager_approval),
         require_admin_approval: Boolean(leavePolicy.require_admin_approval),
       });
-      await entreprisesService.updateParametres(entrepriseId, { timezone });
+      await entreprisesService.updateParametres(entrepriseId, { timezone, logo });
       setSuccess('Politique de congé mise à jour avec succès.');
     } catch (err) {
       console.error('Erreur sauvegarde politique:', err);
@@ -579,6 +585,11 @@ const PolitiqueCongesPage = () => {
             tzPreview={tzPreview}
             timezoneOptions={TIMEZONE_OPTIONS}
           />
+        )}
+
+        {/* Onglet : Logo */}
+        {isSectionVisible('logo') && (
+          <LogoSection logo={logo} setLogo={setLogo} />
         )}
 
         {isSectionVisible('services') && (
