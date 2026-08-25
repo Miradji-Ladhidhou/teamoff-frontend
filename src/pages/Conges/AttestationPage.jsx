@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { congesService } from '../../services/api';
 
@@ -215,21 +215,12 @@ export default function AttestationPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [emailState, setEmailState] = useState('idle');
-  const printedRef = useRef(false);
-
   useEffect(() => {
     congesService.getAttestationData(id)
       .then(res => setData(res.data))
       .catch(err => setError(err.response?.data?.message || 'Erreur lors du chargement de l\'attestation.'));
   }, [id]);
 
-  useEffect(() => {
-    if (data && !printedRef.current) {
-      printedRef.current = true;
-      const timer = setTimeout(() => window.print(), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [data]);
 
   const handleSendEmail = async () => {
     setEmailState('sending');
