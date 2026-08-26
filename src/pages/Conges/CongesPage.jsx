@@ -313,6 +313,10 @@ const CongesPage = () => {
     }
 
     if (isAdmin()) {
+      const workflow = conge?.effective_approval_workflow;
+      if (workflow === 'manager_only') return false;
+      if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
+      if (workflow === 'manager_admin') return conge.statut === 'valide_manager';
       return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
     }
 
@@ -391,6 +395,7 @@ const CongesPage = () => {
   const showEmployeeColumn = isAdmin() || (isManager && canViewAllEmployees && viewMode === 'all');
   const statusChips = [
     { value: '', label: 'Tous' },
+    { value: 'reserve', label: 'Réservés N+1' },
     { value: 'en_attente_manager', label: 'En attente' },
     { value: 'valide_manager', label: isAdminRole ? 'Validé manager' : 'En cours' },
     { value: 'valide_final', label: 'Approuvé' },

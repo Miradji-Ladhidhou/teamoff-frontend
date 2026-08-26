@@ -181,7 +181,7 @@ const CalendrierPage = ({ embedded = false }) => {
       ]);
 
       const allEvents = calendarResponse.data || [];
-      setConges(allEvents.filter(e => e.record_type !== 'absence'));
+      setConges(allEvents.filter(e => e.record_type === 'conge'));
       setAbsences(allEvents.filter(e => e.record_type === 'absence'));
       setJoursFeries(feriesResponse.data);
 

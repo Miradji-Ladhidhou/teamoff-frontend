@@ -353,17 +353,28 @@ const CongeDetailsPage = () => {
     return conge.statut === 'reserve' && ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
   };
 
+  // Pour les champs DATEONLY (YYYY-MM-DD), new Date('YYYY-MM-DD') produit UTC minuit
+  // ce qui décale d'un jour en fuseaux UTC-. On parse comme minuit local si pas de 'T'.
+  const parseLocalDate = (dateString) => {
+    if (!dateString) return null;
+    if (typeof dateString === 'string' && dateString.length === 10 && !dateString.includes('T')) {
+      const [y, m, d] = dateString.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return new Date(dateString);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const parsedDate = new Date(dateString);
-    if (Number.isNaN(parsedDate.getTime())) return '-';
+    const parsedDate = parseLocalDate(dateString);
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return '-';
     return parsedDate.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const formatDateShort = (dateString) => {
     if (!dateString) return '-';
-    const parsedDate = new Date(dateString);
-    if (Number.isNaN(parsedDate.getTime())) return '-';
+    const parsedDate = parseLocalDate(dateString);
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return '-';
     return parsedDate.toLocaleDateString('fr-FR');
   };
 
@@ -670,38 +681,6 @@ const CongeDetailsPage = () => {
             </Card>
           )}
 
-          {/* Historique des statuts — timeline Phase 2 */}
-          {conge.historique && conge.historique.length > 0 && (
-            <div className="mb-4">
-              <div className="section-header mb-2">
-                <span className="section-title">Historique</span>
-              </div>
-              <div className="timeline-history">
-                {conge.historique.map((item, index) => {
-                  const accent = getStatusAccent(item.statut);
-                  const isDone = accent !== 'pending';
-                  return (
-                    <div key={index} className="history-item">
-                      <div className={`history-dot ${isDone ? 'done' : 'pending'}`} />
-                      <div>
-                        <div className="history-title">
-                          <span className={`badge ${accentToBadgeClass(accent)}`}>{getStatusText(item.statut)}</span>
-                        </div>
-                        <div className="history-date">
-                          Par {item.modifie_par_nom} · {formatDateShort(item.date_modification)}
-                        </div>
-                        {item.commentaire && (
-                          <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))', marginTop: 4, padding: '4px 8px', background: 'var(--surface, var(--dk-elevated))', borderRadius: 6 }}>
-                            {item.commentaire}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </Col>
 
         <Col md={4} className="order-first order-md-last">
@@ -777,7 +756,7 @@ const CongeDetailsPage = () => {
                 <button
                   className="btn-approve"
                   style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', width: '100%' }}
-                  disabled={action.loading}
+                  disabled={actionLoading}
                   onClick={() => action.run(async () => {
                     try {
                       await congesService.activate(conge.id);
@@ -789,7 +768,7 @@ const CongeDetailsPage = () => {
                     }
                   })}
                 >
-                  {action.loading ? <Spinner size="sm" /> : <><FaCheck size={10} className="me-1" /> Activer la demande</>}
+                  {actionLoading ? <Spinner size="sm" /> : <><FaCheck size={10} className="me-1" /> Activer la demande</>}
                 </button>
               </Card.Body>
             </Card>

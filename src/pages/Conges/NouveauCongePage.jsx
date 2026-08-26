@@ -195,8 +195,12 @@ const NouveauCongePage = () => {
     if (!formData.date_fin) errors.date_fin = 'La date de fin est requise';
 
     if (formData.date_debut && formData.date_fin) {
-      const startDate = new Date(formData.date_debut);
-      const endDate = new Date(formData.date_fin);
+      // Interpréter YYYY-MM-DD comme minuit local (new Date('YYYY-MM-DD') produit UTC minuit
+      // ce qui décale d'un jour en fuseaux UTC- et génère un faux "date dans le passé")
+      const [sy, sm, sd] = formData.date_debut.split('-').map(Number);
+      const [ey, em, ed] = formData.date_fin.split('-').map(Number);
+      const startDate = new Date(sy, sm - 1, sd);
+      const endDate   = new Date(ey, em - 1, ed);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
