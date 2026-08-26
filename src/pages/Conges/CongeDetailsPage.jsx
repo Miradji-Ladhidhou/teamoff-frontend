@@ -341,7 +341,7 @@ const CongeDetailsPage = () => {
     }
     if (isSuperAdmin || user?.role === 'admin_entreprise') {
       if (workflow === 'manager' || workflow === 'manager_only') return false;
-      if (workflow === 'admin_only') return conge.statut === 'en_attente_manager';
+      if (workflow === 'admin_only') return ['en_attente_manager', 'valide_manager'].includes(conge.statut);
       if (workflow === 'manager_admin') return conge.statut === 'valide_manager';
       return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
     }
