@@ -130,7 +130,14 @@ const CalendrierPage = ({ embedded = false }) => {
 
   const labelEnAttente = approvalWorkflow === 'admin_only'
     ? "En attente de l'admin"
-    : 'En attente du manager';
+    : approvalWorkflow === 'auto'
+      ? null                        // auto : pas d'étape "en attente"
+      : 'En attente du manager';
+
+  // Vrai pour les workflows avec une étape intermédiaire manager (valide_manager)
+  const hasManagerStep = approvalWorkflow === 'manager_admin';
+  // Vrai pour les workflows où l'admin peut rejeter sans passer par le manager
+  const hasRefuseManager = ['manager_only', 'manager_admin'].includes(approvalWorkflow);
 
   const labelValideManager = 'Validé par le manager';
 
@@ -508,11 +515,11 @@ const CalendrierPage = ({ embedded = false }) => {
                     onChange={handleFilterChange}
                   >
                     <option value="all">Tous les statuts</option>
-                    <option value="en_attente_manager">En attente manager</option>
-                    <option value="valide_manager">Validé manager</option>
-                    <option value="valide_final">Validé final</option>
-                    <option value="refuse_manager">Refusé manager</option>
-                    <option value="refuse_final">Refusé final</option>
+                    {labelEnAttente && <option value="en_attente_manager">{labelEnAttente}</option>}
+                    {hasManagerStep  && <option value="valide_manager">Validé manager</option>}
+                    <option value="valide_final">Approuvé</option>
+                    {hasRefuseManager && <option value="refuse_manager">Refusé manager</option>}
+                    <option value="refuse_final">Refusé</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -694,8 +701,10 @@ const CalendrierPage = ({ embedded = false }) => {
       {/* Légende */}
       <div className="calendar-legend-bar">
         <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Congé approuvé</span>
-        <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>{labelEnAttente}</span>
-        {approvalWorkflow === 'manager_admin' && (
+        {labelEnAttente && (
+          <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>{labelEnAttente}</span>
+        )}
+        {hasManagerStep && (
           <span className="calendar-legend-item"><span className="legend-dot legend-dot-valide-manager"></span>{labelValideManager}</span>
         )}
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
@@ -717,7 +726,7 @@ const CalendrierPage = ({ embedded = false }) => {
         };
 
         const statusLabel = {
-          en_attente_manager: labelEnAttente,
+          en_attente_manager: labelEnAttente || 'En attente',
           valide_manager: labelValideManager,
           valide_final: 'Validé',
           refuse_manager: 'Refusé',
