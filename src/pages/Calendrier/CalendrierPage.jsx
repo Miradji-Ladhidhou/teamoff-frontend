@@ -314,6 +314,21 @@ const CalendrierPage = ({ embedded = false }) => {
     return blockedSpecificDates.includes(normalized);
   };
 
+  const getCongeStatusLabel = (conge) => {
+    const wf = conge?.effective_approval_workflow || approvalWorkflow;
+    const pendingLabel = wf === 'admin_only' ? "En attente de l'admin" : 'En attente du manager';
+    const map = {
+      reserve: 'Réservé N+1',
+      en_attente_manager: pendingLabel,
+      valide_manager: 'Validé par le manager',
+      valide_final: 'Approuvé',
+      refuse_manager: 'Refusé (manager)',
+      refuse_final: 'Refusé',
+      annule: 'Annulé',
+    };
+    return map[conge?.statut] || conge?.statut || 'Inconnu';
+  };
+
   const getStatusBadgeClass = (statut) => {
     const classes = {
       en_attente_manager: 'pending',
@@ -725,15 +740,6 @@ const CalendrierPage = ({ embedded = false }) => {
           return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
         };
 
-        const statusLabel = {
-          en_attente_manager: labelEnAttente || 'En attente',
-          valide_manager: labelValideManager,
-          valide_final: 'Validé',
-          refuse_manager: 'Refusé',
-          refuse_final: 'Refusé',
-          annule: 'Annulé',
-        };
-
         const absenceLabel = {
           maladie: 'Arrêt maladie',
           absence_exceptionnelle: 'Abs. except.',
@@ -746,7 +752,7 @@ const CalendrierPage = ({ embedded = false }) => {
             prenom: c.utilisateur?.prenom || c.utilisateur_prenom || '',
             nom: c.utilisateur?.nom || c.utilisateur_nom || '',
             type: getCongeTypeLabel(c),
-            statut: statusLabel[c.statut] || c.statut,
+            statut: getCongeStatusLabel(c),
             color: getStatusColor(c.statut),
             debut: c.date_debut,
             fin: c.date_fin,
@@ -853,7 +859,7 @@ const CalendrierPage = ({ embedded = false }) => {
                   <div><strong>Employé:</strong> {`${selectedEventDetails.utilisateur?.prenom || selectedEventDetails.utilisateur_prenom || ''} ${selectedEventDetails.utilisateur?.nom || ''}`.trim() || 'Non défini'}</div>
                   <div><strong>Catégorie:</strong> {getCongeTypeLabel(selectedEventDetails)}</div>
                   <div><strong>Période:</strong> {formatDateLabel(selectedEventDetails.date_debut)} au {formatDateLabel(selectedEventDetails.date_fin)}</div>
-                  <div><strong>Statut:</strong> <span className={`badge ${getStatusBadgeClass(selectedEventDetails.statut)}`}>{(selectedEventDetails.statut || 'Inconnu').toUpperCase()}</span></div>
+                  <div><strong>Statut:</strong> <span className={`badge ${getStatusBadgeClass(selectedEventDetails.statut)}`}>{getCongeStatusLabel(selectedEventDetails)}</span></div>
                   {canSeeEventComments(selectedEventDetails) && selectedEventDetails.commentaire_employe && (
                     <div><strong>Commentaire:</strong> {selectedEventDetails.commentaire_employe}</div>
                   )}
