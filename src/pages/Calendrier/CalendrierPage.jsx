@@ -80,6 +80,11 @@ const getCongeTypeLabel = (conge) => {
   return conge?.conge_type_libelle || 'Congé';
 };
 
+const absenceTypeLabel = (type) => {
+  const labels = { maladie: 'Arrêt maladie', absence_exceptionnelle: 'Absence exceptionnelle', confidentiel: 'Absence (confidentiel)' };
+  return labels[type] || type || 'Non défini';
+};
+
 const CalendrierPage = ({ embedded = false }) => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -165,15 +170,19 @@ const CalendrierPage = ({ embedded = false }) => {
         utilisateurId: filters.utilisateurId === 'me' ? user?.id : filters.utilisateurId,
       };
 
-      const [congesResponse, absencesResponse, feriesResponse, blockedDaysResponse] = await Promise.all([
+      // Le calendrier retourne congés + absences fusionnés (record_type: 'conge' | 'absence').
+      // Les absences transitent par ce endpoint pour que les employés voient les absences
+      // de leurs collègues (avec masquage RGPD maladie côté backend), contrairement à
+      // /absences qui restreint l'employé à ses propres absences.
+      const [calendarResponse, feriesResponse, blockedDaysResponse] = await Promise.all([
         calendrierService.getCongesByMonth(year, month, resolvedFilters),
-        api.get('/absences', { params: { date_debut: firstDay, date_fin: lastDay } }),
         calendrierService.getJoursFeriesByMonth(year, month),
         entrepriseId ? entreprisesService.getBlockedDays(entrepriseId).catch(() => null) : Promise.resolve(null),
       ]);
 
-      setConges(congesResponse.data);
-      setAbsences(absencesResponse.data || []);
+      const allEvents = calendarResponse.data || [];
+      setConges(allEvents.filter(e => e.record_type !== 'absence'));
+      setAbsences(allEvents.filter(e => e.record_type === 'absence'));
       setJoursFeries(feriesResponse.data);
 
       const blocked = blockedDaysResponse?.data?.blocked_days || {};
@@ -647,17 +656,20 @@ const CalendrierPage = ({ embedded = false }) => {
                             </div>
                           );
                         } else if (event._eventType === 'absence') {
-                          const absColor = event.type_absence === 'maladie' ? 'maladie' : 'absence-except';
+                          const isMaladie = event.type_absence === 'maladie';
+                          const isConfidentiel = event.type_absence === 'confidentiel';
+                          const absColor = isMaladie ? 'maladie' : isConfidentiel ? 'maladie' : 'absence-except';
+                          const absLabel = isMaladie ? 'Maladie' : isConfidentiel ? 'Absent' : 'Abs. except.';
                           return (
                             <div
                               key={idx}
                               className={`calendar-event bg-${absColor}`}
-                              title={`Absence - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''} (${event.type_absence})${canSeeAbsenceComment(event) && event.commentaire ? ' : ' + event.commentaire : ''}`}
+                              title={`${absLabel} - ${event.utilisateur?.prenom || ''} ${event.utilisateur?.nom || ''}${!isConfidentiel && canSeeAbsenceComment(event) && event.commentaire ? ' : ' + event.commentaire : ''}`}
                               onClick={(e) => openEventDetailsModal(event, e)}
                               role="button"
                             >
                               <small className="text-white">
-                                {event.type_absence === 'maladie' ? 'Maladie' : 'Abs. except.'}
+                                {absLabel}
                                 {event.utilisateur?.prenom ? ` · ${event.utilisateur.prenom}` : ''}
                               </small>
                             </div>
@@ -716,6 +728,7 @@ const CalendrierPage = ({ embedded = false }) => {
         const absenceLabel = {
           maladie: 'Arrêt maladie',
           absence_exceptionnelle: 'Abs. except.',
+          confidentiel: 'Absence',
         };
 
         const rows = [
@@ -731,18 +744,21 @@ const CalendrierPage = ({ embedded = false }) => {
             commentaire: canSeeEventComments(c) ? (c.commentaire_employe || '') : '',
             sort: c.date_debut,
           })),
-          ...absences.map(a => ({
-            key: `a-${a.id}`,
-            prenom: a.utilisateur?.prenom || '',
-            nom: a.utilisateur?.nom || '',
-            type: absenceLabel[a.type_absence] || a.type_absence,
-            statut: null,
-            color: a.type_absence === 'maladie' ? 'maladie' : 'absence-except',
-            debut: a.date_debut,
-            fin: a.date_fin,
-            commentaire: canSeeAbsenceComment(a) ? (a.commentaire || '') : '',
-            sort: a.date_debut,
-          })),
+          ...absences.map(a => {
+            const isConf = a.type_absence === 'confidentiel';
+            return {
+              key: `a-${a.id}`,
+              prenom: a.utilisateur?.prenom || '',
+              nom: a.utilisateur?.nom || '',
+              type: absenceLabel[a.type_absence] || a.type_absence,
+              statut: null,
+              color: (a.type_absence === 'maladie' || isConf) ? 'maladie' : 'absence-except',
+              debut: a.date_debut,
+              fin: a.date_fin,
+              commentaire: !isConf && canSeeAbsenceComment(a) ? (a.commentaire || '') : '',
+              sort: a.date_debut,
+            };
+          }),
         ].sort((a, b) => (a.sort || '').localeCompare(b.sort || ''));
 
         if (rows.length === 0) return null;
@@ -837,9 +853,9 @@ const CalendrierPage = ({ embedded = false }) => {
                 <>
                   <div><strong>Type:</strong> Absence</div>
                   <div><strong>Employé:</strong> {`${selectedEventDetails.utilisateur?.prenom || ''} ${selectedEventDetails.utilisateur?.nom || ''}`.trim() || 'Non défini'}</div>
-                  <div><strong>Motif:</strong> {selectedEventDetails.type_absence || 'Non défini'}</div>
+                  <div><strong>Motif:</strong> {absenceTypeLabel(selectedEventDetails.type_absence)}</div>
                   <div><strong>Période:</strong> {formatDateLabel(selectedEventDetails.date_debut)} au {formatDateLabel(selectedEventDetails.date_fin)}</div>
-                  {canSeeAbsenceComment(selectedEventDetails) && selectedEventDetails.commentaire && (
+                  {selectedEventDetails.type_absence !== 'confidentiel' && canSeeAbsenceComment(selectedEventDetails) && selectedEventDetails.commentaire && (
                     <div><strong>Commentaire:</strong> {selectedEventDetails.commentaire}</div>
                   )}
                 </>
