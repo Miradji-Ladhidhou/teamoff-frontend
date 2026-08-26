@@ -15,7 +15,6 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
-import GeneralRulesSection from './components/GeneralRulesSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -201,7 +200,6 @@ const PolitiqueCongesPage = () => {
   const SECTION_MAP = {
     types:         ['types'],
     acquisition:   ['acquisition'],
-    validation:    ['validation'],
     services:      ['services'],
     report:        ['report'],
     annulation:    ['cancellation'],
@@ -557,11 +555,6 @@ const PolitiqueCongesPage = () => {
             </div>
             <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
           </>
-        )}
-
-        {/* Onglet : Règles générales (workflow, délais, accès manager) */}
-        {isSectionVisible('validation') && (
-          <GeneralRulesSection policy={policy} setField={setField} setPolicy={setPolicy} />
         )}
 
         {/* Onglet : Report & Réservations */}

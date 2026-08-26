@@ -116,29 +116,9 @@ const CalendrierPage = ({ embedded = false }) => {
 
   const isPrivileged = ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
 
-  const [approvalWorkflow, setApprovalWorkflow] = useState('manager_admin');
-
-  useEffect(() => {
-    if (!entrepriseId) return;
-    entreprisesService.getPolitique(entrepriseId)
-      .then(res => {
-        const wf = res.data?.politique_conges?.approval_workflow;
-        if (wf) setApprovalWorkflow(wf);
-      })
-      .catch(() => {});
-  }, [entrepriseId]);
-
-  const labelEnAttente = approvalWorkflow === 'admin_only'
-    ? "En attente de l'admin"
-    : approvalWorkflow === 'auto'
-      ? null                        // auto : pas d'étape "en attente"
-      : 'En attente du manager';
-
-  // Vrai pour les workflows avec une étape intermédiaire manager (valide_manager)
-  const hasManagerStep = approvalWorkflow === 'manager_admin';
-  // Vrai pour les workflows où l'admin peut rejeter sans passer par le manager
-  const hasRefuseManager = ['manager_only', 'manager_admin'].includes(approvalWorkflow);
-
+  // Le workflow est configuré par service — la légende montre toujours tous les états.
+  // Les libellés par événement utilisent effective_approval_workflow (voir getCongeStatusLabel).
+  const approvalWorkflow = 'manager_admin'; // fallback pour getCongeStatusLabel uniquement
   const labelValideManager = 'Validé par le manager';
 
   // Commentaires visibles seulement par les rôles privilégiés ou l'employé sur ses propres événements
@@ -530,10 +510,10 @@ const CalendrierPage = ({ embedded = false }) => {
                     onChange={handleFilterChange}
                   >
                     <option value="all">Tous les statuts</option>
-                    {labelEnAttente && <option value="en_attente_manager">{labelEnAttente}</option>}
-                    {hasManagerStep  && <option value="valide_manager">Validé manager</option>}
+                    <option value="en_attente_manager">En attente</option>
+                    <option value="valide_manager">Validé manager</option>
                     <option value="valide_final">Approuvé</option>
-                    {hasRefuseManager && <option value="refuse_manager">Refusé manager</option>}
+                    <option value="refuse_manager">Refusé manager</option>
                     <option value="refuse_final">Refusé</option>
                   </Form.Select>
                 </Form.Group>
@@ -716,12 +696,8 @@ const CalendrierPage = ({ embedded = false }) => {
       {/* Légende */}
       <div className="calendar-legend-bar">
         <span className="calendar-legend-item"><span className="legend-dot bg-success"></span>Congé approuvé</span>
-        {labelEnAttente && (
-          <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>{labelEnAttente}</span>
-        )}
-        {hasManagerStep && (
-          <span className="calendar-legend-item"><span className="legend-dot legend-dot-valide-manager"></span>{labelValideManager}</span>
-        )}
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-warning"></span>En attente</span>
+        <span className="calendar-legend-item"><span className="legend-dot legend-dot-valide-manager"></span>Validé manager</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-danger"></span>Refusé</span>
         <span className="calendar-legend-item"><span className="legend-dot bg-purple"></span>Réservé (année N+1)</span>
         <span className="calendar-legend-item"><span className="legend-dot legend-dot-absence-except"></span>Absence exceptionnelle</span>
