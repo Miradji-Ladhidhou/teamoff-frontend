@@ -43,10 +43,9 @@
   border-left: 3px solid transparent;
 }
 
-.aeq-stat--total   { border-left-color: var(--dk-accent); }
-.aeq-stat--signalee  { border-left-color: #f59e0b; }
-.aeq-stat--approuvee { border-left-color: #10b981; }
-.aeq-stat--rejetee   { border-left-color: #ef4444; }
+.aeq-stat--total         { border-left-color: var(--dk-accent); }
+.aeq-stat--maladie       { border-left-color: #6366f1; }
+.aeq-stat--exceptionnelle { border-left-color: #ea580c; }
 
 .aeq-stat__val {
   font-size: 1.6rem;
@@ -305,63 +304,24 @@
   white-space: nowrap;
 }
 
-/* statut badges */
-.aeq-badge--signalée   { background: rgba(245,158,11,0.12); color: #d97706; }
-.aeq-badge--approuvée  { background: rgba(16,185,129,0.12); color: #059669; }
-.aeq-badge--rejetée    { background: rgba(239,68,68,0.12);  color: #dc2626; }
-
 /* type badges */
 .aeq-badge--type { border-radius: 4px; }
 .aeq-badge--maladie                { background: rgba(99,102,241,0.1); color: #6366f1; }
 .aeq-badge--absence_exceptionnelle { background: rgba(249,115,22,0.1); color: #ea580c; }
 
-/* ── Action buttons ── */
-.aeq-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.4rem;
-}
-
-.aeq-btn-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--btn-radius);
-  font-size: 0.78rem;
-  font-weight: 600;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: filter var(--transition-fast);
-  white-space: nowrap;
-}
-
-.aeq-btn-action--approve {
-  background: rgba(16,185,129,0.12);
-  color: #059669;
-  border-color: rgba(16,185,129,0.25);
-}
-
-.aeq-btn-action--approve:hover {
-  background: rgba(16,185,129,0.2);
-}
-
-.aeq-btn-action--reject {
-  background: rgba(239,68,68,0.1);
-  color: #dc2626;
-  border-color: rgba(239,68,68,0.2);
-}
-
-.aeq-btn-action--reject:hover {
-  background: rgba(239,68,68,0.18);
-}
-
-.aeq-no-action {
-  display: block;
-  text-align: right;
+/* ── Comment cell ── */
+.aeq-comment {
+  font-size: 0.82rem;
   color: var(--dk-text-soft);
-  font-size: 0.85rem;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aeq-no-comment {
+  color: var(--dk-text-soft);
+  opacity: 0.5;
 }
 
 /* ── Empty state ── */
@@ -508,20 +468,6 @@
 
 .aeq-modal-btn--cancel:hover {
   background: var(--dk-card-bg);
-}
-
-.aeq-modal-btn--reject {
-  background: #dc2626;
-  color: #fff;
-}
-
-.aeq-modal-btn--reject:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.aeq-modal-btn--reject:not(:disabled):hover {
-  filter: brightness(1.1);
 }
 
 .aeq-modal-btn--confirm {

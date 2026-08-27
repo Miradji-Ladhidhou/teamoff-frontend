@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './absences-equipe.css';
 import { api } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
 import { Container, Card, Modal, Spinner } from 'react-bootstrap';
-import {
-  FaUserMinus, FaPlus, FaCheck, FaTimes, FaSearch,
-  FaFilter, FaUserClock,
-} from 'react-icons/fa';
+import { FaUserMinus, FaPlus, FaSearch, FaFilter, FaUserClock } from 'react-icons/fa';
 
 const PAGE_SIZE = 15;
 
@@ -16,40 +12,25 @@ const TYPE_LABELS = {
   absence_exceptionnelle: 'Abs. exceptionnelle',
 };
 
-const STATUT_LABELS = {
-  signalée: 'Signalée',
-  approuvée: 'Approuvée',
-  rejetée: 'Rejetée',
-};
-
 function diffJours(debut, fin) {
   if (!debut || !fin) return '-';
-  const d1 = new Date(debut);
-  const d2 = new Date(fin);
-  const diff = Math.round((d2 - d1) / 86400000) + 1;
+  const diff = Math.round((new Date(fin) - new Date(debut)) / 86400000) + 1;
   return diff > 1 ? `${diff} j` : '1 j';
 }
 
 function fmtDate(str) {
   if (!str) return '-';
-  const d = new Date(str);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(str).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function initials(prenom, nom) {
   return `${(prenom || '')[0] || ''}${(nom || '')[0] || ''}`.toUpperCase();
 }
 
-/* ────── Avatar ────── */
 function Avatar({ prenom, nom }) {
-  return (
-    <span className="aeq-avatar" aria-hidden="true">
-      {initials(prenom, nom)}
-    </span>
-  );
+  return <span className="aeq-avatar" aria-hidden="true">{initials(prenom, nom)}</span>;
 }
 
-/* ────── Stat card ────── */
 function StatCard({ label, value, mod }) {
   return (
     <div className={`aeq-stat aeq-stat--${mod}`}>
@@ -59,16 +40,6 @@ function StatCard({ label, value, mod }) {
   );
 }
 
-/* ────── Badge statut ────── */
-function BadgeStatut({ statut }) {
-  return (
-    <span className={`aeq-badge aeq-badge--${statut}`}>
-      {STATUT_LABELS[statut] || statut}
-    </span>
-  );
-}
-
-/* ────── Badge type ────── */
 function BadgeType({ type }) {
   return (
     <span className={`aeq-badge aeq-badge--type aeq-badge--${type}`}>
@@ -81,7 +52,6 @@ function BadgeType({ type }) {
    MAIN COMPONENT
 ═══════════════════════════════════════════ */
 const AbsencesEquipePage = () => {
-  const { user } = useAuth();
   const alert = useAlert();
 
   const [absences, setAbsences] = useState([]);
@@ -92,12 +62,6 @@ const AbsencesEquipePage = () => {
   /* filters */
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterStatut, setFilterStatut] = useState('');
-
-  /* reject modal */
-  const [rejectTarget, setRejectTarget] = useState(null);
-  const [rejectComment, setRejectComment] = useState('');
-  const [rejectSending, setRejectSending] = useState(false);
 
   /* declare modal */
   const [showDeclare, setShowDeclare] = useState(false);
@@ -141,9 +105,8 @@ const AbsencesEquipePage = () => {
   /* ── Stats ── */
   const stats = useMemo(() => ({
     total: absences.length,
-    signalée: absences.filter(a => a.statut === 'signalée').length,
-    approuvée: absences.filter(a => a.statut === 'approuvée').length,
-    rejetée: absences.filter(a => a.statut === 'rejetée').length,
+    maladie: absences.filter(a => a.type_absence === 'maladie').length,
+    exceptionnelle: absences.filter(a => a.type_absence === 'absence_exceptionnelle').length,
   }), [absences]);
 
   /* ── Filtered list ── */
@@ -154,51 +117,15 @@ const AbsencesEquipePage = () => {
       const fullName = `${u.prenom || ''} ${u.nom || ''}`.toLowerCase();
       if (q && !fullName.includes(q)) return false;
       if (filterType && a.type_absence !== filterType) return false;
-      if (filterStatut && a.statut !== filterStatut) return false;
       return true;
     });
-  }, [absences, search, filterType, filterStatut]);
+  }, [absences, search, filterType]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageSlice = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const resetPage = () => setPage(1);
-
-  /* ── Approve ── */
-  const handleApprove = async (absence) => {
-    try {
-      await api.patch(`/absences/${absence.id}`, { statut: 'approuvée' });
-      alert.success('Absence approuvée.');
-      await loadAbsences();
-    } catch (err) {
-      alert.error(err.response?.data?.message || 'Erreur lors de l\'approbation.');
-    }
-  };
-
-  /* ── Reject ── */
-  const openReject = (absence) => {
-    setRejectTarget(absence);
-    setRejectComment('');
-  };
-
-  const handleReject = async () => {
-    if (!rejectComment.trim()) return;
-    setRejectSending(true);
-    try {
-      await api.patch(`/absences/${rejectTarget.id}`, {
-        statut: 'rejetée',
-        commentaire: rejectComment.trim(),
-      });
-      alert.success('Absence rejetée.');
-      setRejectTarget(null);
-      await loadAbsences();
-    } catch (err) {
-      alert.error(err.response?.data?.message || 'Erreur lors du rejet.');
-    } finally {
-      setRejectSending(false);
-    }
-  };
 
   /* ── Declare for someone ── */
   const handleDeclare = async (e) => {
@@ -256,9 +183,8 @@ const AbsencesEquipePage = () => {
       {/* Stats */}
       <div className="aeq-stats">
         <StatCard label="Total" value={stats.total} mod="total" />
-        <StatCard label="Signalées" value={stats.signalée} mod="signalee" />
-        <StatCard label="Approuvées" value={stats.approuvée} mod="approuvee" />
-        <StatCard label="Rejetées" value={stats.rejetée} mod="rejetee" />
+        <StatCard label="Arrêts maladie" value={stats.maladie} mod="maladie" />
+        <StatCard label="Abs. exceptionnelles" value={stats.exceptionnelle} mod="exceptionnelle" />
       </div>
 
       {/* Filters */}
@@ -285,23 +211,12 @@ const AbsencesEquipePage = () => {
               <option value="maladie">Arrêt maladie</option>
               <option value="absence_exceptionnelle">Absence exceptionnelle</option>
             </select>
-
-            <select
-              className="aeq-select"
-              value={filterStatut}
-              onChange={e => { setFilterStatut(e.target.value); resetPage(); }}
-            >
-              <option value="">Tous les statuts</option>
-              <option value="signalée">Signalée</option>
-              <option value="approuvée">Approuvée</option>
-              <option value="rejetée">Rejetée</option>
-            </select>
           </div>
 
-          {(search || filterType || filterStatut) && (
+          {(search || filterType) && (
             <button
               className="aeq-btn-reset"
-              onClick={() => { setSearch(''); setFilterType(''); setFilterStatut(''); resetPage(); }}
+              onClick={() => { setSearch(''); setFilterType(''); resetPage(); }}
             >
               Réinitialiser
             </button>
@@ -325,14 +240,12 @@ const AbsencesEquipePage = () => {
                   <th>Type</th>
                   <th>Période</th>
                   <th>Déclarée le</th>
-                  <th>Statut</th>
-                  <th className="aeq-th-actions">Actions</th>
+                  <th>Commentaire</th>
                 </tr>
               </thead>
               <tbody>
                 {pageSlice.map(absence => {
                   const u = absence.utilisateur || {};
-                  const isSignalee = absence.statut === 'signalée';
                   return (
                     <tr key={absence.id}>
                       <td>
@@ -358,32 +271,7 @@ const AbsencesEquipePage = () => {
                         </div>
                       </td>
                       <td className="aeq-declared-at">{fmtDate(absence.created_at || absence.createdAt)}</td>
-                      <td><BadgeStatut statut={absence.statut} /></td>
-                      <td>
-                        <div className="aeq-actions">
-                          {isSignalee && (
-                            <>
-                              <button
-                                className="aeq-btn-action aeq-btn-action--approve"
-                                title="Approuver"
-                                onClick={() => handleApprove(absence)}
-                              >
-                                <FaCheck size={12} />
-                                Approuver
-                              </button>
-                              <button
-                                className="aeq-btn-action aeq-btn-action--reject"
-                                title="Rejeter"
-                                onClick={() => openReject(absence)}
-                              >
-                                <FaTimes size={12} />
-                                Rejeter
-                              </button>
-                            </>
-                          )}
-                          {!isSignalee && <span className="aeq-no-action">—</span>}
-                        </div>
-                      </td>
+                      <td className="aeq-comment">{absence.commentaire || <span className="aeq-no-comment">—</span>}</td>
                     </tr>
                   );
                 })}
@@ -402,9 +290,7 @@ const AbsencesEquipePage = () => {
             >
               ‹
             </button>
-            <span className="aeq-page-info">
-              Page {currentPage} / {totalPages}
-            </span>
+            <span className="aeq-page-info">Page {currentPage} / {totalPages}</span>
             <button
               className="aeq-page-btn"
               disabled={currentPage >= totalPages}
@@ -417,44 +303,9 @@ const AbsencesEquipePage = () => {
 
         <div className="aeq-count">
           {filtered.length} absence{filtered.length !== 1 ? 's' : ''}
-          {(search || filterType || filterStatut) && ` sur ${absences.length}`}
+          {(search || filterType) && ` sur ${absences.length}`}
         </div>
       </Card>
-
-      {/* ── Modal : Rejet ── */}
-      <Modal show={!!rejectTarget} onHide={() => setRejectTarget(null)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="fs-6 fw-semibold">Rejeter l'absence</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {rejectTarget && (
-            <p className="text-muted small mb-3">
-              Absence de <strong>{rejectTarget.utilisateur?.prenom} {rejectTarget.utilisateur?.nom}</strong>{' '}
-              du {fmtDate(rejectTarget.date_debut)} au {fmtDate(rejectTarget.date_fin)}.
-            </p>
-          )}
-          <label className="aeq-modal-label">Motif du rejet <span className="aeq-required">*</span></label>
-          <textarea
-            className="aeq-modal-textarea"
-            rows={3}
-            placeholder="Indiquez le motif…"
-            value={rejectComment}
-            onChange={e => setRejectComment(e.target.value)}
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="aeq-modal-btn aeq-modal-btn--cancel" onClick={() => setRejectTarget(null)}>
-            Annuler
-          </button>
-          <button
-            className="aeq-modal-btn aeq-modal-btn--reject"
-            disabled={!rejectComment.trim() || rejectSending}
-            onClick={handleReject}
-          >
-            {rejectSending ? <Spinner animation="border" size="sm" /> : 'Confirmer le rejet'}
-          </button>
-        </Modal.Footer>
-      </Modal>
 
       {/* ── Modal : Déclarer pour un collaborateur ── */}
       <Modal show={showDeclare} onHide={() => { setShowDeclare(false); setDeclError(''); }} centered>
@@ -467,7 +318,7 @@ const AbsencesEquipePage = () => {
         <form onSubmit={handleDeclare}>
           <Modal.Body>
             <p className="text-muted small mb-3">
-              L'absence est enregistrée immédiatement avec le statut <em>signalée</em>.
+              L'absence est enregistrée immédiatement comme <em>signalée</em>.
             </p>
 
             <div className="aeq-form-grid">
@@ -551,7 +402,7 @@ const AbsencesEquipePage = () => {
               className="aeq-modal-btn aeq-modal-btn--confirm"
               disabled={declSending}
             >
-              {declSending ? <Spinner animation="border" size="sm" /> : 'Déclarer l\'absence'}
+              {declSending ? <Spinner animation="border" size="sm" /> : "Déclarer l'absence"}
             </button>
           </Modal.Footer>
         </form>
