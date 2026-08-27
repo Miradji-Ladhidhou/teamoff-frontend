@@ -23,6 +23,7 @@ const JoursFeriesPage = () => {
   const [selectedJourFerieDetails, setSelectedJourFerieDetails] = useState(null);
   const [entreprises, setEntreprises] = useState([]);
   const [selectedEntrepriseId, setSelectedEntrepriseId] = useState('');
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [importYear, setImportYear] = useState(new Date().getFullYear());
   const [importCountry, setImportCountry] = useState('FR');
   const [formData, setFormData] = useState({
@@ -39,7 +40,7 @@ const JoursFeriesPage = () => {
     if (user?.role === 'super_admin') {
       loadEntreprises();
     } else {
-      loadJoursFeries();
+      loadJoursFeries({ year: filterYear });
     }
   }, []);
 
@@ -49,7 +50,7 @@ const JoursFeriesPage = () => {
     const run = async () => {
       setLoading(true);
       try {
-        const response = await joursFeriesService.getAll({ entreprise_id: selectedEntrepriseId });
+        const response = await joursFeriesService.getAll({ entreprise_id: selectedEntrepriseId, year: filterYear });
         if (!cancelled) setJoursFeries(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         console.error('Erreur chargement jours fériés:', err);
@@ -60,7 +61,7 @@ const JoursFeriesPage = () => {
     };
     run();
     return () => { cancelled = true; };
-  }, [selectedEntrepriseId, user?.role]);
+  }, [selectedEntrepriseId, filterYear, user?.role]);
 
   useEffect(() => {
     if (!success) return;
@@ -120,7 +121,7 @@ const JoursFeriesPage = () => {
         setShowModal(false);
         setEditingJourFerie(null);
         setFormData({ date: '', libelle: '', recurrent: false, est_travail: false });
-        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+        await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId, year: filterYear } : { year: filterYear });
         setSuccess('Jour férié enregistré avec succès.');
       } catch (err) {
         console.error('Erreur sauvegarde jour férié:', err);
@@ -151,7 +152,7 @@ const JoursFeriesPage = () => {
         await deleteAction.run(async () => {
           try {
             await joursFeriesService.delete(id, user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
-            await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {});
+            await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId, year: filterYear } : { year: filterYear });
             alert.success('Jour férié supprimé.');
           } catch (err) {
             console.error('Erreur suppression jour férié:', err);
@@ -201,8 +202,7 @@ const JoursFeriesPage = () => {
         const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
         const response = await joursFeriesService.importNational(importYear, { country: importCountry }, params);
 
-        await loadJoursFeries(params);
-        setSuccess(response.data?.message || 'Import terminé.');
+        await handleImportSuccess(response);
       } catch (err) {
         console.error('Erreur import jours fériés:', err);
         alert.error(err.response?.data?.message || 'Erreur lors de l\'import des jours fériés nationaux');
@@ -210,20 +210,44 @@ const JoursFeriesPage = () => {
     });
   };
 
-  const formatDate = (dateString) => {
+  // Pour un férié récurrent, projeter la date sur filterYear pour l'affichage
+  const getEffectiveDate = (jf) => {
+    const raw = String(jf.date || '').slice(0, 10);
+    if (!jf.recurrent) return raw;
+    // Remplacer l'année stockée par l'année du filtre courant
+    return `${filterYear}-${raw.slice(5)}`;
+  };
+
+  const formatDate = (dateString, { withYear = true, withWeekday = true } = {}) => {
     if (!dateString) return '-';
     const parts = String(dateString).slice(0, 10).split('-').map(Number);
     if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return '-';
     const [year, month, day] = parts;
-    return new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const options = { month: 'long', day: 'numeric' };
+    if (withWeekday) options.weekday = 'long';
+    if (withYear) options.year = 'numeric';
+    return new Date(year, month - 1, day).toLocaleDateString('fr-FR', options);
+  };
+
+  const formatJfDate = (jf) => {
+    const effective = getEffectiveDate(jf);
+    if (jf.recurrent) {
+      return formatDate(effective, { withYear: false });
+    }
+    return formatDate(effective);
   };
 
   const canManage = user?.role === 'admin_entreprise' || user?.role === 'super_admin';
+
+  const handleImportSuccess = async (response) => {
+    const d = response.data;
+    let msg = d?.message || 'Import terminé.';
+    if (d?.skipped_recurrent > 0) {
+      msg += ` ${d.skipped_recurrent} date(s) ignorée(s) car déjà couvertes par un férié récurrent.`;
+    }
+    await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId, year: filterYear } : { year: filterYear });
+    setSuccess(msg);
+  };
 
   if (loading) {
     return (
@@ -259,7 +283,8 @@ const JoursFeriesPage = () => {
 
       {canManage && (
         <div className="filters-panel mb-3">
-          <Row className="g-3 align-items-end">
+          {/* Filtre de la liste */}
+          <Row className="g-3 align-items-end mb-3">
             {user?.role === 'super_admin' && (
               <Col xs={12} md={5}>
                 <Form.Label>Entreprise</Form.Label>
@@ -273,8 +298,28 @@ const JoursFeriesPage = () => {
                 </Form.Select>
               </Col>
             )}
+            <Col xs={6} md={user?.role === 'super_admin' ? 3 : 4}>
+              <Form.Label>Afficher pour l'année</Form.Label>
+              <Form.Control
+                type="number"
+                value={filterYear}
+                onChange={(e) => setFilterYear(Number(e.target.value))}
+                min={2000}
+                max={2100}
+              />
+            </Col>
+            <Col xs={6} md={user?.role === 'super_admin' ? 4 : 8} className="d-flex align-items-end">
+              <div className="text-muted small">
+                Les fériés récurrents s'affichent pour chaque année sans duplication.
+              </div>
+            </Col>
+          </Row>
+
+          {/* Import API */}
+          <hr className="my-2" />
+          <Row className="g-3 align-items-end">
             <Col xs={6} md={user?.role === 'super_admin' ? 2 : 3}>
-              <Form.Label>Année</Form.Label>
+              <Form.Label>Année import</Form.Label>
               <Form.Control
                 type="number"
                 value={importYear}
@@ -299,13 +344,13 @@ const JoursFeriesPage = () => {
                 action={importNationalAction}
                 loadingText="Import en cours..."
               >
-                Importer les jours fériés via API
+                Importer via API officielle
               </AsyncButton>
             </Col>
           </Row>
-          <div className="text-muted small mt-3">
-            L'import récupère les jours fériés officiels depuis une API externe selon l'année et le pays sélectionnés,
-            puis ajoute uniquement les dates encore absentes pour l'entreprise cible.
+          <div className="text-muted small mt-2">
+            L'import ajoute les jours fériés officiels pour l'année et le pays sélectionnés.
+            Les dates déjà couvertes par un férié récurrent sont automatiquement ignorées.
           </div>
         </div>
       )}
@@ -331,7 +376,10 @@ const JoursFeriesPage = () => {
                   <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                     <div>
                       <div className="fw-semibold">{jourFerie.libelle}</div>
-                      <div className="small text-muted">{formatDate(jourFerie.date)}</div>
+                      <div className="small text-muted">
+                        {formatJfDate(jourFerie)}
+                        {jourFerie.recurrent && <span className="ms-1 badge info" style={{ fontSize: '10px' }}>chaque année</span>}
+                      </div>
                     </div>
                   </div>
                   <div className="d-flex gap-2">
@@ -385,7 +433,12 @@ const JoursFeriesPage = () => {
                 <tbody>
                   {joursFeries.map((jourFerie) => (
                     <tr key={jourFerie.id}>
-                      <td>{formatDate(jourFerie.date)}</td>
+                      <td>
+                        <div>{formatJfDate(jourFerie)}</div>
+                        {jourFerie.recurrent && (
+                          <div className="text-muted" style={{ fontSize: '11px' }}>chaque année</div>
+                        )}
+                      </td>
                       <td>{jourFerie.libelle}</td>
                       <td>
                         <span className={`badge ${jourFerie.est_travail ? 'info' : 'secondary'}`}>
@@ -394,8 +447,8 @@ const JoursFeriesPage = () => {
                       </td>
                       <td>
                         {jourFerie.recurrent
-                          ? <span className="badge approved">Oui</span>
-                          : <span className="badge secondary">Non</span>}
+                          ? <span className="badge approved">Récurrent</span>
+                          : <span className="badge secondary">Ponctuel</span>}
                       </td>
                       <td>
                         <div className="d-flex gap-1">
@@ -474,11 +527,18 @@ const JoursFeriesPage = () => {
             <Form.Group className="mb-3">
               <Form.Check
                 type="switch"
-                label="Jour férié récurrent (chaque année)"
+                label="Récurrent — s'applique chaque année (seuls le jour et le mois comptent)"
                 checked={formData.recurrent}
                 onChange={(e) => setFormData(prev => ({ ...prev, recurrent: e.target.checked }))}
                 disabled={saveAction.isRunning}
               />
+              {formData.recurrent && formData.date && (
+                <div className="text-muted small mt-1">
+                  Ce férié s'appliquera chaque année le{' '}
+                  <strong>{formatDate(formData.date, { withYear: false, withWeekday: false })}</strong>.
+                  L'année dans la date ci-dessus ne sera pas prise en compte.
+                </div>
+              )}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Libellé *</Form.Label>
@@ -532,18 +592,24 @@ const JoursFeriesPage = () => {
         <Modal.Body>
           {selectedJourFerieDetails && (
             <div className="d-grid gap-2 small">
-              <div><strong>Date :</strong> {formatDate(selectedJourFerieDetails.date)}</div>
+              <div>
+                <strong>Date :</strong>{' '}
+                {formatJfDate(selectedJourFerieDetails)}
+                {selectedJourFerieDetails.recurrent && (
+                  <span className="ms-2 text-muted">(s'applique chaque année au même mois+jour)</span>
+                )}
+              </div>
               <div><strong>Libellé :</strong> {selectedJourFerieDetails.libelle}</div>
               <div>
                 <strong>Type :</strong>{' '}
                 <span className={`badge ${selectedJourFerieDetails.est_travail ? 'approved' : 'info'}`}>
-                  {selectedJourFerieDetails.est_travail ? 'Travaillé' : 'Férié'}
+                  {selectedJourFerieDetails.est_travail ? 'Travaillé' : 'Chômé'}
                 </span>
               </div>
               <div>
                 <strong>Récurrence :</strong>{' '}
-                <span className={`badge ${selectedJourFerieDetails.recurrent ? 'info' : 'pending'}`}>
-                  {selectedJourFerieDetails.recurrent ? 'Récurrent' : 'Ponctuel'}
+                <span className={`badge ${selectedJourFerieDetails.recurrent ? 'approved' : 'secondary'}`}>
+                  {selectedJourFerieDetails.recurrent ? 'Récurrent (chaque année)' : 'Ponctuel (une seule fois)'}
                 </span>
               </div>
             </div>
