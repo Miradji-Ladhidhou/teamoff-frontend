@@ -112,6 +112,13 @@
   padding: 0.4rem 0.65rem;
 }
 
+.nc-info-banner--warn {
+  background: rgba(240,168,85,0.12);
+  color: #92400e;
+  border: 1px solid rgba(240,168,85,0.25);
+  font-weight: 600;
+}
+
 /* ── Dates en ligne ── */
 .nc-dates-row {
   display: grid;

@@ -15,10 +15,12 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
+import PreavisSection from './components/PreavisSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
   minimum_notice_days: 0,
+  notice_period_tiers: [],
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
   allow_employee_cancel_own_pending: true,
@@ -201,6 +203,7 @@ const PolitiqueCongesPage = () => {
     types:         ['types'],
     acquisition:   ['acquisition'],
     services:      ['services'],
+    preavis:       ['preavis'],
     report:        ['report'],
     annulation:    ['cancellation'],
     notifications: ['notifications'],
@@ -402,6 +405,7 @@ const PolitiqueCongesPage = () => {
       const payload = {
         ...policy,
         minimum_notice_days: Number(policy.minimum_notice_days || 0),
+        notice_period_tiers: Array.isArray(policy.notice_period_tiers) ? policy.notice_period_tiers : [],
         max_consecutive_days: Number(policy.max_consecutive_days || 0),
         conges_payes_annuels: Number(policy.conges_payes_annuels || 0),
         rtt_annuels: Number(policy.rtt_annuels || 0),
@@ -590,6 +594,10 @@ const PolitiqueCongesPage = () => {
         {/* Onglet : Logo */}
         {isSectionVisible('logo') && (
           <LogoSection logo={logo} setLogo={setLogo} />
+        )}
+
+        {isSectionVisible('preavis') && (
+          <PreavisSection policy={policy} setPolicy={setPolicy} />
         )}
 
         {isSectionVisible('services') && (

@@ -617,6 +617,13 @@ const NouveauCongePage = () => {
             )}
           </div>
 
+          {/* Avertissement délai de préavis */}
+          {joursPolitique?.preavis_requis > 0 && joursPolitique?.jours_avant_depart !== undefined && joursPolitique.jours_avant_depart < joursPolitique.preavis_requis && (
+            <div className="nc-info-banner nc-info-banner--warn" style={{ marginTop: 8 }}>
+              ⚠ Délai de préavis insuffisant : {joursPolitique.preavis_requis} jour(s) requis pour ce congé, mais le départ est dans {Math.max(0, joursPolitique.jours_avant_depart)} jour(s). Votre demande sera refusée.
+            </div>
+          )}
+
           {/* ── Étape 3 : Commentaire + Envoi ── */}
           <div className="nc-step nc-step--last">
             <div className="nc-step__label">Commentaire <span className="nc-optional">optionnel</span></div>
