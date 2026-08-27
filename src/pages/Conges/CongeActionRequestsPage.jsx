@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Table, Spinner, Button, Modal, Form, ButtonGroup } from 'react-bootstrap';
+import { Container, Table, Spinner, Button, Modal, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaCheck, FaTimes, FaChevronRight, FaInbox } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
@@ -125,19 +125,20 @@ const CongeActionRequestsPage = () => {
       </div>
 
       {/* Filtres statut */}
-      <div className="d-flex gap-2 flex-wrap mb-3">
-        <ButtonGroup size="sm">
+      <div className="mb-3">
+        <div className="chips-row" style={{ paddingBottom: 4 }}>
           {['', 'pending', 'approved', 'rejected'].map((s) => (
-            <Button
+            <button
               key={s}
-              variant={statutFilter === s ? 'primary' : 'outline-secondary'}
+              type="button"
+              className={`chip${statutFilter === s ? ' active' : ''}`}
               onClick={() => { setStatutFilter(s); setPage(1); }}
             >
               {s === '' ? 'Toutes' : STATUT_LABELS[s]}
-            </Button>
+            </button>
           ))}
-        </ButtonGroup>
-        {total > 0 && <span className="text-muted small align-self-center">{total} résultat(s)</span>}
+          {total > 0 && <span className="text-muted small align-self-center" style={{ whiteSpace: 'nowrap', marginLeft: 4 }}>{total} résultat(s)</span>}
+        </div>
       </div>
 
       {loading ? (
@@ -149,95 +150,171 @@ const CongeActionRequestsPage = () => {
           {statutFilter === 'pending' ? 'Aucune demande en attente.' : 'Aucune demande trouvée.'}
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <Table hover className="align-middle mb-0">
-            <thead>
-              <tr style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                <th>Employé</th>
-                <th>Type</th>
-                <th>Congé</th>
-                <th>Période demandée</th>
-                <th>Soumis le</th>
-                <th>Statut</th>
-                {statutFilter !== 'pending' && <th>Décision</th>}
-                {statutFilter !== 'pending' && <th>Traité le</th>}
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((req) => {
-                const employeNom = req.utilisateur
-                  ? `${req.utilisateur.prenom || ''} ${req.utilisateur.nom || ''}`.trim()
-                  : '-';
-                const congeType = req.conge?.conge_type_libelle || req.conge?.conge_type?.libelle || 'Congé';
-                const periodeOrigine = req.conge_date_debut_origine
-                  ? `${formatDate(req.conge_date_debut_origine)} → ${formatDate(req.conge_date_fin_origine)}`
-                  : null;
-                const congePeriode = periodeOrigine
-                  || (req.conge ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}` : null)
-                  || (req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-');
-                const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
-                  ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
-                  : null;
+        <>
+          {/* ── Vue desktop (≥768px) ── */}
+          <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
+            <Table hover className="align-middle mb-0">
+              <thead>
+                <tr style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  <th>Employé</th>
+                  <th>Type</th>
+                  <th>Congé</th>
+                  <th>Période demandée</th>
+                  <th>Soumis le</th>
+                  <th>Statut</th>
+                  {statutFilter !== 'pending' && <th>Décision</th>}
+                  {statutFilter !== 'pending' && <th>Traité le</th>}
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => {
+                  const employeNom = req.utilisateur
+                    ? `${req.utilisateur.prenom || ''} ${req.utilisateur.nom || ''}`.trim()
+                    : '-';
+                  const congeType = req.conge?.conge_type_libelle || req.conge?.conge_type?.libelle || 'Congé';
+                  const periodeOrigine = req.conge_date_debut_origine
+                    ? `${formatDate(req.conge_date_debut_origine)} → ${formatDate(req.conge_date_fin_origine)}`
+                    : null;
+                  const congePeriode = periodeOrigine
+                    || (req.conge ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}` : null)
+                    || (req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-');
+                  const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
+                    ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
+                    : null;
 
-                return (
-                  <tr key={req.id}>
-                    <td style={{ fontWeight: 600, fontSize: '13px' }}>{employeNom}</td>
-                    <td>
-                      <span className={`badge ${req.type === 'cancel' ? 'refused' : 'info'}`} style={{ fontSize: '11px' }}>
+                  return (
+                    <tr key={req.id}>
+                      <td style={{ fontWeight: 600, fontSize: '13px' }}>{employeNom}</td>
+                      <td>
+                        <span className={`badge ${req.type === 'cancel' ? 'refused' : 'info'}`} style={{ fontSize: '11px' }}>
+                          {TYPE_LABELS[req.type] || req.type}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '12px' }}>
+                        <div>{congeType}</div>
+                        <div className="text-muted" style={{ fontSize: '11px' }}>{congePeriode}</div>
+                      </td>
+                      <td style={{ fontSize: '12px' }}>
+                        {nouvellePeriode ? <span>{nouvellePeriode}</span> : <span className="text-muted">—</span>}
+                      </td>
+                      <td style={{ fontSize: '12px' }}>{formatDate(req.created_at)}</td>
+                      <td>{statutBadge(req.statut)}</td>
+                      {statutFilter !== 'pending' && (
+                        <td style={{ fontSize: '12px', maxWidth: 180 }}>
+                          {req.commentaire_admin
+                            ? <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{req.commentaire_admin}</span>
+                            : <span className="text-muted">—</span>}
+                        </td>
+                      )}
+                      {statutFilter !== 'pending' && (
+                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                          {req.updated_at ? formatDate(req.updated_at) : '—'}
+                        </td>
+                      )}
+                      <td>
+                        <div className="d-flex gap-2 align-items-center">
+                          {req.statut === 'pending' && (
+                            <>
+                              <Button size="sm" variant="outline-success" onClick={() => openApprove(req)} title="Approuver">
+                                <FaCheck size={11} />
+                              </Button>
+                              <Button size="sm" variant="outline-danger" onClick={() => openReject(req)} title="Refuser">
+                                <FaTimes size={11} />
+                              </Button>
+                            </>
+                          )}
+                          {congeLink(req) && (
+                            <Link to={congeLink(req)} style={{ fontSize: '11px', color: 'var(--accent-blue, #5b8dee)' }}>
+                              <FaChevronRight size={10} />
+                            </Link>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+
+          {/* ── Vue mobile (<768px) ── */}
+          <div className="d-md-none" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {requests.map((req) => {
+              const employeNom = req.utilisateur
+                ? `${req.utilisateur.prenom || ''} ${req.utilisateur.nom || ''}`.trim()
+                : '-';
+              const congeType = req.conge?.conge_type_libelle || req.conge?.conge_type?.libelle || 'Congé';
+              const periodeOrigine = req.conge_date_debut_origine
+                ? `${formatDate(req.conge_date_debut_origine)} → ${formatDate(req.conge_date_fin_origine)}`
+                : null;
+              const congePeriode = periodeOrigine
+                || (req.conge ? `${formatDate(req.conge.date_debut)} → ${formatDate(req.conge.date_fin)}` : null)
+                || (req.type === 'cancel' && req.statut === 'approved' ? '(congé annulé)' : '-');
+              const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
+                ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
+                : null;
+
+              return (
+                <div key={req.id} style={{
+                  background: 'var(--dk-card)',
+                  border: '1px solid var(--dk-border)',
+                  borderRadius: 10,
+                  padding: '0.75rem',
+                  boxShadow: 'var(--dk-shadow-sm)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{employeNom}</div>
+                      <div style={{ fontSize: 11, color: 'var(--dk-text-muted)' }}>{congeType} · {congePeriode}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <span className={`badge ${req.type === 'cancel' ? 'refused' : 'info'}`} style={{ fontSize: '10px' }}>
                         {TYPE_LABELS[req.type] || req.type}
                       </span>
-                    </td>
-                    <td style={{ fontSize: '12px' }}>
-                      <div>{congeType}</div>
-                      <div className="text-muted" style={{ fontSize: '11px' }}>{congePeriode}</div>
-                    </td>
-                    <td style={{ fontSize: '12px' }}>
-                      {nouvellePeriode ? (
-                        <span>{nouvellePeriode}</span>
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
-                    </td>
-                    <td style={{ fontSize: '12px' }}>{formatDate(req.created_at)}</td>
-                    <td>{statutBadge(req.statut)}</td>
-                    {statutFilter !== 'pending' && (
-                      <td style={{ fontSize: '12px', maxWidth: 180 }}>
-                        {req.commentaire_admin
-                          ? <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{req.commentaire_admin}</span>
-                          : <span className="text-muted">—</span>}
-                      </td>
+                      {statutBadge(req.statut)}
+                    </div>
+                  </div>
+
+                  {nouvellePeriode && (
+                    <div style={{ fontSize: 12, color: 'var(--dk-text-soft)', marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>Nouvelles dates : </span>{nouvellePeriode}
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: 11, color: 'var(--dk-text-muted)', marginBottom: 6 }}>
+                    Soumis le {formatDate(req.created_at)}
+                    {req.statut !== 'pending' && req.updated_at && ` · Traité le ${formatDate(req.updated_at)}`}
+                  </div>
+
+                  {req.commentaire_admin && (
+                    <div style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--dk-text-soft)', marginBottom: 6 }}>
+                      Décision : {req.commentaire_admin}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {req.statut === 'pending' && (
+                      <>
+                        <Button size="sm" variant="outline-success" onClick={() => openApprove(req)}>
+                          <FaCheck size={10} className="me-1" /> Approuver
+                        </Button>
+                        <Button size="sm" variant="outline-danger" onClick={() => openReject(req)}>
+                          <FaTimes size={10} className="me-1" /> Refuser
+                        </Button>
+                      </>
                     )}
-                    {statutFilter !== 'pending' && (
-                      <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                        {req.updated_at ? formatDate(req.updated_at) : '—'}
-                      </td>
+                    {congeLink(req) && (
+                      <Link to={congeLink(req)} style={{ fontSize: '11px', color: 'var(--accent-blue, #5b8dee)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        Voir le congé <FaChevronRight size={9} />
+                      </Link>
                     )}
-                    <td>
-                      <div className="d-flex gap-2 align-items-center">
-                        {req.statut === 'pending' && (
-                          <>
-                            <Button size="sm" variant="outline-success" onClick={() => openApprove(req)} title="Approuver">
-                              <FaCheck size={11} />
-                            </Button>
-                            <Button size="sm" variant="outline-danger" onClick={() => openReject(req)} title="Refuser">
-                              <FaTimes size={11} />
-                            </Button>
-                          </>
-                        )}
-                        {congeLink(req) && (
-                          <Link to={congeLink(req)} style={{ fontSize: '11px', color: 'var(--accent-blue, #5b8dee)' }}>
-                            <FaChevronRight size={10} />
-                          </Link>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pagination */}

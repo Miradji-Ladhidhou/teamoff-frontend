@@ -54,6 +54,7 @@ const PrivacyPage = () => {
           <Card>
             <Card.Header><h5 className="mb-0">3. Finalités et bases légales</h5></Card.Header>
             <Card.Body>
+              <div className="table-responsive">
               <table className="table table-sm mb-0">
                 <thead>
                   <tr>
@@ -84,6 +85,7 @@ const PrivacyPage = () => {
                   </tr>
                 </tbody>
               </table>
+              </div>
             </Card.Body>
           </Card>
         </Col>
