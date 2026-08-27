@@ -1,5 +1,5 @@
 import './absences.css';
-import React from 'react';
+import React, { useState } from 'react';
 import AbsenceForm from './AbsenceForm';
 import { useAuth } from '../../contexts/AuthContext';
 import { Container, Card, Spinner } from 'react-bootstrap';
@@ -8,6 +8,7 @@ const CalendrierPage = React.lazy(() => import('../Calendrier/CalendrierPage'));
 
 const AbsencesPage = () => {
   const { user } = useAuth();
+  const [calKey, setCalKey] = useState(0);
 
   const canDeclareAbsence = user && ['employe', 'apprenti', 'manager', 'admin_entreprise'].includes(user.role);
 
@@ -29,7 +30,7 @@ const AbsencesPage = () => {
       {canDeclareAbsence && (
         <Card className="mb-4">
           <Card.Body>
-            <AbsenceForm />
+            <AbsenceForm onSuccess={() => setCalKey((k) => k + 1)} />
           </Card.Body>
         </Card>
       )}
@@ -43,7 +44,7 @@ const AbsencesPage = () => {
               </div>
             )}
           >
-            <CalendrierPage embedded />
+            <CalendrierPage key={calKey} embedded />
           </React.Suspense>
         </Card.Body>
       </Card>
