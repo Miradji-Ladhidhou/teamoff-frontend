@@ -20,6 +20,7 @@ import {
   FaUserCircle,
   FaHistory,
   FaInbox,
+  FaUserMinus,
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,6 +45,7 @@ const iconMap = {
   balance: FaCoins,
   history: FaHistory,
   inbox: FaInbox,
+  absence: FaUserMinus,
 };
 
 const roleLabel = {

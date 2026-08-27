@@ -279,8 +279,8 @@ function App() {
             <Route path="/conges/:id/edit" element={<NouveauCongePage />} />
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
             <Route path="/historique-conges" element={<Navigate to="/conges" replace />} />
-            <Route path="/absences" element={<Navigate to="/calendrier" replace />} />
-            <Route path="/absences/equipe" element={<Navigate to="/calendrier" replace />} />
+            <Route path="/absences" element={<AbsencesPage />} />
+            <Route path="/absences/equipe" element={<Navigate to="/absences" replace />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
