@@ -28,7 +28,7 @@ export const roleNavigation = {
   manager: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
     { path: '/conges-equipe', label: 'Congés équipe', icon: 'leave', section: 'primary' },
-    { path: '/absences', label: 'Absences', icon: 'absence', section: 'primary' },
+    { path: '/absences/equipe', label: 'Absences équipe', icon: 'absence', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
@@ -40,7 +40,7 @@ export const roleNavigation = {
     { path: '/users', label: 'Utilisateurs', icon: 'users', section: 'primary' },
     { path: '/conges', label: 'Congés', icon: 'leave', section: 'primary' },
     { path: '/conges/demandes', label: 'Demandes modif/annul', icon: 'inbox', section: 'primary' },
-    { path: '/absences', label: 'Absences', icon: 'absence', section: 'primary' },
+    { path: '/absences/equipe', label: 'Absences équipe', icon: 'absence', section: 'primary' },
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/politique-conges', label: 'Règles & services', icon: 'settings', section: 'secondary' },
     { path: '/soldes', label: 'Soldes', icon: 'balance', section: 'secondary' },

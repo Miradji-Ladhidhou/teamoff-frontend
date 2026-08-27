@@ -1,0 +1,539 @@
+/* ════════════════════════════════════
+   AbsencesEquipePage — styles
+═══════════════════════════════════ */
+
+.aeq-page {
+  overflow-x: hidden;
+}
+
+/* ── Loading ── */
+.aeq-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem;
+  color: var(--dk-text-soft);
+  font-size: 0.9rem;
+}
+
+/* ── Stats ── */
+.aeq-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 575.98px) {
+  .aeq-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.aeq-stat {
+  background: var(--dk-card-bg);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-shadow: var(--dk-shadow-sm);
+  border-left: 3px solid transparent;
+}
+
+.aeq-stat--total   { border-left-color: var(--dk-accent); }
+.aeq-stat--signalee  { border-left-color: #f59e0b; }
+.aeq-stat--approuvee { border-left-color: #10b981; }
+.aeq-stat--rejetee   { border-left-color: #ef4444; }
+
+.aeq-stat__val {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--dk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.aeq-stat__lbl {
+  font-size: 0.78rem;
+  color: var(--dk-text-soft);
+  font-weight: 500;
+}
+
+/* ── Filters card ── */
+.aeq-filters-card {
+  background: var(--dk-card-bg);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+}
+
+.aeq-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.aeq-search-wrap {
+  position: relative;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.aeq-search-icon {
+  position: absolute;
+  left: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--dk-text-soft);
+  pointer-events: none;
+}
+
+.aeq-search {
+  width: 100%;
+  padding: 0.44rem 0.75rem 0.44rem 2rem;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  font-size: 0.875rem;
+}
+
+.aeq-search:focus {
+  outline: none;
+  border-color: var(--dk-accent);
+  box-shadow: 0 0 0 0.18rem var(--dk-accent-border);
+}
+
+.aeq-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.aeq-filter-icon {
+  color: var(--dk-text-soft);
+  flex-shrink: 0;
+}
+
+.aeq-select {
+  padding: 0.44rem 0.7rem;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.aeq-select:focus {
+  outline: none;
+  border-color: var(--dk-accent);
+  box-shadow: 0 0 0 0.18rem var(--dk-accent-border);
+}
+
+.aeq-btn-reset {
+  padding: 0.44rem 0.9rem;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--dk-border);
+  background: transparent;
+  color: var(--dk-text-soft);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.aeq-btn-reset:hover {
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+}
+
+/* ── Declare button ── */
+.aeq-btn-declare {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.44rem 1rem;
+  border-radius: var(--btn-radius);
+  background: var(--dk-accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: filter var(--transition-base);
+  flex-shrink: 0;
+}
+
+.aeq-btn-declare:hover {
+  filter: brightness(1.1);
+}
+
+/* ── Table card ── */
+.aeq-table-card {
+  background: var(--dk-card-bg);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: var(--dk-shadow-sm);
+}
+
+.aeq-table-wrap {
+  overflow-x: auto;
+  min-height: 6rem;
+}
+
+.aeq-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: var(--dk-text);
+}
+
+.aeq-table thead {
+  background: var(--dk-elevated);
+}
+
+.aeq-table th {
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dk-text-soft);
+  border-bottom: 1px solid var(--dk-border);
+  white-space: nowrap;
+}
+
+.aeq-th-actions {
+  text-align: right;
+}
+
+.aeq-table td {
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--dk-border);
+  vertical-align: middle;
+}
+
+.aeq-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.aeq-table tbody tr:hover {
+  background: var(--dk-elevated);
+  transition: background var(--transition-fast);
+}
+
+/* ── Collab cell ── */
+.aeq-collab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.aeq-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--dk-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.aeq-collab-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.aeq-collab-name {
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.aeq-collab-service {
+  font-size: 0.75rem;
+  color: var(--dk-text-soft);
+  line-height: 1.25;
+}
+
+/* ── Dates ── */
+.aeq-dates {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.aeq-dates-sep {
+  color: var(--dk-text-soft);
+}
+
+.aeq-dates-dur {
+  font-size: 0.75rem;
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  color: var(--dk-text-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Declared at ── */
+.aeq-declared-at {
+  color: var(--dk-text-soft);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* ── Badges ── */
+.aeq-badge {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* statut badges */
+.aeq-badge--signalée   { background: rgba(245,158,11,0.12); color: #d97706; }
+.aeq-badge--approuvée  { background: rgba(16,185,129,0.12); color: #059669; }
+.aeq-badge--rejetée    { background: rgba(239,68,68,0.12);  color: #dc2626; }
+
+/* type badges */
+.aeq-badge--type { border-radius: 4px; }
+.aeq-badge--maladie                { background: rgba(99,102,241,0.1); color: #6366f1; }
+.aeq-badge--absence_exceptionnelle { background: rgba(249,115,22,0.1); color: #ea580c; }
+
+/* ── Action buttons ── */
+.aeq-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.aeq-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--btn-radius);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+  white-space: nowrap;
+}
+
+.aeq-btn-action--approve {
+  background: rgba(16,185,129,0.12);
+  color: #059669;
+  border-color: rgba(16,185,129,0.25);
+}
+
+.aeq-btn-action--approve:hover {
+  background: rgba(16,185,129,0.2);
+}
+
+.aeq-btn-action--reject {
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+  border-color: rgba(239,68,68,0.2);
+}
+
+.aeq-btn-action--reject:hover {
+  background: rgba(239,68,68,0.18);
+}
+
+.aeq-no-action {
+  display: block;
+  text-align: right;
+  color: var(--dk-text-soft);
+  font-size: 0.85rem;
+}
+
+/* ── Empty state ── */
+.aeq-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--dk-text-soft);
+}
+
+.aeq-empty-icon {
+  opacity: 0.3;
+}
+
+.aeq-empty p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Pagination ── */
+.aeq-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--dk-border);
+}
+
+.aeq-page-btn {
+  background: var(--dk-elevated);
+  border: 1px solid var(--dk-border);
+  color: var(--dk-text);
+  border-radius: var(--btn-radius);
+  padding: 0.3rem 0.8rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.aeq-page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.aeq-page-btn:not(:disabled):hover {
+  background: var(--dk-card-bg);
+}
+
+.aeq-page-info {
+  font-size: 0.82rem;
+  color: var(--dk-text-soft);
+}
+
+/* ── Count footer ── */
+.aeq-count {
+  padding: 0.5rem 1rem;
+  font-size: 0.78rem;
+  color: var(--dk-text-soft);
+  text-align: right;
+  border-top: 1px solid var(--dk-border);
+}
+
+/* ── Modal styles ── */
+.aeq-modal-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--dk-text-soft);
+  margin-bottom: 0.3rem;
+}
+
+.aeq-required {
+  color: var(--dk-error);
+}
+
+.aeq-modal-input,
+.aeq-modal-select,
+.aeq-modal-textarea {
+  width: 100%;
+  padding: 0.44rem 0.75rem;
+  border-radius: var(--input-radius);
+  border: 1px solid var(--dk-border);
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  font-size: 0.9rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.aeq-modal-input:focus,
+.aeq-modal-select:focus,
+.aeq-modal-textarea:focus {
+  border-color: var(--dk-accent);
+  outline: none;
+  box-shadow: 0 0 0 0.18rem var(--dk-accent-border);
+}
+
+.aeq-modal-textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.aeq-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.aeq-form-field--full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 500px) {
+  .aeq-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aeq-form-error {
+  margin-top: 0.5rem;
+  font-size: 0.84rem;
+  color: var(--dk-error);
+}
+
+/* modal action buttons */
+.aeq-modal-btn {
+  padding: 0.44rem 1.1rem;
+  border-radius: var(--btn-radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+}
+
+.aeq-modal-btn--cancel {
+  background: var(--dk-elevated);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+
+.aeq-modal-btn--cancel:hover {
+  background: var(--dk-card-bg);
+}
+
+.aeq-modal-btn--reject {
+  background: #dc2626;
+  color: #fff;
+}
+
+.aeq-modal-btn--reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aeq-modal-btn--reject:not(:disabled):hover {
+  filter: brightness(1.1);
+}
+
+.aeq-modal-btn--confirm {
+  background: var(--dk-accent);
+  color: #fff;
+}
+
+.aeq-modal-btn--confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aeq-modal-btn--confirm:not(:disabled):hover {
+  filter: brightness(1.1);
+}

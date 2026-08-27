@@ -44,6 +44,7 @@ const PrivacyPage = lazy(() => import('./pages/Privacy/PrivacyPage'));
 const HelpPage = lazy(() => import('./pages/Help/HelpPage'));
 const MyProfilePage = lazy(() => import('./pages/MyProfile/MyProfilePage'));
 const AbsencesPage = lazy(() => import('./pages/Absences/AbsencesPage'));
+const AbsencesEquipePage = lazy(() => import('./pages/Absences/AbsencesEquipePage'));
 
 // SuperAdmin pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/DashboardPage'));
@@ -280,7 +281,6 @@ function App() {
             <Route path="/conges/:id" element={<CongeDetailsPage />} />
             <Route path="/historique-conges" element={<Navigate to="/conges" replace />} />
             <Route path="/absences" element={<AbsencesPage />} />
-            <Route path="/absences/equipe" element={<Navigate to="/absences" replace />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my-profile" element={<MyProfilePage />} />
@@ -293,6 +293,7 @@ function App() {
         <Route element={<ProtectedRoute roles={['manager', 'admin_entreprise', 'super_admin']} />}>
           <Route element={<Layout />}>
             <Route path="/conges-equipe" element={<CongesPage />} />
+            <Route path="/absences/equipe" element={<AbsencesEquipePage />} />
           </Route>
         </Route>
 
