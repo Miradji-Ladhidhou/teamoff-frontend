@@ -241,10 +241,12 @@ const JoursFeriesPage = () => {
 
   const handleImportSuccess = async (response) => {
     const d = response.data;
-    let msg = d?.message || 'Import terminé.';
-    if (d?.skipped_recurrent > 0) {
-      msg += ` ${d.skipped_recurrent} date(s) ignorée(s) car déjà couvertes par un férié récurrent.`;
-    }
+    const parts = [];
+    if (d?.imported > 0) parts.push(`${d.imported} ajouté(s)`);
+    if (d?.updated_recurrent > 0) parts.push(`${d.updated_recurrent} passé(s) en récurrent`);
+    if (d?.skipped > 0) parts.push(`${d.skipped} ignoré(s)`);
+    const detail = parts.length > 0 ? ` (${parts.join(', ')})` : '';
+    const msg = `Import terminé${detail}. Les fériés à date fixe (Noël, 1er janvier…) sont automatiquement marqués récurrents.`;
     await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId, year: filterYear } : { year: filterYear });
     setSuccess(msg);
   };
