@@ -1,9 +1,9 @@
 import './my-profile.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
-import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
+import { FaUser, FaSave, FaLock, FaEye, FaEyeSlash, FaShieldAlt, FaUserClock } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { authService } from '../../services/api';
+import { authService, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -18,14 +18,22 @@ const roleToAvatarColor = (role) => {
   return map[role] || 'blue';
 };
 
+const CAN_DELEGATE = ['manager', 'admin_entreprise'];
+
 const MyProfilePage = () => {
   const { user, updateUser } = useAuth();
   const profileAction = useAsyncAction();
   const passwordAction = useAsyncAction();
   const twoFAAction = useAsyncAction();
+  const delegateAction = useAsyncAction();
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState('');
   const alert = useAlert();
+
+  // Délégation
+  const [colleagues, setColleagues] = useState([]);
+  const [delegueId, setDelegueId] = useState(user?.delegue_id || '');
+  const [currentDelegue, setCurrentDelegue] = useState(user?.delegue || null);
 
   const [profileData, setProfileData] = useState({ prenom: '', nom: '', email: '' });
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -49,9 +57,19 @@ const MyProfilePage = () => {
     if (user?.id) {
       setProfileData({ prenom: user.prenom || '', nom: user.nom || '', email: user.email || '' });
       setTwoFAEnabled(user.totp_enabled ?? false);
+      setDelegueId(user.delegue_id || '');
+      setCurrentDelegue(user.delegue || null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  useEffect(() => {
+    if (activeTab !== 'delegation' || !CAN_DELEGATE.includes(user?.role)) return;
+    usersService.getAll({ statut: 'actif' }).then(res => {
+      const list = Array.isArray(res.data) ? res.data : (res.data?.users || res.data?.data || []);
+      setColleagues(list.filter(u => u.id !== user.id));
+    }).catch(() => {});
+  }, [activeTab, user?.role, user?.id]);
 
   useEffect(() => {
     if (!success) return;
@@ -114,6 +132,20 @@ const MyProfilePage = () => {
     });
   };
 
+  const handleDelegateSubmit = async (e) => {
+    e.preventDefault();
+    await delegateAction.run(async () => {
+      try {
+        const res = await authService.setOwnDelegate(delegueId || null);
+        setCurrentDelegue(res.data.delegue);
+        updateUser({ delegue_id: res.data.delegue_id, delegue: res.data.delegue });
+        alert.success(res.data.message || 'Délégation mise à jour.');
+      } catch (err) {
+        alert.error(err.response?.data?.message || 'Erreur lors de la mise à jour.');
+      }
+    });
+  };
+
   const profileLoading = profileAction.isRunning;
   const passwordLoading = passwordAction.isRunning;
 
@@ -162,6 +194,14 @@ const MyProfilePage = () => {
                 >
                   <FaShieldAlt size={12} /> Double authentification
                 </button>
+                {CAN_DELEGATE.includes(user?.role) && (
+                  <button
+                    className={`btn btn-sm text-start d-flex align-items-center gap-2${activeTab === 'delegation' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                    onClick={() => setActiveTab('delegation')}
+                  >
+                    <FaUserClock size={12} /> Délégation
+                  </button>
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -339,6 +379,53 @@ const MyProfilePage = () => {
                     </AsyncButton>
                   </div>
                 )}
+              </Card.Body>
+            </Card>
+          )}
+
+          {activeTab === 'delegation' && CAN_DELEGATE.includes(user?.role) && (
+            <Card>
+              <Card.Header>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}><FaUserClock className="me-2" />Délégation des validations</span>
+              </Card.Header>
+              <Card.Body>
+                <p className="text-muted small mb-3">
+                  Désignez un collègue pour valider les demandes de congé en votre absence. Le délégué recevra une notification par email. Vous pouvez modifier ou supprimer cette délégation à tout moment.
+                </p>
+                {currentDelegue && (
+                  <div className="alert alert-info py-2 px-3 small mb-3" style={{ borderRadius: 8 }}>
+                    Délégué actuel : <strong>{currentDelegue.prenom} {currentDelegue.nom}</strong>
+                  </div>
+                )}
+                <Form onSubmit={handleDelegateSubmit}>
+                  <Form.Group className="mb-4">
+                    <Form.Label>Collaborateur délégué</Form.Label>
+                    <Form.Select
+                      value={delegueId}
+                      onChange={e => setDelegueId(e.target.value)}
+                      disabled={delegateAction.isRunning}
+                    >
+                      <option value="">— Aucun délégué —</option>
+                      {colleagues.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.prenom} {c.nom}{c.service ? ` — ${c.service}` : ''}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Text className="text-muted">
+                      Laissez vide pour supprimer la délégation existante.
+                    </Form.Text>
+                  </Form.Group>
+                  <AsyncButton
+                    variant="primary"
+                    type="submit"
+                    className="w-100"
+                    action={delegateAction}
+                    loadingText="Enregistrement..."
+                  >
+                    <FaSave className="me-2" /> Enregistrer la délégation
+                  </AsyncButton>
+                </Form>
               </Card.Body>
             </Card>
           )}

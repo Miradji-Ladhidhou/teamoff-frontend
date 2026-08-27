@@ -170,6 +170,7 @@ export const authService = {
   changePassword: (data) => api.post('/auth/change-password', data),
   getProfile: () => api.get('/me'),
   updateProfile: (data) => api.put('/me', data),
+  setOwnDelegate: (delegue_id) => api.put('/me/delegate', { delegue_id }),
   verify2FA: (data) => api.post('/auth/2fa/verify', data),
   setup2FA: () => api.get('/auth/2fa/setup'),
   enable2FA: (data) => api.post('/auth/2fa/enable', data),
