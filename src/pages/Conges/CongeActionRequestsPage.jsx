@@ -159,7 +159,7 @@ const CongeActionRequestsPage = () => {
                 <th>Période demandée</th>
                 <th>Soumis le</th>
                 <th>Statut</th>
-                {statutFilter !== 'pending' && <th>Décision admin</th>}
+                {statutFilter !== 'pending' && <th>Décision</th>}
                 {statutFilter !== 'pending' && <th>Traité le</th>}
                 <th></th>
               </tr>
