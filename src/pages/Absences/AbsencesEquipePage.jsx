@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './absences-equipe.css';
-import { api } from '../../services/api';
+import { api, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { Container, Card, Modal, Spinner } from 'react-bootstrap';
 import { FaUserMinus, FaPlus, FaSearch, FaFilter, FaUserClock } from 'react-icons/fa';
@@ -86,7 +86,7 @@ const AbsencesEquipePage = () => {
 
   const loadUsers = useCallback(async () => {
     try {
-      const res = await api.users.getAll({ statut: 'actif' });
+      const res = await usersService.getAll({ statut: 'actif' });
       const list = Array.isArray(res.data) ? res.data : (res.data?.users || res.data?.data || []);
       setUsers(list.filter(u => ['employe', 'apprenti', 'manager', 'admin_entreprise'].includes(u.role)));
     } catch {
