@@ -278,6 +278,7 @@ export const joursFeriesService = {
   update: (id, data) => api.put(`/jours-feries/${id}`, data),
   delete: (id, params = {}) => api.delete(`/jours-feries/${id}`, { params }),
   importNational: (year, data = {}, params = {}) => api.post(`/jours-feries/import/${year}`, data, { params }),
+  repairRecurrence: (data = {}, params = {}) => api.post('/jours-feries/repair-recurrence', data, { params }),
   getTemplates: (params = {}) => api.get('/jours-feries/templates', { params }),
   createTemplate: (data = {}, params = {}) => api.post('/jours-feries/templates', data, { params }),
   exportTemplateCSV: (id) => api.get(`/jours-feries/templates/${id}/export/csv`, { responseType: 'blob' }),

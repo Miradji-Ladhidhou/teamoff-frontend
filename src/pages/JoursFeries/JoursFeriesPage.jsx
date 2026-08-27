@@ -34,6 +34,7 @@ const JoursFeriesPage = () => {
   });
   const saveAction = useAsyncAction();
   const importNationalAction = useAsyncAction();
+  const repairRecurrenceAction = useAsyncAction();
   const deleteAction = useAsyncAction();
 
   useEffect(() => {
@@ -210,6 +211,22 @@ const JoursFeriesPage = () => {
     });
   };
 
+  const handleRepairRecurrence = async () => {
+    await repairRecurrenceAction.run(async () => {
+      try {
+        const params = user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId } : {};
+        const response = await joursFeriesService.repairRecurrence({ country: importCountry }, params);
+        const { fixed, message } = response.data;
+        if (fixed > 0) {
+          await loadJoursFeries(user?.role === 'super_admin' ? { entreprise_id: selectedEntrepriseId, year: filterYear } : { year: filterYear });
+        }
+        setSuccess(message);
+      } catch (err) {
+        alert.error(err.response?.data?.message || 'Erreur lors de la réparation des récurrences');
+      }
+    });
+  };
+
   // Pour un férié récurrent, projeter la date sur filterYear pour l'affichage
   const getEffectiveDate = (jf) => {
     const raw = String(jf.date || '').slice(0, 10);
@@ -353,6 +370,26 @@ const JoursFeriesPage = () => {
           <div className="text-muted small mt-2">
             L'import ajoute les jours fériés officiels pour l'année et le pays sélectionnés.
             Les dates déjà couvertes par un férié récurrent sont automatiquement ignorées.
+          </div>
+
+          {/* Réparation rétroactive des récurrences */}
+          <hr className="my-2" />
+          <Row className="g-3 align-items-end">
+            <Col xs={12} md={user?.role === 'super_admin' ? 5 : 8}>
+              <AsyncButton
+                variant="outline-secondary"
+                onClick={handleRepairRecurrence}
+                disabled={user?.role === 'super_admin' && !selectedEntrepriseId}
+                className="w-100"
+                action={repairRecurrenceAction}
+                loadingText="Réparation en cours..."
+              >
+                🔧 Réparer les récurrences
+              </AsyncButton>
+            </Col>
+          </Row>
+          <div className="text-muted small mt-2">
+            Détecte automatiquement les fériés à date fixe (même mois+jour sur plusieurs années ou via l'API officielle) et les marque comme récurrents pour qu'ils s'affichent sur tous les calendriers futurs.
           </div>
         </div>
       )}
