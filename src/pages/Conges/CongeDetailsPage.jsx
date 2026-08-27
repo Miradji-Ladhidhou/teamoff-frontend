@@ -525,6 +525,20 @@ const CongeDetailsPage = () => {
                 {conge.jours_restants ?? '-'} jour(s)
               </span>
             </div>
+            {['manager', 'admin_entreprise', 'super_admin'].includes(user?.role) && conge?.effective_approval_workflow && (
+              <div className="info-row">
+                <span className="info-label">Workflow (figé)</span>
+                <span className="info-value">
+                  {{
+                    auto: 'Automatique',
+                    manager_only: 'Manager seul',
+                    manager: 'Manager seul',
+                    admin_only: 'Admin seul',
+                    manager_admin: 'Manager → Admin',
+                  }[conge.effective_approval_workflow] || conge.effective_approval_workflow}
+                </span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Date demande</span>
               <span className="info-value">{formatDateShort(conge.date_demande || conge.created_at || conge.createdAt)}</span>
