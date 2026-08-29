@@ -61,10 +61,15 @@ const CongeDetailsPage = () => {
     congesService.getHistory(id)
       .then((res) => setHistory(Array.isArray(res.data) ? res.data : []))
       .catch(() => {});
-    congesService.getAttestationData(id)
-      .then((res) => setJourDetail(res.data?.jours || null))
-      .catch(() => {});
   }, [id]);
+
+  useEffect(() => {
+    if (conge?.statut === 'valide_final') {
+      congesService.getAttestationData(id)
+        .then((res) => setJourDetail(res.data?.jours || null))
+        .catch(() => {});
+    }
+  }, [conge?.statut, id]);
 
   useEffect(() => {
     if (!conge || !canApprove()) {
