@@ -33,6 +33,13 @@ const politiqueLabel = (p) => {
   return 'Jours ouvrés (lun. – ven.)';
 };
 
+const jourTypeWord = (p) => {
+  if (!p) return 'ouvré';
+  if (p.count_saturday && p.count_sunday) return 'calendaire';
+  if (p.count_saturday) return 'ouvrable';
+  return 'ouvré';
+};
+
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap');
 
@@ -335,11 +342,11 @@ export default function AttestationPage() {
               {data.conge.statut === 'reserve'
                 ? <>{' '}a soumis une <strong>réservation prévisionnelle</strong> de congé de type <strong>« {data.conge.type} »</strong>{' '}
                     du <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
-                    pour une durée de <em>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</em>.
+                    pour une durée de <em>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} {jourTypeWord(pol)}{jours.ouvres > 1 ? 's' : ''}</em>.
                     Cette réservation est en attente de validation.</>
                 : <>{' '}a bénéficié d'un congé de type <strong>« {data.conge.type} »</strong>{' '}
                     du <strong>{fmt(data.conge.date_debut)}</strong> au <strong>{fmt(data.conge.date_fin)}</strong>,
-                    pour une durée de <em>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} ouvré{jours.ouvres > 1 ? 's' : ''}</em>,
+                    pour une durée de <em>{jours.ouvres} jour{jours.ouvres > 1 ? 's' : ''} {jourTypeWord(pol)}{jours.ouvres > 1 ? 's' : ''}</em>,
                     conformément à la politique de congés de l'entreprise.</>
               }
             </p>
@@ -405,7 +412,7 @@ export default function AttestationPage() {
                 </div>
                 <div className="d-dc-cell accent">
                   <div className="d-dc-num blue">{jours.ouvres}</div>
-                  <div className="d-dc-lbl blue">Jours ouvrés</div>
+                  <div className="d-dc-lbl blue">Jours {jourTypeWord(pol)}s</div>
                 </div>
               </div>
               {pol && (
