@@ -15,8 +15,6 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
-import GeneralRulesSection from './components/GeneralRulesSection';
-import PreavisSection from './components/PreavisSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -204,7 +202,6 @@ const PolitiqueCongesPage = () => {
   const SECTION_MAP = {
     types:         ['types'],
     acquisition:   ['acquisition'],
-    regles:        ['regles'],
     services:      ['services'],
     report:        ['report'],
     annulation:    ['cancellation'],
@@ -561,15 +558,6 @@ const PolitiqueCongesPage = () => {
               </div>
             </div>
             <AccrualSection policy={policy} setPolicy={setPolicy} congeTypes={congeTypes} />
-          </>
-        )}
-
-        {/* Onglet : Règles & Préavis */}
-        {isSectionVisible('regles') && (
-          <>
-            <GeneralRulesSection policy={policy} setField={setField} setPolicy={setPolicy} />
-            <hr className="my-4" />
-            <PreavisSection policy={policy} setPolicy={setPolicy} />
           </>
         )}
 
