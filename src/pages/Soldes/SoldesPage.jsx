@@ -246,7 +246,7 @@ const SoldesPage = () => {
 
       {reportAutorise && (
         <div className="small text-muted mb-3">
-          Report N→N+1 activé — max {reportMaxJours} j par type. La colonne N-1 montre les jours portés depuis {selectedYear - 1}.
+          Report N→N+1 activé — max {reportMaxJours} j par type. Les colonnes N-1 / N indiquent les jours restants dans chaque enveloppe (N-1 consommé en premier).
         </div>
       )}
 
@@ -266,8 +266,8 @@ const SoldesPage = () => {
           {/* Mobile */}
           <div className="user-list-mobile d-md-none">
             {counters.map((counter) => {
-              const nMoinsUn = toNum(counter.jours_reportes);
-              const acquisN = toNum(counter.jours_acquis_annee ?? (toNum(counter.jours_acquis) - nMoinsUn));
+              const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
+              const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
               const solde = toNum(counter.solde_disponible);
               return (
                 <div
@@ -282,8 +282,8 @@ const SoldesPage = () => {
                     </strong>
                   </div>
                   <div className="d-flex gap-3 small" style={{ color: 'var(--dk-text-soft)' }}>
-                    {nMoinsUn > 0 && <span>N-1 : <strong>{nMoinsUn.toFixed(1)} j</strong></span>}
-                    <span>N : {acquisN.toFixed(1)} j</span>
+                    {n1Dispo > 0 && <span>N-1 : <strong>{n1Dispo.toFixed(1)} j</strong></span>}
+                    <span>N : {nDispo.toFixed(1)} j</span>
                     <span>Pris : {toNum(counter.jours_pris).toFixed(1)} j</span>
                   </div>
                   <div className="d-flex gap-2 w-100 mt-1">
@@ -301,8 +301,8 @@ const SoldesPage = () => {
               <thead>
                 <tr>
                   <th>Type de congé</th>
-                  <th title={`Jours reportés depuis ${selectedYear - 1}`}>N-1 ({selectedYear - 1})</th>
-                  <th>Acquis {selectedYear}</th>
+                  <th title={`Jours N-1 encore disponibles (reportés depuis ${selectedYear - 1})`}>N-1 restant</th>
+                  <th title={`Jours acquis en ${selectedYear} encore disponibles`}>N restant</th>
                   <th>Pris</th>
                   <th>Solde</th>
                   <th style={{ width: 1 }}></th>
@@ -310,18 +310,18 @@ const SoldesPage = () => {
               </thead>
               <tbody>
                 {counters.map((counter) => {
-                  const nMoinsUn = toNum(counter.jours_reportes);
-                  const acquisN = toNum(counter.jours_acquis_annee ?? (toNum(counter.jours_acquis) - nMoinsUn));
+                  const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
+                  const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
                   const solde = toNum(counter.solde_disponible);
                   return (
                     <tr key={counter.id}>
                       <td><strong>{counter.conge_type?.libelle || '—'}</strong></td>
                       <td>
-                        {nMoinsUn > 0
-                          ? <span className="badge info">{nMoinsUn.toFixed(1)} j</span>
+                        {n1Dispo > 0
+                          ? <span className="badge info">{n1Dispo.toFixed(1)} j</span>
                           : <span style={{ color: 'var(--dk-text-muted)' }}>—</span>}
                       </td>
-                      <td>{acquisN.toFixed(1)} j</td>
+                      <td>{nDispo.toFixed(1)} j</td>
                       <td style={{ color: 'var(--dk-text-soft)' }}>{toNum(counter.jours_pris).toFixed(1)} j</td>
                       <td>
                         <strong style={{ color: solde < 0 ? 'var(--dk-error)' : 'var(--dk-accent)' }}>
