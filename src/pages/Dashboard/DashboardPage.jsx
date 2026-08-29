@@ -426,26 +426,42 @@ const DashboardPage = () => {
                 soldes.map((solde, idx) => {
                   const restant = getSoldeJours(solde);
                   const acquis = Number(solde?.jours_acquis ?? solde?.quota_annuel ?? 0) || 0;
+                  const pris = Number(solde?.jours_pris ?? 0);
+                  const reserves = Number(solde?.jours_reserves ?? 0);
                   const pct = acquis > 0 ? Math.min(100, Math.round((restant / acquis) * 100)) : 100;
                   const isLow = acquis > 0 && pct < 25;
                   const hasN1 = Number(solde?.jours_reportes ?? 0) > 0;
                   const n1Dispo = Number(solde?.n1_disponible ?? 0);
                   const nDispo = Number(solde?.n_disponible ?? 0);
                   const fmt = (v) => Number.isInteger(v) ? String(v) : v.toFixed(1);
+                  const pctPris = acquis > 0 ? Math.min(100, (pris / acquis) * 100) : 0;
+                  const pctReserved = acquis > 0 ? Math.min(100 - pctPris, (reserves / acquis) * 100) : 0;
+                  const pctDispo = Math.max(0, 100 - pctPris - pctReserved);
                   return (
                     <div key={idx} className={`solde-card ${isLow ? 'solde-card--low' : ''}`}>
-                      <div className="solde-card__days">{restant}<span className="solde-card__unit">j</span></div>
-                      <div className="solde-card__label">{getSoldeTypeLabel(solde)}</div>
-                      {hasN1 && (
-                        <div className="solde-card__n1">
-                          <span>N-1&nbsp;{fmt(n1Dispo)}j</span>
-                          <span className="solde-card__n1-sep">·</span>
-                          <span>N&nbsp;{fmt(nDispo)}j</span>
-                        </div>
-                      )}
+                      <div className="solde-card__type">{getSoldeTypeLabel(solde)}</div>
+                      <div className="solde-card__main">
+                        <span className="solde-card__days">{restant}</span>
+                        <span className="solde-card__unit">j</span>
+                      </div>
                       {acquis > 0 && (
                         <div className="solde-card__bar">
-                          <div className="solde-card__bar-fill" style={{ width: `${pct}%` }} />
+                          {pctPris > 0 && <div className="solde-card__bar-pris" style={{ width: `${pctPris}%` }} />}
+                          {pctReserved > 0 && <div className="solde-card__bar-reserved" style={{ width: `${pctReserved}%` }} />}
+                          {pctDispo > 0 && <div className={`solde-card__bar-dispo${isLow ? ' solde-card__bar-dispo--low' : ''}`} style={{ width: `${pctDispo}%` }} />}
+                        </div>
+                      )}
+                      <div className="solde-card__stats">
+                        <span>{fmt(acquis)}j acquis</span>
+                        {pris > 0 && <><span className="solde-card__stat-sep">·</span><span>{fmt(pris)}j pris</span></>}
+                      </div>
+                      {reserves > 0 && (
+                        <div className="solde-card__pending">{fmt(reserves)}j en attente</div>
+                      )}
+                      {hasN1 && (
+                        <div className="solde-card__n1">
+                          <span className="solde-card__n1-pill">N-1 {fmt(n1Dispo)}j</span>
+                          <span className="solde-card__n1-pill solde-card__n1-pill--n">N {fmt(nDispo)}j</span>
                         </div>
                       )}
                     </div>

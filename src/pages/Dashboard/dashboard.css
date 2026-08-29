@@ -127,10 +127,10 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* ────────────── Soldes — nouvelle grille ────────────── */
+/* ────────────── Soldes — grille ────────────── */
 .soldes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -138,14 +138,16 @@
   background: var(--dk-card);
   border: 1px solid var(--dk-border);
   border-radius: var(--card-radius, 12px);
-  padding: 0.85rem 0.9rem 0.7rem;
+  padding: 0.8rem 0.9rem 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 3px;
+  box-shadow: var(--dk-shadow-sm);
+  transition: box-shadow var(--transition-fast);
 }
 
 .solde-card--low {
-  border-color: rgba(248, 113, 113, 0.35);
+  border-color: rgba(220, 38, 38, 0.3);
 }
 
 .solde-card--error,
@@ -157,8 +159,29 @@
   padding: 1rem;
 }
 
+/* Type label */
+.solde-card__type {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dk-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 1px;
+}
+
+/* Nombre principal */
+.solde-card__main {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  line-height: 1;
+}
+
 .solde-card__days {
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 800;
   color: var(--dk-text);
   line-height: 1;
@@ -169,51 +192,67 @@
 }
 
 .solde-card__unit {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-left: 2px;
   color: var(--dk-text-soft);
+  margin-bottom: 1px;
 }
 
-.solde-card__label {
-  font-size: 0.7rem;
-  color: var(--dk-text-soft);
+/* Barre segmentée : pris · en attente · disponible */
+.solde-card__bar {
+  display: flex;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--dk-elevated);
+  overflow: hidden;
+  margin: 5px 0 2px;
+}
+
+.solde-card__bar-pris     { background: var(--dk-text-muted); opacity: 0.6; }
+.solde-card__bar-reserved { background: var(--dk-warning); opacity: 0.8; }
+.solde-card__bar-dispo    { background: var(--dk-accent); }
+.solde-card__bar-dispo--low { background: var(--dk-error); }
+
+/* Stats : acquis · pris */
+.solde-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.67rem;
   font-weight: 500;
-  line-height: 1.2;
-  margin-top: 2px;
+  color: var(--dk-text-soft);
 }
 
+.solde-card__stat-sep { opacity: 0.35; }
+
+/* En attente */
+.solde-card__pending {
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: var(--dk-warning);
+}
+
+/* Pills N-1 / N */
 .solde-card__n1 {
   display: flex;
-  align-items: center;
   gap: 4px;
-  font-size: 0.68rem;
-  font-weight: 500;
-  color: var(--dk-text-soft);
-  margin-top: 2px;
-}
-
-.solde-card__n1-sep {
-  opacity: 0.4;
-}
-
-.solde-card__bar {
-  height: 4px;
-  border-radius: 99px;
-  background: var(--dk-border);
-  overflow: hidden;
+  flex-wrap: wrap;
   margin-top: 4px;
 }
 
-.solde-card__bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  background: var(--role-accent);
-  transition: width 0.4s ease;
+.solde-card__n1-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--dk-warning-bg);
+  color: var(--dk-warning);
 }
 
-.solde-card--low .solde-card__bar-fill {
-  background: var(--dk-error);
+.solde-card__n1-pill--n {
+  background: var(--dk-accent-soft);
+  color: var(--dk-accent-dark);
 }
 
 /* ────────────── FAB — mobile floating action button ────────────── */
