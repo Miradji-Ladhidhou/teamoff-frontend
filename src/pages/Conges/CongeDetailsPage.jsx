@@ -1,5 +1,5 @@
 import './conge-details.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Modal, Form } from 'react-bootstrap';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaClock, FaCheck, FaTimes, FaCalendarAlt, FaComment, FaList, FaFilePdf } from 'react-icons/fa';
@@ -52,6 +52,9 @@ const CongeDetailsPage = () => {
   const [modifyRequestComment, setModifyRequestComment] = useState('');
   const [modifyRequestDateDebut, setModifyRequestDateDebut] = useState('');
   const [modifyRequestDateFin, setModifyRequestDateFin] = useState('');
+  const [modifyPreviewDays, setModifyPreviewDays] = useState(null);
+  const [modifyPreviewLoading, setModifyPreviewLoading] = useState(false);
+  const modifyDebounceRef = useRef(null);
 
   useEffect(() => {
     loadCongeDetails();
@@ -184,6 +187,32 @@ const CongeDetailsPage = () => {
       }
     });
   };
+
+  // Calcul temps réel des jours ouvrés pour la demande de modification
+  useEffect(() => {
+    if (!modifyRequestDateDebut || !modifyRequestDateFin || modifyRequestDateFin < modifyRequestDateDebut) {
+      setModifyPreviewDays(null);
+      return;
+    }
+    clearTimeout(modifyDebounceRef.current);
+    setModifyPreviewLoading(true);
+    modifyDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await congesService.calculateDays({
+          date_debut: modifyRequestDateDebut,
+          date_fin: modifyRequestDateFin,
+          debut_demi_journee: 'matin',
+          fin_demi_journee: 'apres_midi',
+        });
+        setModifyPreviewDays(res.data.jours ?? null);
+      } catch {
+        setModifyPreviewDays(null);
+      } finally {
+        setModifyPreviewLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(modifyDebounceRef.current);
+  }, [modifyRequestDateDebut, modifyRequestDateFin]);
 
   const handleSubmitCancelRequest = async () => {
     await action.run(async () => {
@@ -1055,55 +1084,98 @@ const CongeDetailsPage = () => {
       </Modal>
 
       {/* Modal demande de modification (employé → congé validé) */}
-      <Modal show={showModifyRequestModal} onHide={() => setShowModifyRequestModal(false)} backdrop="static" keyboard={!actionLoading} centered>
+      <Modal show={showModifyRequestModal} onHide={() => { setShowModifyRequestModal(false); setModifyPreviewDays(null); }} backdrop="static" keyboard={!actionLoading} centered>
         <Modal.Header closeButton={!actionLoading}>
           <Modal.Title>Demander la modification du congé</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p className="small text-muted mb-3">
-            Votre demande de modification sera transmise à l&apos;administrateur pour validation. Votre congé actuel reste inchangé jusqu&apos;à la décision.
+            Votre demande sera transmise pour validation. Votre congé actuel reste inchangé jusqu&apos;à la décision.
           </p>
-          <Form.Group className="mb-3">
-            <Form.Label>Nouvelle date de début</Form.Label>
-            <Form.Control
-              type="date"
-              value={modifyRequestDateDebut}
-              onChange={(e) => setModifyRequestDateDebut(e.target.value)}
-              disabled={actionLoading}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Nouvelle date de fin</Form.Label>
-            <Form.Control
-              type="date"
-              value={modifyRequestDateFin}
-              onChange={(e) => setModifyRequestDateFin(e.target.value)}
-              disabled={actionLoading}
-              required
-            />
-          </Form.Group>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+            <Form.Group>
+              <Form.Label style={{ fontSize: '13px', fontWeight: 600 }}>Nouvelle date de début</Form.Label>
+              <Form.Control
+                type="date"
+                value={modifyRequestDateDebut}
+                onChange={(e) => setModifyRequestDateDebut(e.target.value)}
+                disabled={actionLoading}
+                required
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label style={{ fontSize: '13px', fontWeight: 600 }}>Nouvelle date de fin</Form.Label>
+              <Form.Control
+                type="date"
+                value={modifyRequestDateFin}
+                min={modifyRequestDateDebut || undefined}
+                onChange={(e) => setModifyRequestDateFin(e.target.value)}
+                disabled={actionLoading}
+                required
+              />
+            </Form.Group>
+          </div>
+
+          {/* Preview jours ouvrés */}
+          {(modifyRequestDateDebut && modifyRequestDateFin) && (
+            <div style={{
+              border: '1px solid',
+              borderColor: modifyPreviewDays === 0 ? '#dc3545' : modifyPreviewDays > 0 ? '#198754' : '#dee2e6',
+              borderRadius: 8,
+              padding: '0.6rem 0.9rem',
+              marginBottom: '1rem',
+              background: modifyPreviewDays === 0 ? '#fff5f5' : modifyPreviewDays > 0 ? '#f0faf4' : 'var(--dk-card, #f8f9fa)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '13px',
+            }}>
+              {modifyPreviewLoading ? (
+                <><Spinner animation="border" size="sm" /><span className="text-muted">Calcul en cours…</span></>
+              ) : modifyPreviewDays === null ? (
+                <span className="text-muted">Sélectionnez les deux dates pour voir le décompte</span>
+              ) : modifyPreviewDays <= 0 ? (
+                <span style={{ color: '#dc3545', fontWeight: 600 }}>
+                  ⚠ 0 jour ouvré — ces dates tombent uniquement sur des week-ends, jours fériés ou jours bloqués. Choisissez d&apos;autres dates.
+                </span>
+              ) : (
+                <span style={{ color: '#198754' }}>
+                  <strong>{modifyPreviewDays}</strong> jour{modifyPreviewDays > 1 ? 's' : ''} ouvré{modifyPreviewDays > 1 ? 's' : ''} décompté{modifyPreviewDays > 1 ? 's' : ''}
+                  {conge && conge.jours_decomptes > 0 && (
+                    <span style={{ color: '#6c757d', fontWeight: 400 }}>
+                      {' '}(congé actuel : {conge.jours_decomptes} j — différence :{' '}
+                      <span style={{ color: modifyPreviewDays > conge.jours_decomptes ? '#dc3545' : '#198754', fontWeight: 600 }}>
+                        {modifyPreviewDays > conge.jours_decomptes ? '+' : ''}{(modifyPreviewDays - conge.jours_decomptes).toFixed(1).replace('.0', '')} j
+                      </span>)
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+          )}
+
           <Form.Group>
-            <Form.Label>Motif de la demande (requis)</Form.Label>
+            <Form.Label style={{ fontSize: '13px', fontWeight: 600 }}>Motif de la demande (requis)</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
               value={modifyRequestComment}
               onChange={(e) => setModifyRequestComment(e.target.value)}
-              placeholder="Expliquez la raison de votre demande de modification..."
+              placeholder="Expliquez la raison de votre demande de modification…"
               disabled={actionLoading}
               required
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModifyRequestModal(false)} disabled={actionLoading}>Fermer</Button>
+          <Button variant="secondary" onClick={() => { setShowModifyRequestModal(false); setModifyPreviewDays(null); }} disabled={actionLoading}>Fermer</Button>
           <AsyncButton
             variant="primary"
             onClick={handleSubmitModifyRequest}
-            disabled={actionLoading || !modifyRequestComment.trim() || !modifyRequestDateDebut || !modifyRequestDateFin}
+            disabled={actionLoading || !modifyRequestComment.trim() || !modifyRequestDateDebut || !modifyRequestDateFin || modifyPreviewDays === 0 || modifyPreviewLoading}
             action={action}
-            loadingText="Envoi..."
+            loadingText="Envoi…"
           >
             Envoyer la demande
           </AsyncButton>
