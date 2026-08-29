@@ -2,8 +2,6 @@ import React from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 
 const ServicePoliciesSection = ({
-  policy,
-  setField,
   newServiceName,
   setNewServiceName,
   addServicePolicy,
@@ -19,37 +17,6 @@ const ServicePoliciesSection = ({
 }) => {
   return (
     <div id="section-politiques-services" className="mb-4">
-
-      {/* ── Permissions managers ── */}
-      <div className="settings-row">
-        <div className="settings-row__info">
-          <div className="settings-row__label">Managers — accès à l'historique des employés</div>
-          <div className="settings-row__desc">Les managers peuvent consulter l'historique de congés de tous les employés. Désactiver pour qu'ils ne voient que le leur.</div>
-        </div>
-        <div className="settings-row__control">
-          <Form.Check
-            type="switch"
-            checked={Boolean(policy.manager_can_view_employee_history ?? true)}
-            onChange={(e) => setField('manager_can_view_employee_history', e.target.checked)}
-            label=""
-          />
-        </div>
-      </div>
-
-      <div className="settings-row mb-4">
-        <div className="settings-row__info">
-          <div className="settings-row__label">Managers — export CSV des congés de l'équipe</div>
-          <div className="settings-row__desc">Les managers peuvent exporter les congés de tous les employés en CSV. Désactiver pour limiter l'export à leurs propres données.</div>
-        </div>
-        <div className="settings-row__control">
-          <Form.Check
-            type="switch"
-            checked={Boolean(policy.manager_can_export_team_leaves ?? true)}
-            onChange={(e) => setField('manager_can_export_team_leaves', e.target.checked)}
-            label=""
-          />
-        </div>
-      </div>
 
       {/* ── Ajout d'un service ── */}
       <Row className="g-2 mb-3">

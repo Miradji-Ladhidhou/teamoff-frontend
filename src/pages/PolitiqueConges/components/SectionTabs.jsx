@@ -4,8 +4,9 @@ import { Form } from 'react-bootstrap';
 const TABS = [
   { id: 'types',         label: 'Types de congé',           emoji: '📋' },
   { id: 'acquisition',   label: 'Soldes & Acquisition',     emoji: '📊' },
+  { id: 'regles',        label: 'Règles & Préavis',         emoji: '⏱️' },
   { id: 'services',      label: 'Règles par service',       emoji: '🏢' },
-{ id: 'report',        label: 'Report & Réservations',    emoji: '🗓️' },
+  { id: 'report',        label: 'Report & Réservations',    emoji: '🗓️' },
   { id: 'annulation',    label: 'Annulation & Modification', emoji: '🔄' },
   { id: 'notifications', label: 'Notifications email',      emoji: '📧' },
   { id: 'timezone',      label: 'Fuseau horaire',           emoji: '🌐' },
