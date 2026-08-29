@@ -326,8 +326,21 @@ const NouveauCongePage = () => {
     await submitCongeAction.run(async () => {
       const overlapCheck = await congesService.checkOverlap(formData);
       const overlapAction = overlapCheck?.data?.action;
+      const overlapMessage = overlapCheck?.data?.message;
       if (overlapAction === 'block') {
-        alert.error(overlapCheck?.data?.message || 'Cette demande est bloquée : chevauchement avec une réservation ou un congé existant.');
+        alert.error(overlapMessage || 'Cette demande est bloquée : chevauchement avec une réservation ou un congé existant.');
+        return;
+      }
+      if (overlapAction === 'warning') {
+        alert.confirm({
+          title: 'Chevauchement détecté',
+          description: `${overlapMessage || 'Attention : chevauchement détecté.'}\n\nVoulez-vous quand même réserver ?`,
+          confirmLabel: 'Confirmer la réservation',
+          cancelLabel: 'Annuler',
+          danger: true,
+          onConfirm: async () => { await submitCreateLeave(); },
+          onCancel: () => {},
+        });
         return;
       }
       await submitCreateLeave();
