@@ -34,6 +34,8 @@ const CongeActionRequestsPage = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [adminComment, setAdminComment] = useState('');
+  const [approveError, setApproveError] = useState(null);
+  const [rejectError, setRejectError] = useState(null);
 
   const approveAction = useAsyncAction();
   const rejectAction = useAsyncAction();
@@ -64,16 +66,19 @@ const CongeActionRequestsPage = () => {
   const openApprove = (req) => {
     setSelectedRequest(req);
     setAdminComment('');
+    setApproveError(null);
     setShowApproveModal(true);
   };
 
   const openReject = (req) => {
     setSelectedRequest(req);
     setAdminComment('');
+    setRejectError(null);
     setShowRejectModal(true);
   };
 
   const handleApprove = async () => {
+    setApproveError(null);
     await approveAction.run(async () => {
       try {
         await congesService.approveActionRequest(selectedRequest.id, { commentaire: adminComment.trim() || undefined });
@@ -82,12 +87,14 @@ const CongeActionRequestsPage = () => {
         setStatutFilter('approved');
         setPage(1);
       } catch (err) {
-        alert.error(err.response?.data?.message || 'Erreur lors de l\'approbation');
+        const msg = err.response?.data?.message || 'Erreur lors de l\'approbation';
+        setApproveError({ message: msg, status: err.response?.status });
       }
     });
   };
 
   const handleReject = async () => {
+    setRejectError(null);
     await rejectAction.run(async () => {
       try {
         await congesService.rejectActionRequest(selectedRequest.id, { commentaire: adminComment.trim() });
@@ -96,7 +103,8 @@ const CongeActionRequestsPage = () => {
         setStatutFilter('rejected');
         setPage(1);
       } catch (err) {
-        alert.error(err.response?.data?.message || 'Erreur lors du refus');
+        const msg = err.response?.data?.message || 'Erreur lors du refus';
+        setRejectError({ message: msg, status: err.response?.status });
       }
     });
   };
@@ -331,7 +339,7 @@ const CongeActionRequestsPage = () => {
       )}
 
       {/* Modal Approuver */}
-      <Modal show={showApproveModal} onHide={() => setShowApproveModal(false)} backdrop="static" keyboard={!approveAction.isRunning} centered>
+      <Modal show={showApproveModal} onHide={() => { setShowApproveModal(false); setApproveError(null); }} backdrop="static" keyboard={!approveAction.isRunning} centered>
         <Modal.Header closeButton={!approveAction.isRunning}>
           <Modal.Title>Approuver la demande</Modal.Title>
         </Modal.Header>
@@ -352,6 +360,18 @@ const CongeActionRequestsPage = () => {
           <div className="p-2 mb-3 rounded" style={{ background: 'var(--dk-card, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
             {selectedRequest?.commentaire_employe || '—'}
           </div>
+
+          {approveError && (
+            <div className="alert alert-danger py-2 px-3 mb-3" style={{ fontSize: '13px' }}>
+              <strong>Impossible d'approuver</strong> — {approveError.message}
+              {approveError.status === 422 && (
+                <div className="mt-1" style={{ fontSize: '12px', color: '#721c24' }}>
+                  Vous pouvez <strong>refuser</strong> cette demande et inviter l'employé à en soumettre une nouvelle avec des dates valides.
+                </div>
+              )}
+            </div>
+          )}
+
           <Form.Group>
             <Form.Label>Commentaire (optionnel)</Form.Label>
             <Form.Control
@@ -365,7 +385,12 @@ const CongeActionRequestsPage = () => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowApproveModal(false)} disabled={approveAction.isRunning}>Annuler</Button>
+          <Button variant="secondary" onClick={() => { setShowApproveModal(false); setApproveError(null); }} disabled={approveAction.isRunning}>Annuler</Button>
+          {approveError?.status === 422 && (
+            <Button variant="outline-danger" onClick={() => { setShowApproveModal(false); setApproveError(null); openReject(selectedRequest); }}>
+              Refuser à la place
+            </Button>
+          )}
           <AsyncButton variant="success" onClick={handleApprove} action={approveAction} loadingText="Approbation...">
             Approuver
           </AsyncButton>
@@ -373,7 +398,7 @@ const CongeActionRequestsPage = () => {
       </Modal>
 
       {/* Modal Refuser */}
-      <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)} backdrop="static" keyboard={!rejectAction.isRunning} centered>
+      <Modal show={showRejectModal} onHide={() => { setShowRejectModal(false); setRejectError(null); }} backdrop="static" keyboard={!rejectAction.isRunning} centered>
         <Modal.Header closeButton={!rejectAction.isRunning}>
           <Modal.Title>Refuser la demande</Modal.Title>
         </Modal.Header>
@@ -391,6 +416,13 @@ const CongeActionRequestsPage = () => {
           <div className="p-2 mb-3 rounded" style={{ background: 'var(--dk-card, #f8f9fa)', fontSize: '13px', fontStyle: 'italic', borderLeft: '3px solid #5b8dee' }}>
             {selectedRequest?.commentaire_employe || '—'}
           </div>
+
+          {rejectError && (
+            <div className="alert alert-danger py-2 px-3 mb-3" style={{ fontSize: '13px' }}>
+              <strong>Erreur</strong> — {rejectError.message}
+            </div>
+          )}
+
           <Form.Group>
             <Form.Label>Motif du refus (requis)</Form.Label>
             <Form.Control
@@ -405,7 +437,7 @@ const CongeActionRequestsPage = () => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowRejectModal(false)} disabled={rejectAction.isRunning}>Annuler</Button>
+          <Button variant="secondary" onClick={() => { setShowRejectModal(false); setRejectError(null); }} disabled={rejectAction.isRunning}>Annuler</Button>
           <AsyncButton
             variant="danger"
             onClick={handleReject}
