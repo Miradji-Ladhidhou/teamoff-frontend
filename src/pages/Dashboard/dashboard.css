@@ -129,11 +129,12 @@
 
 /* ────────────── Soldes — grille ────────────── */
 .soldes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
+/* ── Carte simple (pas de N-1) ── */
 .solde-card {
   background: var(--dk-card);
   border: 1px solid var(--dk-border);
@@ -143,23 +144,18 @@
   flex-direction: column;
   gap: 3px;
   box-shadow: var(--dk-shadow-sm);
-  transition: box-shadow var(--transition-fast);
 }
 
-.solde-card--low {
-  border-color: rgba(220, 38, 38, 0.3);
-}
+.solde-card--low  { border-color: rgba(220, 38, 38, 0.3); }
 
 .solde-card--error,
 .solde-card--empty {
   font-size: 0.8rem;
   color: var(--dk-text-soft);
-  grid-column: 1 / -1;
   text-align: center;
   padding: 1rem;
 }
 
-/* Type label */
 .solde-card__type {
   font-size: 0.6rem;
   font-weight: 600;
@@ -172,7 +168,6 @@
   margin-bottom: 1px;
 }
 
-/* Nombre principal */
 .solde-card__main {
   display: flex;
   align-items: baseline;
@@ -187,9 +182,7 @@
   line-height: 1;
 }
 
-.solde-card--low .solde-card__days {
-  color: var(--dk-error);
-}
+.solde-card--low .solde-card__days { color: var(--dk-error); }
 
 .solde-card__unit {
   font-size: 1rem;
@@ -198,22 +191,6 @@
   margin-bottom: 1px;
 }
 
-/* Barre segmentée : pris · en attente · disponible */
-.solde-card__bar {
-  display: flex;
-  height: 5px;
-  border-radius: 99px;
-  background: var(--dk-elevated);
-  overflow: hidden;
-  margin: 5px 0 2px;
-}
-
-.solde-card__bar-pris     { background: var(--dk-text-muted); opacity: 0.6; }
-.solde-card__bar-reserved { background: var(--dk-warning); opacity: 0.8; }
-.solde-card__bar-dispo    { background: var(--dk-accent); }
-.solde-card__bar-dispo--low { background: var(--dk-error); }
-
-/* Stats : acquis · pris */
 .solde-card__stats {
   display: flex;
   flex-wrap: wrap;
@@ -226,33 +203,124 @@
 
 .solde-card__stat-sep { opacity: 0.35; }
 
-/* En attente */
 .solde-card__pending {
   font-size: 0.67rem;
   font-weight: 600;
   color: var(--dk-warning);
 }
 
-/* Pills N-1 / N */
-.solde-card__n1 {
+/* ── Barre segmentée partagée ── */
+.solde-bar {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--dk-elevated);
+  overflow: hidden;
+  margin: 6px 0 2px;
+}
+
+.solde-bar__pris     { background: var(--dk-text-muted); opacity: 0.6; }
+.solde-bar__reserved { background: var(--dk-warning); opacity: 0.8; }
+.solde-bar__dispo    { background: var(--dk-accent); }
+.solde-bar__dispo--low { background: var(--dk-error); }
+
+/* ── Groupe N-1 / N / Total ── */
+.solde-group {
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--card-radius, 12px);
+  padding: 0.75rem 0.9rem 0.7rem;
+  box-shadow: var(--dk-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.solde-group__type {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dk-text-muted);
+  margin-bottom: 8px;
+}
+
+.solde-group__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.solde-group__pending {
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: var(--dk-warning);
   margin-top: 4px;
 }
 
-.solde-card__n1-pill {
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background: var(--dk-warning-bg);
-  color: var(--dk-warning);
+/* ── Mini-card ── */
+.solde-mini {
+  border-radius: 8px;
+  padding: 0.55rem 0.6rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.solde-card__n1-pill--n {
-  background: var(--dk-accent-soft);
-  color: var(--dk-accent-dark);
+.solde-mini--n1 {
+  background: var(--dk-warning-bg, rgba(217, 119, 6, 0.08));
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+.solde-mini--n {
+  background: var(--dk-accent-soft, rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+
+.solde-mini--total {
+  background: var(--dk-elevated, #f5f6f8);
+  border: 1px solid var(--dk-border);
+}
+
+.solde-mini--low.solde-mini--total {
+  background: rgba(220, 38, 38, 0.06);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.solde-mini__val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--dk-text);
+}
+
+.solde-mini--n1  .solde-mini__val { color: var(--dk-warning, #d97706); }
+.solde-mini--n   .solde-mini__val { color: var(--dk-accent, #6366f1); }
+.solde-mini--low .solde-mini__val { color: var(--dk-error, #dc2626); }
+
+.solde-mini__unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-left: 1px;
+}
+
+.solde-mini__lbl {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--dk-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .solde-group__cards {
+    grid-template-columns: 1fr;
+  }
+  .solde-mini {
+    padding: 0.5rem 0.6rem;
+  }
 }
 
 /* ────────────── FAB — mobile floating action button ────────────── */
@@ -293,7 +361,5 @@
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .soldes-grid {
-    grid-template-columns: 1fr;
-  }
+  /* soldes-grid is now flex column, no override needed */
 }
