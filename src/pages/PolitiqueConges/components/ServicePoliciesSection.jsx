@@ -152,17 +152,45 @@ const ServicePoliciesSection = ({
 
               <div className="svc-card__row svc-card__row--3">
                 <div className="svc-card__field">
-                  <label className="svc-card__label">Préavis min (jours)</label>
+                  <label className="svc-card__label">Seuil d'urgence (jours)</label>
                   <Form.Control
                     size="sm"
                     type="number"
                     min="0"
-                    value={servicePolicy.minimum_notice_days ?? 0}
-                    onChange={(e) => setServiceField(serviceName, 'minimum_notice_days', e.target.value)}
+                    value={servicePolicy.notice_urgency_threshold ?? 0}
+                    onChange={(e) => setServiceField(serviceName, 'notice_urgency_threshold', e.target.value)}
                   />
-                  <span className="svc-card__hint">Jours à l'avance requis avant la date de début (0 = aucun)</span>
+                  <span className="svc-card__hint">Congé &lt; X jours = urgent · 0 = pas de distinction</span>
                 </div>
 
+                <div className="svc-card__field">
+                  <label className="svc-card__label">Préavis urgent (jours)</label>
+                  <Form.Control
+                    size="sm"
+                    type="number"
+                    min="0"
+                    disabled={!(Number(servicePolicy.notice_urgency_threshold) > 0)}
+                    value={servicePolicy.notice_urgent_days ?? 0}
+                    onChange={(e) => setServiceField(serviceName, 'notice_urgent_days', e.target.value)}
+                  />
+                  <span className="svc-card__hint">Requis si congé &lt; seuil</span>
+                </div>
+
+                <div className="svc-card__field">
+                  <label className="svc-card__label">Préavis normal (jours)</label>
+                  <Form.Control
+                    size="sm"
+                    type="number"
+                    min="0"
+                    disabled={!(Number(servicePolicy.notice_urgency_threshold) > 0)}
+                    value={servicePolicy.notice_normal_days ?? 0}
+                    onChange={(e) => setServiceField(serviceName, 'notice_normal_days', e.target.value)}
+                  />
+                  <span className="svc-card__hint">Requis si congé ≥ seuil</span>
+                </div>
+              </div>
+
+              <div className="svc-card__row">
                 <div className="svc-card__field">
                   <label className="svc-card__label">Max consécutifs (jours)</label>
                   <Form.Control

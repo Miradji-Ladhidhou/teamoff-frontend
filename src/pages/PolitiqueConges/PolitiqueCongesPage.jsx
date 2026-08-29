@@ -15,7 +15,6 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
-import PreavisSection from './components/PreavisSection';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -53,7 +52,9 @@ const DEFAULT_POLICY = {
 
 const DEFAULT_SERVICE_POLICY = {
   overlap_behavior: 'block',
-  minimum_notice_days: 0,
+  notice_urgency_threshold: 0,
+  notice_urgent_days: 0,
+  notice_normal_days: 0,
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
   max_employees_on_leave: 0,
@@ -69,7 +70,6 @@ const DEFAULT_CONGE_TYPE_FORM = {
 const DEFAULT_LEAVE_POLICY = {
   allow_modify_validated: false,
   allow_cancel_validated: false,
-  min_notice_days: 0,
   require_manager_approval: true,
   require_admin_approval: true,
 };
@@ -203,7 +203,6 @@ const PolitiqueCongesPage = () => {
     types:         ['types'],
     acquisition:   ['acquisition'],
     services:      ['services'],
-    preavis:       ['preavis'],
     report:        ['report'],
     annulation:    ['cancellation'],
     notifications: ['notifications'],
@@ -416,7 +415,9 @@ const PolitiqueCongesPage = () => {
         service_policies: Object.entries(servicePolicies).reduce((acc, [serviceName, servicePolicy]) => {
           acc[serviceName] = {
             overlap_behavior: servicePolicy.overlap_behavior || 'block',
-            minimum_notice_days: Number(servicePolicy.minimum_notice_days || 0),
+            notice_urgency_threshold: Number(servicePolicy.notice_urgency_threshold || 0),
+            notice_urgent_days: Number(servicePolicy.notice_urgent_days || 0),
+            notice_normal_days: Number(servicePolicy.notice_normal_days || 0),
             max_consecutive_days: Number(servicePolicy.max_consecutive_days || 0),
             approval_workflow: servicePolicy.approval_workflow,
             max_employees_on_leave: Number(servicePolicy.max_employees_on_leave || 0),
@@ -429,7 +430,6 @@ const PolitiqueCongesPage = () => {
       await leavePoliciesAPI.updatePolicy({
         allow_modify_validated: Boolean(leavePolicy.allow_modify_validated),
         allow_cancel_validated: Boolean(leavePolicy.allow_cancel_validated),
-        min_notice_days: Number(leavePolicy.min_notice_days || 0),
         require_manager_approval: Boolean(leavePolicy.require_manager_approval),
         require_admin_approval: Boolean(leavePolicy.require_admin_approval),
       });
@@ -594,10 +594,6 @@ const PolitiqueCongesPage = () => {
         {/* Onglet : Logo */}
         {isSectionVisible('logo') && (
           <LogoSection logo={logo} setLogo={setLogo} />
-        )}
-
-        {isSectionVisible('preavis') && (
-          <PreavisSection policy={policy} setPolicy={setPolicy} />
         )}
 
         {isSectionVisible('services') && (

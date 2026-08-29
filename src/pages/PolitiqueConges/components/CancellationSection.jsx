@@ -49,18 +49,6 @@ const CancellationSection = ({ policy, setField, leavePolicy, setLeavePolicy }) 
           />
         </Col>
       </Row>
-      <Row className="g-3">
-        <Col xs={12} md={6}>
-          <Form.Group>
-            <Form.Label>Préavis minimum (jours)</Form.Label>
-            <Form.Control
-              type="number" min="0"
-              value={leavePolicy.min_notice_days}
-              onChange={(e) => setLeavePolicy((prev) => ({ ...prev, min_notice_days: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
     </div>
   </div>
 );
