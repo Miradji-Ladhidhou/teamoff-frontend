@@ -24,7 +24,7 @@ import {
 } from 'react-icons/fa';
 
 import { useAuth } from '../../contexts/AuthContext';
-import { entreprisesService } from '../../services/api';
+import { entreprisesService, notificationsService } from '../../services/api';
 import { getNavigationForRole } from '../../utils/navigation';
 import { useNotificationStream } from '../../hooks/useNotificationStream';
 import AppFooter from './AppFooter';
@@ -71,6 +71,21 @@ const Layout = () => {
   }, []);
 
   useNotificationStream(handleNewNotification);
+
+  // Charger le compteur initial de notifications non lues
+  useEffect(() => {
+    if (!user?.id) return;
+    notificationsService.getAll({ non_lu: 'true', limit: 1 })
+      .then((res) => setUnreadCount(res.data?.pagination?.total || 0))
+      .catch(() => {});
+  }, [user?.id]);
+
+  // Synchroniser le compteur quand la page notifications broadcast un changement
+  useEffect(() => {
+    const handler = (e) => setUnreadCount(e.detail?.unreadCount ?? 0);
+    window.addEventListener('teamoff:notifications-updated', handler);
+    return () => window.removeEventListener('teamoff:notifications-updated', handler);
+  }, []);
 
   useEffect(() => {
     if (!user?.entreprise_id) return;
