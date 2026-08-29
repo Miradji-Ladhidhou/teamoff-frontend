@@ -428,10 +428,21 @@ const DashboardPage = () => {
                   const acquis = Number(solde?.jours_acquis ?? solde?.quota_annuel ?? 0) || 0;
                   const pct = acquis > 0 ? Math.min(100, Math.round((restant / acquis) * 100)) : 100;
                   const isLow = acquis > 0 && pct < 25;
+                  const hasN1 = Number(solde?.jours_reportes ?? 0) > 0;
+                  const n1Dispo = Number(solde?.n1_disponible ?? 0);
+                  const nDispo = Number(solde?.n_disponible ?? 0);
+                  const fmt = (v) => Number.isInteger(v) ? String(v) : v.toFixed(1);
                   return (
                     <div key={idx} className={`solde-card ${isLow ? 'solde-card--low' : ''}`}>
                       <div className="solde-card__days">{restant}<span className="solde-card__unit">j</span></div>
                       <div className="solde-card__label">{getSoldeTypeLabel(solde)}</div>
+                      {hasN1 && (
+                        <div className="solde-card__n1">
+                          <span>N-1&nbsp;{fmt(n1Dispo)}j</span>
+                          <span className="solde-card__n1-sep">·</span>
+                          <span>N&nbsp;{fmt(nDispo)}j</span>
+                        </div>
+                      )}
                       {acquis > 0 && (
                         <div className="solde-card__bar">
                           <div className="solde-card__bar-fill" style={{ width: `${pct}%` }} />

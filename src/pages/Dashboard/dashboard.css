@@ -183,6 +183,20 @@
   margin-top: 2px;
 }
 
+.solde-card__n1 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--dk-text-soft);
+  margin-top: 2px;
+}
+
+.solde-card__n1-sep {
+  opacity: 0.4;
+}
+
 .solde-card__bar {
   height: 4px;
   border-radius: 99px;
