@@ -323,7 +323,15 @@ const NouveauCongePage = () => {
       return;
     }
     if (!validateForm(true)) return; // skip balance check
-    await submitCongeAction.run(() => submitCreateLeave());
+    await submitCongeAction.run(async () => {
+      const overlapCheck = await congesService.checkOverlap(formData);
+      const overlapAction = overlapCheck?.data?.action;
+      if (overlapAction === 'block') {
+        alert.error(overlapCheck?.data?.message || 'Cette demande est bloquée : chevauchement avec une réservation ou un congé existant.');
+        return;
+      }
+      await submitCreateLeave();
+    });
   };
 
   const handleSubmit = async (e) => {
