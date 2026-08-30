@@ -253,10 +253,11 @@ const DashboardPage = () => {
     return Number.isFinite(value) ? value : 0;
   };
 
-  const getCongeAccent = (statut) => {
+  const getCongeAccent = (statut, workflow) => {
+    const isAdminOnly = workflow === 'admin_only';
     switch (statut) {
-      case 'en_attente_manager': return { accent: 'pending', label: 'En att. manager' };
-      case 'valide_manager':     return { accent: 'info',    label: 'En att. validation admin' };
+      case 'en_attente_manager': return { accent: 'pending', label: isAdminOnly ? 'En att. admin' : 'En att. manager' };
+      case 'valide_manager':     return { accent: 'info',    label: isAdminOnly ? 'Validé admin' : 'En att. validation admin' };
       case 'valide_final':       return { accent: 'success', label: 'Approuvé' };
       case 'refuse_manager':
       case 'refuse_final':       return { accent: 'danger',  label: 'Refusé' };
@@ -516,7 +517,7 @@ const DashboardPage = () => {
           ) : (
             <div className="d-flex flex-column gap-2">
               {recentConges.map((conge) => {
-                const { accent, label: accentLabel } = getCongeAccent(conge.statut);
+                const { accent, label: accentLabel } = getCongeAccent(conge.statut, conge.effective_approval_workflow);
                 return (
                   <Link key={conge.id} to={`/conges/${conge.id}`} style={{ textDecoration: 'none' }}>
                     <div className="card-accented">

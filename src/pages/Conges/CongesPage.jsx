@@ -9,15 +9,16 @@ import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
 
-const getCongeAccent = (statut, role) => {
+const getCongeAccent = (statut, role, workflow) => {
   const isAdminRole = ['admin_entreprise', 'super_admin', 'manager'].includes(role);
+  const isAdminOnly = workflow === 'admin_only';
   switch (statut) {
     case 'reserve':
       return { accent: 'reserve', label: 'Réservé' };
     case 'en_attente_manager':
-      return { accent: 'pending', label: 'En attente' };
+      return { accent: 'pending', label: isAdminOnly ? 'En att. admin' : 'En attente' };
     case 'valide_manager':
-      return { accent: 'info', label: isAdminRole ? 'Validé manager' : 'En cours' };
+      return { accent: 'info', label: isAdminOnly ? 'Validé admin' : isAdminRole ? 'Validé manager' : 'En cours' };
     case 'valide_final':
       return { accent: 'success', label: 'Approuvé' };
     case 'refuse_manager':
@@ -367,8 +368,8 @@ const CongesPage = () => {
     });
   };
 
-  const getStatusBadge = (status) => {
-    const { accent, label } = getCongeAccent(status, user?.role);
+  const getStatusBadge = (status, workflow) => {
+    const { accent, label } = getCongeAccent(status, user?.role, workflow);
     return <span className={`badge ${accentToBadgeClass(accent)}`}>{label}</span>;
   };
 
@@ -505,7 +506,7 @@ const CongesPage = () => {
               {/* Vue carte — mobile/tablette portrait */}
               <div className="d-md-none">
                 {paginatedConges.map((conge) => {
-                  const { accent, label } = getCongeAccent(conge.statut, user?.role);
+                  const { accent, label } = getCongeAccent(conge.statut, user?.role, conge.effective_approval_workflow);
                   return (
                     <Link key={conge.id} to={`/conges/${conge.id}`} style={{ textDecoration: 'none' }}>
                       <div className="card-accented conges-mobile-item">
@@ -577,7 +578,7 @@ const CongesPage = () => {
                           {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
                         </td>
                         <td>
-                          {getStatusBadge(conge.statut)}
+                          {getStatusBadge(conge.statut, conge.effective_approval_workflow)}
                           {conge.statut?.startsWith('refuse') && (conge.commentaire_manager || conge.commentaire_admin) && (
                             <div className="small text-muted mt-1" title={conge.commentaire_admin || conge.commentaire_manager}>
                               {(conge.commentaire_admin || conge.commentaire_manager)?.slice(0, 60)}

@@ -270,12 +270,13 @@ const CongeDetailsPage = () => {
   };
 
   const getStatusText = (statut) => {
+    const workflow = conge?.effective_approval_workflow;
     const map = {
       reserve: 'Réservé',
-      en_attente_manager: 'En attente manager',
-      valide_manager: 'Validé manager',
+      en_attente_manager: workflow === 'admin_only' ? 'En attente admin' : 'En attente manager',
+      valide_manager: workflow === 'admin_only' ? 'Validé admin' : 'Validé manager',
       valide_final: 'Validé final',
-      refuse_manager: 'Refusé manager',
+      refuse_manager: workflow === 'admin_only' ? 'Refusé admin' : 'Refusé manager',
       refuse_final: 'Refusé final',
     };
     return map[statut] || statut;
