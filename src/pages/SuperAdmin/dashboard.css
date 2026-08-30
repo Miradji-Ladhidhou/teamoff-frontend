@@ -253,3 +253,68 @@
   margin-top: 0.5rem;
   color: var(--dk-text-muted);
 }
+
+/* ── Super-admin dashboard ── */
+.sa-company-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.sa-company-bar__icon {
+  color: var(--dk-text-muted);
+  flex-shrink: 0;
+}
+
+.sa-company-bar__select {
+  flex: 1;
+  max-width: 320px;
+}
+
+.sa-company-bar__badge {
+  flex-shrink: 0;
+}
+
+.sa-breakdown-mobile-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dk-border);
+}
+.sa-breakdown-mobile-row:last-child { border-bottom: none; }
+
+.sa-role-list { display: flex; flex-direction: column; gap: 6px; }
+
+.sa-role-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--dk-border);
+}
+.sa-role-row:last-child { border-bottom: none; }
+.sa-role-label { font-size: 13px; color: var(--dk-text); }
+
+.sa-health-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sa-health-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.dot-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.dot-status.green { background: var(--dk-success, #22c55e); }
+.dot-status.red   { background: var(--dk-error, #ef4444); }

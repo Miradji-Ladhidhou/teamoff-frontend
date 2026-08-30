@@ -8,7 +8,7 @@ import {
   FaHistory, FaDownload, FaEye, FaUser, FaBuilding,
   FaCalendarCheck, FaTimes
 } from 'react-icons/fa';
-import { auditService, usersService, exportsService, formatGeneratedAt } from '../../services/api';
+import { auditService, usersService, exportsService, entreprisesService, formatGeneratedAt } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 
 // ---------- Helpers purs (hors composant — stables entre renders) ----------
@@ -76,7 +76,9 @@ const AuditLogs = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [allUsers, setAllUsers] = useState([]);
+  const [allCompanies, setAllCompanies] = useState([]);
   const [userFilter, setUserFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -88,12 +90,13 @@ const AuditLogs = () => {
   const LIMIT = 20;
 
   const userOptions = useMemo(() => {
-    return [...allUsers]
-      .sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`));
-  }, [allUsers]);
+    const filtered = companyFilter ? allUsers.filter(u => u.entreprise_id === companyFilter) : allUsers;
+    return [...filtered].sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`));
+  }, [allUsers, companyFilter]);
 
   useEffect(() => {
     usersService.getAll().then(({ data }) => setAllUsers(data || [])).catch(() => {});
+    entreprisesService.getAll().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {});
   }, []);
 
   // Logique métier inchangée
@@ -104,15 +107,17 @@ const AuditLogs = () => {
         page: overrides.page ?? currentPage,
         limit: LIMIT,
       };
-      const nextActionFilter = overrides.actionFilter ?? actionFilter;
-      const nextUserFilter   = overrides.userFilter   ?? userFilter;
-      const nextDateDebut    = overrides.dateDebut    ?? dateDebut;
-      const nextDateFin      = overrides.dateFin      ?? dateFin;
+      const nextActionFilter  = overrides.actionFilter  ?? actionFilter;
+      const nextUserFilter    = overrides.userFilter    ?? userFilter;
+      const nextCompanyFilter = overrides.companyFilter ?? companyFilter;
+      const nextDateDebut     = overrides.dateDebut     ?? dateDebut;
+      const nextDateFin       = overrides.dateFin       ?? dateFin;
 
-      if (nextActionFilter) params.action        = nextActionFilter;
-      if (nextUserFilter)   params.utilisateur_id = nextUserFilter;
-      if (nextDateDebut)    params.dateDebut      = nextDateDebut;
-      if (nextDateFin)      params.dateFin        = nextDateFin;
+      if (nextActionFilter)  params.action        = nextActionFilter;
+      if (nextUserFilter)    params.utilisateur_id = nextUserFilter;
+      if (nextCompanyFilter) params.entreprise_id  = nextCompanyFilter;
+      if (nextDateDebut)     params.dateDebut      = nextDateDebut;
+      if (nextDateFin)       params.dateFin        = nextDateFin;
 
       const { data } = await auditService.getAll(params);
       setLogs(data.logs || []);
@@ -124,7 +129,7 @@ const AuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, userFilter, actionFilter, dateDebut, dateFin]);
+  }, [currentPage, userFilter, companyFilter, actionFilter, dateDebut, dateFin]);
 
   useEffect(() => {
     loadLogs();
@@ -132,11 +137,12 @@ const AuditLogs = () => {
 
   const handleReset = () => {
     setUserFilter('');
+    setCompanyFilter('');
     setActionFilter('');
     setDateDebut('');
     setDateFin('');
     setCurrentPage(1);
-    loadLogs({ page: 1, userFilter: '', actionFilter: '', dateDebut: '', dateFin: '' });
+    loadLogs({ page: 1, userFilter: '', companyFilter: '', actionFilter: '', dateDebut: '', dateFin: '' });
   };
 
   const exportLogs = async () => {
@@ -145,10 +151,11 @@ const AuditLogs = () => {
     try {
       const response = await exportsService.exportAuditCSV({
         generatedAt:    formatGeneratedAt(),
-        action:         actionFilter || undefined,
-        utilisateur_id: userFilter   || undefined,
-        dateDebut:      dateDebut    || undefined,
-        dateFin:        dateFin      || undefined,
+        action:         actionFilter   || undefined,
+        utilisateur_id: userFilter     || undefined,
+        entreprise_id:  companyFilter  || undefined,
+        dateDebut:      dateDebut      || undefined,
+        dateFin:        dateFin        || undefined,
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
@@ -184,8 +191,19 @@ const AuditLogs = () => {
         <Card.Body>
           <Row className="g-2 align-items-end">
 
+            {/* Entreprise */}
+            <Col xs={12} sm={6} md={3}>
+              <FilterLabel>Entreprise</FilterLabel>
+              <Form.Select value={companyFilter} onChange={(e) => { setCompanyFilter(e.target.value); setUserFilter(''); setCurrentPage(1); }}>
+                <option value="">Toutes les entreprises</option>
+                {allCompanies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nom}</option>
+                ))}
+              </Form.Select>
+            </Col>
+
             {/* Utilisateur : pleine largeur sur mobile */}
-            <Col xs={12} md={3}>
+            <Col xs={12} sm={6} md={3}>
               <FilterLabel>Utilisateur</FilterLabel>
               <Form.Select value={userFilter} onChange={(e) => { setUserFilter(e.target.value); setCurrentPage(1); }}>
                 <option value="">Tous les utilisateurs</option>
@@ -197,7 +215,7 @@ const AuditLogs = () => {
               </Form.Select>
             </Col>
 
-            {/* Action : demi-largeur sur xs, propre sur sm+ */}
+            {/* Action */}
             <Col xs={12} sm={6} md={2}>
               <FilterLabel>Action</FilterLabel>
               <Form.Select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}>
