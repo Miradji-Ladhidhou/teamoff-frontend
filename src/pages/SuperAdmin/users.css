@@ -224,3 +224,113 @@
     flex: 1 1 calc(50% - 4px);
   }
 }
+
+/* ── Import CSV modal ── */
+.import-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--dk-border);
+}
+
+.import-tab-btn {
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dk-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.import-tab-btn:hover {
+  color: var(--dk-text);
+}
+
+.import-tab-btn--active {
+  color: var(--dk-primary, #6366f1);
+  border-bottom-color: var(--dk-primary, #6366f1);
+}
+
+.import-tab-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bloc résultat */
+.import-result {
+  background: var(--dk-card, #f8f9fa);
+  border: 1px solid var(--dk-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.import-result__summary {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--dk-text);
+}
+
+.import-result__section {
+  margin-top: 8px;
+}
+
+.import-result__label {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--dk-success, #22c55e);
+  margin-bottom: 4px;
+}
+
+.import-result__label--warn {
+  color: var(--dk-warning, #f59e0b);
+}
+
+.import-result__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--dk-text);
+}
+
+.import-result__list li {
+  margin-bottom: 2px;
+}
+
+/* Bloc erreurs */
+.import-errors {
+  background: color-mix(in srgb, var(--dk-error, #ef4444) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dk-error, #ef4444) 30%, transparent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.import-errors__title {
+  font-weight: 600;
+  color: var(--dk-error, #ef4444);
+  margin-bottom: 8px;
+}
+
+.import-errors__row {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--dk-border) 60%, transparent);
+  color: var(--dk-text);
+}
+
+.import-errors__row:last-child {
+  border-bottom: none;
+}
+
+.import-errors__line {
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--dk-error, #ef4444);
+  min-width: 60px;
+}
