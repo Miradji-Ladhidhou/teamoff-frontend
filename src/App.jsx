@@ -53,6 +53,8 @@ const SuperAdminServicesPage = lazy(() => import('./pages/SuperAdmin/ServicesPag
 const SystemSettings = lazy(() => import('./pages/SuperAdmin/SettingsPage'));
 const MetricsPage = lazy(() => import('./pages/SuperAdmin/MetricsPage'));
 const AuditLogs = lazy(() => import('./pages/SuperAdmin/AuditLogsPage'));
+const SALeavesPage = lazy(() => import('./pages/SuperAdmin/SALeavesPage'));
+const SAAbsencesPage = lazy(() => import('./pages/SuperAdmin/SAAbsencesPage'));
 
 const LoadingSpinner = () => (
   <Container className="page-loading">
@@ -323,11 +325,11 @@ function App() {
             <Route path="companies" element={<CompaniesManagement />} />
             <Route path="services" element={<SuperAdminServicesPage />} />
             <Route path="users" element={<UsersPage />} />
-            <Route path="leaves" element={<CongesPage />} />
+            <Route path="leaves" element={<SALeavesPage />} />
             <Route path="leaves/new" element={<NouveauCongePage />} />
             <Route path="leaves/:id/edit" element={<NouveauCongePage />} />
             <Route path="leaves/:id" element={<CongeDetailsPage />} />
-            <Route path="absences" element={<AbsencesPage />} />
+            <Route path="absences" element={<SAAbsencesPage />} />
             <Route path="metrics" element={<MetricsPage />} />
             <Route path="exports" element={<ExportsPage />} />
             <Route path="holidays" element={<JoursFeriesPage />} />

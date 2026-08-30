@@ -85,7 +85,7 @@ const absenceTypeLabel = (type) => {
   return labels[type] || type || 'Non défini';
 };
 
-const CalendrierPage = ({ embedded = false }) => {
+const CalendrierPage = ({ embedded = false, entrepriseIdOverride = null }) => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [conges, setConges] = useState([]);
@@ -110,7 +110,7 @@ const CalendrierPage = ({ embedded = false }) => {
     statut: 'all',
     utilisateurId: 'all'
   });
-  const entrepriseId = user?.entreprise_id;
+  const entrepriseId = entrepriseIdOverride || user?.entreprise_id;
   const canDeclareAbsence = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
   const canCreateLeave = ['employe', 'manager', 'admin_entreprise'].includes(user?.role);
 

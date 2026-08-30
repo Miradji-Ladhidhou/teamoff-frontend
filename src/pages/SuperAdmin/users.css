@@ -334,3 +334,11 @@
   color: var(--dk-error, #ef4444);
   min-width: 60px;
 }
+
+/* ── SALeavesPage mobile rows ── */
+.sa-leave-mobile-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dk-border);
+  background: var(--dk-card);
+}
+.sa-leave-mobile-row:last-child { border-bottom: none; }
