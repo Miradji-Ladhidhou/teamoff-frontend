@@ -46,6 +46,7 @@ const NouveauCongePage = () => {
   const [initialCongeSnapshot, setInitialCongeSnapshot] = useState(null);
   const [formDirty, setFormDirty] = useState(false);
   const submittedRef = useRef(false);
+  const [crossYearChoice, setCrossYearChoice] = useState(null); // 'N' | 'N1' | null
   useUnsavedChanges(formDirty && !submittedRef.current);
   const { validateModification } = useLeavePolicy();
   useEffect(() => {
@@ -66,6 +67,11 @@ const NouveauCongePage = () => {
   useEffect(() => {
     loadInitialData();
   }, [id, user?.id, user?.role]);
+
+  // Réinitialise le choix inter-années si les dates ou le type changent
+  useEffect(() => {
+    setCrossYearChoice(null);
+  }, [formData.date_debut, formData.date_fin, formData.conge_type_id]);
 
   // When the leave type changes (or is first resolved), clear stale half-day values
   // if the selected type doesn't allow half-days — otherwise they'd be silently sent.
@@ -296,6 +302,8 @@ const NouveauCongePage = () => {
     ...(data.debut_demi_journee ? { debut_demi_journee: data.debut_demi_journee } : {}),
     ...(data.fin_demi_journee ? { fin_demi_journee: data.fin_demi_journee } : {}),
     commentaire_employe: data.commentaire_employe || null,
+    // Imputer sur le solde N si le salarié a choisi d'utiliser son solde de l'année en cours
+    ...(crossYearChoice === 'N' ? { annee_compteur: new Date().getFullYear() } : {}),
   });
 
   const submitCreateLeave = async (precheckWarning = null) => {
@@ -662,41 +670,105 @@ const NouveauCongePage = () => {
 
           {/* ── Actions ── */}
           {(() => {
+            const currentYear = new Date().getFullYear();
             const reqYear = formData.date_debut ? new Date(formData.date_debut).getFullYear() : null;
-            const isN1 = reqYear !== null && reqYear > new Date().getFullYear();
+            const isN1 = reqYear !== null && reqYear === currentYear + 1;
             const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
             const available = Number(soldeType?.solde_disponible ?? 0);
             const soldeInsuffisant = joursCalcules !== null && joursCalcules > 0 && joursCalcules > available;
-            const showReservationButton = !isEditMode
-              && isN1
-              && soldeInsuffisant
-              && joursPolitique?.autoriser_reservation_sans_solde === true;
+            // Scénario inter-années : solde N suffisant mais dates en N+1
+            const canReserveN1 = joursPolitique?.autoriser_reservation_sans_solde !== false;
+            const nBalanceSufficient = available >= joursCalcules;
+            // Toujours proposer le choix pour une demande N+1 (si au moins une option est valide)
+            const showCrossYearChoice = !isEditMode && isN1 && joursCalcules > 0;
             return (
-              <div className="nc-actions">
-                <AsyncButton
-                  type="submit"
-                  variant="primary"
-                  className="nc-btn-submit"
-                  action={submitCongeAction}
-                  loadingText={isEditMode ? 'Enregistrement…' : 'Envoi en cours…'}
-                >
-                  {isEditMode ? 'Enregistrer' : 'Envoyer la demande'}
-                </AsyncButton>
-                {showReservationButton && (
-                  <AsyncButton
-                    type="button"
-                    variant="outline-primary"
-                    className="nc-btn-reserve"
-                    action={submitCongeAction}
-                    loadingText="Réservation…"
-                    onClick={handleReserverSansSolde}
-                  >
-                    Réserver sans solde
-                  </AsyncButton>
+              <div className="nc-actions-section">
+                {showCrossYearChoice && (
+                  <div className="nc-crossyear-choice">
+                    <div className="nc-crossyear-choice__title">
+                      Comment souhaitez-vous poser ce congé ?
+                    </div>
+                    <div className="nc-crossyear-choice__subtitle">
+                      Vos dates sont en {reqYear}. Choisissez comment imputer ce congé.
+                    </div>
+                    <div className="nc-crossyear-choice__options">
+                      <button
+                        type="button"
+                        className={`nc-crossyear-option${crossYearChoice === 'N' ? ' nc-crossyear-option--selected' : ''}${!nBalanceSufficient ? ' nc-crossyear-option--disabled' : ''}`}
+                        onClick={() => nBalanceSufficient && setCrossYearChoice('N')}
+                        disabled={!nBalanceSufficient}
+                      >
+                        <div className="nc-crossyear-option__body">
+                          <div className="nc-crossyear-option__label">Consommer mon solde {currentYear}</div>
+                          <div className="nc-crossyear-option__desc">
+                            {nBalanceSufficient
+                              ? <>Congé déposé immédiatement, traité selon le circuit normal. Solde {currentYear} restant : <strong>{(available - joursCalcules).toFixed(1)} j</strong></>
+                              : <>Solde {currentYear} insuffisant — <strong>{available.toFixed(1)} j</strong> disponible{available !== 1 ? 's' : ''}, {joursCalcules} j demandé{joursCalcules !== 1 ? 's' : ''}.</>
+                            }
+                          </div>
+                        </div>
+                      </button>
+                      {canReserveN1 && (
+                        <button
+                          type="button"
+                          className={`nc-crossyear-option${crossYearChoice === 'N1' ? ' nc-crossyear-option--selected' : ''}`}
+                          onClick={() => setCrossYearChoice('N1')}
+                        >
+                          <div className="nc-crossyear-option__body">
+                            <div className="nc-crossyear-option__label">Réserver sur le solde {reqYear}</div>
+                            <div className="nc-crossyear-option__desc">
+                              Réservation prévisionnelle — activée ~30 jours avant le départ.
+                              Votre solde {currentYear} reste intact.
+                            </div>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
-                <Button as={Link} to={returnPath} variant="outline-secondary" disabled={loading} className="nc-btn-cancel">
-                  Annuler
-                </Button>
+                <div className="nc-actions">
+                  {showCrossYearChoice ? (
+                    crossYearChoice === 'N' ? (
+                      <AsyncButton
+                        type="submit"
+                        variant="primary"
+                        className="nc-btn-submit"
+                        action={submitCongeAction}
+                        loadingText="Envoi en cours…"
+                      >
+                        Envoyer la demande
+                      </AsyncButton>
+                    ) : crossYearChoice === 'N1' ? (
+                      <AsyncButton
+                        type="button"
+                        variant="outline-primary"
+                        className="nc-btn-reserve"
+                        action={submitCongeAction}
+                        loadingText="Réservation…"
+                        onClick={handleReserverSansSolde}
+                      >
+                        Créer la réservation
+                      </AsyncButton>
+                    ) : (
+                      <Button variant="primary" className="nc-btn-submit" disabled>
+                        Choisissez une option
+                      </Button>
+                    )
+                  ) : (
+                    <AsyncButton
+                      type="submit"
+                      variant="primary"
+                      className="nc-btn-submit"
+                      action={submitCongeAction}
+                      loadingText={isEditMode ? 'Enregistrement…' : 'Envoi en cours…'}
+                    >
+                      {isEditMode ? 'Enregistrer' : 'Envoyer la demande'}
+                    </AsyncButton>
+                  )}
+                  <Button as={Link} to={returnPath} variant="outline-secondary" disabled={loading} className="nc-btn-cancel">
+                    Annuler
+                  </Button>
+                </div>
               </div>
             );
           })()}

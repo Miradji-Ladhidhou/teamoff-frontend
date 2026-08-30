@@ -214,13 +214,91 @@
   border-color: rgba(156, 163, 175, 0.25);
 }
 
+/* ── Choix inter-années ── */
+.nc-crossyear-choice {
+  padding: 1.1rem 1.5rem 0.75rem;
+  background: var(--dk-elevated);
+  border-top: 1px solid var(--dk-border-soft, rgba(255,255,255,0.05));
+}
+
+.nc-crossyear-choice__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--dk-text-muted, #6b7280);
+  margin-bottom: 0.25rem;
+}
+
+.nc-crossyear-choice__subtitle {
+  font-size: 0.82rem;
+  color: var(--dk-text-muted, #9ca3af);
+  margin-bottom: 0.75rem;
+}
+
+.nc-crossyear-choice__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.nc-crossyear-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid var(--dk-border, rgba(255,255,255,0.1));
+  border-radius: 10px;
+  background: var(--dk-card, #1e1e2e);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.nc-crossyear-option:hover {
+  border-color: var(--color-primary, #4f46e5);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.nc-crossyear-option--selected {
+  border-color: var(--color-primary, #4f46e5);
+  background: rgba(79, 70, 229, 0.10);
+}
+
+.nc-crossyear-option--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nc-crossyear-option--disabled:hover {
+  border-color: var(--dk-border, rgba(255,255,255,0.1));
+  background: var(--dk-card, #1e1e2e);
+}
+
+.nc-crossyear-option__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--dk-text, #f3f4f6);
+  margin-bottom: 0.2rem;
+}
+
+.nc-crossyear-option__desc {
+  font-size: 0.74rem;
+  color: var(--dk-text-muted, #9ca3af);
+  line-height: 1.45;
+}
+
 /* ── Actions ── */
+.nc-actions-section {
+  background: var(--dk-elevated);
+  border-top: 1px solid var(--dk-border-soft, rgba(255,255,255,0.05));
+}
+
 .nc-actions {
   display: flex;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  background: var(--dk-elevated);
-  border-top: 1px solid var(--dk-border-soft, rgba(255,255,255,0.05));
 }
 
 .nc-btn-submit {
@@ -245,6 +323,14 @@
 
   .nc-step {
     padding: 1rem 1.1rem;
+  }
+
+  .nc-crossyear-choice__options {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-crossyear-choice {
+    padding: 1rem 1.1rem 0.65rem;
   }
 
   .nc-actions {
