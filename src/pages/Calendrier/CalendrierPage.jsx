@@ -155,6 +155,7 @@ const CalendrierPage = ({ embedded = false, entrepriseIdOverride = null }) => {
       const resolvedFilters = {
         ...filters,
         utilisateurId: filters.utilisateurId === 'me' ? user?.id : filters.utilisateurId,
+        ...(entrepriseIdOverride ? { entrepriseId: entrepriseIdOverride } : {}),
       };
 
       // Le calendrier retourne congés + absences fusionnés (record_type: 'conge' | 'absence').
