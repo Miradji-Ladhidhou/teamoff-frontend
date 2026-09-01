@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaBuilding, FaPlus, FaEdit, FaTrash, FaDownload, FaInfoCircle, FaUserTie } from 'react-icons/fa';
 import * as api from '../../services/api';
+import leavePoliciesAPI from '../../services/leavePoliciesAPI';
 import { useAlert } from '../../hooks/useAlert';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import AsyncButton from '../../components/AsyncButton';
@@ -12,6 +13,14 @@ import AsyncButton from '../../components/AsyncButton';
 const DEFAULT_PARAMETRES = {
   timezone: 'Europe/Paris',
   notifications_email: true,
+};
+
+const DEFAULT_LEAVE_POLICY = {
+  allow_modify_validated: false,
+  allow_cancel_validated: false,
+  min_notice_days: 0,
+  require_manager_approval: true,
+  require_admin_approval: false,
 };
 
 const DEFAULT_POLITIQUE = {
@@ -84,6 +93,7 @@ const CompaniesManagement = () => {
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [success, setSuccess] = useState('');
   const [adminData, setAdminData] = useState({ prenom: '', nom: '', email: '' });
+  const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   const [advancedParametresJson, setAdvancedParametresJson] = useState(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
   const [advancedPolitiqueJson, setAdvancedPolitiqueJson] = useState(JSON.stringify(DEFAULT_POLITIQUE, null, 2));
@@ -119,6 +129,7 @@ const CompaniesManagement = () => {
   const resetForm = () => {
     setFormData(DEFAULT_FORM);
     setAdminData({ prenom: '', nom: '', email: '' });
+    setLeavePolicy(DEFAULT_LEAVE_POLICY);
     setShowAdvancedJson(false);
     setShowReportValidation(false);
     setAdvancedParametresJson(JSON.stringify(DEFAULT_PARAMETRES, null, 2));
@@ -178,6 +189,13 @@ const CompaniesManagement = () => {
 
         if (editingCompany) {
           await api.entreprisesService.update(editingCompany.id, payload);
+          await leavePoliciesAPI.updatePolicy({
+            allow_modify_validated: Boolean(leavePolicy.allow_modify_validated),
+            allow_cancel_validated: Boolean(leavePolicy.allow_cancel_validated),
+            min_notice_days: Number(leavePolicy.min_notice_days) || 0,
+            require_manager_approval: Boolean(leavePolicy.require_manager_approval),
+            require_admin_approval: Boolean(leavePolicy.require_admin_approval),
+          }, editingCompany.id);
           setSuccess('Entreprise mise a jour avec succes');
         } else {
           const created = await api.entreprisesService.create(payload);
@@ -221,7 +239,7 @@ const CompaniesManagement = () => {
     });
   };
 
-  const handleEdit = (company) => {
+  const handleEdit = async (company) => {
     const companyParametres = company.parametres || {};
     const companyPolitique = company.politique_conges || {};
 
@@ -259,6 +277,11 @@ const CompaniesManagement = () => {
     setAdvancedParametresJson(JSON.stringify(companyParametres, null, 2));
     setAdvancedPolitiqueJson(JSON.stringify(companyPolitique, null, 2));
     setShowAdvancedJson(false);
+
+    leavePoliciesAPI.getPolicy(company.id)
+      .then((pol) => pol && setLeavePolicy({ ...DEFAULT_LEAVE_POLICY, ...pol }))
+      .catch(() => setLeavePolicy(DEFAULT_LEAVE_POLICY));
+
     setShowModal(true);
   };
 
@@ -867,6 +890,82 @@ const CompaniesManagement = () => {
                     </Row>
                   </Card.Body>
                 </Card>
+
+                {editingCompany && (
+                  <Card className="mb-3 border-0 bg-light">
+                    <Card.Body>
+                      <h6 className="mb-3">Règles de modification / annulation</h6>
+                      <Row>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Modifier un congé validé</Form.Label>
+                            <Form.Check
+                              type="switch"
+                              id="allow-modify-validated"
+                              checked={Boolean(leavePolicy.allow_modify_validated)}
+                              onChange={(e) => setLeavePolicy((p) => ({ ...p, allow_modify_validated: e.target.checked }))}
+                              label={leavePolicy.allow_modify_validated ? 'Autorisé' : 'Interdit'}
+                              disabled={submitAction.isRunning}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Annuler un congé validé</Form.Label>
+                            <Form.Check
+                              type="switch"
+                              id="allow-cancel-validated"
+                              checked={Boolean(leavePolicy.allow_cancel_validated)}
+                              onChange={(e) => setLeavePolicy((p) => ({ ...p, allow_cancel_validated: e.target.checked }))}
+                              label={leavePolicy.allow_cancel_validated ? 'Autorisé' : 'Interdit'}
+                              disabled={submitAction.isRunning}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Préavis min. (jours)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              min={0}
+                              value={leavePolicy.min_notice_days}
+                              onChange={(e) => setLeavePolicy((p) => ({ ...p, min_notice_days: e.target.value }))}
+                              disabled={submitAction.isRunning}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Validation manager</Form.Label>
+                            <Form.Check
+                              type="switch"
+                              id="require-manager-approval"
+                              checked={Boolean(leavePolicy.require_manager_approval)}
+                              onChange={(e) => setLeavePolicy((p) => ({ ...p, require_manager_approval: e.target.checked }))}
+                              label={leavePolicy.require_manager_approval ? 'Requise' : 'Non requise'}
+                              disabled={submitAction.isRunning}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Validation admin</Form.Label>
+                            <Form.Check
+                              type="switch"
+                              id="require-admin-approval"
+                              checked={Boolean(leavePolicy.require_admin_approval)}
+                              onChange={(e) => setLeavePolicy((p) => ({ ...p, require_admin_approval: e.target.checked }))}
+                              label={leavePolicy.require_admin_approval ? 'Requise' : 'Non requise'}
+                              disabled={submitAction.isRunning}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                )}
               </>
             )}
 
