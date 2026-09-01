@@ -14,17 +14,68 @@ import { useAlert } from '../../hooks/useAlert';
 // ---------- Helpers purs (hors composant — stables entre renders) ----------
 
 const ACTION_BADGE_CLASS = {
-  CREATE: 'approved',
-  UPDATE: 'info',
-  DELETE: 'refused',
-  LOGIN: 'info',
-  LOGOUT: 'info',
-  VALIDATE: 'approved',
-  REJECT: 'pending',
+  // Auth
+  LOGIN_SUCCESS: 'approved', LOGIN_FAILED: 'refused', LOGOUT: 'info',
+  ACCOUNT_LOCKED: 'refused',
+  PASSWORD_CHANGED: 'info', PASSWORD_RESET_REQUEST: 'pending', PASSWORD_RESET_SUCCESS: 'approved',
+  TWO_FACTOR_ENABLED: 'approved', TWO_FACTOR_DISABLED: 'pending', TWO_FACTOR_VERIFIED: 'info',
+  INVITE_EXPIRED: 'refused',
+  // Congés
+  CONGE_CREATED: 'approved', CONGE_UPDATED: 'info', CONGE_DELETED: 'refused',
+  CONGE_APPROVED: 'approved', CONGE_REJECTED: 'refused',
+  CONGE_RESERVE_ACTIVATED: 'info', CONGE_RESERVE_SKIPPED: 'pending',
+  CONGE_OVERLAP_BLOCKED: 'refused', QUOTA_INSUFFICIENT: 'refused',
+  // Imports
+  IMPORT_USERS_SUCCESS: 'approved', IMPORT_USERS_FAILED: 'refused',
+  IMPORT_CONGES_SUCCESS: 'approved', IMPORT_CONGES_FAILED: 'refused',
+  // Exports
+  EXPORT_CSV_GENERATED: 'info',
+  // Users / entreprises
+  USER_CREATED: 'approved', USER_UPDATED: 'info', USER_DELETED: 'refused', ROLE_CHANGED: 'pending',
+  ENTREPRISE_CREATED: 'approved', ENTREPRISE_UPDATED: 'info', ENTREPRISE_DELETED: 'refused',
+  // Compteurs
+  COUNTER_UPDATED: 'info', COUNTER_DELETED: 'refused',
+  // Système
+  SYSTEM_SETTINGS_UPDATED: 'info', SYSTEM_BACKUP_CREATED: 'approved',
+  SYSTEM_MAINTENANCE_TOGGLED: 'pending', SYSTEM_RESTART_REQUESTED: 'pending',
+  SYSTEM_TEST_EMAIL_SENT: 'info', SYSTEM_BACKUP_DOWNLOADED: 'info',
 };
 
+const ACTION_LABELS = {
+  LOGIN_SUCCESS: 'Connexion réussie', LOGIN_FAILED: 'Connexion échouée', LOGOUT: 'Déconnexion',
+  ACCOUNT_LOCKED: 'Compte bloqué',
+  PASSWORD_CHANGED: 'Mot de passe changé', PASSWORD_RESET_REQUEST: 'Reset demandé', PASSWORD_RESET_SUCCESS: 'Reset réussi',
+  TWO_FACTOR_ENABLED: '2FA activé', TWO_FACTOR_DISABLED: '2FA désactivé', TWO_FACTOR_VERIFIED: '2FA vérifié',
+  INVITE_EXPIRED: 'Invitation expirée',
+  CONGE_CREATED: 'Congé créé', CONGE_UPDATED: 'Congé modifié', CONGE_DELETED: 'Congé supprimé',
+  CONGE_APPROVED: 'Congé approuvé', CONGE_REJECTED: 'Congé refusé',
+  CONGE_RESERVE_ACTIVATED: 'Réservation activée', CONGE_RESERVE_SKIPPED: 'Réservation ignorée',
+  CONGE_OVERLAP_BLOCKED: 'Chevauchement bloqué', QUOTA_INSUFFICIENT: 'Solde insuffisant',
+  IMPORT_USERS_SUCCESS: 'Import employés ✓', IMPORT_USERS_FAILED: 'Import employés ✗',
+  IMPORT_CONGES_SUCCESS: 'Import congés ✓', IMPORT_CONGES_FAILED: 'Import congés ✗',
+  EXPORT_CSV_GENERATED: 'Export CSV généré',
+  USER_CREATED: 'Utilisateur créé', USER_UPDATED: 'Utilisateur modifié', USER_DELETED: 'Utilisateur supprimé',
+  ROLE_CHANGED: 'Rôle modifié',
+  ENTREPRISE_CREATED: 'Entreprise créée', ENTREPRISE_UPDATED: 'Entreprise modifiée', ENTREPRISE_DELETED: 'Entreprise supprimée',
+  COUNTER_UPDATED: 'Solde modifié', COUNTER_DELETED: 'Compteur supprimé',
+  SYSTEM_SETTINGS_UPDATED: 'Paramètres modifiés', SYSTEM_BACKUP_CREATED: 'Sauvegarde créée',
+  SYSTEM_BACKUP_DOWNLOADED: 'Sauvegarde téléchargée',
+  SYSTEM_MAINTENANCE_TOGGLED: 'Maintenance modifiée', SYSTEM_RESTART_REQUESTED: 'Redémarrage demandé',
+  SYSTEM_TEST_EMAIL_SENT: 'Email test envoyé',
+};
+
+const ACTION_GROUPS = [
+  { label: 'Authentification', actions: ['LOGIN_SUCCESS','LOGIN_FAILED','LOGOUT','ACCOUNT_LOCKED','PASSWORD_CHANGED','PASSWORD_RESET_REQUEST','PASSWORD_RESET_SUCCESS','TWO_FACTOR_ENABLED','TWO_FACTOR_DISABLED','TWO_FACTOR_VERIFIED','INVITE_EXPIRED'] },
+  { label: 'Congés', actions: ['CONGE_CREATED','CONGE_UPDATED','CONGE_DELETED','CONGE_APPROVED','CONGE_REJECTED','CONGE_RESERVE_ACTIVATED','CONGE_RESERVE_SKIPPED','CONGE_OVERLAP_BLOCKED','QUOTA_INSUFFICIENT'] },
+  { label: 'Imports / Exports', actions: ['IMPORT_USERS_SUCCESS','IMPORT_USERS_FAILED','IMPORT_CONGES_SUCCESS','IMPORT_CONGES_FAILED','EXPORT_CSV_GENERATED'] },
+  { label: 'Utilisateurs', actions: ['USER_CREATED','USER_UPDATED','USER_DELETED','ROLE_CHANGED'] },
+  { label: 'Entreprises', actions: ['ENTREPRISE_CREATED','ENTREPRISE_UPDATED','ENTREPRISE_DELETED'] },
+  { label: 'Soldes', actions: ['COUNTER_UPDATED','COUNTER_DELETED'] },
+  { label: 'Système', actions: ['SYSTEM_SETTINGS_UPDATED','SYSTEM_BACKUP_CREATED','SYSTEM_BACKUP_DOWNLOADED','SYSTEM_MAINTENANCE_TOGGLED','SYSTEM_RESTART_REQUESTED','SYSTEM_TEST_EMAIL_SENT'] },
+];
+
 const getActionBadge = (action) => (
-  <span className={`badge ${ACTION_BADGE_CLASS[action] || 'info'}`}>{action}</span>
+  <span className={`badge ${ACTION_BADGE_CLASS[action] || 'info'}`}>{ACTION_LABELS[action] || action}</span>
 );
 
 const getEntityIcon = (entity) => {
@@ -82,6 +133,8 @@ const AuditLogs = () => {
   const [actionFilter, setActionFilter] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('DESC');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const alert = useAlert();
@@ -112,12 +165,16 @@ const AuditLogs = () => {
       const nextCompanyFilter = overrides.companyFilter ?? companyFilter;
       const nextDateDebut     = overrides.dateDebut     ?? dateDebut;
       const nextDateFin       = overrides.dateFin       ?? dateFin;
+      const nextSortBy        = overrides.sortBy        ?? sortBy;
+      const nextSortOrder     = overrides.sortOrder     ?? sortOrder;
 
       if (nextActionFilter)  params.action        = nextActionFilter;
       if (nextUserFilter)    params.utilisateur_id = nextUserFilter;
       if (nextCompanyFilter) params.entreprise_id  = nextCompanyFilter;
       if (nextDateDebut)     params.dateDebut      = nextDateDebut;
       if (nextDateFin)       params.dateFin        = nextDateFin;
+      params.sortBy    = nextSortBy;
+      params.sortOrder = nextSortOrder;
 
       const { data } = await auditService.getAll(params);
       setLogs(data.logs || []);
@@ -129,7 +186,7 @@ const AuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, userFilter, companyFilter, actionFilter, dateDebut, dateFin]);
+  }, [currentPage, userFilter, companyFilter, actionFilter, dateDebut, dateFin, sortBy, sortOrder]);
 
   useEffect(() => {
     loadLogs();
@@ -141,8 +198,10 @@ const AuditLogs = () => {
     setActionFilter('');
     setDateDebut('');
     setDateFin('');
+    setSortBy('date');
+    setSortOrder('DESC');
     setCurrentPage(1);
-    loadLogs({ page: 1, userFilter: '', companyFilter: '', actionFilter: '', dateDebut: '', dateFin: '' });
+    loadLogs({ page: 1, userFilter: '', companyFilter: '', actionFilter: '', dateDebut: '', dateFin: '', sortBy: 'date', sortOrder: 'DESC' });
   };
 
   const exportLogs = async () => {
@@ -220,13 +279,13 @@ const AuditLogs = () => {
               <FilterLabel>Action</FilterLabel>
               <Form.Select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}>
                 <option value="">Toutes les actions</option>
-                <option value="LOGIN_SUCCESS">Connexion réussie</option>
-                <option value="LOGIN_FAILED">Connexion échouée</option>
-                <option value="SYSTEM_SETTINGS_UPDATED">Paramètres système modifiés</option>
-                <option value="SYSTEM_MAINTENANCE_TOGGLED">Mode maintenance modifié</option>
-                <option value="SYSTEM_BACKUP_CREATED">Sauvegarde créée</option>
-                <option value="SYSTEM_TEST_EMAIL_SENT">Email de test envoyé</option>
-                <option value="SYSTEM_RESTART_REQUESTED">Redémarrage demandé</option>
+                {ACTION_GROUPS.map(group => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.actions.map(a => (
+                      <option key={a} value={a}>{ACTION_LABELS[a] || a}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </Form.Select>
             </Col>
 
@@ -240,8 +299,27 @@ const AuditLogs = () => {
               <Form.Control type="date" value={dateFin} onChange={(e) => { setDateFin(e.target.value); setCurrentPage(1); }} />
             </Col>
 
+            {/* Tri */}
+            <Col xs={6} sm={4} md={2}>
+              <FilterLabel>Trier par</FilterLabel>
+              <Form.Select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}>
+                <option value="date">Date</option>
+                <option value="action">Action</option>
+                <option value="entity">Entité</option>
+                <option value="utilisateur">Salarié</option>
+                <option value="entreprise">Entreprise</option>
+              </Form.Select>
+            </Col>
+            <Col xs={6} sm={2} md={1}>
+              <FilterLabel>Ordre</FilterLabel>
+              <Form.Select value={sortOrder} onChange={(e) => { setSortOrder(e.target.value); setCurrentPage(1); }}>
+                <option value="DESC">↓ Récent</option>
+                <option value="ASC">↑ Ancien</option>
+              </Form.Select>
+            </Col>
+
             {/* Compteur + reset — séparé visuellement sur mobile via CSS */}
-            <Col xs={12} md={3} className="audit-filters-actions">
+            <Col xs={12} md={2} className="audit-filters-actions">
               <span className="badge info">
                 {total} résultat{total > 1 ? 's' : ''}
               </span>
@@ -316,12 +394,32 @@ const AuditLogs = () => {
                     <Table hover responsive>
                       <thead>
                         <tr>
-                          <th>Date/Heure</th>
-                          <th>Utilisateur</th>
-                          <th>Action</th>
-                          <th>Entité</th>
-                          {/* Entreprise masquée sur md étroit, visible dès lg */}
-                          <th className="d-none d-lg-table-cell">Entreprise</th>
+                          {[
+                            { key: 'date',        label: 'Date/Heure' },
+                            { key: 'utilisateur', label: 'Salarié' },
+                            { key: 'action',      label: 'Action' },
+                            { key: 'entity',      label: 'Entité' },
+                          ].map(col => (
+                            <th key={col.key} style={{ cursor: 'pointer', userSelect: 'none' }}
+                              onClick={() => {
+                                if (sortBy === col.key) { setSortOrder(o => o === 'ASC' ? 'DESC' : 'ASC'); }
+                                else { setSortBy(col.key); setSortOrder('DESC'); }
+                                setCurrentPage(1);
+                              }}
+                            >
+                              {col.label}
+                              {sortBy === col.key ? (sortOrder === 'DESC' ? ' ↓' : ' ↑') : ' ·'}
+                            </th>
+                          ))}
+                          <th className="d-none d-lg-table-cell" style={{ cursor: 'pointer', userSelect: 'none' }}
+                            onClick={() => {
+                              if (sortBy === 'entreprise') { setSortOrder(o => o === 'ASC' ? 'DESC' : 'ASC'); }
+                              else { setSortBy('entreprise'); setSortOrder('ASC'); }
+                              setCurrentPage(1);
+                            }}
+                          >
+                            Entreprise{sortBy === 'entreprise' ? (sortOrder === 'DESC' ? ' ↓' : ' ↑') : ' ·'}
+                          </th>
                           <th>IP</th>
                           <th></th>
                         </tr>
