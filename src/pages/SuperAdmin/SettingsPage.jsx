@@ -1079,8 +1079,10 @@ const SystemSettings = () => {
                       {accrualResults.simulated ? 'SIMULATION' : 'APPLIQUÉ'}
                     </span>
                     <span className="small text-muted">
-                      Crédits posés : <strong>{accrualResults.total_applied ?? '—'}</strong> ·
-                      Ignorés (déjà crédités) : <strong>{accrualResults.total_skipped ?? '—'}</strong>
+                      {accrualResults.simulated
+                        ? <>À créditer : <strong>{accrualResults.total_to_apply ?? '—'}</strong></>
+                        : <>Crédits posés : <strong>{accrualResults.total_applied ?? '—'}</strong></>
+                      } · Ignorés (déjà crédités) : <strong>{accrualResults.total_skipped ?? '—'}</strong>
                     </span>
                   </div>
                   <div style={{ overflowX: 'auto' }}>
@@ -1088,7 +1090,7 @@ const SystemSettings = () => {
                       <thead>
                         <tr>
                           <th>Entreprise</th>
-                          <th className="text-center">Posés</th>
+                          <th className="text-center">{accrualResults.simulated ? 'À créditer' : 'Posés'}</th>
                           <th className="text-center">Ignorés</th>
                           <th className="text-center">Jours ajoutés</th>
                           <th>Statut</th>
@@ -1098,7 +1100,7 @@ const SystemSettings = () => {
                         {(accrualResults.results || []).map((r) => (
                           <tr key={r.entreprise_id} className={r.error ? 'table-danger' : ''}>
                             <td>{r.nom}</td>
-                            <td className="text-center">{r.error ? '—' : (r.applied ?? 0)}</td>
+                            <td className="text-center">{r.error ? '—' : (accrualResults.simulated ? (r.to_apply ?? 0) : (r.applied ?? 0))}</td>
                             <td className="text-center">{r.error ? '—' : (r.skipped ?? 0)}</td>
                             <td className="text-center">{r.error ? '—' : (r.total_added ?? 0)}</td>
                             <td>{r.error ? <span className="text-danger small">{r.error}</span> : <span className="text-success small">OK</span>}</td>
