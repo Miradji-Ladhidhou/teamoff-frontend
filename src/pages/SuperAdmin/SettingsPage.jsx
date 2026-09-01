@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Tab, Tabs, Table, Modal } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
 import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } from 'react-icons/fa';
-import { settingsService } from '../../services/api';
+import { settingsService, quotasService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -1042,7 +1042,7 @@ const SystemSettings = () => {
                       setAccrualLoading(true);
                       setAccrualResults(null);
                       try {
-                        const { data } = await api.quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: false });
+                        const { data } = await quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: false });
                         setAccrualResults({ ...data, simulated: true });
                       } catch (e) {
                         alert.error(e.response?.data?.message || 'Erreur simulation');
@@ -1059,7 +1059,7 @@ const SystemSettings = () => {
                       setAccrualLoading(true);
                       setAccrualResults(null);
                       try {
-                        const { data } = await api.quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: true });
+                        const { data } = await quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: true });
                         setAccrualResults({ ...data, simulated: false });
                         alert.showSuccessModal(data.message, { autoCloseMs: 5000 });
                       } catch (e) {
