@@ -59,6 +59,13 @@ const SystemSettings = () => {
   const [historySortBy, setHistorySortBy] = useState('date');
   const [historySortOrder, setHistorySortOrder] = useState('desc');
 
+  // Onglet Quotas — crédit mensuel manuel
+  const now = new Date();
+  const [accrualYear,    setAccrualYear]    = useState(now.getFullYear());
+  const [accrualMonth,   setAccrualMonth]   = useState(now.getMonth() + 1);
+  const [accrualResults, setAccrualResults] = useState(null);
+  const [accrualLoading, setAccrualLoading] = useState(false);
+
   useEffect(() => {
     loadSettings();
     loadSystemInfo();
@@ -402,6 +409,7 @@ const SystemSettings = () => {
           <option value="database">Base de données</option>
           <option value="system">Informations système</option>
           <option value="history">Historique</option>
+          <option value="quotas">Quotas</option>
         </Form.Select>
       </div>
 
@@ -990,6 +998,117 @@ const SystemSettings = () => {
                   Suivant
                 </Button>
               </div>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        <Tab eventKey="quotas" title="Quotas">
+          <Card className="settings-card">
+            <Card.Body>
+              <h5 className="mb-1">Crédit mensuel — rattrapage manuel</h5>
+              <p className="text-muted small mb-4">
+                Permet de simuler (audit) puis d'appliquer le crédit mensuel pour toutes les entreprises actives.
+                Utilisez le mode simulation d'abord pour vérifier les montants avant d'appliquer.
+              </p>
+
+              <Row className="g-3 align-items-end mb-4">
+                <Col xs={6} md={3}>
+                  <Form.Group>
+                    <Form.Label className="small fw-semibold">Année</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min={2020}
+                      max={2100}
+                      value={accrualYear}
+                      onChange={(e) => setAccrualYear(Number(e.target.value))}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={6} md={3}>
+                  <Form.Group>
+                    <Form.Label className="small fw-semibold">Mois</Form.Label>
+                    <Form.Select value={accrualMonth} onChange={(e) => setAccrualMonth(Number(e.target.value))}>
+                      {['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((m, i) => (
+                        <option key={i+1} value={i+1}>{m}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={6} className="d-flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline-primary"
+                    disabled={accrualLoading}
+                    onClick={async () => {
+                      setAccrualLoading(true);
+                      setAccrualResults(null);
+                      try {
+                        const { data } = await api.quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: false });
+                        setAccrualResults({ ...data, simulated: true });
+                      } catch (e) {
+                        alert.error(e.response?.data?.message || 'Erreur simulation');
+                      } finally { setAccrualLoading(false); }
+                    }}
+                  >
+                    {accrualLoading ? 'Chargement…' : 'Simuler (audit)'}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    disabled={accrualLoading}
+                    onClick={async () => {
+                      if (!window.confirm(`Appliquer le crédit ${accrualYear}-${String(accrualMonth).padStart(2,'0')} pour TOUTES les entreprises ?`)) return;
+                      setAccrualLoading(true);
+                      setAccrualResults(null);
+                      try {
+                        const { data } = await api.quotasService.monthlyAccrual({ annee: accrualYear, mois: accrualMonth, apply: true });
+                        setAccrualResults({ ...data, simulated: false });
+                        alert.showSuccessModal(data.message, { autoCloseMs: 5000 });
+                      } catch (e) {
+                        alert.error(e.response?.data?.message || 'Erreur application');
+                      } finally { setAccrualLoading(false); }
+                    }}
+                  >
+                    Appliquer le crédit
+                  </Button>
+                </Col>
+              </Row>
+
+              {accrualResults && (
+                <>
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <span className={`badge ${accrualResults.simulated ? 'bg-secondary' : 'bg-success'} fs-6`}>
+                      {accrualResults.simulated ? 'SIMULATION' : 'APPLIQUÉ'}
+                    </span>
+                    <span className="small text-muted">
+                      Crédits posés : <strong>{accrualResults.total_applied ?? '—'}</strong> ·
+                      Ignorés (déjà crédités) : <strong>{accrualResults.total_skipped ?? '—'}</strong>
+                    </span>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <Table bordered size="sm" className="settings-table mb-0">
+                      <thead>
+                        <tr>
+                          <th>Entreprise</th>
+                          <th className="text-center">Posés</th>
+                          <th className="text-center">Ignorés</th>
+                          <th className="text-center">Jours ajoutés</th>
+                          <th>Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(accrualResults.results || []).map((r) => (
+                          <tr key={r.entreprise_id} className={r.error ? 'table-danger' : ''}>
+                            <td>{r.nom}</td>
+                            <td className="text-center">{r.error ? '—' : (r.applied ?? 0)}</td>
+                            <td className="text-center">{r.error ? '—' : (r.skipped ?? 0)}</td>
+                            <td className="text-center">{r.error ? '—' : (r.total_added ?? 0)}</td>
+                            <td>{r.error ? <span className="text-danger small">{r.error}</span> : <span className="text-success small">OK</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </>
+              )}
             </Card.Body>
           </Card>
         </Tab>
