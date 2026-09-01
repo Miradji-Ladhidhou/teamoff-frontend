@@ -53,6 +53,7 @@ const SuperAdminServicesPage = lazy(() => import('./pages/SuperAdmin/ServicesPag
 const SystemSettings = lazy(() => import('./pages/SuperAdmin/SettingsPage'));
 const MetricsPage = lazy(() => import('./pages/SuperAdmin/MetricsPage'));
 const AuditLogs = lazy(() => import('./pages/SuperAdmin/AuditLogsPage'));
+const EmailLogsPage = lazy(() => import('./pages/SuperAdmin/EmailLogsPage'));
 const SALeavesPage = lazy(() => import('./pages/SuperAdmin/SALeavesPage'));
 const SAAbsencesPage = lazy(() => import('./pages/SuperAdmin/SAAbsencesPage'));
 
@@ -335,6 +336,7 @@ function App() {
             <Route path="holidays" element={<JoursFeriesPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="audit" element={<AuditLogs />} />
+            <Route path="email-logs" element={<EmailLogsPage />} />
             <Route path="settings" element={<SystemSettings />} />
             <Route path="profile" element={<MyProfilePage />} />
             <Route path="legal" element={<LegalPage />} />

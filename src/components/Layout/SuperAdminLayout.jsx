@@ -5,7 +5,7 @@ import { Nav, Offcanvas, Button, Badge } from 'react-bootstrap';
 import {
   FaSignOutAlt, FaShieldAlt, FaHome, FaBuilding, FaUsers,
   FaCalendarCheck, FaChartLine, FaDownload, FaCalendarTimes,
-  FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt, FaUser
+  FaBell, FaHistory, FaCog, FaEllipsisH, FaCalendarAlt, FaUser, FaEnvelope
 } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
@@ -19,7 +19,7 @@ const iconMap = {
   home: FaHome, shield: FaShieldAlt, business: FaBuilding, users: FaUsers,
   leave: FaCalendarCheck, calendar: FaCalendarAlt, chart: FaChartLine,
   download: FaDownload, holiday: FaCalendarTimes, bell: FaBell,
-  audit: FaHistory, settings: FaCog, more: FaEllipsisH
+  audit: FaHistory, settings: FaCog, more: FaEllipsisH, email: FaEnvelope
 };
 
 const superadminTopbarNotes = {
@@ -34,6 +34,7 @@ const superadminTopbarNotes = {
   '/superadmin/holidays': 'Parametrez les jours feries globaux',
   '/superadmin/notifications': 'Supervisez les notifications systeme',
   '/superadmin/audit': 'Tracez les actions sensibles',
+  '/superadmin/email-logs': 'Consultez l historique des emails envoyés',
   '/superadmin/settings': 'Ajustez les reglages plateforme',
   '/superadmin/profile': 'Gerez votre compte et votre securite',
   '/help': 'Accedez a la documentation',

@@ -381,6 +381,10 @@ export const auditService = {
   getAll: (params = {}) => api.get('/audit', { params }),
 };
 
+export const emailLogsService = {
+  getAll: (params = {}) => api.get('/email-logs', { params }),
+};
+
 export const settingsService = {
   getAll: () => api.get('/settings'),
   getHistory: (params = {}) => api.get('/settings/history', { params }),

@@ -63,6 +63,7 @@ export const roleNavigation = {
     { path: '/superadmin/holidays', label: 'Jours fériés & bloqués', icon: 'holiday', section: 'secondary' },
     { path: '/superadmin/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' },
     { path: '/superadmin/audit', label: 'Audit', icon: 'audit', section: 'secondary' },
+    { path: '/superadmin/email-logs', label: 'Emails', icon: 'email', section: 'secondary' },
     { path: '/superadmin/settings', label: 'Réglages', icon: 'settings', section: 'secondary' },
     { path: '/help', label: 'Prise en main', icon: 'info', section: 'secondary' }
   ]
