@@ -755,32 +755,35 @@ const SystemSettings = () => {
             <Card.Body>
               {driveStatus === null ? (
                 <span className="text-muted small">Chargement…</span>
-              ) : driveStatus.connected ? (
-                <div className="d-flex align-items-center gap-3 flex-wrap">
-                  <span className="badge bg-success">Connecté</span>
-                  {driveStatus.email && <span className="small text-muted">{driveStatus.email}</span>}
-                  {driveStatus.source === 'env' && (
-                    <span className="badge bg-secondary small">via variable d'env</span>
-                  )}
-                  {driveStatus.source === 'db' && (
-                    <Button
-                      variant="outline-danger" size="sm"
-                      onClick={async () => {
-                        if (!window.confirm('Déconnecter Google Drive ?')) return;
-                        try {
-                          await googleDriveAuthService.disconnect();
-                          setDriveStatus({ connected: false });
-                          alert.showSuccessModal('Google Drive déconnecté.', { autoCloseMs: 3000 });
-                        } catch { alert.error('Erreur lors de la déconnexion.'); }
-                      }}
-                    >Déconnecter</Button>
-                  )}
-                </div>
               ) : (
                 <div className="d-flex align-items-center gap-3 flex-wrap">
-                  <span className="badge bg-secondary">Non connecté</span>
+                  {driveStatus.connected ? (
+                    <>
+                      <span className="badge bg-success">Connecté</span>
+                      {driveStatus.email && <span className="small text-muted">{driveStatus.email}</span>}
+                      {driveStatus.source === 'env' && (
+                        <span className="badge bg-warning text-dark small" title="Token expiré ? Utilisez le bouton ci-dessous pour reconnecter via OAuth.">via variable d'env</span>
+                      )}
+                      {driveStatus.source === 'db' && (
+                        <Button
+                          variant="outline-danger" size="sm"
+                          onClick={async () => {
+                            if (!window.confirm('Déconnecter Google Drive ?')) return;
+                            try {
+                              await googleDriveAuthService.disconnect();
+                              setDriveStatus({ connected: false });
+                              alert.showSuccessModal('Google Drive déconnecté.', { autoCloseMs: 3000 });
+                            } catch { alert.error('Erreur lors de la déconnexion.'); }
+                          }}
+                        >Déconnecter</Button>
+                      )}
+                    </>
+                  ) : (
+                    <span className="badge bg-secondary">Non connecté</span>
+                  )}
                   <Button
-                    variant="outline-primary" size="sm"
+                    variant={driveStatus.connected && driveStatus.source === 'env' ? 'outline-warning' : 'outline-primary'}
+                    size="sm"
                     disabled={driveConnecting}
                     onClick={async () => {
                       setDriveConnecting(true);
@@ -793,9 +796,12 @@ const SystemSettings = () => {
                       }
                     }}
                   >
-                    {driveConnecting ? 'Redirection…' : '🔗 Connecter un compte Google'}
+                    {driveConnecting
+                      ? 'Redirection…'
+                      : driveStatus.connected && driveStatus.source === 'env'
+                        ? '🔄 Reconnecter via OAuth'
+                        : '🔗 Connecter un compte Google'}
                   </Button>
-                  <span className="small text-muted">Requiert GOOGLE_OAUTH_CLIENT_ID et CLIENT_SECRET sur le serveur.</span>
                 </div>
               )}
             </Card.Body>
