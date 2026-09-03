@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Tab, Tabs, Table, Modal } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
 import { FaSave, FaDatabase, FaServer, FaShieldAlt, FaEnvelope, FaDownload } from 'react-icons/fa';
-import { settingsService, quotasService } from '../../services/api';
+import { settingsService, quotasService, googleDriveAuthService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import AsyncButton from '../../components/AsyncButton';
 
@@ -49,6 +49,8 @@ const SystemSettings = () => {
   const [confirmModal, setConfirmModal] = useState({ show: false, action: '', label: '', payload: null });
   const [driveBackups, setDriveBackups] = useState([]);
   const [loadingDriveBackups, setLoadingDriveBackups] = useState(false);
+  const [driveStatus, setDriveStatus] = useState(null); // null=chargement, {connected, email, source}
+  const [driveConnecting, setDriveConnecting] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'general');
   const [testEmailRecipient, setTestEmailRecipient] = useState('');
   const [settingsHistory, setSettingsHistory] = useState([]);
@@ -69,7 +71,22 @@ const SystemSettings = () => {
   useEffect(() => {
     loadSettings();
     loadSystemInfo();
-  }, []);
+    // Statut connexion Google Drive
+    googleDriveAuthService.getStatus()
+      .then(({ data }) => setDriveStatus(data))
+      .catch(() => setDriveStatus({ connected: false }));
+    // Retour OAuth Google (redirect depuis backend)
+    const driveConnected = searchParams.get('drive_connected');
+    const driveError     = searchParams.get('drive_error');
+    if (driveConnected === 'true') {
+      alert.showSuccessModal('Google Drive connecté avec succès !', { autoCloseMs: 4000 });
+      googleDriveAuthService.getStatus().then(({ data }) => setDriveStatus(data)).catch(() => {});
+      setSearchParams(p => { p.delete('drive_connected'); return p; });
+    } else if (driveError) {
+      alert.error(`Erreur connexion Google Drive : ${driveError}`);
+      setSearchParams(p => { p.delete('drive_error'); return p; });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadHistory();
@@ -729,6 +746,58 @@ const SystemSettings = () => {
                   </>
                 ),
               })}
+            </Card.Body>
+          </Card>
+
+          {/* Connexion Google Drive */}
+          <Card className="mt-3">
+            <Card.Header><h5 className="mb-0">☁️ Connexion Google Drive</h5></Card.Header>
+            <Card.Body>
+              {driveStatus === null ? (
+                <span className="text-muted small">Chargement…</span>
+              ) : driveStatus.connected ? (
+                <div className="d-flex align-items-center gap-3 flex-wrap">
+                  <span className="badge bg-success">Connecté</span>
+                  {driveStatus.email && <span className="small text-muted">{driveStatus.email}</span>}
+                  {driveStatus.source === 'env' && (
+                    <span className="badge bg-secondary small">via variable d'env</span>
+                  )}
+                  {driveStatus.source === 'db' && (
+                    <Button
+                      variant="outline-danger" size="sm"
+                      onClick={async () => {
+                        if (!window.confirm('Déconnecter Google Drive ?')) return;
+                        try {
+                          await googleDriveAuthService.disconnect();
+                          setDriveStatus({ connected: false });
+                          alert.showSuccessModal('Google Drive déconnecté.', { autoCloseMs: 3000 });
+                        } catch { alert.error('Erreur lors de la déconnexion.'); }
+                      }}
+                    >Déconnecter</Button>
+                  )}
+                </div>
+              ) : (
+                <div className="d-flex align-items-center gap-3 flex-wrap">
+                  <span className="badge bg-secondary">Non connecté</span>
+                  <Button
+                    variant="outline-primary" size="sm"
+                    disabled={driveConnecting}
+                    onClick={async () => {
+                      setDriveConnecting(true);
+                      try {
+                        const { data } = await googleDriveAuthService.getAuthUrl();
+                        window.location.href = data.url;
+                      } catch (e) {
+                        alert.error(e.response?.data?.message || 'Impossible de générer l\'URL OAuth.');
+                        setDriveConnecting(false);
+                      }
+                    }}
+                  >
+                    {driveConnecting ? 'Redirection…' : '🔗 Connecter un compte Google'}
+                  </Button>
+                  <span className="small text-muted">Requiert GOOGLE_OAUTH_CLIENT_ID et CLIENT_SECRET sur le serveur.</span>
+                </div>
+              )}
             </Card.Body>
           </Card>
 

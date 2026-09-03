@@ -385,6 +385,12 @@ export const emailLogsService = {
   getAll: (params = {}) => api.get('/email-logs', { params }),
 };
 
+export const googleDriveAuthService = {
+  getStatus:    ()         => api.get('/google-drive/status'),
+  getAuthUrl:   ()         => api.get('/google-drive/auth-url'),
+  disconnect:   ()         => api.delete('/google-drive/disconnect'),
+};
+
 export const settingsService = {
   getAll: () => api.get('/settings'),
   getHistory: (params = {}) => api.get('/settings/history', { params }),
