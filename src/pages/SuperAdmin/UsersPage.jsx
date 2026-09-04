@@ -586,13 +586,13 @@ const UsersManagement = () => {
                             <FaShieldAlt />
                           </AsyncButton>
                         )}
-                        {targetUser.email !== PROTECTED_EMAIL && isSuperAdmin && (
+                        {targetUser.email !== PROTECTED_EMAIL && (
                           <AsyncButton
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleDelete(targetUser.id)}
                             title="Supprimer"
-                            disabled={targetUser.id === user?.id}
+                            disabled={!isSuperAdmin || targetUser.id === user?.id}
                             isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
                             loadingText="">
                             <FaTrash />
@@ -789,10 +789,10 @@ const UsersManagement = () => {
               <FaShieldAlt className="me-1" />Désactiver 2FA
             </AsyncButton>
           )}
-          {selectedUserDetails?.email !== PROTECTED_EMAIL && isSuperAdmin && (
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
             <AsyncButton variant="outline-danger" size="sm"
               onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
-              disabled={selectedUserDetails?.id === user?.id}
+              disabled={!isSuperAdmin || selectedUserDetails?.id === user?.id}
               isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
               loadingText="">
               <FaTrash className="me-1" />Supprimer
