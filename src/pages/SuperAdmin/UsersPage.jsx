@@ -556,7 +556,7 @@ const UsersManagement = () => {
                         {!isSuperAdmin && (
                           <Button variant="outline-info" size="sm" onClick={() => navigate(`/soldes?userId=${targetUser.id}`)} title="Soldes"><FaCoins /></Button>
                         )}
-                        {targetUser.email !== PROTECTED_EMAIL && isSuperAdmin && (
+                        {targetUser.email !== PROTECTED_EMAIL && (
                           <AsyncButton
                             variant={targetUser.statut === 'actif' ? 'outline-warning' : 'outline-success'}
                             size="sm"
@@ -586,13 +586,13 @@ const UsersManagement = () => {
                             <FaShieldAlt />
                           </AsyncButton>
                         )}
-                        {targetUser.email !== PROTECTED_EMAIL && (
+                        {targetUser.email !== PROTECTED_EMAIL && isSuperAdmin && (
                           <AsyncButton
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleDelete(targetUser.id)}
                             title="Supprimer"
-                            disabled={!isSuperAdmin || targetUser.id === user?.id}
+                            disabled={targetUser.id === user?.id}
                             isLoading={mutateUserAction.isRunning && activeUserActionId === targetUser.id}
                             loadingText="">
                             <FaTrash />
@@ -769,7 +769,7 @@ const UsersManagement = () => {
               <FaEnvelope className="me-1" />Renvoyer invitation
             </AsyncButton>
           )}
-          {selectedUserDetails?.email !== PROTECTED_EMAIL && isSuperAdmin && (
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
             <AsyncButton
               variant={selectedUserDetails?.statut === 'actif' ? 'outline-warning' : 'outline-success'}
               size="sm"
@@ -789,10 +789,10 @@ const UsersManagement = () => {
               <FaShieldAlt className="me-1" />Désactiver 2FA
             </AsyncButton>
           )}
-          {selectedUserDetails?.email !== PROTECTED_EMAIL && (
+          {selectedUserDetails?.email !== PROTECTED_EMAIL && isSuperAdmin && (
             <AsyncButton variant="outline-danger" size="sm"
               onClick={() => { closeDetailsModal(); handleDelete(selectedUserDetails.id); }}
-              disabled={!isSuperAdmin || selectedUserDetails?.id === user?.id}
+              disabled={selectedUserDetails?.id === user?.id}
               isLoading={mutateUserAction.isRunning && activeUserActionId === selectedUserDetails?.id}
               loadingText="">
               <FaTrash className="me-1" />Supprimer
