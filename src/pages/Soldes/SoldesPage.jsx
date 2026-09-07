@@ -72,7 +72,7 @@ const SoldesPage = () => {
             const match = filteredUsers.find((u) => String(u.id) === String(urlUserId));
             if (match) return match.id;
           }
-          return filteredUsers[0]?.id || '';
+          return '';
         });
       } catch {
         alert.error('Impossible de charger les données.');
@@ -226,7 +226,7 @@ const SoldesPage = () => {
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
         >
-          {users.length === 0 && <option value="">Aucun utilisateur</option>}
+          <option value="">— Voir tous les employés —</option>
           {users.map((u) => (
             <option key={u.id} value={u.id}>
               {u.prenom} {u.nom}{u.service ? ` — ${u.service}` : ''}
@@ -250,7 +250,34 @@ const SoldesPage = () => {
         </div>
       )}
 
-      {loadingCounters ? (
+      {!selectedUserId ? (
+        <div className="conges-list-wrap">
+          <Table hover className="users-dense-table mb-0">
+            <thead>
+              <tr>
+                <th>Employé</th>
+                <th>Service</th>
+                <th>Rôle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr><td colSpan={3} className="text-center text-muted py-3">Aucun employé</td></tr>
+              ) : users.map((u) => (
+                <tr
+                  key={u.id}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setSelectedUserId(u.id)}
+                >
+                  <td><strong>{u.prenom} {u.nom}</strong></td>
+                  <td className="text-muted">{u.service || '—'}</td>
+                  <td className="text-muted" style={{ fontSize: 12 }}>{u.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      ) : loadingCounters ? (
         <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
       ) : counters.length === 0 ? (
         <div className="text-center py-5">
