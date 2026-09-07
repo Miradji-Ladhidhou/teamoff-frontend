@@ -27,6 +27,7 @@ const SoldesPage = () => {
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [counters, setCounters] = useState([]);
   const [allCounters, setAllCounters] = useState([]);
+  const [allSort, setAllSort] = useState({ col: 'employe', dir: 'asc' });
   const [loading, setLoading] = useState(true);
   const [loadingCounters, setLoadingCounters] = useState(false);
   const [reportAutorise, setReportAutorise] = useState(false);
@@ -111,6 +112,42 @@ const SoldesPage = () => {
     () => users.find((u) => String(u.id) === String(selectedUserId)),
     [users, selectedUserId]
   );
+
+  const sortedAllCounters = useMemo(() => {
+    const sign = allSort.dir === 'asc' ? 1 : -1;
+    return [...allCounters].sort((a, b) => {
+      switch (allSort.col) {
+        case 'employe': {
+          const na = `${a.utilisateur?.nom} ${a.utilisateur?.prenom}`.toLowerCase();
+          const nb = `${b.utilisateur?.nom} ${b.utilisateur?.prenom}`.toLowerCase();
+          return na < nb ? -sign : na > nb ? sign : 0;
+        }
+        case 'type': {
+          const la = (a.conge_type?.libelle || '').toLowerCase();
+          const lb = (b.conge_type?.libelle || '').toLowerCase();
+          return la < lb ? -sign : la > lb ? sign : 0;
+        }
+        case 'n1':    return sign * (toNum(a.n1_disponible) - toNum(b.n1_disponible));
+        case 'n':     return sign * (toNum(a.n_disponible)  - toNum(b.n_disponible));
+        case 'pris':  return sign * (toNum(a.jours_pris)    - toNum(b.jours_pris));
+        case 'solde': return sign * (toNum(a.solde_disponible) - toNum(b.solde_disponible));
+        default: return 0;
+      }
+    });
+  }, [allCounters, allSort]);
+
+  const toggleAllSort = (col) => setAllSort(prev =>
+    prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' }
+  );
+
+  const SortTh = ({ col, children }) => {
+    const active = allSort.col === col;
+    return (
+      <th onClick={() => toggleAllSort(col)} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
+        {children} {active ? (allSort.dir === 'asc' ? '↑' : '↓') : <span style={{ opacity: 0.3 }}>↕</span>}
+      </th>
+    );
+  };
 
   /* ── Ouvrir la modal ── */
   const openModal = (counter = null) => {
@@ -263,19 +300,19 @@ const SoldesPage = () => {
             <Table hover className="users-dense-table mb-0">
               <thead>
                 <tr>
-                  <th>Employé</th>
-                  <th>Type de congé</th>
-                  <th title="Jours N-1 encore disponibles">N-1 restant</th>
-                  <th title="Jours N encore disponibles">N restant</th>
-                  <th>Pris</th>
-                  <th>Solde</th>
+                  <SortTh col="employe">Employé</SortTh>
+                  <SortTh col="type">Type de congé</SortTh>
+                  <SortTh col="n1">N-1 restant</SortTh>
+                  <SortTh col="n">N restant</SortTh>
+                  <SortTh col="pris">Pris</SortTh>
+                  <SortTh col="solde">Solde</SortTh>
                   <th style={{ width: 1 }}></th>
                 </tr>
               </thead>
               <tbody>
-                {allCounters.length === 0 ? (
+                {sortedAllCounters.length === 0 ? (
                   <tr><td colSpan={7} className="text-center text-muted py-3">Aucun solde pour {selectedYear}</td></tr>
-                ) : allCounters.map((counter) => {
+                ) : sortedAllCounters.map((counter) => {
                   const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
                   const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
                   const solde = toNum(counter.solde_disponible);
