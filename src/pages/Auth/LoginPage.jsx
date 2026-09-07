@@ -111,7 +111,7 @@ const LoginPage = () => {
               </div>
 
               {successMessage && (
-                <Alert variant="success" className="py-2 small mb-3">{successMessage}</Alert>
+                <Alert variant="success" className="py-2 small mb-3" style={{ color: '#fff' }}>{successMessage}</Alert>
               )}
 
               {twoFAState.required ? (
