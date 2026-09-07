@@ -254,6 +254,7 @@ export const entreprisesService = {
 export const quotasService = {
   getSolde: (userId, congeTypeId) => api.get(`/quotas/solde/${userId}/${congeTypeId}`),
   getSoldes: (userId, params = {}) => api.get(`/quotas/soldes/${userId}`, { params }),
+  getAllCounters: (params = {}) => api.get('/quotas/counters-all', { params }),
   getUserCounters: (userId, params = {}) => api.get(`/quotas/counters/${userId}`, { params }),
   upsertUserCounter: (userId, data) => api.post(`/quotas/counters/${userId}`, data),
   deleteUserCounter: (counterId) => api.delete(`/quotas/counters/${counterId}`),

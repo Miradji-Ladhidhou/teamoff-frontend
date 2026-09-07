@@ -26,6 +26,7 @@ const SoldesPage = () => {
   const [selectedUserId, setSelectedUserId] = useState(urlUserId || '');
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [counters, setCounters] = useState([]);
+  const [allCounters, setAllCounters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingCounters, setLoadingCounters] = useState(false);
   const [reportAutorise, setReportAutorise] = useState(false);
@@ -85,13 +86,17 @@ const SoldesPage = () => {
 
   /* ── Chargement soldes ── */
   useEffect(() => {
-    if (!selectedUserId) return;
     let cancelled = false;
     const load = async () => {
       setLoadingCounters(true);
       try {
-        const res = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
-        if (!cancelled) setCounters(Array.isArray(res.data?.items) ? res.data.items : []);
+        if (selectedUserId) {
+          const res = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
+          if (!cancelled) setCounters(Array.isArray(res.data?.items) ? res.data.items : []);
+        } else {
+          const res = await quotasService.getAllCounters({ annee: selectedYear });
+          if (!cancelled) setAllCounters(Array.isArray(res.data?.items) ? res.data.items : []);
+        }
       } catch {
         if (!cancelled) alert.error('Impossible de charger les soldes.');
       } finally {
@@ -251,32 +256,60 @@ const SoldesPage = () => {
       )}
 
       {!selectedUserId ? (
-        <div className="conges-list-wrap">
-          <Table hover className="users-dense-table mb-0">
-            <thead>
-              <tr>
-                <th>Employé</th>
-                <th>Service</th>
-                <th>Rôle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr><td colSpan={3} className="text-center text-muted py-3">Aucun employé</td></tr>
-              ) : users.map((u) => (
-                <tr
-                  key={u.id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedUserId(u.id)}
-                >
-                  <td><strong>{u.prenom} {u.nom}</strong></td>
-                  <td className="text-muted">{u.service || '—'}</td>
-                  <td className="text-muted" style={{ fontSize: 12 }}>{u.role}</td>
+        loadingCounters ? (
+          <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
+        ) : (
+          <div className="conges-list-wrap d-none d-md-block">
+            <Table hover className="users-dense-table mb-0">
+              <thead>
+                <tr>
+                  <th>Employé</th>
+                  <th>Type de congé</th>
+                  <th title="Jours N-1 encore disponibles">N-1 restant</th>
+                  <th title="Jours N encore disponibles">N restant</th>
+                  <th>Pris</th>
+                  <th>Solde</th>
+                  <th style={{ width: 1 }}></th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
+              </thead>
+              <tbody>
+                {allCounters.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center text-muted py-3">Aucun solde pour {selectedYear}</td></tr>
+                ) : allCounters.map((counter) => {
+                  const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
+                  const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
+                  const solde = toNum(counter.solde_disponible);
+                  return (
+                    <tr key={counter.id}>
+                      <td>
+                        <span
+                          style={{ cursor: 'pointer', color: 'var(--dk-accent)', fontWeight: 600 }}
+                          onClick={() => setSelectedUserId(counter.utilisateur_id)}
+                        >
+                          {counter.utilisateur?.prenom} {counter.utilisateur?.nom}
+                        </span>
+                        {counter.utilisateur?.service && (
+                          <span className="text-muted ms-1" style={{ fontSize: 11 }}>— {counter.utilisateur.service}</span>
+                        )}
+                      </td>
+                      <td><strong>{counter.conge_type?.libelle || '—'}</strong></td>
+                      <td>{n1Dispo > 0 ? <strong>{n1Dispo.toFixed(1)} j</strong> : <span className="text-muted">—</span>}</td>
+                      <td>{nDispo.toFixed(1)} j</td>
+                      <td>{toNum(counter.jours_pris).toFixed(1)} j</td>
+                      <td><strong style={{ color: solde < 0 ? 'var(--dk-error)' : undefined }}>{solde.toFixed(1)} j</strong></td>
+                      <td>
+                        <div className="d-flex gap-1">
+                          <Button size="sm" variant="outline-primary" onClick={() => { setSelectedUserId(counter.utilisateur_id); setTimeout(() => openModal(counter), 50); }}>Modifier</Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => handleDelete(counter.id)}>Supprimer</Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+        )
       ) : loadingCounters ? (
         <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
       ) : counters.length === 0 ? (
