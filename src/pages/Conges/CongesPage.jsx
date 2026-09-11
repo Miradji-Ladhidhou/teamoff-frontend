@@ -438,8 +438,8 @@ const CongesPage = () => {
         </div>
       </div>
 
-      {/* Filtres statut + tri */}
-      <div className="conges-filter-bar mb-3">
+      {/* Filtres statut */}
+      <div className="conges-filter-bar mb-2">
         {(isAdmin() || (isManager && viewMode === 'all')) && employeeOptions.length > 0 && (
           <Form.Select
             className="conges-filter-bar__search"
@@ -464,9 +464,14 @@ const CongesPage = () => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Tri */}
+      <div className="conges-sort-bar mb-3">
+        <span className="conges-sort-bar__label">Trier par</span>
         <Form.Select
           size="sm"
-          className="conges-filter-bar__sort"
+          className="conges-sort-bar__select"
           value={`${filters.sortBy}__${filters.sortOrder}`}
           onChange={(e) => {
             const [by, order] = e.target.value.split('__');
@@ -474,13 +479,14 @@ const CongesPage = () => {
             setFilters(prev => ({ ...prev, sortBy: by, sortOrder: order }));
           }}
         >
-          <option value="date_demande__desc">Demande — récent</option>
-          <option value="date_demande__asc">Demande — ancien</option>
-          <option value="date_debut__asc">Début — proche</option>
-          <option value="date_debut__desc">Début — lointain</option>
-          <option value="date_fin__asc">Fin — proche</option>
-          <option value="date_fin__desc">Fin — lointain</option>
+          <option value="date_demande__desc">Date demande — récent d'abord</option>
+          <option value="date_demande__asc">Date demande — ancien d'abord</option>
+          <option value="date_debut__asc">Date début — proche d'abord</option>
+          <option value="date_debut__desc">Date début — lointain d'abord</option>
+          <option value="date_fin__asc">Date fin — proche d'abord</option>
+          <option value="date_fin__desc">Date fin — lointain d'abord</option>
         </Form.Select>
+        <span className="conges-sort-bar__count">{sortedConges.length} résultat{sortedConges.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="conges-list-wrap">
