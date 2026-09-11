@@ -205,6 +205,14 @@ export const congesService = {
   },
   importCSVTemplate: (entreprise_id) =>
     api.get('/conges/import/csv/template', { params: { entreprise_id }, responseType: 'blob' }),
+  importReservationsCSV: (file, entreprise_id) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (entreprise_id) form.append('entreprise_id', entreprise_id);
+    return api.post('/conges/import/reservations', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  importReservationsCSVTemplate: (entreprise_id) =>
+    api.get('/conges/import/reservations/template', { params: { entreprise_id }, responseType: 'blob' }),
   // Demandes de modification/annulation de congé validé
   submitActionRequest: (congeId, data) => api.post(`/conges/${congeId}/action-request`, data),
   getActionRequests: (params = {}) => api.get('/conges/action-requests', { params }),

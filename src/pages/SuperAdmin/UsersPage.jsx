@@ -314,10 +314,17 @@ const UsersManagement = () => {
     const eid = isSuperAdmin ? importEntrepriseId : user?.entreprise_id;
     if (!eid) { alert.error('Sélectionnez une entreprise d\'abord'); return; }
     try {
-      const res = importTab === 'employes'
-        ? await api.usersService.importCSVTemplate(eid)
-        : await api.congesService.importCSVTemplate(eid);
-      const filename = importTab === 'employes' ? 'modele_import_employes.csv' : 'modele_import_conges.csv';
+      let res, filename;
+      if (importTab === 'employes') {
+        res = await api.usersService.importCSVTemplate(eid);
+        filename = 'modele_import_employes.csv';
+      } else if (importTab === 'reservations') {
+        res = await api.congesService.importReservationsCSVTemplate(eid);
+        filename = 'modele_import_reservations.csv';
+      } else {
+        res = await api.congesService.importCSVTemplate(eid);
+        filename = 'modele_import_conges.csv';
+      }
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
@@ -337,7 +344,9 @@ const UsersManagement = () => {
     try {
       const res = importTab === 'employes'
         ? await api.usersService.importCSV(importFile, eid)
-        : await api.congesService.importCSV(importFile, eid);
+        : importTab === 'reservations'
+          ? await api.congesService.importReservationsCSV(importFile, eid)
+          : await api.congesService.importCSV(importFile, eid);
       setImportResult(res.data);
       if (importTab === 'employes') loadUsers();
     } catch (e) {
@@ -840,13 +849,23 @@ const UsersManagement = () => {
             >
               Congés
             </button>
+            <button
+              type="button"
+              className={`import-tab-btn${importTab === 'reservations' ? ' import-tab-btn--active' : ''}`}
+              onClick={() => switchImportTab('reservations')}
+              disabled={importLoading}
+            >
+              Réservations
+            </button>
           </div>
 
           {/* Description */}
           <p className="text-muted small mb-3">
             {importTab === 'employes'
               ? 'Créez des employés et initialisez leurs soldes de congés en une opération. Les emails déjà existants seront ignorés (soldes mis à jour quand même). Chaque nouvel employé reçoit une invitation par email pour définir son mot de passe.'
-              : 'Importez l\'historique des congés des salariés. Téléchargez le modèle — les emails des salariés actifs sont pré-remplis.'}
+              : importTab === 'reservations'
+                ? 'Importez des réservations de congés N+1 (solde insuffisant). Le statut est automatiquement défini à "réservé". Quand le solde devient disponible, les réservations sont activées automatiquement.'
+                : 'Importez l\'historique des congés des salariés. Téléchargez le modèle — les emails des salariés actifs sont pré-remplis.'}
           </p>
 
           {/* Ligne actions */}
@@ -888,6 +907,17 @@ const UsersManagement = () => {
               {importTab === 'conges' && importResult.created?.length > 0 && (
                 <div className="import-result__section">
                   <div className="import-result__label">Congés créés ({importResult.created.length})</div>
+                  <ul className="import-result__list">
+                    {importResult.created.map((c, i) => (
+                      <li key={i}>{c.email} — {c.type_conge} du {c.date_debut} au {c.date_fin} ({c.jours_calcules} j)</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {importTab === 'reservations' && importResult.created?.length > 0 && (
+                <div className="import-result__section">
+                  <div className="import-result__label">Réservations créées ({importResult.created.length})</div>
                   <ul className="import-result__list">
                     {importResult.created.map((c, i) => (
                       <li key={i}>{c.email} — {c.type_conge} du {c.date_debut} au {c.date_fin} ({c.jours_calcules} j)</li>
