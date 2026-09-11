@@ -164,15 +164,16 @@ const CongesPage = () => {
   const sortedConges = useMemo(() => {
     const sorted = [...filteredConges];
     const direction = filters.sortOrder === 'asc' ? 1 : -1;
+    const dateField = { date_demande: 'date_demande', date_debut: 'date_debut', date_fin: 'date_fin' };
 
     sorted.sort((left, right) => {
       if (filters.sortBy === 'jours_restants') {
         return ((Number(left.jours_restants) || 0) - (Number(right.jours_restants) || 0)) * direction;
       }
-
-      const leftDate = new Date(left.date_demande || left.created_at || left.createdAt || 0).getTime();
-      const rightDate = new Date(right.date_demande || right.created_at || right.createdAt || 0).getTime();
-      return (leftDate - rightDate) * direction;
+      const field = dateField[filters.sortBy] || 'date_demande';
+      const lv = new Date(left[field] || left.date_demande || left.created_at || 0).getTime();
+      const rv = new Date(right[field] || right.date_demande || right.created_at || 0).getTime();
+      return (lv - rv) * direction;
     });
 
     return sorted;
@@ -473,8 +474,12 @@ const CongesPage = () => {
             setFilters(prev => ({ ...prev, sortBy: by, sortOrder: order }));
           }}
         >
-          <option value="date_demande__desc">Plus récent</option>
-          <option value="date_demande__asc">Plus ancien</option>
+          <option value="date_demande__desc">Demande — récent</option>
+          <option value="date_demande__asc">Demande — ancien</option>
+          <option value="date_debut__asc">Début — proche</option>
+          <option value="date_debut__desc">Début — lointain</option>
+          <option value="date_fin__asc">Fin — proche</option>
+          <option value="date_fin__desc">Fin — lointain</option>
         </Form.Select>
       </div>
 
@@ -564,6 +569,7 @@ const CongesPage = () => {
                       {user?.role === 'super_admin' && <th>Entreprise</th>}
                       <th>Type</th>
                       <th>Période</th>
+                      <th className="text-end">Jours</th>
                       <th>Statut</th>
                       <th>Actions</th>
                     </tr>
@@ -576,6 +582,11 @@ const CongesPage = () => {
                         <td>{getCongeTypeLabel(conge)}</td>
                         <td>
                           {formatDate(conge.date_debut)} - {formatDate(conge.date_fin)}
+                        </td>
+                        <td className="text-end text-nowrap">
+                          {(conge.jours_calcules ?? conge.jours_pris) != null
+                            ? <span className="fw-semibold">{formatDays(conge.jours_calcules ?? conge.jours_pris)}j</span>
+                            : <span className="text-muted">-</span>}
                         </td>
                         <td>
                           {getStatusBadge(conge.statut, conge.effective_approval_workflow)}
