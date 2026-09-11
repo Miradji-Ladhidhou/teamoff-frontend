@@ -32,6 +32,8 @@ const JoursFeriesPage = () => {
     recurrent: false,
     est_travail: false,
   });
+  const [recalcul, setRecalcul] = useState(null);
+  const [recalculLoading, setRecalculLoading] = useState(false);
   const saveAction = useAsyncAction();
   const importNationalAction = useAsyncAction();
   const repairRecurrenceAction = useAsyncAction();
@@ -256,6 +258,20 @@ const JoursFeriesPage = () => {
 
   const canManage = user?.role === 'admin_entreprise' || user?.role === 'super_admin';
 
+  const handleRecalcul = async (dryRun) => {
+    const entrepriseId = user?.role === 'super_admin' ? selectedEntrepriseId : user?.entreprise_id;
+    if (!entrepriseId) return;
+    try {
+      setRecalculLoading(true);
+      const res = await entreprisesService.recalculConges(entrepriseId, dryRun);
+      setRecalcul({ ...res.data, dryRun });
+    } catch (err) {
+      alert.error(err.response?.data?.message || 'Erreur lors du recalcul');
+    } finally {
+      setRecalculLoading(false);
+    }
+  };
+
   const handleImportSuccess = async (response) => {
     const d = response.data;
     const parts = [];
@@ -391,6 +407,44 @@ const JoursFeriesPage = () => {
           <div className="text-muted small mt-2">
             Détecte automatiquement les fériés à date fixe (même mois+jour sur plusieurs années ou via l'API officielle) et les marque comme récurrents pour qu'ils s'affichent sur tous les calendriers futurs.
           </div>
+
+          {/* Recalcul des soldes */}
+          <hr className="my-2" />
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => handleRecalcul(true)}
+              disabled={recalculLoading || (user?.role === 'super_admin' && !selectedEntrepriseId)}
+            >
+              {recalculLoading ? <Spinner size="sm" className="me-1" /> : null}
+              Simuler le recalcul des soldes
+            </Button>
+            <Button
+              variant="outline-warning"
+              size="sm"
+              onClick={() => handleRecalcul(false)}
+              disabled={recalculLoading || (user?.role === 'super_admin' && !selectedEntrepriseId)}
+            >
+              Appliquer le recalcul des soldes
+            </Button>
+          </div>
+          <div className="text-muted small mb-2">
+            Recalcule les jours ouvrés des congés et réservations en cours en tenant compte des nouveaux fériés.
+          </div>
+          {recalcul && (
+            <div className={`alert alert-${recalcul.dryRun ? 'info' : 'success'} py-2 mb-0`}>
+              <strong>{recalcul.dryRun ? 'Simulation' : 'Recalcul appliqué'}</strong> — {recalcul.nb_modifies ?? 0} congé(s) modifié(s)
+              {recalcul.resultats?.length > 0 && (
+                <ul className="mb-0 mt-1 small">
+                  {recalcul.resultats.slice(0, 10).map((r, i) => (
+                    <li key={i}>{r.email} — {r.type} : {r.ancien}j → {r.nouveau}j (Δ {r.delta > 0 ? '+' : ''}{r.delta}j)</li>
+                  ))}
+                  {recalcul.resultats.length > 10 && <li>… et {recalcul.resultats.length - 10} autres</li>}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       )}
 

@@ -118,6 +118,8 @@ const PolitiqueCongesPage = () => {
   const [leavePolicy, setLeavePolicy] = useState(DEFAULT_LEAVE_POLICY);
   const [activeSection, setActiveSection] = useState('types');
   const [expandedServices, setExpandedServices] = useState({});
+  const [recalcul, setRecalcul] = useState(null);
+  const [recalculLoading, setRecalculLoading] = useState(false);
 
   const entrepriseId = user?.entreprise_id;
 
@@ -443,6 +445,19 @@ const PolitiqueCongesPage = () => {
     }
   };
 
+  const handleRecalcul = async (dryRun) => {
+    if (!entrepriseId) return;
+    try {
+      setRecalculLoading(true);
+      const res = await entreprisesService.recalculConges(entrepriseId, dryRun);
+      setRecalcul({ ...res.data, dryRun });
+    } catch (err) {
+      alert.error(err.response?.data?.message || 'Erreur lors du recalcul');
+    } finally {
+      setRecalculLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container fluid="sm" className="page-loading">
@@ -621,6 +636,43 @@ const PolitiqueCongesPage = () => {
           </div>
         )}
       </Form>
+
+      {activeSection !== 'types' && (
+        <div className="border-top pt-3 mt-3">
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => handleRecalcul(true)}
+              disabled={recalculLoading}
+            >
+              {recalculLoading ? <Spinner size="sm" className="me-1" /> : null}
+              Simuler le recalcul des soldes
+            </Button>
+            <Button
+              variant="outline-warning"
+              size="sm"
+              onClick={() => handleRecalcul(false)}
+              disabled={recalculLoading}
+            >
+              Appliquer le recalcul des soldes
+            </Button>
+          </div>
+          {recalcul && (
+            <div className={`alert alert-${recalcul.dryRun ? 'info' : 'success'} py-2 mb-0`}>
+              <strong>{recalcul.dryRun ? 'Simulation' : 'Recalcul appliqué'}</strong> — {recalcul.nb_modifies ?? 0} congé(s) modifié(s)
+              {recalcul.resultats?.length > 0 && (
+                <ul className="mb-0 mt-1 small">
+                  {recalcul.resultats.slice(0, 10).map((r, i) => (
+                    <li key={i}>{r.email} — {r.type} : {r.ancien}j → {r.nouveau}j (Δ {r.delta > 0 ? '+' : ''}{r.delta}j)</li>
+                  ))}
+                  {recalcul.resultats.length > 10 && <li>… et {recalcul.resultats.length - 10} autres</li>}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal show={showTypeModal} onHide={closeTypeModal} centered>
         <Modal.Header closeButton>

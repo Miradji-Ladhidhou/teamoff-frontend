@@ -255,6 +255,7 @@ export const entreprisesService = {
   createService: (id, data) => api.post(`/entreprises/${id}/services`, data),
   updateService: (id, serviceName, data) => api.put(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`, data),
   deleteService: (id, serviceName) => api.delete(`/entreprises/${id}/services/${encodeURIComponent(serviceName)}`),
+  recalculConges: (id, dryRun = false) => api.post(`/entreprises/${id}/recalcul-conges${dryRun ? '?dry_run=true' : ''}`),
   delete: (id) => api.delete(`/entreprises/${id}`),
   updateStatus: (id, statut) => api.patch(`/entreprises/${id}/statut`, { statut }),
 };
