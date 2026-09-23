@@ -17,7 +17,7 @@ const MOUVEMENT_META = {
   report_annee:           { label: 'Report N-1',    color: '#22c55e' },
   reservation:            { label: 'Réservé',       color: '#f97316' },
   validation_auto:        { label: 'Validé (auto)', color: '#ef4444' },
-  validation:             { label: 'Validé',        color: '#94a3b8' },
+  validation:             { label: 'Prélèvement',   color: '#ef4444' },
   rejet:                  { label: 'Refusé',        color: '#22c55e' },
   annulation:             { label: 'Annulé',        color: '#22c55e' },
   activation_reservation: { label: 'Activé',        color: '#f97316' },
@@ -25,6 +25,9 @@ const MOUVEMENT_META = {
 };
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+const fmtPeriod = (conge) => conge?.date_debut
+  ? `${fmtDate(conge.date_debut)}${conge.date_fin ? ` – ${fmtDate(conge.date_fin)}` : ''}`
+  : null;
 
 const QtyBadge = ({ value }) => {
   const n = toNum(value);
@@ -230,6 +233,8 @@ const HistoriqueSoldePage = () => {
                     </div>
                   )}
                   {m.description && <div className="hist-card__desc">{m.description}</div>}
+                  <div className="hist-card__conge-type">Solde concerné : {m.annee}</div>
+                  {m.conge && <div className="hist-card__desc">Congé : {fmtPeriod(m.conge)}</div>}
                   {m.conge_type?.libelle && (
                     <div className="hist-card__conge-type">{m.conge_type.libelle}</div>
                   )}
@@ -254,6 +259,7 @@ const HistoriqueSoldePage = () => {
               <thead>
                 <tr>
                   <th>Date</th>
+                  <th>Année du solde</th>
                   {!selectedUserId && <th>Employé</th>}
                   <th>Type</th>
                   <th>Détail</th>
@@ -268,6 +274,9 @@ const HistoriqueSoldePage = () => {
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--dk-text-soft)', fontSize: '0.82rem' }}>
                       {fmtDate(m.date)}
                     </td>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.82rem', fontWeight: 700 }}>
+                      {m.annee}
+                    </td>
                     {!selectedUserId && (
                       <td style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                         {m.utilisateur ? `${m.utilisateur.prenom} ${m.utilisateur.nom}` : '—'}
@@ -280,7 +289,7 @@ const HistoriqueSoldePage = () => {
                     )}
                     <td><TypeBadge type={m.type} /></td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--dk-text-soft)' }}>
-                      {m.description || '—'}
+                      {m.description || (m.conge ? `Congé du ${fmtPeriod(m.conge)}` : '—')}
                     </td>
                     <td style={{ fontSize: '0.75rem', color: 'var(--dk-text-muted)' }}>
                       {m.conge_type?.libelle || '—'}
