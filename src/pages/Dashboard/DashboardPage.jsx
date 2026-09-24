@@ -8,7 +8,11 @@ import { congesService, quotasService, notificationsService, congeTypesService, 
 import { useAlert } from '../../hooks/useAlert';
 import OnboardingWizard from '../../components/OnboardingWizard/OnboardingWizard';
 
-const statutPriority = { valide_manager: 0, en_attente_manager: 1, valide_final: 2, refuse_manager: 3, refuse_final: 3 };
+const getArrivalTimestamp = (item) => {
+  const value = item?.date_demande || item?.created_at || item?.createdAt || item?.date_debut;
+  const timestamp = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
 
 const accentToBarColor = (accent) => {
   const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
@@ -117,9 +121,7 @@ const DashboardPage = () => {
         }
 
         setStats(statsData);
-        const sorted = [...conges].sort((a, b) =>
-          (statutPriority[a.statut] ?? 9) - (statutPriority[b.statut] ?? 9)
-        );
+        const sorted = [...conges].sort((a, b) => getArrivalTimestamp(b) - getArrivalTimestamp(a));
         setRecentConges(sorted.slice(0, 5));
         setNotifications(notifs);
 
