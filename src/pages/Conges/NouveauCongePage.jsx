@@ -11,6 +11,16 @@ import useLeavePolicy from '../../hooks/useLeavePolicy';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import AsyncButton from '../../components/AsyncButton';
 
+function getCongeCounterYear(conge) {
+  const rawYear = conge?.annee_compteur;
+  const counterYear = Number(rawYear);
+  if (rawYear !== null && rawYear !== undefined && rawYear !== '' && Number.isInteger(counterYear)) {
+    return counterYear;
+  }
+  const dateYear = Number(String(conge?.date_debut || '').slice(0, 4));
+  return Number.isInteger(dateYear) ? dateYear : null;
+}
+
 const NouveauCongePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -135,10 +145,19 @@ const NouveauCongePage = () => {
             conge_type_id: conge.conge_type_id || '',
             date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
             jours_calcules: Number(conge.jours_calcules || conge.nombre_jours || conge.jours_pris || 0),
+            annee_compteur: getCongeCounterYear(conge),
           });
           const targetUserId = conge.utilisateur_id || user.id;
-          const soldesResponse = await quotasService.getSoldes(targetUserId);
-          setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+          const currentYear = new Date().getFullYear();
+          const sourceYear = getCongeCounterYear(conge) ?? currentYear;
+          const balanceYears = [...new Set([currentYear, sourceYear])].sort((a, b) => a - b);
+          const balanceResponses = await Promise.all(
+            balanceYears.map((year) => quotasService.getSoldes(targetUserId, { annee: year }))
+          );
+          setSoldes(balanceResponses.flatMap((response, index) =>
+            (Array.isArray(response.data?.soldes) ? response.data.soldes : [])
+              .map((balance) => ({ ...balance, annee: balanceYears[index] }))
+          ));
 
           setFormData({
             conge_type_id: conge.conge_type_id || '',
@@ -152,11 +171,12 @@ const NouveauCongePage = () => {
       } else {
         const [typesResponse, soldesResponse] = await Promise.all([
           congeTypesService.getAll(),
-          quotasService.getSoldes(user.id),
+          quotasService.getSoldes(user.id, { annee: new Date().getFullYear() }),
         ]);
 
         setCongeTypes(Array.isArray(typesResponse.data) ? typesResponse.data : []);
-        setSoldes(Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : []);
+        setSoldes((Array.isArray(soldesResponse.data?.soldes) ? soldesResponse.data.soldes : [])
+          .map((balance) => ({ ...balance, annee: new Date().getFullYear() })));
       }
 
     } catch (err) {
@@ -238,13 +258,13 @@ const NouveauCongePage = () => {
 
     // Vérifier le solde disponible (sauf si la soumission est une réservation explicite N+1)
     if (!isAdminEditingValidatedConge && !skipBalanceCheck && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
-      const soldeType = soldes.find(s => s.conge_type_id === formData.conge_type_id);
+      const nextYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
+      const balanceYearLimit = getBalanceYearLimit();
+      const soldeType = getSoldeForType(formData.conge_type_id, balanceYearLimit);
       const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
       const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
-      const initialYear = initialCongeSnapshot?.date_debut
-        ? new Date(initialCongeSnapshot.date_debut).getFullYear()
-        : null;
-      const nextYear = formData.date_debut ? new Date(formData.date_debut).getFullYear() : null;
+      const initialYear = initialCongeSnapshot?.annee_compteur
+        ?? (initialCongeSnapshot?.date_debut ? Number(initialCongeSnapshot.date_debut.slice(0, 4)) : null);
       const sameCounterAsInitial = isEditingPendingConge
         && initialTypeId === formData.conge_type_id
         && initialYear !== null
@@ -445,8 +465,56 @@ const NouveauCongePage = () => {
     return congeTypes.find(type => type.id === formData.conge_type_id);
   };
 
-  const getSoldeForType = (typeId) => {
-    return soldes.find(s => s.conge_type_id === typeId);
+  const getSoldeForType = (typeId, maxYear = Infinity) => {
+    const matchingBalances = soldes.filter((balance) =>
+      balance.conge_type_id === typeId && Number(balance.annee) <= maxYear
+    );
+    if (matchingBalances.length === 0) return null;
+
+    return {
+      ...matchingBalances[matchingBalances.length - 1],
+      solde_disponible: matchingBalances.reduce(
+        (total, balance) => total + Math.max(0, Number(balance.solde_disponible ?? 0)),
+        0
+      ),
+    };
+  };
+
+  const getBalanceYearLimit = () => {
+    const currentYear = new Date().getFullYear();
+    const requestYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
+    if (!requestYear || (!isEditMode && crossYearChoice === 'N')) return currentYear;
+    return Math.max(currentYear, requestYear);
+  };
+
+  const getEffectiveAvailableForType = (typeId, maxYear = Infinity) => {
+    const solde = getSoldeForType(typeId, maxYear);
+    let disponible = Number(solde?.solde_disponible ?? 0);
+    const originalYear = initialCongeSnapshot?.annee_compteur
+      ?? (initialCongeSnapshot?.date_debut ? Number(initialCongeSnapshot.date_debut.slice(0, 4)) : null);
+    const requestYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
+    const sameCounterAsInitial = isEditMode
+      && initialCongeSnapshot?.conge_type_id === typeId
+      && originalYear !== null
+      && originalYear === requestYear
+      && soldes.some((balance) => balance.conge_type_id === typeId && Number(balance.annee) === originalYear);
+
+    if (!sameCounterAsInitial) return disponible;
+
+    const originalCounter = soldes.find((balance) =>
+      balance.conge_type_id === typeId && Number(balance.annee) === originalYear
+    );
+    const originalDays = Number(initialCongeSnapshot?.jours_calcules || 0);
+    if (initialCongeStatut === 'valide_final') {
+      return disponible + Math.min(originalDays, Math.max(0, Number(originalCounter?.jours_pris || 0)));
+    }
+
+    const acquired = Math.max(0, Number(originalCounter?.jours_acquis || 0));
+    const reserved = Math.max(0, Number(originalCounter?.jours_reserves || 0));
+    const availableBeforeRelease = Math.max(0, acquired - reserved);
+    const availableAfterRelease = Math.max(0, acquired - Math.max(0, reserved - originalDays));
+    disponible += availableAfterRelease - availableBeforeRelease;
+    return disponible;
   };
 
   if (loadingData) {
@@ -495,10 +563,14 @@ const NouveauCongePage = () => {
             >
               <option value="">Choisir un type…</option>
               {congeTypes.map(type => {
-                const solde = getSoldeForType(type.id);
+                const balanceYearLimit = getBalanceYearLimit();
+                const solde = getSoldeForType(type.id, balanceYearLimit);
+                const disponible = getEffectiveAvailableForType(type.id, balanceYearLimit);
                 return (
                   <option key={type.id} value={type.id}>
-                    {type.libelle}{solde ? ` — ${solde.solde_disponible} j restants` : ''}
+                    {type.libelle}{solde
+                      ? ` — ${disponible.toFixed(1)} j ${isEditMode ? 'disponibles avant modification' : 'restants'}`
+                      : ''}
                   </option>
                 );
               })}
@@ -509,23 +581,10 @@ const NouveauCongePage = () => {
 
             {/* Indicateur solde inline */}
             {formData.conge_type_id && (() => {
-              const solde = getSoldeForType(formData.conge_type_id);
+              const balanceYearLimit = getBalanceYearLimit();
+              const solde = getSoldeForType(formData.conge_type_id, balanceYearLimit);
               if (!solde) return null;
-              const disponible = Number(solde.solde_disponible ?? 0);
-
-              // En mode édition, les jours de la demande initiale sont déjà
-              // déduits du disponible (reserves ou acquis). On les réintègre
-              // pour afficher le vrai solde avant/après modification.
-              const origDays = isEditMode ? Number(initialCongeSnapshot?.jours_calcules || 0) : 0;
-              const origTypeId = initialCongeSnapshot?.conge_type_id || '';
-              const origYear = initialCongeSnapshot?.date_debut
-                ? new Date(initialCongeSnapshot.date_debut).getFullYear() : null;
-              const newYear = formData.date_debut
-                ? new Date(formData.date_debut).getFullYear() : null;
-              const sameCounter = isEditMode
-                && origTypeId === formData.conge_type_id
-                && origYear !== null && origYear === newYear;
-              const effectiveDisponible = sameCounter ? disponible + origDays : disponible;
+              const effectiveDisponible = getEffectiveAvailableForType(formData.conge_type_id, balanceYearLimit);
 
               const hasCalc = joursCalcules !== null && joursCalcules > 0;
               const apres = hasCalc ? effectiveDisponible - joursCalcules : null;
