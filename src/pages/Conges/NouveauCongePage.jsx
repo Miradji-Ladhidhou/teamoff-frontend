@@ -214,6 +214,7 @@ const NouveauCongePage = () => {
       isEditMode
       && user?.role === 'admin_entreprise'
       && initialCongeStatut === 'valide_final';
+    const isEditingReservation = isEditMode && initialCongeStatut === 'reserve';
     const isEditingPendingConge = isEditMode && initialCongeStatut === 'en_attente_manager';
 
     if (!formData.conge_type_id) errors.conge_type_id = 'Le type de congé est requis';
@@ -257,7 +258,7 @@ const NouveauCongePage = () => {
     }
 
     // Vérifier le solde disponible (sauf si la soumission est une réservation explicite N+1)
-    if (!isAdminEditingValidatedConge && !skipBalanceCheck && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
+    if (!isAdminEditingValidatedConge && !isEditingReservation && !skipBalanceCheck && formData.conge_type_id && joursCalcules !== null && joursCalcules > 0) {
       const nextYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
       const balanceYearLimit = getBalanceYearLimit();
       const soldeType = getSoldeForType(formData.conge_type_id, balanceYearLimit);
