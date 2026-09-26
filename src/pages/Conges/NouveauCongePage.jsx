@@ -585,10 +585,11 @@ const NouveauCongePage = () => {
               const balanceYearLimit = getBalanceYearLimit();
               const solde = getSoldeForType(formData.conge_type_id, balanceYearLimit);
               if (!solde) return null;
+              const isEditingReservation = isEditMode && initialCongeStatut === 'reserve';
               const effectiveDisponible = getEffectiveAvailableForType(formData.conge_type_id, balanceYearLimit);
 
               const hasCalc = joursCalcules !== null && joursCalcules > 0;
-              const apres = hasCalc ? effectiveDisponible - joursCalcules : null;
+              const apres = hasCalc && !isEditingReservation ? effectiveDisponible - joursCalcules : null;
               const enDanger = hasCalc && apres < 0;
               const avertissement = hasCalc && apres !== null && apres >= 0 && apres < 2;
               return (
@@ -598,6 +599,9 @@ const NouveauCongePage = () => {
                     <span>→ <strong>{apres.toFixed(1)} j</strong> après</span>
                   )}
                   {enDanger && <span className="nc-solde-badge">⚠ Solde insuffisant</span>}
+                  {isEditingReservation && (
+                    <span>Réservation sans prélèvement; le solde sera vérifié à la validation finale.</span>
+                  )}
                 </div>
               );
             })()}
