@@ -148,16 +148,9 @@ const NouveauCongePage = () => {
             annee_compteur: getCongeCounterYear(conge),
           });
           const targetUserId = conge.utilisateur_id || user.id;
-          const currentYear = new Date().getFullYear();
-          const sourceYear = getCongeCounterYear(conge) ?? currentYear;
-          const balanceYears = [...new Set([currentYear, sourceYear])].sort((a, b) => a - b);
-          const balanceResponses = await Promise.all(
-            balanceYears.map((year) => quotasService.getSoldes(targetUserId, { annee: year }))
-          );
-          setSoldes(balanceResponses.flatMap((response, index) =>
-            (Array.isArray(response.data?.soldes) ? response.data.soldes : [])
-              .map((balance) => ({ ...balance, annee: balanceYears[index] }))
-          ));
+          const balanceResponse = await quotasService.getSoldes(targetUserId, { annee: 'all' });
+          setSoldes((Array.isArray(balanceResponse.data?.soldes) ? balanceResponse.data.soldes : [])
+            .map((balance) => ({ ...balance, annee: Number(balance.annee) })));
 
           setFormData({
             conge_type_id: conge.conge_type_id || '',
@@ -262,15 +255,9 @@ const NouveauCongePage = () => {
       const nextYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
       const balanceYearLimit = getBalanceYearLimit();
       const soldeType = getSoldeForType(formData.conge_type_id, balanceYearLimit);
-      const currentRequestDays = Number(initialCongeSnapshot?.jours_calcules || 0);
-      const initialTypeId = initialCongeSnapshot?.conge_type_id || '';
-      const initialYear = initialCongeSnapshot?.annee_compteur
-        ?? (initialCongeSnapshot?.date_debut ? Number(initialCongeSnapshot.date_debut.slice(0, 4)) : null);
-      const sameCounterAsInitial = isEditingPendingConge
-        && initialTypeId === formData.conge_type_id
-        && initialYear !== null
-        && initialYear === nextYear;
-      const effectiveAvailable = Number(soldeType?.solde_disponible || 0) + (sameCounterAsInitial ? currentRequestDays : 0);
+      const effectiveAvailable = isEditingPendingConge
+        ? getEffectiveAvailableForType(formData.conge_type_id, balanceYearLimit)
+        : Number(soldeType?.solde_disponible || 0);
 
       if (soldeType && joursCalcules > effectiveAvailable) {
         errors.conge_type_id = `Solde insuffisant (${effectiveAvailable} jours disponibles)`;
@@ -485,6 +472,18 @@ const NouveauCongePage = () => {
     const currentYear = new Date().getFullYear();
     const requestYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
     if (!requestYear || (!isEditMode && crossYearChoice === 'N')) return currentYear;
+    const initialDateYear = initialCongeSnapshot?.date_debut
+      ? Number(initialCongeSnapshot.date_debut.slice(0, 4))
+      : null;
+    const initialCounterYear = initialCongeSnapshot?.annee_compteur;
+    if (
+      isEditMode
+      && initialCongeSnapshot?.conge_type_id === formData.conge_type_id
+      && initialDateYear === requestYear
+      && Number.isInteger(initialCounterYear)
+    ) {
+      return initialCounterYear;
+    }
     return Math.max(currentYear, requestYear);
   };
 
@@ -493,11 +492,10 @@ const NouveauCongePage = () => {
     let disponible = Number(solde?.solde_disponible ?? 0);
     const originalYear = initialCongeSnapshot?.annee_compteur
       ?? (initialCongeSnapshot?.date_debut ? Number(initialCongeSnapshot.date_debut.slice(0, 4)) : null);
-    const requestYear = formData.date_debut ? Number(formData.date_debut.slice(0, 4)) : null;
     const sameCounterAsInitial = isEditMode
       && initialCongeSnapshot?.conge_type_id === typeId
       && originalYear !== null
-      && originalYear === requestYear
+      && originalYear <= maxYear
       && soldes.some((balance) => balance.conge_type_id === typeId && Number(balance.annee) === originalYear);
 
     if (!sameCounterAsInitial) return disponible;
