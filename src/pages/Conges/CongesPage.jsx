@@ -29,6 +29,15 @@ const getCongeAccent = (statut, role, workflow) => {
   }
 };
 
+const STATUS_PRIORITY = {
+  en_attente_manager: 0,
+  valide_manager: 1,
+  reserve: 2,
+  valide_final: 3,
+  refuse_manager: 4,
+  refuse_final: 5,
+};
+
 const accentToBarColor = (accent) => {
   const map = { pending: 'amber', info: 'blue', success: 'green', danger: 'red' };
   return map[accent] || 'blue';
@@ -53,9 +62,9 @@ const CongesPage = () => {
     statut: '',
     conge_type_id: '',
     utilisateur_id: '',
-    sortBy: 'date_demande',
-    sortOrder: 'desc',
-    limit: 10
+    sortBy: 'priorite',
+    sortOrder: 'asc',
+    limit: 25
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [showValidateModal, setShowValidateModal] = useState(false);
@@ -98,6 +107,7 @@ const CongesPage = () => {
 
       Object.keys(params).forEach(key => { if (!params[key]) delete params[key]; });
 
+      params.limit = 500;
       const response = await congesService.getAll(params);
       const items = Array.isArray(response.data?.items) ? response.data.items : (Array.isArray(response.data) ? response.data : []);
       setConges(items);
@@ -167,6 +177,11 @@ const CongesPage = () => {
     const dateField = { date_demande: 'date_demande', date_debut: 'date_debut', date_fin: 'date_fin' };
 
     sorted.sort((left, right) => {
+      if (filters.sortBy === 'priorite') {
+        const statusDifference = (STATUS_PRIORITY[left.statut] ?? 99) - (STATUS_PRIORITY[right.statut] ?? 99);
+        if (statusDifference !== 0) return statusDifference * direction;
+        return (new Date(left.date_debut).getTime() - new Date(right.date_debut).getTime()) || 0;
+      }
       if (filters.sortBy === 'jours_restants') {
         return ((Number(left.jours_restants) || 0) - (Number(right.jours_restants) || 0)) * direction;
       }
@@ -404,6 +419,12 @@ const CongesPage = () => {
     { value: 'refuse_manager', label: isAdminRole ? 'Refusé manager' : 'Refusé' },
     ...(isAdminRole ? [{ value: 'refuse_final', label: 'Refusé (final)' }] : []),
   ];
+  const statusSummary = [
+    { label: 'En attente', count: conges.filter((conge) => conge.statut === 'en_attente_manager').length, badge: 'pending' },
+    { label: 'Validé manager', count: conges.filter((conge) => conge.statut === 'valide_manager').length, badge: 'info' },
+    { label: 'Réservations', count: conges.filter((conge) => conge.statut === 'reserve').length, badge: 'reserve' },
+    { label: 'Approuvés', count: conges.filter((conge) => conge.statut === 'valide_final').length, badge: 'approved' },
+  ];
 
   return (
     <Container fluid="sm" className="conges-page">
@@ -436,6 +457,14 @@ const CongesPage = () => {
             </Button>
           )}
         </div>
+      </div>
+
+      <div className="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Résumé des congés">
+        {statusSummary.map(({ label, count, badge }) => (
+          <span key={label} className={`badge ${badge}`}>
+            {label} : {count}
+          </span>
+        ))}
       </div>
 
       {/* Filtres statut */}
@@ -479,6 +508,8 @@ const CongesPage = () => {
             setFilters(prev => ({ ...prev, sortBy: by, sortOrder: order }));
           }}
         >
+          <option value="priorite__asc">Priorité — à traiter d'abord</option>
+          <option value="priorite__desc">Priorité — à traiter en dernier</option>
           <option value="date_demande__desc">Date demande — récent d'abord</option>
           <option value="date_demande__asc">Date demande — ancien d'abord</option>
           <option value="date_debut__asc">Date début — proche d'abord</option>
