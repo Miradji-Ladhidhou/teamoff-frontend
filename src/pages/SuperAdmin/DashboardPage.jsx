@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { FaChartLine, FaCog, FaBuilding, FaUsers, FaCalendarAlt, FaClock } from 'react-icons/fa';
 import * as api from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
+import DashboardCalendarPreview from '../../components/DashboardCalendarPreview';
 
 const normalizeStatus = (ok) => (ok ? 'healthy' : 'unhealthy');
 
@@ -183,6 +184,8 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      <DashboardCalendarPreview selectedCompanyId={selectedCompanyId} />
 
       {/* Vue "toutes entreprises" : breakdown */}
       {!selectedCompanyId && companyBreakdown.length > 0 && (

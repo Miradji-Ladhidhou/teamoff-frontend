@@ -219,14 +219,9 @@ const CalendrierPage = ({ embedded = false, entrepriseIdOverride = null }) => {
 
     const days = [];
 
-    // Jours du mois précédent pour compléter la première semaine
+    // Cellules vides pour aligner le premier jour sur sa colonne
     for (let i = 0; i < startingDayOfWeek; i++) {
-      const prevDate = new Date(year, month, -i);
-      days.unshift({
-        date: prevDate,
-        isCurrentMonth: false,
-        dayNumber: prevDate.getDate()
-      });
+      days.push({ date: null, isCurrentMonth: false, dayNumber: null });
     }
 
     // Jours du mois actuel
@@ -238,14 +233,10 @@ const CalendrierPage = ({ embedded = false, entrepriseIdOverride = null }) => {
       });
     }
 
-    // Jours du mois suivant pour compléter la dernière semaine
-    const remainingCells = 42 - days.length; // 6 semaines * 7 jours
-    for (let i = 1; i <= remainingCells; i++) {
-      days.push({
-        date: new Date(year, month + 1, i),
-        isCurrentMonth: false,
-        dayNumber: i
-      });
+    // Cellules vides pour terminer la dernière semaine sans afficher le mois suivant
+    const trailingCells = (7 - (days.length % 7)) % 7;
+    for (let i = 0; i < trailingCells; i++) {
+      days.push({ date: null, isCurrentMonth: false, dayNumber: null });
     }
 
     return days;
@@ -604,6 +595,10 @@ const CalendrierPage = ({ embedded = false, entrepriseIdOverride = null }) => {
 
               {/* Jours du calendrier */}
               {days.map((dayInfo, index) => {
+                if (!dayInfo.date) {
+                  return <div key={index} className="calendar-day calendar-day-empty" aria-hidden="true" />;
+                }
+
                 const events = getEventsForDay(dayInfo.date);
                 const jourFerie = getJourFerieForDay(dayInfo.date);
                 const isSpecificBlocked = isSpecificBlockedDay(dayInfo.date);

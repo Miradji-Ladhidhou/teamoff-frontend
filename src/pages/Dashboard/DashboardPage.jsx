@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { congesService, quotasService, notificationsService, congeTypesService, entreprisesService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import OnboardingWizard from '../../components/OnboardingWizard/OnboardingWizard';
+import DashboardCalendarPreview from '../../components/DashboardCalendarPreview';
 
 const getArrivalTimestamp = (item) => {
   const value = item?.date_demande || item?.created_at || item?.createdAt || item?.date_debut;
@@ -412,6 +413,8 @@ const DashboardPage = () => {
           </div>
         ))}
       </div>
+
+      <DashboardCalendarPreview />
 
       <Row>
         {/* Soldes section */}
