@@ -33,6 +33,23 @@ const EMAIL_GROUPS = [
     ['conge-rejected', 'Congé refusé'],
     ['leave-reminder', 'Rappel congé'],
     ['leave-pending-reminder', 'Rappel validation en attente'],
+    ['leave-new-request-manager', 'Nouvelle demande (manager)'],
+    ['leave-reservation-employee', 'Réservation congé (employé)'],
+    ['leave-reservation-admin', 'Réservation congé (responsable)'],
+    ['leave-created-employee', 'Confirmation de demande (employé)'],
+    ['leave-manager-approved-admin', 'Congé validé par manager (admin)'],
+    ['leave-manager-validated-employee', 'Congé validé par manager (employé)'],
+    ['leave-approved-employee', 'Congé approuvé (employé)'],
+    ['leave-rejected-employee', 'Congé refusé (employé)'],
+    ['leave-updated-employee', 'Congé modifié (employé)'],
+    ['leave-updated-before-approval', 'Congé modifié avant validation'],
+    ['leave-cancelled-by-employee', 'Annulation par employé'],
+    ['leave-cancelled-employee', 'Confirmation annulation (employé)'],
+    ['leave-reservation-activated', 'Réservation activée'],
+    ['leave-action-request-employee', 'Demande de modification/annulation (employé)'],
+    ['leave-action-request-admin', 'Demande de modification/annulation (admin)'],
+    ['leave-action-approved', 'Demande de modification/annulation approuvée'],
+    ['leave-action-rejected', 'Demande de modification/annulation refusée'],
     ['leave-updated-self-confirm', 'Modification congé (confirmation)'],
     ['leave-cancelled-by-admin', 'Annulation par admin'],
     ['leave-cancelled-self-confirm', 'Annulation (confirmation)'],
@@ -103,6 +120,7 @@ const EmailLogsPage = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [allCompanies, setAllCompanies] = useState([]);
+  const [availableTypes, setAvailableTypes] = useState([]);
 
   const [companyFilter, setCompanyFilter] = useState('');
   const [toFilter, setToFilter] = useState('');
@@ -149,6 +167,7 @@ const EmailLogsPage = () => {
 
       const { data } = await emailLogsService.getAll(params);
       setLogs(data.logs || []);
+      setAvailableTypes(Array.isArray(data.types) ? data.types : []);
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
     } catch (err) {
@@ -227,6 +246,13 @@ const EmailLogsPage = () => {
                     ))}
                   </optgroup>
                 ))}
+                {availableTypes.filter(type => !TYPE_LABELS[type]).length > 0 && (
+                  <optgroup label="Autres types journalisés">
+                    {availableTypes.filter(type => !TYPE_LABELS[type]).map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </optgroup>
+                )}
               </Form.Select>
             </Col>
 
