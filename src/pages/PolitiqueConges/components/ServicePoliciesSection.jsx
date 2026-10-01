@@ -117,6 +117,28 @@ const ServicePoliciesSection = ({
                 </div>
               </div>
 
+              <div className="svc-card__row">
+                <div className="svc-card__field">
+                  <div className="svc-card__label">Portée du manager</div>
+                  <Form.Check
+                    type="switch"
+                    id={`manager-view-all-${serviceName}`}
+                    label="Voir les congés des autres services"
+                    checked={servicePolicy.manager_can_view_all_services === true}
+                    onChange={(e) => setServiceField(serviceName, 'manager_can_view_all_services', e.target.checked)}
+                  />
+                  <Form.Check
+                    type="switch"
+                    id={`manager-validate-all-${serviceName}`}
+                    label="Valider les congés des autres services"
+                    checked={servicePolicy.manager_can_validate_all_services === true}
+                    disabled={servicePolicy.manager_can_view_all_services !== true}
+                    onChange={(e) => setServiceField(serviceName, 'manager_can_validate_all_services', e.target.checked)}
+                  />
+                  <span className="svc-card__hint">La validation interservices donne aussi accès à la consultation interservices. Le workflow du service reste prioritaire.</span>
+                </div>
+              </div>
+
               <div className="svc-card__row svc-card__row--3">
                 <div className="svc-card__field">
                   <label className="svc-card__label">Seuil d'urgence (jours)</label>

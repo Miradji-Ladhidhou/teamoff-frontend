@@ -259,8 +259,8 @@ export default function AttestationPage() {
   const nomComplet = `${data.employe.prenom} ${data.employe.nom}`.trim();
   const jours = data.jours;
   const pol = jours.politique;
-  const nbSam    = jours.detail.filter(d => d.label === 'Samedi').length;
-  const nbDim    = jours.detail.filter(d => d.label === 'Dimanche').length;
+  const nbSam    = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Samedi').length;
+  const nbDim    = jours.detail.filter(d => d.type === 'weekend' && d.label === 'Dimanche').length;
   const nbFeries = jours.detail.filter(d => d.type === 'ferie').length;
 
   const periodFmt = () => {
@@ -394,13 +394,13 @@ export default function AttestationPage() {
                 </div>
                 <div className="d-dc-cell">
                   <div className={`d-dc-num${pol && !pol.count_saturday ? ' muted' : ''}`}>{nbSam}</div>
-                  <div className="d-dc-lbl">Samedis</div>
+                  <div className="d-dc-lbl">Samedis exclus</div>
                   {pol && !pol.count_saturday && <div className="d-dc-note">non décomptés</div>}
                   <div className="d-dc-op">−</div>
                 </div>
                 <div className="d-dc-cell">
                   <div className={`d-dc-num${pol && !pol.count_sunday ? ' muted' : ''}`}>{nbDim}</div>
-                  <div className="d-dc-lbl">Dimanches</div>
+                  <div className="d-dc-lbl">Dimanches exclus</div>
                   {pol && !pol.count_sunday && <div className="d-dc-note">non décomptés</div>}
                   <div className="d-dc-op">−</div>
                 </div>

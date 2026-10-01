@@ -190,6 +190,7 @@ const CongeActionRequestsPage = () => {
                   const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
                     ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
                     : null;
+                  const canManagerActOnRequest = user?.role !== 'manager' || req.manager_can_validate === true;
 
                   return (
                     <tr key={req.id}>
@@ -222,7 +223,7 @@ const CongeActionRequestsPage = () => {
                       )}
                       <td>
                         <div className="d-flex gap-2 align-items-center">
-                          {req.statut === 'pending' && (
+                          {req.statut === 'pending' && canManagerActOnRequest && (
                             <>
                               <Button size="sm" variant="outline-success" onClick={() => openApprove(req)} title="Approuver">
                                 <FaCheck size={11} />
@@ -302,7 +303,7 @@ const CongeActionRequestsPage = () => {
                   )}
 
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                    {req.statut === 'pending' && (
+                          {req.statut === 'pending' && canManagerActOnRequest && (
                       <>
                         <Button size="sm" variant="outline-success" onClick={() => openApprove(req)}>
                           <FaCheck size={10} className="me-1" /> Approuver

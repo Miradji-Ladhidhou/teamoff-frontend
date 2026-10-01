@@ -113,9 +113,23 @@ const SoldesPage = () => {
     [users, selectedUserId]
   );
 
+  const allCounterRows = useMemo(() => {
+    const employeesWithCounters = new Set(allCounters.map((counter) => String(counter.utilisateur_id)));
+    const employeesWithoutCounters = users
+      .filter((employee) => !employeesWithCounters.has(String(employee.id)))
+      .map((employee) => ({
+        id: `sans-solde-${employee.id}`,
+        utilisateur_id: employee.id,
+        utilisateur: employee,
+        no_counter: true,
+      }));
+
+    return [...allCounters, ...employeesWithoutCounters];
+  }, [allCounters, users]);
+
   const sortedAllCounters = useMemo(() => {
     const sign = allSort.dir === 'asc' ? 1 : -1;
-    return [...allCounters].sort((a, b) => {
+    return [...allCounterRows].sort((a, b) => {
       switch (allSort.col) {
         case 'employe': {
           const na = `${a.utilisateur?.nom} ${a.utilisateur?.prenom}`.toLowerCase();
@@ -134,7 +148,7 @@ const SoldesPage = () => {
         default: return 0;
       }
     });
-  }, [allCounters, allSort]);
+  }, [allCounterRows, allSort]);
 
   const toggleAllSort = (col) => setAllSort(prev =>
     prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' }
@@ -296,6 +310,59 @@ const SoldesPage = () => {
         loadingCounters ? (
           <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>
         ) : (
+          <>
+          <div className="user-list-mobile d-md-none">
+            {sortedAllCounters.length === 0 ? (
+              <div className="text-center text-muted p-3">Aucun employé à afficher.</div>
+            ) : sortedAllCounters.map((counter) => {
+              if (counter.no_counter) {
+                return (
+                  <div key={counter.id} className="user-row-btn" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+                    <div>
+                      <strong>{counter.utilisateur?.prenom} {counter.utilisateur?.nom}</strong>
+                      {counter.utilisateur?.service && <span className="text-muted ms-1 small">— {counter.utilisateur.service}</span>}
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center gap-2">
+                      <span className="small text-muted">Aucun solde enregistré pour {selectedYear}</span>
+                      <Button size="sm" variant="outline-primary" onClick={() => {
+                        setSelectedUserId(counter.utilisateur_id);
+                        setTimeout(() => openModal(), 50);
+                      }}>Ajouter</Button>
+                    </div>
+                  </div>
+                );
+              }
+
+              const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
+              const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
+              const solde = toNum(counter.solde_disponible);
+              return (
+                <div key={counter.id} className="user-row-btn" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+                  <div>
+                    <strong>{counter.utilisateur?.prenom} {counter.utilisateur?.nom}</strong>
+                    {counter.utilisateur?.service && <span className="text-muted ms-1 small">— {counter.utilisateur.service}</span>}
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center gap-2">
+                    <strong>{counter.conge_type?.libelle || '—'}</strong>
+                    <strong style={{ color: solde < 0 ? 'var(--dk-error)' : 'var(--dk-accent)' }}>{solde.toFixed(1)} j</strong>
+                  </div>
+                  <div className="d-flex flex-wrap gap-3 small" style={{ color: 'var(--dk-text-soft)' }}>
+                    <span>N-1 : {n1Dispo.toFixed(1)} j</span>
+                    <span>N : {nDispo.toFixed(1)} j</span>
+                    <span>Pris : {toNum(counter.jours_pris).toFixed(1)} j</span>
+                  </div>
+                  <div className="d-flex gap-2 w-100 mt-1">
+                    <Button size="sm" variant="outline-primary" className="flex-fill" onClick={() => {
+                      setSelectedUserId(counter.utilisateur_id);
+                      setTimeout(() => openModal(counter), 50);
+                    }}>Modifier</Button>
+                    <Button size="sm" variant="outline-danger" className="flex-fill" onClick={() => handleDelete(counter.id)}>Supprimer</Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           <div className="conges-list-wrap d-none d-md-block">
             <Table hover className="users-dense-table mb-0">
               <thead>
@@ -311,7 +378,7 @@ const SoldesPage = () => {
               </thead>
               <tbody>
                 {sortedAllCounters.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center text-muted py-3">Aucun solde pour {selectedYear}</td></tr>
+                  <tr><td colSpan={7} className="text-center text-muted py-3">Aucun employé à afficher.</td></tr>
                 ) : sortedAllCounters.map((counter) => {
                   const n1Dispo = toNum(counter.n1_disponible ?? counter.jours_reportes);
                   const nDispo = toNum(counter.n_disponible ?? (toNum(counter.solde_disponible) - n1Dispo));
@@ -329,16 +396,20 @@ const SoldesPage = () => {
                           <span className="text-muted ms-1" style={{ fontSize: 11 }}>— {counter.utilisateur.service}</span>
                         )}
                       </td>
-                      <td><strong>{counter.conge_type?.libelle || '—'}</strong></td>
+                      <td>{counter.no_counter ? <span className="text-muted">Aucun solde enregistré pour {selectedYear}</span> : <strong>{counter.conge_type?.libelle || '—'}</strong>}</td>
                       <td>{n1Dispo > 0 ? <strong>{n1Dispo.toFixed(1)} j</strong> : <span className="text-muted">—</span>}</td>
-                      <td>{nDispo.toFixed(1)} j</td>
-                      <td>{toNum(counter.jours_pris).toFixed(1)} j</td>
-                      <td><strong style={{ color: solde < 0 ? 'var(--dk-error)' : undefined }}>{solde.toFixed(1)} j</strong></td>
+                      <td>{counter.no_counter ? '—' : `${nDispo.toFixed(1)} j`}</td>
+                      <td>{counter.no_counter ? '—' : `${toNum(counter.jours_pris).toFixed(1)} j`}</td>
+                      <td><strong style={{ color: solde < 0 ? 'var(--dk-error)' : undefined }}>{counter.no_counter ? '—' : `${solde.toFixed(1)} j`}</strong></td>
                       <td>
-                        <div className="d-flex gap-1">
-                          <Button size="sm" variant="outline-primary" onClick={() => { setSelectedUserId(counter.utilisateur_id); setTimeout(() => openModal(counter), 50); }}>Modifier</Button>
-                          <Button size="sm" variant="outline-danger" onClick={() => handleDelete(counter.id)}>Supprimer</Button>
-                        </div>
+                        {counter.no_counter ? (
+                          <Button size="sm" variant="outline-primary" onClick={() => { setSelectedUserId(counter.utilisateur_id); setTimeout(() => openModal(), 50); }}>Ajouter</Button>
+                        ) : (
+                          <div className="d-flex gap-1">
+                            <Button size="sm" variant="outline-primary" onClick={() => { setSelectedUserId(counter.utilisateur_id); setTimeout(() => openModal(counter), 50); }}>Modifier</Button>
+                            <Button size="sm" variant="outline-danger" onClick={() => handleDelete(counter.id)}>Supprimer</Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -346,6 +417,7 @@ const SoldesPage = () => {
               </tbody>
             </Table>
           </div>
+          </>
         )
       ) : loadingCounters ? (
         <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>

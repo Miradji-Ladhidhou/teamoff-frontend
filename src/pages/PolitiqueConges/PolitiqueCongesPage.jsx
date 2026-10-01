@@ -58,6 +58,8 @@ const DEFAULT_SERVICE_POLICY = {
   max_consecutive_days: 365,
   approval_workflow: 'manager_admin',
   max_employees_on_leave: 0,
+  manager_can_view_all_services: false,
+  manager_can_validate_all_services: false,
 };
 
 const DEFAULT_CONGE_TYPE_FORM = {
@@ -157,7 +159,17 @@ const PolitiqueCongesPage = () => {
         const types = Array.isArray(typesResponse.data) ? typesResponse.data : [];
         const serviceNames = [...new Set(users.map((u) => String(u.service || '').trim()).filter(Boolean))];
 
-        const normalizedServicePolicies = { ...(merged.service_policies || {}) };
+        const normalizedServicePolicies = Object.fromEntries(
+          Object.entries(merged.service_policies || {}).map(([service, servicePolicy]) => {
+            const canValidateAll = servicePolicy?.manager_can_validate_all_services === true;
+            return [service, {
+              ...DEFAULT_SERVICE_POLICY,
+              ...(servicePolicy || {}),
+              manager_can_view_all_services: canValidateAll || servicePolicy?.manager_can_view_all_services === true,
+              manager_can_validate_all_services: canValidateAll,
+            }];
+          })
+        );
         serviceNames.forEach((service) => {
           if (!normalizedServicePolicies[service]) {
             normalizedServicePolicies[service] = {
@@ -372,6 +384,12 @@ const PolitiqueCongesPage = () => {
         ...DEFAULT_SERVICE_POLICY,
         ...(prev[serviceName] || {}),
         [field]: value,
+        ...(field === 'manager_can_validate_all_services' && value === true
+          ? { manager_can_view_all_services: true }
+          : {}),
+        ...(field === 'manager_can_view_all_services' && value === false
+          ? { manager_can_validate_all_services: false }
+          : {}),
       },
     }));
   };
@@ -423,6 +441,8 @@ const PolitiqueCongesPage = () => {
             max_consecutive_days: Number(servicePolicy.max_consecutive_days || 0),
             approval_workflow: servicePolicy.approval_workflow,
             max_employees_on_leave: Number(servicePolicy.max_employees_on_leave || 0),
+            manager_can_view_all_services: servicePolicy.manager_can_view_all_services === true,
+            manager_can_validate_all_services: servicePolicy.manager_can_validate_all_services === true,
           };
           return acc;
         }, {}),
@@ -639,7 +659,7 @@ const PolitiqueCongesPage = () => {
 
       {activeSection !== 'types' && (
         <div className="border-top pt-3 mt-3">
-          <div className="d-flex align-items-center gap-2 mb-2">
+          <div className="politique-recalc-actions d-flex align-items-center gap-2 mb-2">
             <Button
               variant="outline-secondary"
               size="sm"

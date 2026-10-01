@@ -370,6 +370,7 @@ const CongeDetailsPage = () => {
     const workflow = conge.effective_approval_workflow;
     if (workflow === 'auto') return false;
     if (user?.role === 'manager') {
+      if (conge.manager_can_validate !== true) return false;
       if (conge.utilisateur_id === user?.id) return false;
       if (workflow === 'admin_only') return false;
       return conge.statut === 'en_attente_manager';
@@ -385,7 +386,9 @@ const CongeDetailsPage = () => {
 
   const canActivate = () => {
     if (!conge) return false;
-    return conge.statut === 'reserve' && ['manager', 'admin_entreprise', 'super_admin'].includes(user?.role);
+    if (conge.statut !== 'reserve') return false;
+    if (user?.role === 'manager') return conge.manager_can_validate === true;
+    return ['admin_entreprise', 'super_admin'].includes(user?.role);
   };
 
   // Pour les champs DATEONLY (YYYY-MM-DD), new Date('YYYY-MM-DD') produit UTC minuit

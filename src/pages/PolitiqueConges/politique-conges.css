@@ -3,6 +3,11 @@
   overflow-x: hidden;
 }
 
+.politique-recalc-actions .btn {
+  min-width: 0;
+  white-space: normal;
+}
+
 /* Policy card */
 .politique-card {
   background: var(--dk-card);
@@ -232,6 +237,15 @@
 
 /* ────────────── Responsive ────────────── */
 @media (max-width: 575.98px) {
+  .politique-recalc-actions {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .politique-recalc-actions .btn {
+    width: 100%;
+  }
+
   .svc-card__row,
   .svc-card__row--3 {
     grid-template-columns: 1fr;

@@ -108,4 +108,15 @@
   .jours-feries-mobile-card {
     padding: 0.65rem;
   }
+
+  .jours-feries-recalcul-actions {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .jours-feries-recalcul-actions .btn {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
 }

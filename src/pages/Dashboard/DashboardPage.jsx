@@ -104,7 +104,7 @@ const DashboardPage = () => {
         if (user?.role === 'manager' && (wf === 'manager_admin' || wf === 'manager_only')) {
           const r = await congesService.getAll({ statut: 'en_attente_manager', limit: 500 });
           const items = Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : []);
-          statsData.aValiderManager = items.length;
+          statsData.aValiderManager = items.filter(item => item.manager_can_validate === true).length;
         }
 
         if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
@@ -193,7 +193,7 @@ const DashboardPage = () => {
 
     const canValidateConge = (conge) => {
       if (!conge) return false;
-      if (user?.role === 'manager') return conge.statut === 'en_attente_manager';
+      if (user?.role === 'manager') return conge.manager_can_validate === true && conge.statut === 'en_attente_manager';
       if (user?.role === 'admin_entreprise' || user?.role === 'super_admin') {
         return conge.statut === 'en_attente_manager' || conge.statut === 'valide_manager';
       }

@@ -410,7 +410,7 @@ const JoursFeriesPage = () => {
 
           {/* Recalcul des soldes */}
           <hr className="my-2" />
-          <div className="d-flex align-items-center gap-2 mb-2">
+          <div className="jours-feries-recalcul-actions d-flex align-items-center gap-2 mb-2">
             <Button
               variant="outline-secondary"
               size="sm"

@@ -54,12 +54,16 @@ const useSocket = () => {
         console.warn('Socket connect_timeout:', timeout);
         setIsConnected(false);
       },
-      'conge-created': (data) => addNotification('conge-created', `Nouvelle demande de congé de ${data.user?.prenom || ''} ${data.user?.nom || ''}`, data),
+      'conge-created': (data) => {
+        const informationPrefix = data.notification_mode === 'information' ? 'Pour information : ' : '';
+        addNotification('conge-created', `${informationPrefix}Nouvelle demande de congé de ${data.user?.prenom || ''} ${data.user?.nom || ''}`, data);
+      },
       'conge-validated': (data) => addNotification('conge-validated', 'Votre demande de congé a été approuvée', data),
       'conge-rejected': (data) => addNotification('conge-rejected', 'Votre demande de congé a été rejetée', data),
       'conge-status-changed': (data) => {
         const actionText = data.action === 'validated' ? 'approuvée' : 'rejetée';
-        addNotification('conge-status-changed', `Une demande de congé a été ${actionText}`, data);
+        const informationPrefix = data.notification_mode === 'information' ? 'Pour information : ' : '';
+        addNotification('conge-status-changed', `${informationPrefix}Une demande de congé a été ${actionText}`, data);
       },
       'conge-deleted': (data) => addNotification('conge-deleted', 'Une demande de congé a été supprimée', data)
     };
