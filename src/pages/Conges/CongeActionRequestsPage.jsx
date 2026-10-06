@@ -115,6 +115,9 @@ const CongeActionRequestsPage = () => {
     return `/conges/${req.conge_id}`;
   };
 
+  const canManagerActOnRequest = (req) =>
+    user?.role !== 'manager' || req.manager_can_validate === true;
+
   const statutBadge = (statut) => {
     const classMap = { pending: 'pending', approved: 'approved', rejected: 'refused' };
     return <span className={`badge ${classMap[statut] || 'secondary'}`}>{STATUT_LABELS[statut] || statut}</span>;
@@ -190,8 +193,6 @@ const CongeActionRequestsPage = () => {
                   const nouvellePeriode = req.type === 'modify' && req.date_debut_demandee
                     ? `${formatDate(req.date_debut_demandee)} → ${formatDate(req.date_fin_demandee)}`
                     : null;
-                  const canManagerActOnRequest = user?.role !== 'manager' || req.manager_can_validate === true;
-
                   return (
                     <tr key={req.id}>
                       <td style={{ fontWeight: 600, fontSize: '13px' }}>{employeNom}</td>
@@ -223,7 +224,7 @@ const CongeActionRequestsPage = () => {
                       )}
                       <td>
                         <div className="d-flex gap-2 align-items-center">
-                          {req.statut === 'pending' && canManagerActOnRequest && (
+                          {req.statut === 'pending' && canManagerActOnRequest(req) && (
                             <>
                               <Button size="sm" variant="outline-success" onClick={() => openApprove(req)} title="Approuver">
                                 <FaCheck size={11} />
@@ -303,7 +304,7 @@ const CongeActionRequestsPage = () => {
                   )}
 
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                          {req.statut === 'pending' && canManagerActOnRequest && (
+                    {req.statut === 'pending' && canManagerActOnRequest(req) && (
                       <>
                         <Button size="sm" variant="outline-success" onClick={() => openApprove(req)}>
                           <FaCheck size={10} className="me-1" /> Approuver
