@@ -15,6 +15,7 @@ import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
+import { normalizeManagerCrossServicePolicy } from '../../utils/managerCrossServicePolicy';
 
 const DEFAULT_POLICY = {
   overlap_behavior: 'block',
@@ -60,6 +61,7 @@ const DEFAULT_SERVICE_POLICY = {
   max_employees_on_leave: 0,
   manager_can_view_all_services: false,
   manager_can_validate_all_services: false,
+  manager_can_view_all_absences: false,
 };
 
 const DEFAULT_CONGE_TYPE_FORM = {
@@ -167,6 +169,10 @@ const PolitiqueCongesPage = () => {
               ...(servicePolicy || {}),
               manager_can_view_all_services: canValidateAll || servicePolicy?.manager_can_view_all_services === true,
               manager_can_validate_all_services: canValidateAll,
+              manager_can_view_all_absences: servicePolicy?.manager_can_view_all_absences === true,
+              ...(servicePolicy?.manager_cross_service
+                ? { manager_cross_service: normalizeManagerCrossServicePolicy(servicePolicy) }
+                : {}),
             }];
           })
         );
@@ -443,6 +449,8 @@ const PolitiqueCongesPage = () => {
             max_employees_on_leave: Number(servicePolicy.max_employees_on_leave || 0),
             manager_can_view_all_services: servicePolicy.manager_can_view_all_services === true,
             manager_can_validate_all_services: servicePolicy.manager_can_validate_all_services === true,
+            manager_can_view_all_absences: servicePolicy.manager_can_view_all_absences === true,
+            manager_cross_service: normalizeManagerCrossServicePolicy(servicePolicy),
           };
           return acc;
         }, {}),

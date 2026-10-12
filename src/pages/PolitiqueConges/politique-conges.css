@@ -215,6 +215,18 @@
   grid-template-columns: 1fr 1fr 1fr;
 }
 
+.svc-card__row--full {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.svc-card__row--full .svc-card__field {
+  min-width: 0;
+}
+
+.svc-manager-permissions {
+  min-width: 620px;
+}
+
 .svc-card__field {
   display: flex;
   flex-direction: column;

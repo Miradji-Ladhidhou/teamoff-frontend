@@ -55,17 +55,18 @@ const useSocket = () => {
         setIsConnected(false);
       },
       'conge-created': (data) => {
-        const informationPrefix = data.notification_mode === 'information' ? 'Pour information : ' : '';
-        addNotification('conge-created', `${informationPrefix}Nouvelle demande de congé de ${data.user?.prenom || ''} ${data.user?.nom || ''}`, data);
+        const modePrefix = data.notification_mode === 'information' ? 'Pour information : ' : data.notification_mode === 'action' ? 'Action requise : ' : '';
+        const employee = data.conge?.utilisateur || data.user;
+        addNotification('conge-created', `${modePrefix}Nouvelle demande de congé de ${employee?.prenom || ''} ${employee?.nom || ''}`, data);
       },
       'conge-validated': (data) => addNotification('conge-validated', 'Votre demande de congé a été approuvée', data),
       'conge-rejected': (data) => addNotification('conge-rejected', 'Votre demande de congé a été rejetée', data),
       'conge-status-changed': (data) => {
         const actionText = data.action === 'validated' ? 'approuvée' : 'rejetée';
-        const informationPrefix = data.notification_mode === 'information' ? 'Pour information : ' : '';
-        addNotification('conge-status-changed', `${informationPrefix}Une demande de congé a été ${actionText}`, data);
+        const modePrefix = data.notification_mode === 'information' ? 'Pour information : ' : data.notification_mode === 'action' ? 'Action requise : ' : '';
+        addNotification('conge-status-changed', `${modePrefix}Une demande de congé a été ${actionText}`, data);
       },
-      'conge-deleted': (data) => addNotification('conge-deleted', 'Une demande de congé a été supprimée', data)
+      'conge-deleted': (data) => addNotification('conge-deleted', `${data.notification_mode === 'information' ? 'Pour information : ' : ''}Une demande de congé a été supprimée`, data)
     };
 
     Object.entries(events).forEach(([event, handler]) => socket.on(event, handler));
