@@ -309,6 +309,24 @@
 .aeq-badge--maladie                { background: rgba(99,102,241,0.1); color: #6366f1; }
 .aeq-badge--absence_exceptionnelle { background: rgba(249,115,22,0.1); color: #ea580c; }
 
+/* ── Justificatif tag ── */
+.aeq-justif-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
 /* ── Comment cell ── */
 .aeq-comment {
   font-size: 0.82rem;

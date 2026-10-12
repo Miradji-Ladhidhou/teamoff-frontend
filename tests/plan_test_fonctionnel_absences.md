@@ -4,7 +4,9 @@
 - Aller sur la page Absences
 - Cliquer sur « Déclarer une absence »
 - Remplir tous les champs obligatoires (type, dates)
-- Pour maladie, joindre un justificatif (PDF/image)
+- Pour maladie ou absence exceptionnelle, joindre un justificatif optionnel (photo prise directement ou sélectionnée dans la galerie/fichiers, PDF/JPG/PNG/WEBP jusqu'à 10 Mo)
+- Vérifier que le document est envoyé en pièce jointe de l'email d'alerte aux RH/managers
+- Vérifier qu'aucun fichier n'est conservé dans la base de données (zéro stockage binaire, seules les métadonnées : nom, taille, date, empreinte SHA-256 restent enregistrées comme preuve)
 - Cliquer sur « Déclarer l’absence »
 - Vérifier l’apparition d’une alerte de succès
 - Vérifier l’ajout de l’absence dans le calendrier

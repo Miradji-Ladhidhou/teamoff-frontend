@@ -3,7 +3,7 @@ import './absences-equipe.css';
 import { api, usersService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { Container, Card, Modal, Spinner } from 'react-bootstrap';
-import { FaUserMinus, FaPlus, FaSearch, FaFilter, FaUserClock } from 'react-icons/fa';
+import { FaUserMinus, FaPlus, FaSearch, FaFilter, FaUserClock, FaPaperclip, FaCamera, FaImage, FaTimes } from 'react-icons/fa';
 
 const PAGE_SIZE = 15;
 
@@ -72,6 +72,9 @@ const AbsencesEquipePage = () => {
     date_fin: '',
     commentaire: '',
   });
+  const [declFile, setDeclFile] = useState(null);
+  const declFileInputRef = React.useRef(null);
+  const declCameraInputRef = React.useRef(null);
   const [declError, setDeclError] = useState('');
   const [declSending, setDeclSending] = useState(false);
 
@@ -141,16 +144,25 @@ const AbsencesEquipePage = () => {
     }
     setDeclSending(true);
     try {
-      await api.post('/absences', {
-        utilisateur_id: decl.utilisateur_id,
-        type_absence: decl.type_absence,
-        date_debut: decl.date_debut,
-        date_fin: decl.date_fin,
-        commentaire: decl.commentaire.trim(),
+      const formData = new FormData();
+      formData.append('utilisateur_id', decl.utilisateur_id);
+      formData.append('type_absence', decl.type_absence);
+      formData.append('date_debut', decl.date_debut);
+      formData.append('date_fin', decl.date_fin);
+      formData.append('commentaire', decl.commentaire.trim());
+      if (declFile) {
+        formData.append('justificatif', declFile);
+      }
+
+      await api.post('/absences', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert.success('Absence déclarée avec succès.');
       setShowDeclare(false);
       setDecl({ utilisateur_id: '', type_absence: '', date_debut: '', date_fin: '', commentaire: '' });
+      setDeclFile(null);
+      if (declFileInputRef.current) declFileInputRef.current.value = '';
+      if (declCameraInputRef.current) declCameraInputRef.current.value = '';
       await loadAbsences();
     } catch (err) {
       setDeclError(err.response?.data?.message || 'Erreur lors de la déclaration.');
@@ -241,11 +253,13 @@ const AbsencesEquipePage = () => {
                   <th>Période</th>
                   <th>Déclarée le</th>
                   <th>Commentaire</th>
+                  <th>Justificatif</th>
                 </tr>
               </thead>
               <tbody>
                 {pageSlice.map(absence => {
                   const u = absence.utilisateur || {};
+                  const meta = absence.justificatif_metadata;
                   return (
                     <tr key={absence.id}>
                       <td>
@@ -272,6 +286,24 @@ const AbsencesEquipePage = () => {
                       </td>
                       <td className="aeq-declared-at">{fmtDate(absence.created_at || absence.createdAt)}</td>
                       <td className="aeq-comment">{absence.commentaire || <span className="aeq-no-comment">—</span>}</td>
+                      <td>
+                        {meta ? (
+                          <span
+                            className="aeq-justif-tag"
+                            title={`Document transmis par email aux RH/managers\nTaille : ${meta.taille_formatee || ''}\nSHA-256 : ${meta.sha256 || ''}`}
+                          >
+                            <FaPaperclip className="me-1" size={11} />
+                            {meta.nom_original}
+                          </span>
+                        ) : absence.justificatif ? (
+                          <span className="aeq-justif-tag" title="Transmis par email">
+                            <FaPaperclip className="me-1" size={11} />
+                            {absence.justificatif}
+                          </span>
+                        ) : (
+                          <span className="text-muted small">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -384,6 +416,72 @@ const AbsencesEquipePage = () => {
                   onChange={e => setDecl(d => ({ ...d, commentaire: e.target.value }))}
                   required
                 />
+              </div>
+
+              <div className="aeq-form-field aeq-form-field--full">
+                <label className="aeq-modal-label">Pièce jointe / Justificatif <small className="text-muted">(optionnel)</small></label>
+                <input
+                  ref={declFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) setDeclFile(f);
+                  }}
+                />
+                <input
+                  ref={declCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) setDeclFile(f);
+                  }}
+                />
+
+                {!declFile ? (
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="aeq-modal-btn aeq-modal-btn--cancel py-1 px-3 d-inline-flex align-items-center gap-1"
+                      onClick={() => declFileInputRef.current?.click()}
+                    >
+                      <FaImage size={13} className="text-primary" /> Fichier / Galerie
+                    </button>
+                    <button
+                      type="button"
+                      className="aeq-modal-btn aeq-modal-btn--cancel py-1 px-3 d-inline-flex align-items-center gap-1"
+                      onClick={() => declCameraInputRef.current?.click()}
+                    >
+                      <FaCamera size={13} className="text-success" /> Photo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="d-flex align-items-center justify-content-between p-2 rounded border bg-light">
+                    <span className="small text-truncate me-2">
+                      <FaPaperclip className="me-1" />
+                      {declFile.name} ({(declFile.size / 1024).toFixed(1)} Ko)
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-link text-danger p-0"
+                      onClick={() => {
+                        setDeclFile(null);
+                        if (declFileInputRef.current) declFileInputRef.current.value = '';
+                        if (declCameraInputRef.current) declCameraInputRef.current.value = '';
+                      }}
+                      title="Supprimer"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                )}
+                <div className="text-muted small mt-1" style={{ fontSize: '0.74rem' }}>
+                  🔒 Envoyé par email aux RH/managers puis supprimé. Seule la preuve reste enregistrée.
+                </div>
               </div>
             </div>
 

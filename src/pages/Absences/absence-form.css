@@ -114,3 +114,177 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* Styles pour la section justificatif / pièces jointes */
+.absence-attachment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.absence-privacy-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.absence-upload-box {
+  border: 2px dashed var(--dk-border, #e2e8f0);
+  border-radius: var(--input-radius, 8px);
+  padding: 16px;
+  background: var(--dk-elevated, #f8fafc);
+  text-align: center;
+  transition: border-color var(--transition-fast, 0.2s);
+}
+
+.absence-upload-box:hover {
+  border-color: var(--dk-accent, #4f46e5);
+}
+
+.absence-upload-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.absence-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--dk-text, #1e293b);
+  background: #ffffff;
+  border: 1px solid var(--dk-border, #cbd5e1);
+  border-radius: var(--btn-radius, 6px);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.absence-upload-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.absence-upload-btn--camera {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.absence-upload-btn--camera:hover {
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.absence-upload-hint {
+  font-size: 0.775rem;
+  color: var(--dk-text-muted, #64748b);
+  margin: 0;
+}
+
+/* Aperçu du fichier sélectionné */
+.absence-file-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--dk-elevated, #f8fafc);
+  border: 1px solid var(--dk-border, #cbd5e1);
+  border-radius: var(--input-radius, 8px);
+  gap: 12px;
+}
+
+.absence-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.absence-file-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+.absence-file-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.absence-file-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.absence-file-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dk-text, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.absence-file-size {
+  font-size: 0.75rem;
+  color: var(--dk-text-muted, #64748b);
+}
+
+.absence-file-remove-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.absence-file-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Note RGPD / Confidentialité */
+.absence-form-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 6px;
+  font-size: 0.775rem;
+  color: #334155;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.absence-form-privacy-icon {
+  color: #2563eb;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
