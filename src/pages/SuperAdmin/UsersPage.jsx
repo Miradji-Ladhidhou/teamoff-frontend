@@ -926,6 +926,17 @@ const UsersManagement = () => {
                 </div>
               )}
 
+              {importResult.warnings?.length > 0 && (
+                <div className="import-result__section" role="alert">
+                  <div className="import-result__label import-result__label--warn">Avertissements</div>
+                  <ul className="import-result__list">
+                    {importResult.warnings.map((warning, i) => (
+                      <li key={i}>{warning.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {importResult.skipped?.length > 0 && (
                 <div className="import-result__section">
                   <div className="import-result__label import-result__label--warn">Ignorés ({importResult.skipped.length})</div>

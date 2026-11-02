@@ -1,6 +1,5 @@
 import React from 'react';
-import { Row, Col, Form, Button, Table } from 'react-bootstrap';
-import { MANAGER_CATEGORIES, normalizeManagerCrossServicePolicy } from '../../../utils/managerCrossServicePolicy';
+import { Row, Col, Form, Button } from 'react-bootstrap';
 
 const ServicePoliciesSection = ({
   newServiceName,
@@ -115,58 +114,6 @@ const ServicePoliciesSection = ({
                     <option value="warning">Autoriser avec alerte</option>
                   </Form.Select>
                   <span className="svc-card__hint">Comportement quand le max d'absences simultanées est atteint</span>
-                </div>
-              </div>
-
-              <div className="svc-card__row svc-card__row--full">
-                <div className="svc-card__field">
-                  <div className="svc-card__label">Managers — accès aux autres services</div>
-                  <span className="svc-card__hint">Ces réglages concernent les managers de {serviceName}. Leur propre service conserve ses règles habituelles.</span>
-                  <Table responsive size="sm" className="svc-manager-permissions mt-2 mb-2">
-                    <thead>
-                      <tr><th>Catégorie</th><th>Consultation</th><th>Emails</th><th>Alertes application</th><th>Participation</th></tr>
-                    </thead>
-                    <tbody>
-                      {MANAGER_CATEGORIES.map(({ key, label }) => {
-                        const settings = normalizeManagerCrossServicePolicy(servicePolicy);
-                        const update = (field, value) => {
-                          const next = { ...settings[key], [field]: value };
-                          if (field === 'participation' && value === 'action') next.view = true;
-                          if (field === 'view' && !value) next.participation = 'information';
-                          setServiceField(serviceName, 'manager_cross_service', { ...settings, [key]: next });
-                        };
-                        return (
-                          <tr key={key}>
-                            <th scope="row">{label}</th>
-                            {['view', 'email', 'in_app'].map((field) => (
-                              <td key={field}>
-                                <Form.Check
-                                  type="switch"
-                                  id={`manager-${key}-${field}-${serviceName}`}
-                                  aria-label={`${label} — ${field === 'view' ? 'Consultation' : field === 'email' ? 'Emails' : 'Alertes application'} — ${serviceName}`}
-                                  checked={settings[key][field]}
-                                  onChange={(e) => update(field, e.target.checked)}
-                                />
-                              </td>
-                            ))}
-                            <td>
-                              <Form.Select
-                                size="sm"
-                                aria-label={`${label} — Participation — ${serviceName}`}
-                                value={settings[key].participation}
-                                onChange={(e) => update('participation', e.target.value)}
-                              >
-                                <option value="information">Pour information</option>
-                                <option value="action">Peut agir</option>
-                              </Form.Select>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
-                  <span className="svc-card__hint">Recevoir une alerte ne donne pas le droit de valider. « Peut agir » autorise aussi la consultation ; une action n’est requise que si le workflow du salarié l’attend à cette étape. Les déclarations d’absence restent informatives, sans validation obligatoire. Les emails interservices incluent uniquement les catégories autorisées, y compris dans le récapitulatif hebdomadaire.</span>
-                  <span className="svc-card__hint">Les arrêts maladie contiennent des données sensibles : réservez ces accès aux managers autorisés.</span>
                 </div>
               </div>
 

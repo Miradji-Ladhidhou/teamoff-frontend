@@ -142,6 +142,7 @@ const NouveauCongePage = () => {
           const conge = congeResponse.data;
           setInitialCongeStatut(conge.statut || null);
           setInitialCongeSnapshot({
+            comments_hidden: conge.comments_hidden === true,
             conge_type_id: conge.conge_type_id || '',
             date_debut: conge.date_debut ? conge.date_debut.split('T')[0] : '',
             jours_calcules: Number(conge.jours_calcules || conge.nombre_jours || conge.jours_pris || 0),
@@ -309,7 +310,8 @@ const NouveauCongePage = () => {
     date_fin: data.date_fin,
     ...(data.debut_demi_journee ? { debut_demi_journee: data.debut_demi_journee } : {}),
     ...(data.fin_demi_journee ? { fin_demi_journee: data.fin_demi_journee } : {}),
-    commentaire_employe: data.commentaire_employe || null,
+    ...(!isEditMode || !initialCongeSnapshot?.comments_hidden || data.commentaire_employe.trim()
+      ? { commentaire_employe: data.commentaire_employe || null } : {}),
     // Imputer sur le solde N si le salarié a choisi d'utiliser son solde de l'année en cours
     ...(crossYearChoice === 'N' ? { annee_compteur: new Date().getFullYear() } : {}),
   });
@@ -718,6 +720,7 @@ const NouveauCongePage = () => {
           {/* ── Étape 3 : Commentaire + Envoi ── */}
           <div className="nc-step nc-step--last">
             <div className="nc-step__label">Commentaire <span className="nc-optional">optionnel</span></div>
+            {initialCongeSnapshot?.comments_hidden && <p className="small text-muted">Les commentaires existants sont masqués et conservés. Laisser ce champ vide ne les efface pas.</p>}
             <Form.Control
               as="textarea"
               rows={2}

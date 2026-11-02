@@ -2,7 +2,14 @@ import axios from 'axios';
 import { authService, congesService, usersService } from '../services/api';
 
 // Mock axios
-jest.mock('axios');
+jest.mock('axios', () => {
+  const client = {
+    get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  };
+  return { create: jest.fn(() => client) };
+});
+const api = axios.create.mock.results[0].value;
 
 describe('API Services', () => {
   beforeEach(() => {
@@ -14,12 +21,12 @@ describe('API Services', () => {
       const credentials = { email: 'test@test.com', password: 'password' };
       const mockResponse = { data: { token: 'jwt-token', user: { id: 1 } } };
 
-      axios.post.mockResolvedValueOnce(mockResponse);
+      api.post.mockResolvedValueOnce(mockResponse);
 
       const result = await authService.login(credentials);
 
-      expect(axios.post).toHaveBeenCalledWith('/auth/login', credentials);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.post).toHaveBeenCalledWith('/auth/login', credentials);
+      expect(result).toBe(mockResponse);
     });
 
     it('should call register endpoint', async () => {
@@ -31,23 +38,23 @@ describe('API Services', () => {
       };
       const mockResponse = { data: { user: { id: 1 }, token: 'jwt-token' } };
 
-      axios.post.mockResolvedValueOnce(mockResponse);
+      api.post.mockResolvedValueOnce(mockResponse);
 
       const result = await authService.register(userData);
 
-      expect(axios.post).toHaveBeenCalledWith('/auth/register', userData);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.post).toHaveBeenCalledWith('/auth/register', userData);
+      expect(result).toBe(mockResponse);
     });
 
     it('should call getProfile endpoint', async () => {
       const mockResponse = { data: { id: 1, nom: 'Test', prenom: 'User' } };
 
-      axios.get.mockResolvedValueOnce(mockResponse);
+      api.get.mockResolvedValueOnce(mockResponse);
 
       const result = await authService.getProfile();
 
-      expect(axios.get).toHaveBeenCalledWith('/me');
-      expect(result).toEqual(mockResponse.data);
+      expect(api.get).toHaveBeenCalledWith('/me');
+      expect(result).toBe(mockResponse);
     });
   });
 
@@ -62,12 +69,12 @@ describe('API Services', () => {
         }
       };
 
-      axios.get.mockResolvedValueOnce(mockResponse);
+      api.get.mockResolvedValueOnce(mockResponse);
 
       const result = await congesService.getAll(params);
 
-      expect(axios.get).toHaveBeenCalledWith('/conges', { params });
-      expect(result).toEqual(mockResponse.data);
+      expect(api.get).toHaveBeenCalledWith('/conges', { params });
+      expect(result).toBe(mockResponse);
     });
 
     it('should call create endpoint', async () => {
@@ -78,12 +85,12 @@ describe('API Services', () => {
       };
       const mockResponse = { data: { id: 1, statut: 'en_attente' } };
 
-      axios.post.mockResolvedValueOnce(mockResponse);
+      api.post.mockResolvedValueOnce(mockResponse);
 
       const result = await congesService.create(congeData);
 
-      expect(axios.post).toHaveBeenCalledWith('/conges/demande', congeData);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.post).toHaveBeenCalledWith('/conges/demande', congeData, { timeout: 30000 });
+      expect(result).toBe(mockResponse);
     });
 
     it('should call update endpoint', async () => {
@@ -91,36 +98,36 @@ describe('API Services', () => {
       const updateData = { statut: 'approuve' };
       const mockResponse = { data: { id: 1, statut: 'approuve' } };
 
-      axios.put.mockResolvedValueOnce(mockResponse);
+      api.put.mockResolvedValueOnce(mockResponse);
 
       const result = await congesService.update(congeId, updateData);
 
-      expect(axios.put).toHaveBeenCalledWith(`/conges/${congeId}`, updateData);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.put).toHaveBeenCalledWith(`/conges/${congeId}`, updateData);
+      expect(result).toBe(mockResponse);
     });
 
     it('should call delete endpoint', async () => {
       const congeId = 1;
       const mockResponse = { data: { message: 'Deleted successfully' } };
 
-      axios.delete.mockResolvedValueOnce(mockResponse);
+      api.delete.mockResolvedValueOnce(mockResponse);
 
       const result = await congesService.delete(congeId);
 
-      expect(axios.delete).toHaveBeenCalledWith(`/conges/${congeId}`);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.delete).toHaveBeenCalledWith(`/conges/${congeId}`, { data: {} });
+      expect(result).toBe(mockResponse);
     });
 
     it('should call getById endpoint', async () => {
       const congeId = 1;
       const mockResponse = { data: { id: 1, statut: 'en_attente' } };
 
-      axios.get.mockResolvedValueOnce(mockResponse);
+      api.get.mockResolvedValueOnce(mockResponse);
 
       const result = await congesService.getById(congeId);
 
-      expect(axios.get).toHaveBeenCalledWith(`/conges/${congeId}`);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.get).toHaveBeenCalledWith(`/conges/${congeId}`);
+      expect(result).toBe(mockResponse);
     });
   });
 
@@ -135,12 +142,12 @@ describe('API Services', () => {
         }
       };
 
-      axios.get.mockResolvedValueOnce(mockResponse);
+      api.get.mockResolvedValueOnce(mockResponse);
 
       const result = await usersService.getAll(params);
 
-      expect(axios.get).toHaveBeenCalledWith('/users', { params });
-      expect(result).toEqual(mockResponse.data);
+      expect(api.get).toHaveBeenCalledWith('/users', { params });
+      expect(result).toBe(mockResponse);
     });
 
     it('should call create endpoint', async () => {
@@ -152,24 +159,24 @@ describe('API Services', () => {
       };
       const mockResponse = { data: { id: 1, nom: 'Test', prenom: 'User' } };
 
-      axios.post.mockResolvedValueOnce(mockResponse);
+      api.post.mockResolvedValueOnce(mockResponse);
 
       const result = await usersService.create(userData);
 
-      expect(axios.post).toHaveBeenCalledWith('/users', userData);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.post).toHaveBeenCalledWith('/users', userData);
+      expect(result).toBe(mockResponse);
     });
 
     it('should call getById endpoint', async () => {
       const userId = 1;
       const mockResponse = { data: { id: 1, nom: 'Test', prenom: 'User' } };
 
-      axios.get.mockResolvedValueOnce(mockResponse);
+      api.get.mockResolvedValueOnce(mockResponse);
 
       const result = await usersService.getById(userId);
 
-      expect(axios.get).toHaveBeenCalledWith(`/users/${userId}`);
-      expect(result).toEqual(mockResponse.data);
+      expect(api.get).toHaveBeenCalledWith(`/users/${userId}`);
+      expect(result).toBe(mockResponse);
     });
   });
 });

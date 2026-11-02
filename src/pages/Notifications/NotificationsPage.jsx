@@ -2,10 +2,11 @@ import './notifications.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Spinner, Form } from 'react-bootstrap';
 import { FaBell, FaCheck, FaCheckDouble } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsService } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
+import NotificationSettings from './NotificationSettings';
 
 const NOTIFICATIONS_UPDATED_EVENT = 'teamoff:notifications-updated';
 
@@ -35,6 +36,15 @@ const NotificationsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filterChip, setFilterChip] = useState('all');
   const [markingAll, setMarkingAll] = useState(false);
+  const canConfigure = ['admin_entreprise', 'super_admin'].includes(user?.role);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const section = canConfigure && searchParams.get('section') === 'settings' ? 'settings' : 'inbox';
+  const setSection = value => setSearchParams(current => {
+    const next = new URLSearchParams(current);
+    if (value === 'settings') next.set('section', 'settings');
+    else next.delete('section');
+    return next;
+  });
 
   useEffect(() => {
     loadNotifications();
@@ -191,27 +201,38 @@ const NotificationsPage = () => {
   const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  if (loading) {
-    return (
-      <Container fluid="sm" className="page-loading">
-        <div className="text-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <p className="text-muted">Chargement des notifications...</p>
-        </div>
-      </Container>
-    );
-  }
-
   return (
     <Container fluid="sm">
       <div className="page-title-bar">
-        <span className="section-title-bar__text">Notifications</span>
-        {notifications.some(n => !n.lu) && (
+        <h1 className="section-title-bar__text mb-0">Action et notifications</h1>
+        {section === 'inbox' && notifications.some(n => !n.lu) && (
           <Button variant="link" size="sm" onClick={handleMarkAllAsRead} disabled={markingAll} className="section-title-bar__action p-0 d-flex align-items-center gap-1">
-            <FaCheckDouble size={12} /> Tout lire
+            <FaCheckDouble size={14} /> Tout marquer comme lu
           </Button>
         )}
       </div>
+
+      <p className="text-muted">Retrouvez ici les informations et demandes qui vous concernent.</p>
+      {canConfigure && (
+        <nav className="notif-section-nav" aria-label="Sections des notifications">
+          <Button variant={section === 'inbox' ? 'primary' : 'outline-secondary'} aria-pressed={section === 'inbox'}
+            aria-controls="notifications-inbox" onClick={() => setSection('inbox')}>Mes notifications</Button>
+          <Button variant={section === 'settings' ? 'primary' : 'outline-secondary'} aria-pressed={section === 'settings'}
+            aria-controls="notifications-settings" onClick={() => setSection('settings')}>Action et notifications</Button>
+        </nav>
+      )}
+      {canConfigure && (
+        <div id="notifications-settings" hidden={section !== 'settings'}>
+          <NotificationSettings />
+        </div>
+      )}
+      <section id="notifications-inbox" aria-label="Mes notifications" hidden={canConfigure && section !== 'inbox'}>
+      {loading ? (
+        <div className="text-center py-4" role="status">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <p className="text-muted">Chargement des notifications...</p>
+        </div>
+      ) : <>
 
       {/* Filter chips */}
       <div className="chips-row pb-0 mb-3">
@@ -219,6 +240,7 @@ const NotificationsPage = () => {
           <button
             key={chip.value}
             type="button"
+            aria-pressed={filterChip === chip.value}
             className={`chip${filterChip === chip.value ? ' active' : ''}`}
             onClick={() => { setFilterChip(chip.value); setCurrentPage(1); }}
           >
@@ -229,7 +251,7 @@ const NotificationsPage = () => {
 
       <div className="notif-list-header">
         <small className="text-muted">Par page</small>
-        <Form.Select size="sm" className="notifications-items-per-page" value={itemsPerPage} onChange={handleItemsPerPageChange}>
+        <Form.Select aria-label="Notifications par page" size="sm" className="notifications-items-per-page" value={itemsPerPage} onChange={handleItemsPerPageChange}>
           <option value={5}>5</option>
           <option value={10}>10</option>
           <option value={20}>20</option>
@@ -262,6 +284,7 @@ const NotificationsPage = () => {
                     role={isClickable ? 'button' : undefined}
                     tabIndex={isClickable ? 0 : undefined}
                     onKeyDown={(e) => {
+                      if (e.target !== e.currentTarget) return;
                       if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
                         e.preventDefault();
                         handleOpenNotification(notification);
@@ -277,7 +300,7 @@ const NotificationsPage = () => {
                       {/* Contenu */}
                       <div className="flex-grow-1">
                         <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text, var(--dk-text))' }}>
+                          <div className="notif-item-title">
                             {notification.title || 'Notification'}
                           </div>
                           <div className="d-flex align-items-center gap-2 flex-shrink-0">
@@ -286,8 +309,9 @@ const NotificationsPage = () => {
                               <Button
                                 variant="link"
                                 size="sm"
-                                className="p-0"
+                                className="notif-read-action p-0"
                                 title="Marquer comme lu"
+                                aria-label={`Marquer comme lu : ${notification.title || 'Notification'}`}
                                 style={{ color: 'var(--accent-blue, var(--dk-accent))' }}
                                 onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notification.id); }}
                               >
@@ -297,19 +321,19 @@ const NotificationsPage = () => {
                           </div>
                         </div>
 
-                        <div style={{ fontSize: '10px', color: 'var(--text-soft, var(--dk-text-soft))', marginBottom: 3 }}>
+                        <div className="notif-item-message">
                           {notification.message}
                         </div>
 
                         {(demandeur || entrepriseNom) && (
-                          <div style={{ fontSize: '9px', color: 'var(--text-muted, var(--dk-text-muted))', marginBottom: 3 }}>
+                          <div className="notif-item-meta">
                             {demandeur && <span>De : {demandeur}</span>}
                             {demandeur && entrepriseNom && <span className="mx-1">·</span>}
                             {entrepriseNom && <span>{entrepriseNom}</span>}
                           </div>
                         )}
 
-                        <div style={{ fontSize: '9px', color: 'var(--text-muted, var(--dk-text-muted))' }}>
+                        <div className="notif-item-meta">
                           {formatNotificationDate(notification)}
                         </div>
                       </div>
@@ -330,6 +354,8 @@ const NotificationsPage = () => {
             </div>
           </div>
         )}
+      </>}
+      </section>
     </Container>
   );
 };

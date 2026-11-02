@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import ServicePoliciesSection from './ServicePoliciesSection';
+import { normalizeManagerCrossServicePolicy } from '../../../utils/managerCrossServicePolicy';
 
 function renderSettings(policy = {}) {
   const setServiceField = jest.fn();
@@ -24,42 +25,39 @@ function renderSettings(policy = {}) {
 
 test.each([undefined, false, true, 'true'])('les anciens droits absences sont repris sans activer un nouveau canal (%s)', (value) => {
   renderSettings({ manager_can_view_all_absences: value });
-  for (const category of ['Absences exceptionnelles', 'Arrêts maladie']) {
-    expect(screen.getByLabelText(`${category} — Consultation — RH`).checked).toBe(value === true);
-    expect(screen.getByLabelText(`${category} — Emails — RH`).checked).toBe(value === true);
-    expect(screen.getByLabelText(`${category} — Alertes application — RH`).checked).toBe(false);
-    expect(screen.getByLabelText(`${category} — Participation — RH`).value).toBe('information');
+  for (const category of ['absence_exceptionnelle', 'maladie']) {
+    expect(normalizeManagerCrossServicePolicy({ manager_can_view_all_absences: value })[category])
+      .toEqual({ view: value === true, email: value === true, in_app: false, participation: 'information' });
   }
+  expect(screen.queryByText('Managers — accès aux autres services')).not.toBeInTheDocument();
 });
 
-test('le canal email est indépendant des autres canaux, catégories et droits', () => {
-  const setField = renderSettings();
-  fireEvent.click(screen.getByLabelText('Arrêts maladie — Emails — RH'));
-  const config = setField.mock.calls[0][2];
-  expect(setField).toHaveBeenCalledWith('RH', 'manager_cross_service', expect.any(Object));
-  expect(config.maladie).toEqual({ view: false, email: true, in_app: false, participation: 'information' });
-  expect(config.conges.email).toBe(false);
-  expect(config.absence_exceptionnelle.email).toBe(false);
+test('la page Services ne propose plus de réglages de notification ou d’accès interservices', () => {
+  renderSettings();
+  expect(screen.queryByRole('link', { name: /Configurer les emails et alertes/ })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Arrêts maladie — Consultation — RH')).not.toBeInTheDocument();
+  expect(screen.queryByText(/Leur propre service conserve/)).not.toBeInTheDocument();
 });
 
-test('peut agir implique la consultation, mais n’active aucun canal', () => {
-  const setField = renderSettings();
-  fireEvent.change(screen.getByLabelText('Congés — Participation — RH'), { target: { value: 'action' } });
-  expect(setField.mock.calls[0][2].conges).toEqual({ view: true, email: false, in_app: false, participation: 'action' });
+test('modifier le circuit du service ne touche pas aux anciens droits ou canaux', () => {
+  const setField = renderSettings({ manager_cross_service: { conges: { view: true, email: true, in_app: false, participation: 'action' } } });
+  fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'admin_only' } });
+  expect(setField).toHaveBeenCalledWith('RH', 'approval_workflow', 'admin_only');
+  expect(setField).toHaveBeenCalledTimes(1);
 });
 
-test('désactiver la consultation retire le droit d’action sans toucher aux emails', () => {
-  const setField = renderSettings({ manager_cross_service: {
+test('les anciennes valeurs explicites restent compatibles malgré le retrait du panneau', () => {
+  const policy = { manager_cross_service: {
     conges: { view: true, email: true, in_app: false, participation: 'action' },
-  } });
-  fireEvent.click(screen.getByLabelText('Congés — Consultation — RH'));
-  expect(setField.mock.calls[0][2].conges).toEqual({ view: false, email: true, in_app: false, participation: 'information' });
+  } };
+  const setField = renderSettings(policy);
+  expect(normalizeManagerCrossServicePolicy(policy).conges).toEqual(policy.manager_cross_service.conges);
+  expect(setField).not.toHaveBeenCalled();
 });
 
 test('les droits congés existants conservent leurs canaux et leur participation', () => {
   renderSettings({ manager_can_validate_all_services: true });
-  for (const field of ['Consultation', 'Emails', 'Alertes application']) {
-    expect(screen.getByLabelText(`Congés — ${field} — RH`).checked).toBe(true);
-  }
-  expect(screen.getByLabelText('Congés — Participation — RH').value).toBe('action');
+  expect(normalizeManagerCrossServicePolicy({ manager_can_validate_all_services: true }).conges)
+    .toEqual({ view: true, email: true, in_app: true, participation: 'action' });
+  expect(screen.queryByLabelText('Congés — Participation — RH')).not.toBeInTheDocument();
 });

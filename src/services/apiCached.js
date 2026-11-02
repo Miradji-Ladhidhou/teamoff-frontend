@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiCache } from '../utils/cache';
+import { notifyHolidayPostCommitWarning } from './holidayPostCommitWarning';
 
 // Configuration de base d'axios
 const api = axios.create({
@@ -23,7 +24,10 @@ api.interceptors.request.use(
 
 // Intercepteur pour gérer les erreurs d'authentification
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    notifyHolidayPostCommitWarning(response);
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // Token expiré ou invalide

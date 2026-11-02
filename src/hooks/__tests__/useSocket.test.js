@@ -26,6 +26,7 @@ describe('useSocket', () => {
       on: jest.fn(),
       off: jest.fn(),
       emit: jest.fn(),
+      connect: jest.fn(),
       disconnect: jest.fn(),
       connected: true
     };
@@ -49,9 +50,27 @@ describe('useSocket', () => {
 
     renderHook(() => useSocket());
 
-    expect(io).toHaveBeenCalledWith(window.location.origin, {
-      auth: { token: 'fake-token' }
+    expect(io).toHaveBeenCalledWith('http://localhost:5500', {
+      auth: { token: 'fake-token' },
+      transports: ['websocket'],
+      upgrade: true,
+      autoConnect: false,
     });
+  });
+
+  test('falls back to the current origin when no API URL is configured', () => {
+    const previous = process.env.VITE_API_URL;
+    delete process.env.VITE_API_URL;
+    window.localStorage.getItem.mockReturnValue('fake-token');
+    try {
+      renderHook(() => useSocket());
+      expect(io).toHaveBeenCalledWith(window.location.origin, expect.objectContaining({
+        auth: { token: 'fake-token' }, autoConnect: false,
+      }));
+    } finally {
+      if (previous === undefined) delete process.env.VITE_API_URL;
+      else process.env.VITE_API_URL = previous;
+    }
   });
 
   test('does not connect when no token', () => {

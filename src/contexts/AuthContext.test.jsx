@@ -4,7 +4,14 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
 // Mock axios
 import axios from 'axios';
-jest.mock('axios');
+jest.mock('axios', () => {
+  const client = {
+    get: jest.fn(), post: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  };
+  return { create: jest.fn(() => client) };
+});
+const api = axios.create.mock.results[0].value;
 
 // Test component that uses auth context
 const TestComponent = () => {
@@ -30,6 +37,9 @@ describe('AuthContext', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    localStorage.getItem.mockReturnValue(null);
+    api.get.mockResolvedValue({ data: {} });
+    api.post.mockResolvedValue({ data: {} });
   });
 
   it('should provide initial unauthenticated state', () => {
@@ -49,17 +59,17 @@ describe('AuthContext', () => {
       nom: 'Test',
       prenom: 'User',
       email: 'test@test.com',
-      role: 'employee'
+      role: 'employe'
     };
 
     const mockResponse = {
       data: {
-        user: mockUser,
+        utilisateur: mockUser,
         token: 'mock-jwt-token'
       }
     };
 
-    axios.post.mockResolvedValueOnce(mockResponse);
+    api.post.mockResolvedValueOnce(mockResponse);
 
     render(
       <AuthProvider>
@@ -71,11 +81,12 @@ describe('AuthContext', () => {
     fireEvent.click(loginButton);
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith('/auth/login', {
+      expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'test@test.com',
         password: 'password'
       });
     });
+    await waitFor(() => expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated'));
 
     // Check if user is stored in localStorage
     expect(localStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockUser));
@@ -84,7 +95,7 @@ describe('AuthContext', () => {
 
   it('should handle login error', async () => {
     const errorMessage = 'Invalid credentials';
-    axios.post.mockRejectedValueOnce({
+    api.post.mockRejectedValueOnce({
       response: { data: { message: errorMessage } }
     });
 
@@ -98,21 +109,21 @@ describe('AuthContext', () => {
     fireEvent.click(loginButton);
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalled();
+      expect(api.post).toHaveBeenCalled();
     });
 
     // Should remain unauthenticated on error
     expect(screen.getByTestId('auth-status')).toHaveTextContent('Not authenticated');
   });
 
-  it('should handle logout', () => {
+  it('should handle logout', async () => {
     // Set up authenticated state
     const mockUser = {
       id: 1,
       nom: 'Test',
       prenom: 'User',
       email: 'test@test.com',
-      role: 'employee'
+      role: 'employe'
     };
 
     localStorage.getItem.mockImplementation((key) => {
@@ -130,7 +141,7 @@ describe('AuthContext', () => {
     const logoutButton = screen.getByText('Logout');
     fireEvent.click(logoutButton);
 
-    expect(localStorage.removeItem).toHaveBeenCalledWith('user');
+    await waitFor(() => expect(localStorage.removeItem).toHaveBeenCalledWith('user'));
     expect(localStorage.removeItem).toHaveBeenCalledWith('token');
   });
 
@@ -140,8 +151,8 @@ describe('AuthContext', () => {
 
       return (
         <div>
-          <div data-testid="admin-role">{hasRole('admin') ? 'Has admin' : 'No admin'}</div>
-          <div data-testid="employee-role">{hasRole('employee') ? 'Has employee' : 'No employee'}</div>
+          <div data-testid="admin-role">{hasRole('admin_entreprise') ? 'Has admin' : 'No admin'}</div>
+          <div data-testid="employee-role">{hasRole('employe') ? 'Has employee' : 'No employee'}</div>
         </div>
       );
     };
@@ -152,7 +163,7 @@ describe('AuthContext', () => {
       nom: 'Test',
       prenom: 'User',
       email: 'test@test.com',
-      role: 'employee'
+      role: 'employe'
     };
 
     localStorage.getItem.mockImplementation((key) => {

@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 
 // Mock pour les icônes React
 jest.mock('react-icons', () => ({
+  ...jest.requireActual('react-icons'),
   FaHome: () => 'FaHome',
   FaCalendarCheck: () => 'FaCalendarCheck',
   FaCalendarAlt: () => 'FaCalendarAlt',
@@ -61,7 +62,7 @@ const localStorageMock = {
   removeItem: jest.fn(),
   clear: jest.fn()
 };
-global.localStorage = localStorageMock;
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 // Mock pour les variables d'environnement
 process.env.VITE_API_URL = 'http://localhost:5500/api';

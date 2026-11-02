@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toastService } from './toastService';
+import { notifyHolidayPostCommitWarning } from './holidayPostCommitWarning';
 import {
   isNotificationDisabledForCurrentRoute,
   setNotificationDisabledRoutes,
@@ -100,7 +101,8 @@ function processRefreshQueue(error, token = null) {
 
 api.interceptors.response.use(
   (response) => {
-    if (shouldNotify(response.config)) {
+    const postCommitWarning = notifyHolidayPostCommitWarning(response);
+    if (!postCommitWarning && shouldNotify(response.config)) {
       const message = response.data?.message;
       if (message) toastService.add(normalizeNotificationMessage(message, 'success'), 'success', 4000);
     }
@@ -297,6 +299,8 @@ export const joursFeriesService = {
 };
 
 export const notificationsService = {
+  getConfiguration: (entrepriseId) => api.get(`/notifications/configuration/${entrepriseId}`),
+  updateConfiguration: (entrepriseId, configuration) => api.put(`/notifications/configuration/${entrepriseId}`, configuration),
   getAll: (params = {}) => {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const normalizedTimezone = typeof browserTimezone === 'string' ? browserTimezone.trim() : '';

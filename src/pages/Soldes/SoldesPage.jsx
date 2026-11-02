@@ -208,12 +208,12 @@ const SoldesPage = () => {
         jours_reserves: toNum(form.jours_reserves),
       });
       closeModal();
-      const res = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
-      setCounters(Array.isArray(res.data?.items) ? res.data.items : []);
 
       const activated = saveRes.data?.reservations_activees ?? [];
       const pending = saveRes.data?.reservations_en_attente ?? [];
-      if (activated.length > 0) {
+      if (saveRes.data?.activation?.status === 'failed') {
+        alert.error(saveRes.data.activation.message);
+      } else if (activated.length > 0) {
         const detail = activated
           .map((r) => {
             const debut = r.date_debut ? new Date(r.date_debut).toLocaleDateString('fr-FR') : '';
@@ -228,6 +228,15 @@ const SoldesPage = () => {
         );
       } else {
         alert.success('Solde enregistré.');
+      }
+      for (const warning of saveRes.data?.warnings ?? []) {
+        alert.info(warning.message);
+      }
+      try {
+        const res = await quotasService.getUserCounters(selectedUserId, { annee: selectedYear });
+        setCounters(Array.isArray(res.data?.items) ? res.data.items : []);
+      } catch {
+        alert.error('Solde enregistré, mais le rafraîchissement des soldes a échoué.');
       }
     } catch (err) {
       alert.error(err.response?.data?.message || 'Erreur lors de la sauvegarde.');

@@ -11,7 +11,6 @@ import SectionTabs from './components/SectionTabs';
 import ReportReservationsSection from './components/ReportReservationsSection';
 import CancellationSection from './components/CancellationSection';
 import TimezoneSection from './components/TimezoneSection';
-import NotificationsSection from './components/NotificationsSection';
 import AccrualSection from './components/AccrualSection';
 import ServicePoliciesSection from './components/ServicePoliciesSection';
 import LogoSection from './components/LogoSection';
@@ -450,11 +449,14 @@ const PolitiqueCongesPage = () => {
             manager_can_view_all_services: servicePolicy.manager_can_view_all_services === true,
             manager_can_validate_all_services: servicePolicy.manager_can_validate_all_services === true,
             manager_can_view_all_absences: servicePolicy.manager_can_view_all_absences === true,
-            manager_cross_service: normalizeManagerCrossServicePolicy(servicePolicy),
+            manager_cross_service: Object.fromEntries(Object.entries(normalizeManagerCrossServicePolicy(servicePolicy))
+              .map(([category, settings]) => [category, { view: settings.view, participation: settings.participation }])),
           };
           return acc;
         }, {}),
       };
+
+      delete payload.notification_settings;
 
       await entreprisesService.updatePolitique(entrepriseId, payload);
       await leavePoliciesAPI.updatePolicy({
@@ -619,11 +621,6 @@ const PolitiqueCongesPage = () => {
           />
         )}
 
-        {/* Onglet : Notifications email */}
-        {isSectionVisible('notifications') && (
-          <NotificationsSection policy={policy} setPolicy={setPolicy} />
-        )}
-
         {/* Onglet : Fuseau horaire */}
         {isSectionVisible('timezone') && (
           <TimezoneSection
@@ -656,7 +653,7 @@ const PolitiqueCongesPage = () => {
           />
         )}
 
-        {activeSection !== 'types' && (
+        {!['types', 'notifications'].includes(activeSection) && (
           <div className="d-flex justify-content-end border-top pt-3 mt-4">
             <AsyncButton type="submit" isLoading={saving} showSpinner={saving} loadingText="Enregistrement…">
               Enregistrer les modifications
@@ -665,11 +662,14 @@ const PolitiqueCongesPage = () => {
         )}
       </Form>
 
-      {activeSection !== 'types' && (
-        <div className="border-top pt-3 mt-3">
+      {isSectionVisible('notifications') && (
+        <div id="section-notifications" className="border-top pt-3 mt-3">
+          <h2 className="h5">Recalcul des soldes manuel</h2>
+          <p>Simulez les effets des règles enregistrées avant d’appliquer le recalcul aux congés existants.</p>
           <div className="politique-recalc-actions d-flex align-items-center gap-2 mb-2">
             <Button
               variant="outline-secondary"
+              type="button"
               size="sm"
               onClick={() => handleRecalcul(true)}
               disabled={recalculLoading}
@@ -679,6 +679,7 @@ const PolitiqueCongesPage = () => {
             </Button>
             <Button
               variant="outline-warning"
+              type="button"
               size="sm"
               onClick={() => handleRecalcul(false)}
               disabled={recalculLoading}

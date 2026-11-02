@@ -14,7 +14,7 @@ export const roleNavigation = {
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/help', label: 'Prise en main', icon: 'info', section: 'secondary' },
-    { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
+    { path: '/notifications', label: 'Action et notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   employe: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
@@ -23,7 +23,7 @@ export const roleNavigation = {
     { path: '/calendrier', label: 'Calendrier', icon: 'calendar', section: 'primary' },
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/help', label: 'Prise en main', icon: 'info', section: 'secondary' },
-    { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
+    { path: '/notifications', label: 'Action et notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   manager: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
@@ -34,7 +34,7 @@ export const roleNavigation = {
     { path: '/historique-solde', label: 'Historique solde', icon: 'history', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/help', label: 'Prise en main', icon: 'info', section: 'secondary' },
-    { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
+    { path: '/notifications', label: 'Action et notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   admin_entreprise: [
     { path: '/dashboard', label: 'Accueil', icon: 'home', section: 'primary' },
@@ -49,7 +49,7 @@ export const roleNavigation = {
     { path: '/jours-feries', label: 'Jours fériés & bloqués', icon: 'holiday', section: 'secondary' },
     { path: '/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/help', label: 'Prise en main', icon: 'info', section: 'secondary' },
-    { path: '/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
+    { path: '/notifications', label: 'Action et notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' }
   ],
   super_admin: [
     { path: '/superadmin/dashboard', label: 'Accueil', icon: 'shield', section: 'primary' },
@@ -61,7 +61,7 @@ export const roleNavigation = {
     { path: '/superadmin/metrics', label: 'Stats', icon: 'chart', section: 'secondary' },
     { path: '/superadmin/exports', label: 'Exports', icon: 'download', section: 'secondary' },
     { path: '/superadmin/holidays', label: 'Jours fériés & bloqués', icon: 'holiday', section: 'secondary' },
-    { path: '/superadmin/notifications', label: 'Notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' },
+    { path: '/superadmin/notifications', label: 'Action et notifications', icon: 'bell', section: 'secondary', badgeKey: 'notifications' },
     { path: '/superadmin/audit', label: 'Audit', icon: 'audit', section: 'secondary' },
     { path: '/superadmin/email-logs', label: 'Emails', icon: 'email', section: 'secondary' },
     { path: '/superadmin/settings', label: 'Réglages', icon: 'settings', section: 'secondary' },

@@ -7,6 +7,7 @@
 .env
 .env.*
 !.env.example
+!.env.*.example
 
 # Build et production
 /dist
@@ -39,6 +40,27 @@ uploads/
 *.key
 *.cert
 *.crt
+*.p12
+*.pfx
+keys/
+secrets/
+credentials/
+credentials.json
+credentials-*.json
+client_secret*.json
+service-account*.json
+.npmrc
+.netrc
+
+# Sauvegardes et bases locales
+backups/
+*.dump
+*.backup
+*.sql.gz
+*.sql.zip
+*.sqlite
+*.sqlite3
+*.db
 
 # Système
 .DS_Store

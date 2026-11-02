@@ -32,7 +32,7 @@ const superadminTopbarNotes = {
   '/superadmin/metrics': 'Consultez les indicateurs cles',
   '/superadmin/exports': 'Generez des exports consolides',
   '/superadmin/holidays': 'Parametrez les jours feries globaux',
-  '/superadmin/notifications': 'Supervisez les notifications systeme',
+  '/superadmin/notifications': 'Gérez les actions et notifications par entreprise',
   '/superadmin/audit': 'Tracez les actions sensibles',
   '/superadmin/email-logs': 'Consultez l historique des emails envoyés',
   '/superadmin/settings': 'Ajustez les reglages plateforme',

@@ -7,7 +7,7 @@ const TABS = [
   { id: 'services',      label: 'Règles par service',       emoji: '🏢' },
   { id: 'report',        label: 'Report & Réservations',    emoji: '🗓️' },
   { id: 'annulation',    label: 'Annulation & Modification', emoji: '🔄' },
-  { id: 'notifications', label: 'Notifications email',      emoji: '📧' },
+  { id: 'notifications', label: 'Recalcul des soldes manuel', emoji: '🔄' },
   { id: 'timezone',      label: 'Fuseau horaire',           emoji: '🌐' },
   { id: 'logo',          label: 'Logo',                     emoji: '🖼️' },
 ];
