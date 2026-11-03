@@ -34,6 +34,67 @@ beforeEach(() => {
   }));
 });
 
+test('les résumés se choisissent par personne au niveau entreprise sans modifier les règles de service', async () => {
+  render(<NotificationSettings />);
+  const weekly = await screen.findByLabelText('Résumé de la semaine : Marc RH');
+  expect(weekly).toBeChecked();
+  expect(screen.getByLabelText('Résumé mensuel : Marc RH')).not.toBeChecked();
+  fireEvent.click(weekly);
+  fireEvent.click(screen.getByLabelText('Résumé mensuel : Alice Admin'));
+  fireEvent.change(screen.getByLabelText('Demandes du service'), { target: { value: 'Finance' } });
+  expect(weekly).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer', exact: true }));
+  await waitFor(() => expect(notificationsService.updateConfiguration).toHaveBeenCalled());
+  const body = notificationsService.updateConfiguration.mock.calls[0][1];
+  expect(body.preferences.report_recipients).toEqual({ weekly_summary: ['m2', 'a1'], monthly_report: [] });
+  expect(body.preferences.roles).toEqual(configuration.preferences.roles);
+  expect(body).not.toHaveProperty('routing');
+});
+
+test('plusieurs managers de services différents et administrateurs peuvent recevoir les deux résumés', async () => {
+  render(<NotificationSettings />);
+  fireEvent.click(await screen.findByLabelText('Résumé mensuel : Marc RH'));
+  fireEvent.click(screen.getByLabelText('Résumé mensuel : Marie Finance'));
+  fireEvent.change(screen.getByLabelText('Demandes du service'), { target: { value: 'Finance' } });
+  expect(screen.getByLabelText('Résumé mensuel : Marc RH')).toBeChecked();
+  expect(screen.getByLabelText('Résumé mensuel : Marie Finance')).toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer', exact: true }));
+  await waitFor(() => expect(notificationsService.updateConfiguration).toHaveBeenCalled());
+  expect(notificationsService.updateConfiguration.mock.calls[0][1].preferences.report_recipients)
+    .toEqual({ monthly_report: ['m1', 'm2', 'a1'] });
+});
+
+test('les résumés peuvent être enregistrés sans service et le brouillon peut être annulé', async () => {
+  notificationsService.getConfiguration.mockResolvedValue({ data: { ...configuration, services: [] } });
+  render(<NotificationSettings />);
+  fireEvent.click(await screen.findByLabelText('Résumé mensuel : Alice Admin'));
+  fireEvent.click(screen.getByRole('button', { name: 'Annuler les changements' }));
+  expect(screen.getByLabelText('Résumé mensuel : Alice Admin')).toBeChecked();
+  fireEvent.click(screen.getByLabelText('Résumé mensuel : Alice Admin'));
+  expect(screen.getByRole('button', { name: 'Enregistrer', exact: true })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer', exact: true }));
+  await waitFor(() => expect(notificationsService.updateConfiguration).toHaveBeenCalled());
+});
+
+test('les destinataires enregistrés sont restaurés et un échec ne perd pas le brouillon', async () => {
+  notificationsService.getConfiguration.mockResolvedValue({ data: {
+    ...configuration, preferences: {
+      ...configuration.preferences, report_recipients: { weekly_summary: ['m2'], monthly_report: [] },
+    },
+  } });
+  notificationsService.updateConfiguration.mockRejectedValue({ response: { data: { message: 'Échec de sauvegarde' } } });
+  render(<NotificationSettings />);
+  expect(await screen.findByLabelText('Résumé de la semaine : Marc RH')).not.toBeChecked();
+  expect(screen.getByLabelText('Résumé de la semaine : Marie Finance')).toBeChecked();
+  expect(screen.getByLabelText('Résumé mensuel : Alice Admin')).not.toBeChecked();
+  fireEvent.click(screen.getByLabelText('Résumé mensuel : Alice Admin'));
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer', exact: true }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Échec de sauvegarde');
+  expect(screen.getByLabelText('Résumé mensuel : Alice Admin')).toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Annuler les changements' }));
+  expect(screen.getByLabelText('Résumé mensuel : Alice Admin')).not.toBeChecked();
+});
+
 test('une seule grille nominative, sans listes d’événements ni cartes Action/Information', async () => {
   render(<NotificationSettings />);
   expect(await screen.findByRole('table', { name: 'Personnes à prévenir' })).toBeInTheDocument();

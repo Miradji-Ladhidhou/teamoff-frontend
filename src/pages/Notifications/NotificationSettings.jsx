@@ -12,6 +12,7 @@ const WORKFLOWS = {
 const ROLES = { manager: 'Manager', admin_entreprise: 'Administrateur', employe: 'Salariés', apprenti: 'Apprentis' };
 const GROUPS = { creation: 'Création', modification: 'Modification', suppression: 'Suppression' };
 const LEGACY_OPTIONS = { on_create: 'Création des demandes', on_validate: 'Validations', on_reject: 'Refus' };
+const REPORTS = { weekly_summary: 'Résumé de la semaine', monthly_report: 'Résumé mensuel' };
 const eventGroup = event => event.group || (['leave_created', 'leave_reservation', 'leave_activated', 'absence_created', 'sickness_created'].includes(event.id)
   ? 'creation' : ['leave_cancelled', 'leave_cancel_requested', 'absence_cancelled', 'sickness_cancelled'].includes(event.id) ? 'suppression' : 'modification');
 
@@ -26,6 +27,7 @@ export default function NotificationSettings() {
   const [changes, setChanges] = useState({});
   const [ownerChanges, setOwnerChanges] = useState({});
   const [legacyChanges, setLegacyChanges] = useState({});
+  const [reportChanges, setReportChanges] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,6 +45,7 @@ export default function NotificationSettings() {
     setChanges({});
     setOwnerChanges({});
     setLegacyChanges({});
+    setReportChanges({});
     setError('');
     if (!companyId) return undefined;
     notificationsService.getConfiguration(companyId).then(response => {
@@ -53,8 +56,24 @@ export default function NotificationSettings() {
     return () => { active = false; };
   }, [companyId]);
 
-  const dirty = Object.keys(changes).length > 0 || Object.keys(ownerChanges).length > 0 || Object.keys(legacyChanges).length > 0;
+  const dirty = Object.keys(changes).length > 0 || Object.keys(ownerChanges).length > 0 || Object.keys(legacyChanges).length > 0 || Object.keys(reportChanges).length > 0;
   const people = configuration ? [...configuration.managers, ...configuration.administrators] : [];
+  const reportEligible = person => ['manager', 'admin_entreprise'].includes(person.role);
+  const reportValue = (person, event) => {
+    const selected = reportChanges[event] ?? configuration.preferences.report_recipients?.[event];
+    if (selected) return selected.includes(person.id);
+    const prefix = person.role === 'manager' ? 'manager' : 'admin';
+    const scope = configuration.preferences[`${prefix}_event_scopes`]?.[event] || configuration.preferences[`${prefix}_scope`];
+    if (scope?.mode === 'users' && !scope.user_ids.includes(person.id)) return false;
+    const preference = configuration.preferences.roles?.[person.role]?.[event];
+    return preference?.workflow?.email ?? preference?.information?.email
+      ?? (event !== 'monthly_report' || person.role !== 'manager');
+  };
+  const setReportRecipient = (person, event, enabled) => setReportChanges(current => ({
+    ...current,
+    [event]: people.filter(candidate => reportEligible(candidate, event)
+      && (candidate.id === person.id ? enabled : reportValue(candidate, event))).map(candidate => candidate.id),
+  }));
   const routeFor = person => changes[service]?.[category]?.[person.id]
     ?? configuration.routing?.[service]?.[category]?.[person.id];
   const setRoute = (person, value) => setChanges(current => ({
@@ -109,8 +128,11 @@ export default function NotificationSettings() {
       const body = {};
       if (Object.keys(legacyChanges).length) body.legacy = legacyChanges;
       if (Object.keys(changes).length) body.routing = changes;
-      if (Object.keys(ownerChanges).length) {
+      if (Object.keys(ownerChanges).length || Object.keys(reportChanges).length) {
         const preferences = { ...configuration.preferences, service_roles: { ...configuration.preferences.service_roles } };
+        if (Object.keys(reportChanges).length) {
+          preferences.report_recipients = { ...preferences.report_recipients, ...reportChanges };
+        }
         for (const [target, roles] of Object.entries(ownerChanges)) {
           preferences.service_roles[target] = { ...preferences.service_roles[target] };
           for (const [role, categories] of Object.entries(roles)) {
@@ -140,6 +162,7 @@ export default function NotificationSettings() {
       setChanges({});
       setOwnerChanges({});
       setLegacyChanges({});
+      setReportChanges({});
       alert.success('Les réglages de notification ont été enregistrés.');
     } catch (err) {
       const message = err.response?.data?.message || 'Impossible d’enregistrer les responsables.';
@@ -170,6 +193,19 @@ export default function NotificationSettings() {
             checked={legacyChanges[key] ?? configuration.legacy[key]}
             onChange={event => setLegacyChanges(current => ({ ...current, [key]: event.target.checked }))} />)}
         </div>
+      </details>
+      <details className="mb-3">
+        <summary>Qui reçoit les résumés par email ?</summary>
+        <p className="small text-muted mt-2">Choisissez les managers et administrateurs pour chaque résumé, indépendamment du service sélectionné. Chaque manager reçoit uniquement les services et catégories déjà autorisés pour ses emails. Les autres périmètres et autorisations email restent appliqués. Le mensuel des managers est désactivé tant que vous ne les abonnez pas.</p>
+        {people.map(person => <div key={person.id} className="d-flex flex-wrap gap-3 mb-2">
+          <strong>{person.prenom} {person.nom} · {ROLES[person.role]}</strong>
+          {Object.entries(REPORTS).filter(([event]) => reportEligible(person, event)).map(([event, label]) => <Form.Check
+            key={event} id={`report-${person.id}-${event}`} label={label}
+            aria-label={`${label} : ${person.prenom} ${person.nom}`}
+            checked={reportValue(person, event)}
+            onChange={change => setReportRecipient(person, event, change.target.checked)} />)}
+        </div>)}
+        {!people.length && <p>Aucun responsable actif dans cette entreprise.</p>}
       </details>
       <div className="notif-settings-selectors">
         <Form.Group controlId="routing-service">
@@ -256,8 +292,8 @@ export default function NotificationSettings() {
       <p className="small text-muted mt-3">« Traiter » autorise aussi ce manager à consulter et valider les congés de ce service, même s’il travaille ailleurs. « Informer » et « Ne pas prévenir » ne retirent pas ses droits antérieurs. Aucun droit médical supplémentaire n’est accordé.</p>
       {Object.values({ ...configuration.legacy, ...legacyChanges }).some(value => !value) && <p role="status" className="small text-warning">Certaines notifications sont coupées. Ouvrez « Autorisations générales des congés » pour les réactiver, puis enregistrez.</p>}
       <div className="d-flex flex-wrap gap-2 mt-3">
-        <Button onClick={save} disabled={!dirty || !service && !Object.keys(legacyChanges).length}>{saving ? 'Enregistrement…' : 'Enregistrer'}</Button>
-        {dirty && <Button variant="outline-secondary" onClick={() => { setChanges({}); setOwnerChanges({}); setLegacyChanges({}); }}>Annuler les changements</Button>}
+        <Button onClick={save} disabled={!dirty || !service && !Object.keys(legacyChanges).length && !Object.keys(reportChanges).length}>{saving ? 'Enregistrement…' : 'Enregistrer'}</Button>
+        {dirty && <Button variant="outline-secondary" onClick={() => { setChanges({}); setOwnerChanges({}); setLegacyChanges({}); setReportChanges({}); }}>Annuler les changements</Button>}
       </div>
     </fieldset>}
   </section>;
